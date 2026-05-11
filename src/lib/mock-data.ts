@@ -1,4 +1,5 @@
-import type { Lead, Client, Project, Task, Approval, FileAsset } from './types';
+import type { Lead, Client, Project, Task, Approval, FileAsset, Invoice, Retainer, Milestone, ClientPortalToken } from './types';
+
 
 export const MOCK_LEADS: Lead[] = [
   // New Lead
@@ -99,3 +100,226 @@ export const MOCK_FILES: FileAsset[] = [
   { id: 'f9',  name: 'annual-report-2025.pdf',        type: 'document', size: '11.2 MB', project: 'Annual Report 2025',     uploadedBy: 'JR', uploadedDate: '2026-04-28' },
   { id: 'f10', name: 'ia-sitemap.pdf',                type: 'document', size: '1.8 MB',  project: 'Website Redesign',       uploadedBy: 'TL', uploadedDate: '2026-06-06' },
 ];
+
+// ── Phase 4 — Billing ─────────────────────────────────────────────────────────
+
+export const MOCK_INVOICES: Invoice[] = [
+  {
+    id: 'inv1',
+    number: 'INV-2026-041',
+    client: 'Stratum Labs',
+    clientId: 'c1',
+    project: 'Brand Identity Refresh',
+    amount: 8000,
+    currency: 'USD',
+    status: 'paid',
+    issuedDate: '2026-05-01',
+    dueDate: '2026-05-15',
+    paidDate: '2026-05-12',
+    lineItems: [
+      { description: 'Brand strategy retainer — May', qty: 1, unitPrice: 5000 },
+      { description: 'Logo suite production', qty: 1, unitPrice: 3000 },
+    ],
+  },
+  {
+    id: 'inv2',
+    number: 'INV-2026-042',
+    client: 'Volta Interactive',
+    clientId: 'c2',
+    project: 'Campaign: Q3 Launch',
+    amount: 6000,
+    currency: 'USD',
+    status: 'sent',
+    issuedDate: '2026-05-20',
+    dueDate: '2026-06-04',
+    lineItems: [
+      { description: 'Creative production — May', qty: 1, unitPrice: 4000 },
+      { description: 'Social asset pack (30 units)', qty: 30, unitPrice: 66.67 },
+    ],
+  },
+  {
+    id: 'inv3',
+    number: 'INV-2026-043',
+    client: 'Solara Health',
+    clientId: 'c8',
+    project: 'Website Redesign',
+    amount: 4500,
+    currency: 'USD',
+    status: 'overdue',
+    issuedDate: '2026-04-30',
+    dueDate: '2026-05-15',
+    lineItems: [
+      { description: 'Discovery & architecture phase', qty: 1, unitPrice: 4500 },
+    ],
+  },
+  {
+    id: 'inv4',
+    number: 'INV-2026-044',
+    client: 'Orbis Consulting',
+    clientId: 'c4',
+    project: 'Investor Deck',
+    amount: 3000,
+    currency: 'USD',
+    status: 'draft',
+    issuedDate: '2026-06-01',
+    dueDate: '2026-06-16',
+    lineItems: [
+      { description: 'Slide design — 20 slides', qty: 20, unitPrice: 150 },
+    ],
+  },
+  {
+    id: 'inv5',
+    number: 'INV-2026-045',
+    client: 'Pollen Studio',
+    clientId: 'c3',
+    project: 'Motion System V2',
+    amount: 9500,
+    currency: 'USD',
+    status: 'paid',
+    issuedDate: '2026-05-10',
+    dueDate: '2026-05-25',
+    paidDate: '2026-05-22',
+    lineItems: [
+      { description: 'Motion system design & export', qty: 1, unitPrice: 9500 },
+    ],
+  },
+  {
+    id: 'inv6',
+    number: 'INV-2026-046',
+    client: 'Halo Collective',
+    clientId: 'c5',
+    project: 'Annual Report 2025',
+    amount: 12000,
+    currency: 'USD',
+    status: 'paid',
+    issuedDate: '2026-04-15',
+    dueDate: '2026-04-30',
+    paidDate: '2026-04-29',
+    lineItems: [
+      { description: 'Annual report design & print-ready export', qty: 1, unitPrice: 12000 },
+    ],
+  },
+];
+
+export const MOCK_RETAINERS: Retainer[] = [
+  {
+    id: 'ret1',
+    client: 'Stratum Labs',
+    clientId: 'c1',
+    amount: 8000,
+    currency: 'USD',
+    cycle: 'monthly',
+    status: 'active',
+    startDate: '2026-01-01',
+    renewalDate: '2026-07-01',
+    hoursIncluded: 40,
+    hoursUsed: 28,
+    notes: 'Full creative production + strategy advisory.',
+  },
+  {
+    id: 'ret2',
+    client: 'Volta Interactive',
+    clientId: 'c2',
+    amount: 6000,
+    currency: 'USD',
+    cycle: 'monthly',
+    status: 'active',
+    startDate: '2026-02-01',
+    renewalDate: '2026-08-01',
+    hoursIncluded: 32,
+    hoursUsed: 19,
+    notes: 'Campaign management and content production.',
+  },
+  {
+    id: 'ret3',
+    client: 'Solara Health',
+    clientId: 'c8',
+    amount: 26000,
+    currency: 'USD',
+    cycle: 'quarterly',
+    status: 'active',
+    startDate: '2026-04-01',
+    renewalDate: '2026-07-01',
+    hoursIncluded: 120,
+    hoursUsed: 34,
+  },
+  {
+    id: 'ret4',
+    client: 'Apex Creative Co.',
+    clientId: 'c6',
+    amount: 4100,
+    currency: 'USD',
+    cycle: 'monthly',
+    status: 'active',
+    startDate: '2026-03-01',
+    renewalDate: '2026-09-01',
+    hoursIncluded: 20,
+    hoursUsed: 20,
+    notes: 'At capacity — expansion discussion pending.',
+  },
+  {
+    id: 'ret5',
+    client: 'Cascade Ventures',
+    clientId: 'c7',
+    amount: 3500,
+    currency: 'USD',
+    cycle: 'monthly',
+    status: 'paused',
+    startDate: '2025-11-01',
+    renewalDate: '2026-05-01',
+    hoursIncluded: 16,
+    hoursUsed: 0,
+    notes: 'Paused pending board approval of new budget.',
+  },
+];
+
+// ── Phase 4 — Milestones ─────────────────────────────────────────────────────
+
+export const MOCK_MILESTONES: Milestone[] = [
+  { id: 'm1', title: 'Logo suite approved', project: 'Brand Identity Refresh', projectId: 'p1', clientId: 'c1', dueDate: '2026-06-14', status: 'upcoming' },
+  { id: 'm2', title: 'Brand guidelines delivered', project: 'Brand Identity Refresh', projectId: 'p1', clientId: 'c1', dueDate: '2026-07-01', status: 'upcoming' },
+  { id: 'm3', title: 'Campaign assets delivered', project: 'Campaign: Q3 Launch', projectId: 'p2', clientId: 'c2', dueDate: '2026-06-20', status: 'upcoming' },
+  { id: 'm4', title: 'Campaign go-live', project: 'Campaign: Q3 Launch', projectId: 'p2', clientId: 'c2', dueDate: '2026-06-30', status: 'upcoming' },
+  { id: 'm5', title: 'Figma handoff', project: 'Website Redesign', projectId: 'p3', clientId: 'c8', dueDate: '2026-07-10', status: 'upcoming' },
+  { id: 'm6', title: 'Development start', project: 'Website Redesign', projectId: 'p3', clientId: 'c8', dueDate: '2026-07-20', status: 'upcoming' },
+  { id: 'm7', title: 'Annual report final delivery', project: 'Annual Report 2025', projectId: 'p6', clientId: 'c5', dueDate: '2026-04-30', status: 'completed' },
+  { id: 'm8', title: 'Motion kit export', project: 'Motion System V2', projectId: 'p4', clientId: 'c3', dueDate: '2026-06-14', status: 'upcoming' },
+];
+
+// ── Phase 4 — Client Portal ───────────────────────────────────────────────────
+
+export const MOCK_PORTAL_TOKENS: ClientPortalToken[] = [
+  {
+    token: 'pt_a1b2c3d4e5f6-stratum',
+    clientId: 'c1',
+    clientName: 'Stratum Labs',
+    expiresAt: '2026-12-31T23:59:59Z',
+    scopes: ['approvals', 'files', 'invoices'],
+  },
+  {
+    token: 'pt_b2c3d4e5f6a1-volta',
+    clientId: 'c2',
+    clientName: 'Volta Interactive',
+    expiresAt: '2026-12-31T23:59:59Z',
+    scopes: ['approvals', 'files', 'invoices', 'reports'],
+  },
+  {
+    token: 'pt_c3d4e5f6a1b2-solara',
+    clientId: 'c8',
+    clientName: 'Solara Health',
+    expiresAt: '2026-09-30T23:59:59Z',
+    scopes: ['approvals', 'files'],
+  },
+  {
+    token: 'pt_d4e5f6a1b2c3-orbis',
+    clientId: 'c4',
+    clientName: 'Orbis Consulting',
+    expiresAt: '2026-08-01T23:59:59Z',
+    scopes: ['approvals'],
+  },
+  // Demo shorthand tokens for easy dev access
+  { token: 'demo-stratum', clientId: 'c1', clientName: 'Stratum Labs',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices'] },
+  { token: 'demo-volta',   clientId: 'c2', clientName: 'Volta Interactive', expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices', 'reports'] },
+  { token: 'demo-solara',  clientId: 'c8', clientName: 'Solara Health',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices'] },
+];
+

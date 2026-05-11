@@ -83,3 +83,61 @@ export interface FileAsset {
   uploadedBy: string;
   uploadedDate: string;
 }
+
+// ── Phase 4 ──────────────────────────────────────────────────────────────────
+
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+
+export interface Invoice {
+  id: string;
+  number: string;
+  client: string;
+  clientId: string;
+  project: string;
+  amount: number;
+  currency: string;
+  status: InvoiceStatus;
+  issuedDate: string;
+  dueDate: string;
+  paidDate?: string;
+  lineItems: { description: string; qty: number; unitPrice: number }[];
+}
+
+export type RetainerStatus = 'active' | 'paused' | 'expired';
+export type RetainerCycle  = 'monthly' | 'quarterly' | 'annual';
+
+export interface Retainer {
+  id: string;
+  client: string;
+  clientId: string;
+  amount: number;
+  currency: string;
+  cycle: RetainerCycle;
+  status: RetainerStatus;
+  startDate: string;
+  renewalDate: string;
+  hoursIncluded: number;
+  hoursUsed: number;
+  notes?: string;
+}
+
+export interface Milestone {
+  id: string;
+  title: string;
+  project: string;
+  projectId: string;
+  clientId: string;
+  dueDate: string;
+  status: 'upcoming' | 'completed' | 'overdue';
+}
+
+// ── Client Portal ─────────────────────────────────────────────────────────────
+
+export interface ClientPortalToken {
+  token: string;
+  clientId: string;
+  clientName: string;
+  expiresAt: string;
+  scopes: ('approvals' | 'files' | 'invoices' | 'reports')[];
+}
+

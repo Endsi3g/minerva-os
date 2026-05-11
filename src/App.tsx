@@ -18,6 +18,11 @@ import Files from './pages/app/Files';
 import Billing from './pages/app/Billing';
 import Reports from './pages/app/Reports';
 import AppSettings from './pages/app/AppSettings';
+import PortalShell from './pages/portal/PortalShell';
+import PortalOverview from './pages/portal/PortalOverview';
+import PortalDeliverables from './pages/portal/PortalDeliverables';
+import PortalFiles from './pages/portal/PortalFiles';
+import PortalInvoices from './pages/portal/PortalInvoices';
 
 export default function App() {
   return (
@@ -31,6 +36,14 @@ export default function App() {
       <Route path="/portal"   element={<ClientPortal />} />
       <Route path="/security" element={<Security />} />
       <Route path="/insights" element={<Insights />} />
+
+      {/* Client portal — token-gated, no app shell */}
+      <Route path="/portal/:token" element={<PortalShell />}>
+        <Route index              element={<PortalOverview />} />
+        <Route path="deliverables" element={<PortalDeliverables />} />
+        <Route path="files"        element={<PortalFiles />} />
+        <Route path="invoices"     element={<PortalInvoices />} />
+      </Route>
 
       {/* App shell */}
       <Route path="/app" element={<AppShell />}>
