@@ -1,8 +1,11 @@
+'use client';
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Link, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Circle, Chrome, Github, Eye, EyeOff } from 'lucide-react';
 import { useLang } from './i18n';
+import { useAuth } from './contexts/AuthContext';
 
 const HERO_VIDEO =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
@@ -19,9 +22,37 @@ const itemVariants = {
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { t } = useLang();
-  const navigate = useNavigate();
+  const { signup } = useAuth();
+  const router = useRouter();
   const s = t.signup;
+
+  async function handleSubmit() {
+    if (!firstName || !lastName || !email || !password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    setError('');
+    setIsLoading(true);
+    try {
+      await signup(firstName, lastName, email, password);
+      router.push('/app/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Account creation failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <main
@@ -90,11 +121,11 @@ export default function SignUp() {
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <InputField label={s.firstName} placeholder={s.firstNamePlaceholder} type="text" />
-              <InputField label={s.lastName} placeholder={s.lastNamePlaceholder} type="text" />
+              <InputField label={s.firstName} placeholder={s.firstNamePlaceholder} type="text" value={firstName} onChange={setFirstName} />
+              <InputField label={s.lastName} placeholder={s.lastNamePlaceholder} type="text" value={lastName} onChange={setLastName} />
             </div>
 
-            <InputField label={s.email} placeholder={s.emailPlaceholder} type="email" />
+            <InputField label={s.email} placeholder={s.emailPlaceholder} type="email" value={email} onChange={setEmail} />
 
             <div className="space-y-1.5">
               <label className="block text-sm font-medium" style={{ color: '#F5F1E8' }}>
@@ -104,6 +135,8 @@ export default function SignUp() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder={s.passwordPlaceholder}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
                   className="w-full rounded-xl h-11 px-4 pr-11 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/15 transition-all"
                   style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
                 />
@@ -122,18 +155,23 @@ export default function SignUp() {
               </p>
             </div>
 
+            {error && (
+              <p className="text-sm px-1" style={{ color: '#A86A6A' }}>{error}</p>
+            )}
+
             <button
               type="button"
-              onClick={() => navigate('/app')}
-              className="w-full h-14 font-semibold rounded-xl transition-all duration-200 hover:opacity-90 active:scale-[0.98] mt-4"
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="w-full h-14 font-semibold rounded-xl transition-all duration-200 hover:opacity-90 active:scale-[0.98] mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
             >
-              {s.submit}
+              {isLoading ? 'Creating account...' : s.submit}
             </button>
 
             <p className="text-center text-sm" style={{ color: 'rgba(184,189,199,0.5)' }}>
               {s.footer}{' '}
-              <Link to="/login" className="transition-colors underline underline-offset-2" style={{ color: '#F5F1E8' }}>
+              <Link href="/login" className="transition-colors underline underline-offset-2" style={{ color: '#F5F1E8' }}>
                 {s.footerLink}
               </Link>
             </p>
@@ -185,13 +223,27 @@ function SocialButton({ icon, label }: { icon: React.ReactNode; label: string })
   );
 }
 
-function InputField({ label, placeholder, type }: { label: string; placeholder: string; type: string }) {
+function InputField({ 
+  label, 
+  placeholder, 
+  type, 
+  value, 
+  onChange 
+}: { 
+  label: string; 
+  placeholder: string; 
+  type: string;
+  value: string;
+  onChange: (val: string) => void;
+}) {
   return (
     <div className="space-y-1.5">
       <label className="block text-sm font-medium" style={{ color: '#F5F1E8' }}>{label}</label>
       <input
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
         className="w-full rounded-xl h-11 px-4 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/15 transition-all"
         style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
       />

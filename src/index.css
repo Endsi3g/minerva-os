@@ -95,6 +95,38 @@
     --sidebar-ring:                   rgba(245,241,232,0.15);
   }
 
+  /* ── Light mode overrides ─────────────────────────────────────────────── */
+  .light {
+    --background:               #F5F1E8;
+    --foreground:               #0A0D14;
+    --card:                     #FFFFFF;
+    --card-foreground:          #0A0D14;
+    --popover:                  #FFFFFF;
+    --popover-foreground:       #0A0D14;
+    --primary:                  #0A0D14;
+    --primary-foreground:       #F5F1E8;
+    --secondary:                #EDE9E0;
+    --secondary-foreground:     #0A0D14;
+    --muted:                    #E8E4DB;
+    --muted-foreground:         #6B7280;
+    --accent:                   #EDE9E0;
+    --accent-foreground:        #0A0D14;
+    --destructive:              #A86A6A;
+    --destructive-foreground:   #FFFFFF;
+    --border:                   rgba(0,0,0,0.08);
+    --input:                    #FFFFFF;
+    --ring:                     rgba(10,13,20,0.18);
+
+    --sidebar:                        #E8E4DB;
+    --sidebar-foreground:             #2A2F3A;
+    --sidebar-primary:                #0A0D14;
+    --sidebar-primary-foreground:     #F5F1E8;
+    --sidebar-accent:                 rgba(0,0,0,0.05);
+    --sidebar-accent-foreground:      #0A0D14;
+    --sidebar-border:                 rgba(0,0,0,0.07);
+    --sidebar-ring:                   rgba(10,13,20,0.15);
+  }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }

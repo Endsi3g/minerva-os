@@ -1,12 +1,16 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+'use client';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   PanelLeftClose,
   PanelLeftOpen,
   Search,
   Bell,
+  Sun,
+  Moon,
   User,
   LogOut,
   Settings,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -17,7 +21,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useSidebar } from './AppShell';
+import { useSidebar, useChat } from './AppShell';
+import { useTheme } from '@/theme';
 
 const PAGE_LABELS: Record<string, string> = {
   '/app/dashboard': 'Dashboard',
@@ -34,9 +39,11 @@ const PAGE_LABELS: Record<string, string> = {
 
 export function AppHeader() {
   const { collapsed, toggle } = useSidebar();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const pageLabel = PAGE_LABELS[location.pathname] ?? 'Minerva OS';
+  const { toggleChat } = useChat();
+  const { theme, toggleTheme } = useTheme();
+  const pathname = usePathname();
+  const router = useRouter();
+  const pageLabel = PAGE_LABELS[pathname ?? ''] ?? 'Minerva OS';
 
   return (
     <header className="h-14 flex items-center px-4 gap-3 border-b border-border shrink-0">
@@ -61,6 +68,26 @@ export function AppHeader() {
       <Button variant="ghost" size="icon" className="text-fog hover:text-ivory" aria-label="Search">
         <Search size={16} />
       </Button>
+      
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={toggleChat}
+        className="text-fog hover:text-sage transition-colors" 
+        aria-label="AI Chat"
+      >
+        <MessageSquare size={16} />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        className="text-fog hover:text-ivory"
+        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+      </Button>
 
       <Button variant="ghost" size="icon" className="text-fog hover:text-ivory relative" aria-label="Notifications">
         <Bell size={16} />
@@ -78,16 +105,16 @@ export function AppHeader() {
         <DropdownMenuContent align="end" className="w-48">
           <div className="px-2 py-1.5 text-xs text-muted-foreground">Uprising Studio</div>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate('/app/settings')}>
+          <DropdownMenuItem onClick={() => router.push('/app/settings')}>
             <User size={14} />
             Profile
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/app/settings')}>
+          <DropdownMenuItem onClick={() => router.push('/app/settings')}>
             <Settings size={14} />
             Settings
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate('/login')} className="text-ember">
+          <DropdownMenuItem onClick={() => router.push('/login')} className="text-ember">
             <LogOut size={14} />
             Sign out
           </DropdownMenuItem>

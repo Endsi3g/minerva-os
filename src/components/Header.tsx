@@ -1,7 +1,10 @@
-import { ArrowRight, Menu, X } from 'lucide-react';
+'use client';
+import { ArrowRight, Menu, X, Sun, Moon } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useLang, type Lang } from '../i18n';
+import { useTheme } from '../theme';
 
 /* ── Lang toggle ──────────────────────────────────────────────────────────── */
 
@@ -63,6 +66,22 @@ function LangToggle({ compact = false }: { compact?: boolean }) {
   );
 }
 
+/* ── Theme toggle ─────────────────────────────────────────────────────────── */
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200"
+      style={{ border: '1px solid rgba(255,255,255,0.13)', color: 'rgba(245,241,232,0.7)' }}
+    >
+      {theme === 'dark' ? <Sun size={15} strokeWidth={1.75} /> : <Moon size={15} strokeWidth={1.75} />}
+    </button>
+  );
+}
+
 /* ── Hamburger ────────────────────────────────────────────────────────────── */
 
 function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void }) {
@@ -101,7 +120,7 @@ const NAV_PATHS = ['/platform', '/modules', '/portal', '/security', '/insights']
 
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useLang();
-  const location = useLocation();
+  const pathname = usePathname();
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
@@ -140,12 +159,12 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             {t.nav.items.map((item, i) => (
               <Link
                 key={item}
-                to={NAV_PATHS[i]}
+                href={NAV_PATHS[i]}
                 onClick={onClose}
                 className="text-base py-3 px-3 rounded-xl flex items-center justify-between group"
                 style={{
-                  color: location.pathname === NAV_PATHS[i] ? '#F5F1E8' : 'rgba(245,241,232,0.65)',
-                  backgroundColor: location.pathname === NAV_PATHS[i] ? 'rgba(255,255,255,0.05)' : 'transparent',
+                  color: pathname === NAV_PATHS[i] ? '#F5F1E8' : 'rgba(245,241,232,0.65)',
+                  backgroundColor: pathname === NAV_PATHS[i] ? 'rgba(255,255,255,0.05)' : 'transparent',
                   opacity: open ? 1 : 0,
                   transform: open ? 'translateY(0)' : 'translateY(-6px)',
                   transition: `opacity 0.35s cubic-bezier(0.23,1,0.32,1) ${i * 45 + 60}ms, transform 0.35s cubic-bezier(0.23,1,0.32,1) ${i * 45 + 60}ms`,
@@ -172,7 +191,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           >
             <LangToggle compact />
             <Link
-              to="/login"
+              href="/login"
               onClick={onClose}
               className="w-full py-3 rounded-full text-center text-sm font-medium transition-all duration-200"
               style={{ color: '#B8BDC7', border: '1px solid rgba(255,255,255,0.12)' }}
@@ -180,7 +199,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
               {t.nav.signIn}
             </Link>
             <Link
-              to="/signup"
+              href="/signup"
               onClick={onClose}
               className="w-full py-3 rounded-full text-center text-sm font-medium transition-all duration-200 hover:opacity-85 active:scale-[0.98]"
               style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
@@ -199,7 +218,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
 export default function Header() {
   const [open, setOpen] = useState(false);
   const { t } = useLang();
-  const location = useLocation();
+  const pathname = usePathname();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
@@ -212,7 +231,7 @@ export default function Header() {
       <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 lg:px-10 lg:py-6">
         {/* Brand */}
         <Link
-          to="/"
+          href="/"
           className="text-xl font-semibold tracking-tight transition-opacity hover:opacity-80"
           style={{ color: '#F5F1E8' }}
         >
@@ -231,11 +250,11 @@ export default function Header() {
           {t.nav.items.map((item, i) => (
             <Link
               key={item}
-              to={NAV_PATHS[i]}
+              href={NAV_PATHS[i]}
               className="text-sm px-4 py-1.5 rounded-full transition-all duration-200 hover:bg-white/8"
-              style={{ 
-                color: location.pathname === NAV_PATHS[i] ? '#F5F1E8' : 'rgba(245,241,232,0.7)',
-                backgroundColor: location.pathname === NAV_PATHS[i] ? 'rgba(255,255,255,0.08)' : 'transparent',
+              style={{
+                color: pathname === NAV_PATHS[i] ? '#F5F1E8' : 'rgba(245,241,232,0.7)',
+                backgroundColor: pathname === NAV_PATHS[i] ? 'rgba(255,255,255,0.08)' : 'transparent',
               }}
             >
               {item}
@@ -243,18 +262,19 @@ export default function Header() {
           ))}
         </div>
 
-        {/* Desktop right: lang + CTAs */}
+        {/* Desktop right: lang + theme + CTAs */}
         <div className="hidden lg:flex items-center gap-3">
           <LangToggle />
+          <ThemeToggle />
           <Link
-            to="/login"
+            href="/login"
             className="text-sm font-medium px-4 py-2 rounded-full transition-all duration-200"
             style={{ color: '#B8BDC7', border: '1px solid rgba(255,255,255,0.13)' }}
           >
             {t.nav.signIn}
           </Link>
           <Link
-            to="/signup"
+            href="/signup"
             className="text-sm font-medium px-5 py-2 rounded-full transition-all duration-200 hover:opacity-85 active:scale-[0.98]"
             style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
           >
@@ -262,9 +282,10 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Mobile: lang + hamburger */}
+        {/* Mobile: lang + theme + hamburger */}
         <div className="flex items-center gap-2 lg:hidden">
           <LangToggle compact />
+          <ThemeToggle />
           <HamburgerButton open={open} onClick={() => setOpen((v) => !v)} />
         </div>
       </nav>

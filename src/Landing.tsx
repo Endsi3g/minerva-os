@@ -1,5 +1,6 @@
+'use client';
 import { ArrowRight, BarChart3, ShieldCheck, Users, Zap, Layout, Quote } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { useLang } from './i18n';
 import Header from './components/Header';
 import LandingFooter from './components/LandingFooter';
@@ -176,7 +177,7 @@ export default function Landing() {
             >
               {/* Primary CTA — glow effect */}
               <Link
-                to="/signup"
+                href="/signup"
                 id="hero-cta-primary"
                 className="flex items-center gap-2.5 px-8 py-3.5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.03] hover:brightness-105 active:scale-[0.98] group"
                 style={{
@@ -195,7 +196,7 @@ export default function Landing() {
 
               {/* Secondary CTA — glassmorphism */}
               <Link
-                to="/login"
+                href="/login"
                 id="hero-cta-secondary"
                 className="flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium transition-all duration-300 hover:bg-white/[0.10] hover:border-white/30"
                 style={{

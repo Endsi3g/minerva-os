@@ -1,8 +1,11 @@
+'use client';
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Circle, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Circle, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useLang } from './i18n';
+import { useAuth } from './contexts/AuthContext';
 
 const HERO_VIDEO =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
@@ -19,9 +22,33 @@ const itemVariants = {
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { t } = useLang();
-  const navigate = useNavigate();
+  const { login } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const l = t.login;
+
+  async function handleSubmit() {
+    if (!email || !password) {
+      setError('Please enter your email and password.');
+      return;
+    }
+    setError('');
+    setIsLoading(true);
+    try {
+      await login(email, password);
+      const next = searchParams.get('next') ?? '/app/dashboard';
+      router.push(next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <main
@@ -90,6 +117,8 @@ export default function Login() {
               <input
                 type="email"
                 placeholder={l.emailPlaceholder}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 className="w-full rounded-xl h-11 px-4 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/15 transition-all"
                 style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
               />
@@ -109,6 +138,9 @@ export default function Login() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder={l.passwordPlaceholder}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                   className="w-full rounded-xl h-11 px-4 pr-11 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/15 transition-all"
                   style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
                 />
@@ -127,13 +159,22 @@ export default function Login() {
             {/* Submit */}
             <button
               type="button"
-              onClick={() => navigate('/app')}
-              className="w-full h-14 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 active:scale-[0.98] mt-2"
+              disabled={isLoading}
+              onClick={handleSubmit}
+              className="w-full h-14 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 active:scale-[0.98] mt-2 disabled:opacity-50"
               style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
             >
-              {l.submit}
-              <ArrowRight size={16} />
+              {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
+                <>
+                  {l.submit}
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
+
+            {error && (
+              <p className="text-center text-xs text-ember mt-2">{error}</p>
+            )}
 
             {/* Divider */}
             <div className="relative flex items-center">
@@ -159,7 +200,7 @@ export default function Login() {
             {/* Footer */}
             <p className="text-center text-sm" style={{ color: 'rgba(184,189,199,0.5)' }}>
               {l.footer}{' '}
-              <Link to="/signup" className="transition-colors underline underline-offset-2" style={{ color: '#F5F1E8' }}>
+              <Link href="/signup" className="transition-colors underline underline-offset-2" style={{ color: '#F5F1E8' }}>
                 {l.footerLink}
               </Link>
             </p>

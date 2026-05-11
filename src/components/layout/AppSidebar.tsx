@@ -1,4 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+'use client';
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   GitBranch,
@@ -22,33 +23,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { NavLink } from '@/components/ui/nav-link';
+import { useLang } from '@/i18n';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from './AppShell';
 
 interface NavItem {
-  to: string;
+  href: string;
   icon: React.ElementType;
-  label: string;
+  labelKey: keyof ReturnType<typeof useLang>['t']['app']['sidebar'];
 }
 
-const workspaceNav: NavItem[] = [
-  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/app/pipeline',  icon: GitBranch,       label: 'Pipeline' },
-  { to: '/app/clients',   icon: Users,            label: 'Clients' },
-  { to: '/app/projects',  icon: FolderKanban,     label: 'Projects' },
-  { to: '/app/tasks',     icon: CheckSquare,      label: 'Tasks' },
+const workspaceNavItems: NavItem[] = [
+  { href: '/app/dashboard', icon: LayoutDashboard, labelKey: 'dashboard' },
+  { href: '/app/pipeline',  icon: GitBranch,       labelKey: 'pipeline' },
+  { href: '/app/clients',   icon: Users,           labelKey: 'clients' },
+  { href: '/app/projects',  icon: FolderKanban,    labelKey: 'projects' },
+  { href: '/app/tasks',     icon: CheckSquare,     labelKey: 'tasks' },
 ];
 
-const studioNav: NavItem[] = [
-  { to: '/app/approvals', icon: ClipboardCheck, label: 'Approvals' },
-  { to: '/app/files',     icon: FileBox,        label: 'Files' },
-  { to: '/app/billing',   icon: Receipt,        label: 'Billing' },
-  { to: '/app/reports',   icon: BarChart2,      label: 'Reports' },
+const studioNavItems: NavItem[] = [
+  { href: '/app/approvals', icon: ClipboardCheck, labelKey: 'approvals' },
+  { href: '/app/files',     icon: FileBox,        labelKey: 'files' },
+  { href: '/app/billing',   icon: Receipt,        labelKey: 'billing' },
+  { href: '/app/reports',   icon: BarChart2,      labelKey: 'reports' },
 ];
 
-function SidebarNavItem({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+function SidebarNavItem({ item, collapsed, sidebar }: { item: NavItem; collapsed: boolean; sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'] }) {
   return (
     <NavLink
-      to={item.to}
+      href={item.href}
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
@@ -60,7 +64,7 @@ function SidebarNavItem({ item, collapsed }: { item: NavItem; collapsed: boolean
       }
     >
       <item.icon size={16} className="shrink-0" />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      {!collapsed && <span className="truncate">{sidebar[item.labelKey]}</span>}
     </NavLink>
   );
 }
@@ -69,10 +73,12 @@ function SidebarSection({
   label,
   items,
   collapsed,
+  sidebar,
 }: {
   label: string;
   items: NavItem[];
   collapsed: boolean;
+  sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'];
 }) {
   return (
     <div className="space-y-0.5">
@@ -82,7 +88,7 @@ function SidebarSection({
         </p>
       )}
       {items.map(item => (
-        <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
+        <SidebarNavItem key={item.href} item={item} collapsed={collapsed} sidebar={sidebar} />
       ))}
     </div>
   );
@@ -90,7 +96,19 @@ function SidebarSection({
 
 export function AppSidebar() {
   const { collapsed } = useSidebar();
-  const navigate = useNavigate();
+  const { t } = useLang();
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const sidebar = t.app.sidebar;
+
+  const initials = user?.name
+    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : 'US';
+
+  async function handleSignOut() {
+    await logout();
+    router.push('/login');
+  }
 
   return (
     <aside
@@ -116,14 +134,14 @@ export function AppSidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-4 py-2">
-        <SidebarSection label="Workspace" items={workspaceNav} collapsed={collapsed} />
-        <SidebarSection label="Studio" items={studioNav} collapsed={collapsed} />
+        <SidebarSection label={sidebar.workspace} items={workspaceNavItems} collapsed={collapsed} sidebar={sidebar} />
+        <SidebarSection label={sidebar.studio} items={studioNavItems} collapsed={collapsed} sidebar={sidebar} />
       </nav>
 
       {/* Footer */}
       <div className="shrink-0 px-2 pb-3 space-y-0.5 border-t border-sidebar-border pt-2">
         <NavLink
-          to="/app/settings"
+          href="/app/settings"
           className={({ isActive }) =>
             cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
@@ -135,7 +153,7 @@ export function AppSidebar() {
           }
         >
           <Settings size={16} className="shrink-0" />
-          {!collapsed && <span>Settings</span>}
+          {!collapsed && <span>{sidebar.settings}</span>}
         </NavLink>
 
         <DropdownMenu>
@@ -147,25 +165,25 @@ export function AppSidebar() {
               )}
             >
               <Avatar className="h-6 w-6 shrink-0">
-                <AvatarFallback className="text-[10px]">US</AvatarFallback>
+                <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
               </Avatar>
               {!collapsed && (
                 <div className="flex flex-col items-start min-w-0 flex-1">
-                  <span className="text-xs font-medium text-ivory truncate w-full">Uprising Studio</span>
-                  <span className="text-[10px] text-fog truncate w-full">Admin</span>
+                  <span className="text-xs font-medium text-ivory truncate w-full">{user?.name ?? 'Uprising Studio'}</span>
+                  <span className="text-[10px] text-fog truncate w-full">{user?.role ?? 'Admin'}</span>
                 </div>
               )}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-48">
-            <DropdownMenuItem onClick={() => navigate('/app/settings')}>
+            <DropdownMenuItem onClick={() => router.push('/app/settings')}>
               <User size={14} />
-              Profile
+              {sidebar.profile}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/login')} className="text-ember">
+            <DropdownMenuItem onClick={handleSignOut} className="text-ember">
               <LogOut size={14} />
-              Sign out
+              {sidebar.signOut}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

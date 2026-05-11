@@ -1,0 +1,298 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         Role     @default(DESIGNER)
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace    Workspace? @relation(fields: [workspaceId], references: [id])
+  workspaceId  String?
+  ownedWorkspace Workspace? @relation("WorkspaceOwner")
+}
+
+enum Role {
+  OWNER
+  STRATEGIST
+  PROJECT_MANAGER
+  DESIGNER
+  DEVELOPER
+  FINANCE
+  CLIENT_STAKEHOLDER
+  CLIENT_REVIEWER
+}
+
+// ── Workspace ─────────────────────────────────────────────────────────────────
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  owner     User     @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  ownerId   String   @unique
+  members   User[]
+
+  clients   Client[]
+  projects  Project[]
+  leads     Lead[]
+}
+
+// ── CRM ───────────────────────────────────────────────────────────────────────
+
+model Client {
+  id           String        @id @default(cuid())
+  company      String
+  industry     String
+  contact      String
+  email        String
+  monthlyValue Float         @default(0)
+  status       ClientStatus  @default(ONBOARDING)
+  createdAt    DateTime      @default(now())
+
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id])
+  workspaceId  String
+
+  projects     Project[]
+  invoices     Invoice[]
+  portalTokens PortalToken[]
+}
+
+enum ClientStatus {
+  ONBOARDING
+  ACTIVE
+  INACTIVE
+}
+
+model Lead {
+  id          String     @id @default(cuid())
+  company     String
+  contact     String
+  email       String
+  value       Float      @default(0)
+  probability Int        @default(20)
+  stage       DealStage  @default(NEW_LEAD)
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+}
+
+enum DealStage {
+  NEW_LEAD
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+// ── Projects & Tasks ──────────────────────────────────────────────────────────
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  status      ProjectStatus @default(ACTIVE)
+  dueDate     DateTime
+  budget      Float         @default(0)
+  spent       Float         @default(0)
+  createdAt   DateTime      @default(now())
+
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+
+  client      Client        @relation(fields: [clientId], references: [id])
+  clientId    String
+
+  tasks       Task[]
+  files       FileAsset[]
+  approvals   Approval[]
+  milestones  Milestone[]
+  invoices    Invoice[]
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  project     Project      @relation(fields: [projectId], references: [id])
+  projectId   String
+
+  assignee    User?        @relation(fields: [assigneeId], references: [id])
+  assigneeId  String?
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ── Approvals ─────────────────────────────────────────────────────────────────
+
+model Approval {
+  id            String          @id @default(cuid())
+  name          String
+  type          DeliverableType
+  status        ApprovalStatus  @default(PENDING)
+  submittedDate DateTime        @default(now())
+  notes         String?
+
+  project       Project         @relation(fields: [projectId], references: [id])
+  projectId     String
+}
+
+enum DeliverableType {
+  DESIGN
+  COPY
+  VIDEO
+  DOCUMENT
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REVISION
+}
+
+// ── Files ─────────────────────────────────────────────────────────────────────
+
+model FileAsset {
+  id           String   @id @default(cuid())
+  name         String
+  type         FileType
+  size         String
+  url          String
+  uploadedDate DateTime @default(now())
+
+  project      Project  @relation(fields: [projectId], references: [id])
+  projectId    String
+}
+
+enum FileType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  ARCHIVE
+}
+
+// ── Billing ───────────────────────────────────────────────────────────────────
+
+model Invoice {
+  id          String        @id @default(cuid())
+  number      String        @unique
+  status      InvoiceStatus @default(DRAFT)
+  amount      Float
+  currency    String        @default("USD")
+  issuedDate  DateTime      @default(now())
+  dueDate     DateTime
+  paidDate    DateTime?
+  stripeId    String?
+
+  client      Client        @relation(fields: [clientId], references: [id])
+  clientId    String
+
+  project     Project       @relation(fields: [projectId], references: [id])
+  projectId   String
+
+  lineItems   LineItem[]
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  OVERDUE
+  PAID
+  CANCELLED
+}
+
+model LineItem {
+  id          String  @id @default(cuid())
+  description String
+  qty         Int     @default(1)
+  unitPrice   Float
+
+  invoice     Invoice @relation(fields: [invoiceId], references: [id])
+  invoiceId   String
+}
+
+model Retainer {
+  id             String   @id @default(cuid())
+  client         String
+  amount         Float
+  currency       String   @default("USD")
+  cycle          String   @default("monthly")
+  hoursIncluded  Int      @default(0)
+  hoursUsed      Float    @default(0)
+  renewalDate    DateTime
+  status         String   @default("active")
+  notes          String?
+}
+
+// ── Milestones ────────────────────────────────────────────────────────────────
+
+model Milestone {
+  id        String          @id @default(cuid())
+  title     String
+  status    MilestoneStatus @default(UPCOMING)
+  dueDate   DateTime
+
+  project   Project         @relation(fields: [projectId], references: [id])
+  projectId String
+}
+
+enum MilestoneStatus {
+  UPCOMING
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ── Portal access tokens ──────────────────────────────────────────────────────
+
+model PortalToken {
+  id         String   @id @default(cuid())
+  token      String   @unique @default(cuid())
+  clientName String
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  client     Client   @relation(fields: [clientId], references: [id])
+  clientId   String
+}

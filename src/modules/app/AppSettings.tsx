@@ -1,0 +1,455 @@
+'use client';
+import { useState } from 'react';
+import { User, Building2, Users, Bell, Shield, Check } from 'lucide-react';
+import { useLang, type Lang } from '@/i18n';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
+
+/* ── Types ───────────────────────────────────────────────────────────────── */
+
+type Tab = 'profile' | 'workspace' | 'team' | 'notifications' | 'security';
+
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  initials: string;
+}
+
+const MOCK_TEAM: TeamMember[] = [
+  { id: '1', name: 'Uprising Studio', email: 'studio@uprising.co', role: 'owner', initials: 'US' },
+  { id: '2', name: 'Camille Dufresne', email: 'camille@uprising.co', role: 'project_manager', initials: 'CD' },
+  { id: '3', name: 'Jordan Belfort', email: 'jordan@uprising.co', role: 'designer', initials: 'JB' },
+  { id: '4', name: 'Priya Sharma', email: 'priya@uprising.co', role: 'developer', initials: 'PS' },
+];
+
+/* ── Sub-sections ────────────────────────────────────────────────────────── */
+
+function ProfileTab() {
+  const { t } = useLang();
+  const { user } = useAuth();
+  const s = t.app.settings.profile;
+  const [name, setName] = useState(user?.name ?? 'Uprising Studio');
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  const roleLabels = t.app.settings.team.roles as Record<string, string>;
+
+  return (
+    <Section title={s.heading} subtitle={s.subtitle}>
+      {/* Avatar */}
+      <div className="flex items-center gap-4 mb-6">
+        <div
+          className="h-16 w-16 rounded-2xl flex items-center justify-center text-lg font-semibold shrink-0"
+          style={{ backgroundColor: '#1A1F32', color: '#F5F1E8', border: '1px solid rgba(255,255,255,0.10)' }}
+        >
+          {name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+        </div>
+        <div>
+          <p className="text-sm font-medium text-ivory">{name}</p>
+          <p className="text-xs text-fog mt-0.5">{user?.email ?? 'studio@uprising.co'}</p>
+          {user?.role && (
+            <span
+              className="inline-block mt-1.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: 'rgba(127,163,138,0.12)', color: '#7FA38A', border: '1px solid rgba(127,163,138,0.2)' }}
+            >
+              {roleLabels[user.role] ?? user.role}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4 max-w-md">
+        <SettingsField label={s.displayName}>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
+            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+          />
+        </SettingsField>
+
+        <SettingsField label={s.email}>
+          <input
+            type="email"
+            value={user?.email ?? 'studio@uprising.co'}
+            readOnly
+            className="w-full rounded-xl h-10 px-3 text-sm opacity-50 cursor-not-allowed"
+            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+          />
+        </SettingsField>
+
+        <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />
+      </div>
+    </Section>
+  );
+}
+
+function WorkspaceTab() {
+  const { t, setLang, lang } = useLang();
+  const s = t.app.settings.workspace;
+  const [studioName, setStudioName] = useState('Uprising Studio');
+  const [timezone, setTimezone] = useState('America/Montreal');
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <Section title={s.heading} subtitle={s.subtitle}>
+      <div className="space-y-4 max-w-md">
+        <SettingsField label={s.studioName}>
+          <input
+            type="text"
+            value={studioName}
+            onChange={e => setStudioName(e.target.value)}
+            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
+            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+          />
+        </SettingsField>
+
+        <SettingsField label={s.timezone}>
+          <select
+            value={timezone}
+            onChange={e => setTimezone(e.target.value)}
+            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all appearance-none"
+            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+          >
+            <option value="America/Montreal">Montreal (ET)</option>
+            <option value="America/Toronto">Toronto (ET)</option>
+            <option value="America/Vancouver">Vancouver (PT)</option>
+            <option value="Europe/Paris">Paris (CET)</option>
+            <option value="Europe/London">London (GMT)</option>
+            <option value="America/New_York">New York (ET)</option>
+          </select>
+        </SettingsField>
+
+        <SettingsField label={s.language}>
+          <div className="flex gap-2">
+            {(['en', 'fr'] as Lang[]).map(l => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={cn(
+                  'flex-1 h-10 rounded-xl text-sm font-medium transition-all',
+                  lang === l
+                    ? 'text-obsidian'
+                    : 'text-silver hover:text-ivory'
+                )}
+                style={
+                  lang === l
+                    ? { backgroundColor: '#F5F1E8' }
+                    : { backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)' }
+                }
+              >
+                {l === 'en' ? s.langEn : s.langFr}
+              </button>
+            ))}
+          </div>
+        </SettingsField>
+
+        <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />
+      </div>
+    </Section>
+  );
+}
+
+function TeamTab() {
+  const { t } = useLang();
+  const s = t.app.settings.team;
+  const roleLabels = s.roles as Record<string, string>;
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invited, setInvited] = useState(false);
+
+  function handleInvite() {
+    if (!inviteEmail) return;
+    setInvited(true);
+    setInviteEmail('');
+    setTimeout(() => setInvited(false), 3000);
+  }
+
+  return (
+    <Section title={s.heading} subtitle={s.subtitle}>
+      {/* Invite bar */}
+      <div className="flex gap-2 mb-6 max-w-md">
+        <input
+          type="email"
+          placeholder={s.invitePlaceholder}
+          value={inviteEmail}
+          onChange={e => setInviteEmail(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleInvite()}
+          className="flex-1 rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all placeholder:text-white/20"
+          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+        />
+        <button
+          onClick={handleInvite}
+          className="px-4 h-10 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] shrink-0"
+          style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
+        >
+          {invited ? <Check size={14} /> : s.inviteButton}
+        </button>
+      </div>
+
+      {/* Member list */}
+      <div className="space-y-2 max-w-lg">
+        {MOCK_TEAM.map(member => (
+          <div
+            key={member.id}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl"
+            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+          >
+            <div
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0"
+              style={{ backgroundColor: '#1A1F32', color: '#B8BDC7' }}
+            >
+              {member.initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-ivory truncate">{member.name}</p>
+              <p className="text-xs text-fog truncate">{member.email}</p>
+            </div>
+            <span
+              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#8A9099' }}
+            >
+              {roleLabels[member.role] ?? member.role}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function NotificationsTab() {
+  const { t } = useLang();
+  const s = t.app.settings.notifications;
+
+  const prefs = [
+    { key: 'projectUpdates', label: s.projectUpdates, desc: s.projectUpdatesDesc, default: true },
+    { key: 'approvalRequests', label: s.approvalRequests, desc: s.approvalRequestsDesc, default: true },
+    { key: 'invoiceActivity', label: s.invoiceActivity, desc: s.invoiceActivityDesc, default: true },
+    { key: 'riskAlerts', label: s.riskAlerts, desc: s.riskAlertsDesc, default: true },
+  ];
+
+  const [enabled, setEnabled] = useState<Record<string, boolean>>(
+    Object.fromEntries(prefs.map(p => [p.key, p.default]))
+  );
+
+  return (
+    <Section title={s.heading} subtitle={s.subtitle}>
+      <div className="space-y-2 max-w-lg">
+        {prefs.map(pref => (
+          <div
+            key={pref.key}
+            className="flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-colors hover:bg-white/[0.02]"
+            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+            onClick={() => setEnabled(prev => ({ ...prev, [pref.key]: !prev[pref.key] }))}
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-ivory">{pref.label}</p>
+              <p className="text-xs text-fog mt-0.5">{pref.desc}</p>
+            </div>
+            <Toggle on={enabled[pref.key]} />
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function SecurityTab() {
+  const { t } = useLang();
+  const s = t.app.settings.security;
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [pwError, setPwError] = useState('');
+  const [pwSaved, setPwSaved] = useState(false);
+
+  function handleUpdatePassword() {
+    if (!currentPw || !newPw || !confirmPw) { setPwError('All fields are required.'); return; }
+    if (newPw !== confirmPw) { setPwError('New passwords do not match.'); return; }
+    if (newPw.length < 8) { setPwError('Password must be at least 8 characters.'); return; }
+    setPwError('');
+    setPwSaved(true);
+    setCurrentPw(''); setNewPw(''); setConfirmPw('');
+    setTimeout(() => setPwSaved(false), 2500);
+  }
+
+  return (
+    <Section title={s.heading} subtitle={s.subtitle}>
+      <div className="space-y-6 max-w-md">
+        {/* Change password */}
+        <div
+          className="rounded-2xl p-5 space-y-3"
+          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <p className="text-sm font-semibold text-ivory">{s.changePassword}</p>
+          <SettingsField label={s.currentPassword}>
+            <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20" style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }} />
+          </SettingsField>
+          <SettingsField label={s.newPassword}>
+            <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20" style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }} />
+          </SettingsField>
+          <SettingsField label={s.confirmPassword}>
+            <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20" style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }} />
+          </SettingsField>
+          {pwError && <p className="text-xs" style={{ color: '#A86A6A' }}>{pwError}</p>}
+          <SaveButton label={pwSaved ? 'Updated.' : s.updatePassword} saved={pwSaved} onClick={handleUpdatePassword} />
+        </div>
+
+        {/* 2FA */}
+        <div
+          className="rounded-2xl p-5 space-y-2"
+          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-ivory">{s.twoFactor}</p>
+            <span
+              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full"
+              style={{ backgroundColor: 'rgba(184,155,106,0.12)', color: '#B89B6A', border: '1px solid rgba(184,155,106,0.2)' }}
+            >
+              {s.comingSoon}
+            </span>
+          </div>
+          <p className="text-xs text-fog">{s.twoFactorDesc}</p>
+          <button
+            disabled
+            className="mt-2 h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed"
+            style={{ backgroundColor: '#1A1F32', color: '#B8BDC7', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            {s.enable2fa}
+          </button>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+/* ── Shared primitives ───────────────────────────────────────────────────── */
+
+function Section({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-base font-semibold text-ivory">{title}</h2>
+        <p className="text-xs text-fog mt-0.5">{subtitle}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function SettingsField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-xs font-medium text-silver">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function SaveButton({ label, saved, onClick }: { label: string; saved: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 h-9 px-5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98]"
+      style={
+        saved
+          ? { backgroundColor: 'rgba(127,163,138,0.15)', color: '#7FA38A', border: '1px solid rgba(127,163,138,0.25)' }
+          : { backgroundColor: '#F5F1E8', color: '#0A0D14' }
+      }
+    >
+      {saved && <Check size={13} />}
+      {label}
+    </button>
+  );
+}
+
+function Toggle({ on }: { on: boolean }) {
+  return (
+    <div
+      className={cn('w-9 h-5 rounded-full relative transition-colors duration-200 shrink-0', on ? 'bg-sage' : 'bg-white/10')}
+    >
+      <div
+        className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200', on ? 'translate-x-4' : 'translate-x-0.5')}
+      />
+    </div>
+  );
+}
+
+/* ── Main page ───────────────────────────────────────────────────────────── */
+
+const TAB_ICONS: Record<Tab, React.ElementType> = {
+  profile: User,
+  workspace: Building2,
+  team: Users,
+  notifications: Bell,
+  security: Shield,
+};
+
+export default function AppSettings() {
+  const { t } = useLang();
+  const s = t.app.settings;
+  const [activeTab, setActiveTab] = useState<Tab>('profile');
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'profile',       label: s.tabs.profile },
+    { id: 'workspace',     label: s.tabs.workspace },
+    { id: 'team',          label: s.tabs.team },
+    { id: 'notifications', label: s.tabs.notifications },
+    { id: 'security',      label: s.tabs.security },
+  ];
+
+  return (
+    <div className="max-w-3xl space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold text-ivory">{s.title}</h1>
+        <p className="text-sm text-fog mt-1">{s.subtitle}</p>
+      </div>
+
+      <div className="flex gap-6">
+        {/* Tab nav */}
+        <nav className="w-44 shrink-0 space-y-0.5">
+          {tabs.map(tab => {
+            const Icon = TAB_ICONS[tab.id];
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left',
+                  activeTab === tab.id
+                    ? 'bg-white/[0.07] text-ivory'
+                    : 'text-fog hover:text-silver hover:bg-white/[0.03]'
+                )}
+              >
+                <Icon size={14} className="shrink-0" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          {activeTab === 'profile'       && <ProfileTab />}
+          {activeTab === 'workspace'     && <WorkspaceTab />}
+          {activeTab === 'team'          && <TeamTab />}
+          {activeTab === 'notifications' && <NotificationsTab />}
+          {activeTab === 'security'      && <SecurityTab />}
+        </div>
+      </div>
+    </div>
+  );
+}

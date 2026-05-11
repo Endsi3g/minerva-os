@@ -17,11 +17,18 @@ function ProbBadge({ p }: { p: number }) {
 
 interface DealCardProps {
   lead: Lead;
+  onEdit?: () => void;
+  onDragStart?: (e: React.DragEvent) => void;
 }
 
-export function DealCard({ lead }: DealCardProps) {
+export function DealCard({ lead, onEdit, onDragStart }: DealCardProps) {
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-3 cursor-pointer hover:border-white/15 hover:bg-dusk/40 transition-colors select-none">
+    <div 
+      draggable
+      onDragStart={onDragStart}
+      onClick={onEdit}
+      className="bg-card border border-border rounded-xl p-4 space-y-3 cursor-pointer hover:border-white/15 hover:bg-dusk/40 transition-colors select-none active:opacity-50"
+    >
       {/* Company + value */}
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-ivory leading-tight">{lead.company}</p>
