@@ -1,13 +1,12 @@
 import { WorkflowManager } from "@convex-dev/workflow";
+import { z } from "zod";
+
 import { components, internal } from "./_generated/api";
 import { internalAction, internalMutation, action, query } from "./_generated/server";
 import { v } from "convex/values";
 import { projectOrchestratorAgent } from "./agents/projectOrchestrator";
-import { z } from "zod";
-import { generateObject } from "ai";
-import { openai } from "@ai-sdk/openai";
 
-const workflow = new WorkflowManager(components.workflow);
+const workflow = new WorkflowManager(components.workflow as any);
 
 // --- Durable Workflow Definition ---
 
@@ -71,8 +70,8 @@ export const getProjectMetrics = query({
 
     const pendingApprovals = await ctx.db
       .query("approvals")
-      .withIndex("by_project", (q) => q.eq("projectId", projectId))
-      .filter((q) => q.eq(q.field("status"), "pending"))
+      .withIndex("by_project", (q: any) => q.eq("projectId", projectId))
+      .filter((q: any) => q.eq(q.field("status"), "pending"))
       .collect();
 
     const overdueTasks = tasks.filter(
@@ -88,6 +87,17 @@ export const getProjectMetrics = query({
   },
 });
 
+export const getRecentProjectNotes = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, { projectId }) => {
+    return await ctx.db
+      .query("projectNotes")
+      .withIndex("by_project", (q: any) => q.eq("projectId", projectId))
+      .order("desc")
+      .take(10);
+  },
+});
+
 export const createRiskThread = internalMutation({
   args: {
     workspaceId: v.id("workspaces"),
@@ -95,10 +105,11 @@ export const createRiskThread = internalMutation({
   },
   handler: async (ctx, { workspaceId, projectId }) => {
     const project = await ctx.db.get(projectId);
-    const { threadId } = await projectOrchestratorAgent.createThread(ctx, {
+    const result = await projectOrchestratorAgent.createThread(ctx as any, {
       title: `Risk Analysis: ${project?.name ?? projectId}`,
-      metadata: { workspaceId, projectId },
-    });
+      metadata: { workspaceId, projectId } as any,
+    }) as any;
+    const threadId = result.threadId;
     return { threadId };
   },
 });
@@ -116,14 +127,10 @@ export const generateProjectRiskPlan = internalAction({
     // Gather context
     const dashboard = await ctx.runQuery(internal.projects.getProjectDashboard, { projectId });
     const metrics = await ctx.runQuery(internal.riskWorkflow.getProjectMetrics, { projectId });
-    const notes = await ctx.db
-      .query("projectNotes")
-      .withIndex("by_project", (q) => q.eq("projectId", projectId))
-      .order("desc")
-      .take(10);
+    const notes = await ctx.runQuery(internal.riskWorkflow.getRecentProjectNotes, { projectId });
 
     // Continue the persistent thread with the agent
-    const { thread } = await projectOrchestratorAgent.continueThread(ctx, { threadId });
+    const { thread } = await projectOrchestratorAgent.continueThread(ctx as any, { threadId }) as any;
 
     // Use structured output to get a typed risk plan
     const result = await thread.generateText({
@@ -225,7 +232,7 @@ export const startProjectRiskWorkflow = action({
     pmEmail: v.string(),
   },
   handler: async (ctx, args) => {
-    const workflowId = await workflow.start(ctx, internal.riskWorkflow.projectRiskWorkflow, args);
+    const workflowId = await workflow.start(ctx as any, internal.riskWorkflow.projectRiskWorkflow, args);
     return { workflowId };
   },
 });
@@ -242,7 +249,7 @@ export const getActiveProjects = query({
   handler: async (ctx) => {
     return await ctx.db
       .query("projects")
-      .filter((q) => q.neq(q.field("status"), "completed"))
+      .filter((q: any) => q.neq(q.field("status"), "completed"))
       .collect();
   },
 });
@@ -256,9 +263,9 @@ export const checkAllProjectsForRisk = internalAction({
       // In a real app we'd fetch the actual PM email, using a dummy one for now
       const pmEmail = "pm@minerva-os.com"; 
       
-      await workflow.start(ctx, internal.riskWorkflow.projectRiskWorkflow, {
+      await workflow.start(ctx as any, internal.riskWorkflow.projectRiskWorkflow, {
         projectId: project._id,
-        workspaceId: project.workspaceId,
+        workspaceId: project.workspaceId as any,
         pmEmail: pmEmail,
       });
     }

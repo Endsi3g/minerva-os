@@ -35,15 +35,15 @@ export default function PortalOverview() {
 
   if (!isValid) return null;
 
-  const pendingApprovals = approvals.filter(a => a.status === 'pending').length;
-  const activeProjects   = projects.filter(p => p.status === 'active').length;
+  const pendingApprovals = approvals.filter((a: any) => a.status === 'pending').length;
+  const activeProjects   = projects.filter((p: any) => p.status === 'active').length;
   const outstandingTotal = invoices
-    .filter(i => i.status === 'sent' || i.status === 'overdue')
-    .reduce((sum, i) => sum + i.amount, 0);
+    .filter((i: any) => i.status === 'sent' || i.status === 'overdue')
+    .reduce((sum: any, i: any) => sum + i.amount, 0);
 
   const upcomingMilestones = milestones
-    .filter(m => m.status !== 'completed')
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .filter((m: any) => m.status !== 'completed')
+    .sort((a: any, b: any) => a.dueDate.localeCompare(b.dueDate))
     .slice(0, 4);
 
   const stats = [
@@ -93,10 +93,10 @@ export default function PortalOverview() {
       <motion.div custom={4} variants={fadeInUp} initial="hidden" animate="visible">
         <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>{po.projects.title}</h2>
         <div className="space-y-3">
-          {projects.filter(p => p.status === 'active').map(project => {
-            const projectTasks = tasks.filter(t => t.projectId === project._id);
+          {projects.filter((p: any) => p.status === 'active').map((project: any) => {
+            const projectTasks = tasks.filter((t: any) => t.projectId === project._id);
             const totalTasks = projectTasks.length;
-            const doneTasks = projectTasks.filter(t => t.status === 'done').length;
+            const doneTasks = projectTasks.filter((t: any) => t.status === 'done').length;
             const pct = totalTasks > 0
               ? Math.round((doneTasks / totalTasks) * 100)
               : 0;
@@ -137,8 +137,8 @@ export default function PortalOverview() {
         <motion.div custom={5} variants={fadeInUp} initial="hidden" animate="visible">
           <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>{po.milestones.title}</h2>
           <div className="space-y-2">
-            {upcomingMilestones.map(m => {
-              const project = projects.find(p => p._id === m.projectId);
+            {upcomingMilestones.map((m: any) => {
+              const project = projects.find((p: any) => p._id === m.projectId);
               const daysLeft = Math.ceil(
                 (new Date(m.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
               );

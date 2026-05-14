@@ -29,7 +29,7 @@ export const add = mutation({
 });
 export const logSystemEvent = mutation({
   args: {
-    workspaceId: v.id("workspaces"),
+    workspaceId: v.optional(v.id("workspaces")),
     action: v.string(),
     targetName: v.string(),
     type: v.string(),

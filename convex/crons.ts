@@ -8,7 +8,7 @@ crons.weekly(
   "weekly-health-check",
   { hourUTC: 8, minuteUTC: 0, dayOfWeek: "monday" },
   api.activity.logSystemEvent,
-  { action: "audit", targetName: "All Projects", type: "system" }
+  { action: "audit", targetName: "All Projects", type: "system", workspaceId: undefined }
 );
 
 // Daily Notification Cleanup

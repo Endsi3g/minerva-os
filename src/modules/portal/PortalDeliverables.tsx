@@ -149,8 +149,8 @@ export default function PortalDeliverables() {
   if (!isValid) return null;
 
   // Join project names
-  const deliverables = approvals.map(app => {
-    const project = projects.find(p => p._id === app.projectId);
+  const deliverables = approvals.map((app: any) => {
+    const project = projects.find((p: any) => p._id === app.projectId);
     return { ...app, project: project?.name || '...' };
   });
 
@@ -158,8 +158,8 @@ export default function PortalDeliverables() {
     await updateApproval({ id, status });
   }
 
-  const pending  = deliverables.filter(a => a.status === 'pending');
-  const resolved = deliverables.filter(a => a.status !== 'pending');
+  const pending  = deliverables.filter((a: any) => a.status === 'pending');
+  const resolved = deliverables.filter((a: any) => a.status !== 'pending');
 
   return (
     <div className="space-y-8">
@@ -183,7 +183,7 @@ export default function PortalDeliverables() {
             {pd.pendingTitle} · {pending.length}
           </p>
           <div className="space-y-2">
-            {pending.map(a => (
+            {pending.map((a: any) => (
               <DeliverableRow key={a._id} approval={a} onAction={handleAction} t={t} lang={lang} />
             ))}
           </div>
@@ -208,7 +208,7 @@ export default function PortalDeliverables() {
             {pd.resolvedTitle} · {resolved.length}
           </p>
           <div className="space-y-2">
-            {resolved.map(a => (
+            {resolved.map((a: any) => (
               <DeliverableRow key={a._id} approval={a} onAction={handleAction} t={t} lang={lang} />
             ))}
           </div>

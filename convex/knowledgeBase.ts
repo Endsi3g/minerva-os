@@ -7,7 +7,7 @@ export const list = query({
     if (args.workspaceId) {
       return await ctx.db
         .query("knowledgeBase")
-        .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+        .filter((q: any) => q.eq(q.field("workspaceId"), args.workspaceId))
         .collect();
     }
     return await ctx.db.query("knowledgeBase").collect();

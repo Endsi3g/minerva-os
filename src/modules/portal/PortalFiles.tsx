@@ -18,7 +18,7 @@ export default function PortalFiles() {
 
   if (!isValid) return null;
 
-  const filtered = files.filter(f =>
+  const filtered = files.filter((f: any) =>
     f.name.toLowerCase().includes(query.toLowerCase()) ||
     f.project.toLowerCase().includes(query.toLowerCase())
   );
@@ -61,8 +61,8 @@ export default function PortalFiles() {
       {/* Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filtered.map(file => {
-            const cfg = TYPE_CONFIG[file.type];
+          {filtered.map((file: any) => {
+            const cfg = TYPE_CONFIG[file.type as FileType];
             const Icon = cfg.icon;
             return (
               <div

@@ -5,10 +5,8 @@ export const list = query({
   args: { workspaceId: v.optional(v.id("workspaces")) },
   handler: async (ctx, args) => {
     if (args.workspaceId) {
-      return await ctx.db
-        .query("workspaces")
-        .filter((q) => q.eq(q.field("orgId"), args.workspaceId))
-        .collect();
+      const workspace = await ctx.db.get(args.workspaceId);
+      return workspace ? [workspace] : [];
     }
     return await ctx.db.query("workspaces").collect();
   },

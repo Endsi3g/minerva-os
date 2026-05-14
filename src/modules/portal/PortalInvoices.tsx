@@ -23,8 +23,8 @@ export default function PortalInvoices() {
   if (!isValid) return null;
 
   // Map to local UI format
-  const invoices = rawInvoices.map(inv => {
-    const project = projects.find(p => p._id === inv.projectId);
+  const invoices = rawInvoices.map((inv: any) => {
+    const project = projects.find((p: any) => p._id === inv.projectId);
     return {
       ...inv,
       id: inv._id,
@@ -37,11 +37,11 @@ export default function PortalInvoices() {
   });
 
   const outstanding = invoices
-    .filter(i => i.status === 'sent' || i.status === 'overdue')
-    .reduce((s, i) => s + i.amount, 0);
+    .filter((i: any) => i.status === 'sent' || i.status === 'overdue')
+    .reduce((s: any, i: any) => s + i.amount, 0);
   const paid = invoices
-    .filter(i => i.status === 'paid')
-    .reduce((s, i) => s + i.amount, 0);
+    .filter((i: any) => i.status === 'paid')
+    .reduce((s: any, i: any) => s + i.amount, 0);
 
   return (
     <div className="space-y-8">
@@ -81,7 +81,7 @@ export default function PortalInvoices() {
         {invoices.length === 0 && (
           <p className="text-sm text-center py-12" style={{ color: '#8A9099' }}>No invoices yet.</p>
         )}
-        {invoices.map((invoice, i) => {
+        {invoices.map((invoice: any, i: number) => {
           const sc = STATUS_CONFIG[invoice.status as InvoiceStatus] || STATUS_CONFIG.draft;
           return (
             <motion.div
