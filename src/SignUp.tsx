@@ -7,7 +7,7 @@ import { Chrome, Github, Eye, EyeOff } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 
-const HERO_IMAGE = '/api/artifacts/orange_abstract_premium_bg_1778774964646.png'; // Using generated orange background
+const HERO_IMAGE = '/brand/hero.png'; // Using local orange background
 const ACCENT = '#ef4d23';
 
 const containerVariants = {
