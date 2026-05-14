@@ -14,6 +14,7 @@ export default function AgentOps() {
   
   const agents = useQuery(api.agents.list, workspaceId ? { workspaceId } : "skip") ?? [];
   const audit = useQuery(api.agents.getAudit, workspaceId ? { workspaceId } : "skip") ?? [];
+  const health = useQuery(api.agents.getHealth, workspaceId ? { workspaceId } : "skip") ?? { activeWorkflows: 0, successRate: 100, humanInterventions: 0 };
 
   return (
     <div className="space-y-8 max-w-6xl">
@@ -114,15 +115,15 @@ export default function AgentOps() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Active Workflows</span>
-                  <span className="font-bold">12</span>
+                  <span className="font-bold">{health.activeWorkflows}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Success Rate</span>
-                  <span className="font-bold text-sage">99.2%</span>
+                  <span className="font-bold text-sage">{health.successRate.toFixed(1)}%</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Human Interventions</span>
-                  <span className="font-bold text-terracotta">2</span>
+                  <span className="font-bold text-terracotta">{health.humanInterventions}</span>
                 </div>
               </div>
             </CardContent>

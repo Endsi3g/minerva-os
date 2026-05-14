@@ -32,7 +32,7 @@ function fmt(n: number, lang: string) {
 }
 
 function totalValue(leads: any[], stage: DealStage) {
-  return leads.filter(l => l.stage === stage).reduce((s, l) => s + l.value, 0);
+  return leads.filter((l: any) => l.stage === stage).reduce((s: any, l: any) => s + l.value, 0);
 }
 
 const STAGE_STYLE: Partial<Record<DealStage, string>> = {
@@ -137,7 +137,7 @@ export default function Pipeline() {
           <p className="text-sm text-fog mt-0.5">
             {p.stats
               .replace('{{count}}', String(leads.length))
-              .replace('{{total}}', fmt(leads.reduce((s, l) => s + l.value, 0), lang))}
+              .replace('{{total}}', fmt(leads.reduce((s: any, l: any) => s + l.value, 0), lang))}
           </p>
         </div>
         <Button size="sm" onClick={() => openSheet('new_lead')}>
@@ -148,8 +148,8 @@ export default function Pipeline() {
 
       {/* Kanban board */}
       <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6" style={{ minHeight: 'calc(100vh - 200px)' }}>
-        {STAGES.map(stage => {
-          const stageLeads = leads.filter(l => l.stage === stage.id);
+        {STAGES.map((stage: any) => {
+          const stageLeads = leads.filter((l: any) => l.stage === stage.id);
           const total = totalValue(leads, stage.id);
           return (
             <div
@@ -178,7 +178,7 @@ export default function Pipeline() {
 
               {/* Deal cards */}
               <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
-                {stageLeads.map(lead => (
+                {stageLeads.map((lead: any) => (
                   <DealCard 
                     key={lead._id} 
                     lead={lead} 

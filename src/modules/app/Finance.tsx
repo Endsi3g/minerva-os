@@ -37,7 +37,7 @@ export default function Finance() {
     let tpsPaid = 0;
     let tvqPaid = 0;
 
-    finances.forEach(entry => {
+    finances.forEach((entry: any) => {
       if (entry.type === 'income') {
         income += entry.amount;
         tpsCollected += entry.tps;
@@ -178,7 +178,7 @@ export default function Finance() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {finances.map((entry) => (
+            {finances.map((entry: any) => (
               <tr key={entry._id} className="hover:bg-white/[0.01] transition-colors">
                 <td className="px-6 py-4 text-sm text-silver">{entry.date}</td>
                 <td className="px-6 py-4 text-sm text-ivory font-medium">{entry.description}</td>

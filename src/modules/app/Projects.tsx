@@ -41,11 +41,11 @@ export default function Projects() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM);
 
-  const activeCount = projects.filter(p => p.status === 'active').length;
+  const activeCount = projects.filter((p: any) => p.status === 'active').length;
 
   async function handleAdd() {
     if (!form.name.trim() || !form.clientId) return;
-    const client = clients.find(c => c._id === form.clientId);
+    const client = clients.find((c: any) => c._id === form.clientId);
     
     await createProject({
       name: form.name.trim(),
@@ -77,7 +77,7 @@ export default function Projects() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map(proj => (
+        {projects.map((proj: any) => (
           <ProjectCard key={proj._id} project={{
             ...proj,
             id: proj._id,
@@ -108,7 +108,7 @@ export default function Projects() {
                   <SelectValue placeholder={p.form.clientPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map(c => (
+                  {clients.map((c: any) => (
                     <SelectItem key={c._id} value={c._id}>{c.company}</SelectItem>
                   ))}
                 </SelectContent>

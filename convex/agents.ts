@@ -226,4 +226,21 @@ export const rejectSuggestion = mutation({
     });
   },
 });
+export const getHealth = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const suggestions = await ctx.db
+      .query("agentSuggestions")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .collect();
 
+    const approved = suggestions.filter(s => s.status === 'approved').length;
+    const total = suggestions.length;
+    
+    return {
+      activeWorkflows: 1, 
+      successRate: total > 0 ? (approved / total) * 100 : 100,
+      humanInterventions: suggestions.filter(s => s.status === 'pending').length,
+    };
+  },
+});

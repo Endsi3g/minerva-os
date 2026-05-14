@@ -1,14 +1,22 @@
-import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 export const list = query({
-  handler: async (ctx) => {
-    return await ctx.db.query("invoices").order("desc").collect();
+  args: { workspaceId: v.optional(v.id("workspaces")) },
+  handler: async (ctx, args) => {
+    if (args.workspaceId) {
+      return await ctx.db
+        .query("invoices")
+        .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+        .collect();
+    }
+    return await ctx.db.query("invoices").collect();
   },
 });
 
-export const add = mutation({
+export const create = mutation({
   args: {
+    workspaceId: v.optional(v.id("workspaces")),
     clientId: v.id("clients"),
     invoiceNumber: v.string(),
     amount: v.number(),
@@ -25,22 +33,5 @@ export const add = mutation({
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("invoices", args);
-  },
-});
-
-export const updateStatus = mutation({
-  args: {
-    id: v.id("invoices"),
-    status: v.string(),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, { status: args.status });
-  },
-});
-
-export const remove = mutation({
-  args: { id: v.id("invoices") },
-  handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
   },
 });

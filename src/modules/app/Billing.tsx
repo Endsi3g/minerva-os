@@ -4,9 +4,13 @@ import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import type { Doc } from '../../../convex/_generated/dataModel';
+import type { Doc, Id } from '../../../convex/_generated/dataModel';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function fmt(n: number, lang: string) {
   return new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US', { 
@@ -127,11 +131,22 @@ export default function Billing() {
   const b = t.app.billing;
 
   const invoices = useQuery(api.invoices.list) ?? [];
-  const retainers = useQuery(api.retainers.list) ?? [];
+  const retainersRaw = useQuery(api.retainers.list) ?? [];
   const clients = useQuery(api.clients.list) ?? [];
+
+  const createInvoice = useMutation(api.invoices.create);
 
   const [filter, setFilter] = useState<string | 'all'>('all');
   const [query, setQuery]   = useState('');
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [form, setForm] = useState({
+    clientId: '' as Id<"clients"> | '',
+    amount: '',
+    description: '',
+  });
+
+  const workspaces = useQuery(api.workspaces.list) ?? [];
+  const workspaceId = workspaces[0]?._id;
 
   const FILTER_TABS = useMemo(() => [
     { id: 'all' as const,     label: t.app.tasks.filters.all },
@@ -142,8 +157,18 @@ export default function Billing() {
   ], [t]);
 
   const outstanding = invoices.filter((i: any) => i.status === 'sent' || i.status === 'overdue').reduce((s: any, i: any) => s + i.amount, 0);
-  const paidMTD     = invoices.filter((i: any) => i.status === 'paid').reduce((s: any, i: any) => s + i.amount, 0);
+  const revenue = invoices.filter((inv: any) => inv.status === 'paid').reduce((s: any, i: any) => s + i.amount, 0);
   const overdueCount = invoices.filter((i: any) => i.status === 'overdue').length;
+
+  const retainers = useMemo(() => retainersRaw.map((r: any) => {
+    const client = clients.find((c: any) => c._id === r.clientId);
+    return {
+      ...r,
+      clientName: client?.company || '...',
+    };
+  }), [retainersRaw, clients]);
+
+  const activeRetainers = retainers.filter((r: any) => r.status === 'active');
 
   const visible = invoices.filter((i: any) => {
     const matchFilter = filter === 'all' || i.status === filter;
@@ -151,6 +176,34 @@ export default function Billing() {
       i.invoiceNumber.toLowerCase().includes(query.toLowerCase());
     return matchFilter && matchQuery;
   });
+
+  async function handleAdd() {
+    if (!form.clientId || !form.amount) return;
+    
+    const amountNum = parseFloat(form.amount);
+    const tps = amountNum * 0.05;
+    const tvq = amountNum * 0.09975;
+
+    await createInvoice({
+      workspaceId,
+      clientId: form.clientId as Id<"clients">,
+      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      amount: amountNum,
+      status: 'sent',
+      date: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      items: [{
+        description: form.description || 'Consulting Services',
+        quantity: 1,
+        price: amountNum,
+      }],
+      tps,
+      tvq,
+    });
+
+    setSheetOpen(false);
+    setForm({ clientId: '', amount: '', description: '' });
+  }
 
   return (
     <>
@@ -161,10 +214,10 @@ export default function Billing() {
           <p className="text-sm text-fog mt-0.5">
             {b.stats
               .replace('invoices', String(invoices.length))
-              .replace('active retainers', String(retainers.filter((r: any) => r.status === 'active').length))}
+              .replace('active retainers', String(activeRetainers.length))}
           </p>
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={() => setSheetOpen(true)}>
           <Plus size={14} />
           {b.newInvoice}
         </Button>
@@ -175,7 +228,7 @@ export default function Billing() {
         {[
           { label: b.summary.outstanding,   value: fmt(outstanding, lang), color: outstanding > 0 ? 'text-warm'  : 'text-sage', sub: b.summary.outstandingSub },
           { label: b.summary.overdue,       value: String(overdueCount),  color: overdueCount > 0      ? 'text-ember' : 'text-sage', sub: overdueCount > 0 ? b.summary.overdueSub : b.summary.overdueNone },
-          { label: b.summary.collected,     value: fmt(paidMTD, lang),     color: 'text-sage',   sub: b.summary.collectedSub },
+          { label: b.summary.collected,     value: fmt(revenue, lang),     color: 'text-sage',   sub: b.summary.collectedSub },
         ].map(s => (
           <div key={s.label} className="bg-card border border-border rounded-xl p-4">
             <p className={cn('text-2xl font-semibold tabular-nums', s.color)}>{s.value}</p>
@@ -186,19 +239,18 @@ export default function Billing() {
       </div>
 
       {/* Retainers */}
-      {retainers.filter(r => r.status === 'active').length > 0 && (
+      {activeRetainers.length > 0 && (
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-ivory mb-3">{b.retainers.title}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {retainers.filter(r => r.status === 'active').map(ret => {
-              const client = clients.find(c => c._id === ret.clientId);
+            {activeRetainers.map((ret: any) => {
               const pct = ret.hoursIncluded > 0 ? Math.round((ret.hoursUsed / ret.hoursIncluded) * 100) : 0;
               const barColor = pct >= 100 ? '#A86A6A' : pct >= 80 ? '#B89B6A' : '#7FA38A';
               return (
                 <div key={ret._id} className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="text-sm font-medium text-ivory">{client?.company || '...'}</p>
+                      <p className="text-sm font-medium text-ivory">{ret.clientName}</p>
                       <p className="text-[10px] text-fog capitalize">
                         {ret.cycle} · {b.retainers.renews} {new Date(ret.renewalDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
                       </p>
@@ -270,6 +322,48 @@ export default function Billing() {
           {visible.map(inv => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
         </div>
       </section>
+
+      {/* New Invoice Sheet */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+          <SheetHeader>
+            <SheetTitle>{b.newInvoice}</SheetTitle>
+          </SheetHeader>
+
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="space-y-1.5">
+              <Label>{b.table.client}</Label>
+              <Select value={form.clientId} onValueChange={v => setForm(f => ({ ...f, clientId: v as Id<"clients"> }))}>
+                <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map((c: any) => (
+                    <SelectItem key={c._id} value={c._id}>{c.company}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{b.table.total}</Label>
+              <Input 
+                type="number" 
+                placeholder="0.00" 
+                value={form.amount} 
+                onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{b.table.description}</Label>
+              <Input 
+                placeholder="Service description" 
+                value={form.description} 
+                onChange={e => setForm(f => ({ ...f, description: e.target.value }))} 
+              />
+            </div>
+          </div>
+
+          <Button className="w-full" onClick={handleAdd}>{t.app.common.add}</Button>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

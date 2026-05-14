@@ -40,6 +40,7 @@ import type * as riskFlags from "../riskFlags.js";
 import type * as riskWorkflow from "../riskWorkflow.js";
 import type * as seed from "../seed.js";
 import type * as services from "../services.js";
+import type * as settings from "../settings.js";
 import type * as sla from "../sla.js";
 import type * as tasks from "../tasks.js";
 import type * as tickets from "../tickets.js";
@@ -85,6 +86,7 @@ declare const fullApi: ApiFromModules<{
   riskWorkflow: typeof riskWorkflow;
   seed: typeof seed;
   services: typeof services;
+  settings: typeof settings;
   sla: typeof sla;
   tasks: typeof tasks;
   tickets: typeof tickets;

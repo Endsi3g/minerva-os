@@ -77,29 +77,29 @@ export default function Reports() {
 
   // Data transforms
   const revenueData = useMemo(() => clients
-    .map(c => ({ name: c.company.split(' ')[0], value: 5000 /* Placeholder since no monthlyValue in schema */ }))
+    .map((c: any) => ({ name: c.company.split(' ')[0], value: 5000 /* Placeholder since no monthlyValue in schema */ }))
     .slice(0, 5), [clients]);
 
   const teamData = useMemo(() => {
-    const assignees = [...new Set(tasks.map(t => t.assignee))];
-    return assignees.map(a => ({
+    const assignees = [...new Set(tasks.map((t: any) => t.assignee))];
+    return assignees.map((a: any) => ({
       name: a,
-      done: tasks.filter(t => t.assignee === a && t.status === 'done').length,
-      open: tasks.filter(t => t.assignee === a && t.status !== 'done').length,
-    })).sort((a, b) => (b.done + b.open) - (a.done + a.open));
+      done: tasks.filter((t: any) => t.assignee === a && t.status === 'done').length,
+      open: tasks.filter((t: any) => t.assignee === a && t.status !== 'done').length,
+    })).sort((a: any, b: any) => (b.done + b.open) - (a.done + a.open));
   }, [tasks]);
 
-  const funnelData = useMemo(() => STAGE_ORDER.map(stage => ({
+  const funnelData = useMemo(() => STAGE_ORDER.map((stage: any) => ({
     name: t.app.pipeline.stages[stage as keyof typeof t.app.pipeline.stages] || stage,
-    count: deals.filter(l => l.stage === stage).length,
-    value: deals.filter(l => l.stage === stage).reduce((s, l) => s + l.value, 0),
+    count: deals.filter((l: any) => l.stage === stage).length,
+    value: deals.filter((l: any) => l.stage === stage).reduce((s: any, l: any) => s + l.value, 0),
   })), [deals, t]);
 
   // Quick stats
-  const totalPending  = approvals.filter(a => a.status === 'pending').length;
-  const totalApproved = approvals.filter(a => a.status === 'approved').length;
-  const wonDeals = deals.filter(l => l.stage === 'won');
-  const totalPipeline = deals.reduce((s, l) => s + l.value, 0);
+  const totalPending  = approvals.filter((a: any) => a.status === 'pending').length;
+  const totalApproved = approvals.filter((a: any) => a.status === 'approved').length;
+  const wonDeals = deals.filter((l: any) => l.stage === 'won');
+  const totalPipeline = deals.reduce((s: any, l: any) => s + l.value, 0);
   const conversionRate = deals.length > 0
     ? Math.round((wonDeals.length / deals.length) * 100)
     : 0;

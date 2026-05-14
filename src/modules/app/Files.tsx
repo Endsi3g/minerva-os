@@ -51,7 +51,7 @@ export default function Files() {
   const assets = useQuery(api.assets.list) ?? [];
   const [query, setQuery] = useState('');
 
-  const filtered = assets.filter(a =>
+  const filtered = assets.filter((a: any) =>
     a.name.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -82,7 +82,7 @@ export default function Files() {
       {/* Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {filtered.map(asset => (
+          {filtered.map((asset: any) => (
             <FileCard key={asset._id} file={asset} lang={lang} />
           ))}
         </div>

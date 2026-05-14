@@ -59,7 +59,7 @@ export function AppHeader() {
 
   const notifications = useQuery(api.notifications.list, { userId: user?.email ?? 'anonymous' }) ?? [];
   const markRead = useMutation(api.notifications.markAsRead);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
 
   async function handleMarkRead(id: Id<"notifications">) {
     await markRead({ id });

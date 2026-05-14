@@ -16,10 +16,10 @@ export default function CallPreps() {
   const updateCall = useMutation(api.calls.update);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selectedCall = calls.find(c => c._id === selectedId);
+  const selectedCall = calls.find((c: any) => c._id === selectedId);
 
   const toggleTask = async (callId: any, taskIndex: number) => {
-    const call = calls.find(c => c._id === callId);
+    const call = calls.find((c: any) => c._id === callId);
     if (!call) return;
     const newList = [...call.prepChecklist];
     newList[taskIndex] = { ...newList[taskIndex], completed: !newList[taskIndex].completed };
@@ -41,7 +41,7 @@ export default function CallPreps() {
           {calls.length === 0 && (
             <p className="text-sm text-fog px-2">{cp.noMeetings}</p>
           )}
-          {calls.map((call) => (
+          {calls.map((call: any) => (
             <button
               key={call._id}
               onClick={() => setSelectedId(call._id)}
@@ -78,7 +78,7 @@ export default function CallPreps() {
               <h1 className="text-3xl font-playfair text-ivory">{selectedCall.title}</h1>
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex -space-x-2">
-                  {selectedCall.attendees.map((a, i) => (
+                  {selectedCall.attendees.map((a: string, i: number) => (
                     <div key={i} className="h-6 w-6 rounded-full bg-dusk border border-obsidian flex items-center justify-center text-[10px] text-silver font-medium" title={a}>
                       {a[0]}
                     </div>
@@ -96,7 +96,7 @@ export default function CallPreps() {
                   <BookOpen size={16} className="text-sage" /> Preparation Checklist
                 </h3>
                 <div className="space-y-2">
-                  {selectedCall.prepChecklist.map((item, i) => (
+                  {selectedCall.prepChecklist.map((item: any, i: number) => (
                     <div 
                       key={i} 
                       onClick={() => toggleTask(selectedCall._id, i)}

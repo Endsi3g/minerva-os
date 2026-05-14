@@ -46,7 +46,7 @@ export default function Clients() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewClientForm>(EMPTY_FORM);
 
-  const filtered = clients.filter(c =>
+  const filtered = clients.filter((c: any) =>
     c.company.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -94,7 +94,7 @@ export default function Clients() {
       {/* Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(client => (
+          {filtered.map((client: any) => (
             <ClientCard key={client._id} client={{
               ...client,
               id: client._id,

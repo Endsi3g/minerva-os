@@ -9,31 +9,25 @@ import { cn } from '@/lib/utils';
 
 type Tab = 'profile' | 'workspace' | 'team' | 'notifications' | 'security';
 
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  initials: string;
-}
-
-const MOCK_TEAM: TeamMember[] = [
-  { id: '1', name: 'Uprising Studio', email: 'studio@uprising.co', role: 'owner', initials: 'US' },
-  { id: '2', name: 'Camille Dufresne', email: 'camille@uprising.co', role: 'project_manager', initials: 'CD' },
-  { id: '3', name: 'Jordan Belfort', email: 'jordan@uprising.co', role: 'designer', initials: 'JB' },
-  { id: '4', name: 'Priya Sharma', email: 'priya@uprising.co', role: 'developer', initials: 'PS' },
-];
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 /* ── Sub-sections ────────────────────────────────────────────────────────── */
 
-function ProfileTab() {
+function ProfileTab({ workspaceId }: { workspaceId: any }) {
   const { t } = useLang();
   const { user } = useAuth();
+  
+  const profile = useQuery(api.settings.getProfile, user?.email ? { email: user.email } : "skip");
+  const updateProfile = useMutation(api.settings.updateProfile);
+  
   const s = t.app.settings.profile;
-  const [name, setName] = useState(user?.name ?? 'Uprising Studio');
+  const [name, setName] = useState(profile?.name ?? user?.name ?? '...');
   const [saved, setSaved] = useState(false);
 
-  function handleSave() {
+  async function handleSave() {
+    if (!profile) return;
+    await updateProfile({ id: profile._id, name });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -91,14 +85,19 @@ function ProfileTab() {
   );
 }
 
-function WorkspaceTab() {
+function WorkspaceTab({ workspaceId }: { workspaceId: any }) {
   const { t, setLang, lang } = useLang();
+  const workspaces = useQuery(api.workspaces.list) ?? [];
+  const workspace = workspaces.find(w => w._id === workspaceId);
+  const updateWorkspace = useMutation(api.settings.updateWorkspace);
+
   const s = t.app.settings.workspace;
-  const [studioName, setStudioName] = useState('Uprising Studio');
-  const [timezone, setTimezone] = useState('America/Montreal');
+  const [studioName, setStudioName] = useState(workspace?.name ?? '...');
   const [saved, setSaved] = useState(false);
 
-  function handleSave() {
+  async function handleSave() {
+    if (!workspace) return;
+    await updateWorkspace({ id: workspace._id, name: studioName });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -162,8 +161,10 @@ function WorkspaceTab() {
   );
 }
 
-function TeamTab() {
+function TeamTab({ workspaceId }: { workspaceId: any }) {
   const { t } = useLang();
+  const team = useQuery(api.settings.listTeam, workspaceId ? { workspaceId } : "skip") ?? [];
+  
   const s = t.app.settings.team;
   const roleLabels = s.roles as Record<string, string>;
   const [inviteEmail, setInviteEmail] = useState('');
@@ -200,9 +201,9 @@ function TeamTab() {
 
       {/* Member list */}
       <div className="space-y-2 max-w-lg">
-        {MOCK_TEAM.map(member => (
+        {team.map((member: any) => (
           <div
-            key={member.id}
+            key={member._id}
             className="flex items-center gap-3 px-4 py-3 rounded-xl"
             style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
           >
@@ -210,7 +211,7 @@ function TeamTab() {
               className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0"
               style={{ backgroundColor: '#1A1F32', color: '#B8BDC7' }}
             >
-              {member.initials}
+              {member.name.split(' ').map((w: any) => w[0]).join('').slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-ivory truncate">{member.name}</p>
@@ -410,6 +411,9 @@ export default function AppSettings() {
     { id: 'security',      label: s.tabs.security },
   ];
 
+  const workspaces = useQuery(api.workspaces.list) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
   return (
     <div className="max-w-3xl space-y-8">
       {/* Header */}
@@ -443,9 +447,9 @@ export default function AppSettings() {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {activeTab === 'profile'       && <ProfileTab />}
-          {activeTab === 'workspace'     && <WorkspaceTab />}
-          {activeTab === 'team'          && <TeamTab />}
+          {activeTab === 'profile'       && <ProfileTab workspaceId={workspaceId} />}
+          {activeTab === 'workspace'     && <WorkspaceTab workspaceId={workspaceId} />}
+          {activeTab === 'team'          && <TeamTab workspaceId={workspaceId} />}
           {activeTab === 'notifications' && <NotificationsTab />}
           {activeTab === 'security'      && <SecurityTab />}
         </div>
