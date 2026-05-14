@@ -34,20 +34,24 @@ export default function Projects() {
   const { t } = useLang();
   const p = t.app.projects;
 
-  const projects = useQuery(api.projects.list) ?? [];
-  const clients = useQuery(api.clients.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const createProject = useMutation(api.projects.add);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM);
 
-  const activeCount = projects.filter(p => p.status === 'active').length;
+  const activeCount = projects.filter((p: any) => p.status === 'active').length;
 
   async function handleAdd() {
     if (!form.name.trim() || !form.clientId) return;
-    const client = clients.find(c => c._id === form.clientId);
+    const client = clients.find((c: any) => c._id === form.clientId);
     
     await createProject({
+      workspaceId: workspaceId!,
       name: form.name.trim(),
       clientName: client?.company ?? '',
       status: 'active',
@@ -77,7 +81,7 @@ export default function Projects() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map(proj => (
+        {projects.map((proj: any) => (
           <ProjectCard key={proj._id} project={{
             ...proj,
             id: proj._id,
@@ -108,7 +112,7 @@ export default function Projects() {
                   <SelectValue placeholder={p.form.clientPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map(c => (
+                  {clients.map((c: any) => (
                     <SelectItem key={c._id} value={c._id}>{c.company}</SelectItem>
                   ))}
                 </SelectContent>

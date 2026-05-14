@@ -1,12 +1,11 @@
 import { WorkflowManager } from "@convex-dev/workflow";
-import { z } from "zod";
 
-import { components, internal } from "./_generated/api";
-import { internalAction, internalMutation, action, query } from "./_generated/server";
+import { api, components, internal } from "./_generated/api";
+import { internalAction, internalMutation, action, query, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { projectOrchestratorAgent } from "./agents/projectOrchestrator";
 
-const workflow = new WorkflowManager(components.workflow as any);
+const workflow = new WorkflowManager((components as any).workflow);
 
 // --- Durable Workflow Definition ---
 
@@ -46,7 +45,7 @@ export const projectRiskWorkflow = workflow.define({
       (updatedMetrics?.healthScore ?? 50) > (initialMetrics?.healthScore ?? 50) + 10;
 
     if (!improved) {
-      await step.runMutation(internal.notifications.notifyOwnerAboutStalledRisk, {
+      await step.runMutation(api.notifications.notifyOwnerAboutStalledRisk, {
         workspaceId,
         projectId,
         pmId: pmEmail,
@@ -57,7 +56,7 @@ export const projectRiskWorkflow = workflow.define({
 
 // --- Internal helpers ---
 
-export const getProjectMetrics = query({
+export const getProjectMetrics = internalQuery({
   args: { projectId: v.id("projects") },
   handler: async (ctx, { projectId }) => {
     const project = await ctx.db.get(projectId);
@@ -87,7 +86,7 @@ export const getProjectMetrics = query({
   },
 });
 
-export const getRecentProjectNotes = query({
+export const getRecentProjectNotes = internalQuery({
   args: { projectId: v.id("projects") },
   handler: async (ctx, { projectId }) => {
     return await ctx.db
@@ -105,9 +104,9 @@ export const createRiskThread = internalMutation({
   },
   handler: async (ctx, { workspaceId, projectId }) => {
     const project = await ctx.db.get(projectId);
-    const result = await projectOrchestratorAgent.createThread(ctx as any, {
+    const result = await (projectOrchestratorAgent as any).createThread(ctx as any, {
       title: `Risk Analysis: ${project?.name ?? projectId}`,
-      metadata: { workspaceId, projectId } as any,
+      metadata: { workspaceId, projectId },
     }) as any;
     const threadId = result.threadId;
     return { threadId };
@@ -125,7 +124,7 @@ export const generateProjectRiskPlan = internalAction({
   },
   handler: async (ctx, { projectId, workspaceId, pmEmail, threadId }) => {
     // Gather context
-    const dashboard = await ctx.runQuery(internal.projects.getProjectDashboard, { projectId });
+    const dashboard = await ctx.runQuery(api.projects.getProjectDashboard, { projectId });
     const metrics = await ctx.runQuery(internal.riskWorkflow.getProjectMetrics, { projectId });
     const notes = await ctx.runQuery(internal.riskWorkflow.getRecentProjectNotes, { projectId });
 
@@ -175,7 +174,7 @@ Respond with a JSON block in this format:
     const currentHealth = metrics?.healthScore ?? 80;
 
     // 1. Create a risk flag
-    const riskFlagId = await ctx.runMutation(internal.riskFlags.createProjectRiskFlag, {
+    const riskFlagId = await ctx.runMutation(api.riskFlags.add, {
       workspaceId,
       projectId,
       type: plan.riskType,
@@ -185,7 +184,7 @@ Respond with a JSON block in this format:
     });
 
     // 2. Update project health score
-    await ctx.runMutation(internal.projects.updateProjectHealth, {
+    await ctx.runMutation(api.projects.updateProjectHealth, {
       projectId,
       healthScore: Math.max(0, currentHealth + plan.healthScoreDelta),
       riskFlags: [plan.riskType],
@@ -193,7 +192,7 @@ Respond with a JSON block in this format:
 
     // 3. Create draft tasks
     for (const t of plan.suggestedTasks) {
-      await ctx.runMutation(internal.tasks.createTaskDraft, {
+      await ctx.runMutation(api.tasks.createTaskDraft, {
         workspaceId,
         projectId,
         title: t.title,
@@ -204,7 +203,7 @@ Respond with a JSON block in this format:
     }
 
     // 4. Store the mitigation plan
-    await ctx.runMutation(internal.aiSummaries.createRiskMitigationPlan, {
+    await ctx.runMutation(api.aiSummaries.createRiskMitigationPlan, {
       workspaceId,
       projectId,
       riskFlagId,
@@ -212,7 +211,7 @@ Respond with a JSON block in this format:
     });
 
     // 5. Notify the PM
-    await ctx.runMutation(internal.notifications.notifyPMAboutRisk, {
+    await ctx.runMutation(api.notifications.notifyPMAboutRisk, {
       workspaceId,
       projectId,
       pmId: pmEmail,
@@ -231,7 +230,7 @@ export const startProjectRiskWorkflow = action({
     workspaceId: v.id("workspaces"),
     pmEmail: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ workflowId: string }> => {
     const workflowId = await workflow.start(ctx as any, internal.riskWorkflow.projectRiskWorkflow, args);
     return { workflowId };
   },
@@ -244,7 +243,7 @@ export const getWorkflowStatus = query({
   },
 });
 
-export const getActiveProjects = query({
+export const getActiveProjects = internalQuery({
   args: {},
   handler: async (ctx) => {
     return await ctx.db

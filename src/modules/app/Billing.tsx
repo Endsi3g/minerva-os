@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import type { Doc } from '../../../convex/_generated/dataModel';
+
 
 function fmt(n: number, lang: string) {
   return new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US', { 
@@ -16,12 +16,12 @@ function fmt(n: number, lang: string) {
   }).format(n);
 }
 
-function InvoiceRow({ invoice, t, lang, clients }: { invoice: Doc<"invoices">; t: any; lang: string, clients: Doc<"clients">[] }) {
+function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang: string, clients: any[] }) {
   const [expanded, setExpanded] = useState(false);
   const b = t.app.billing;
   const common = t.app.common;
   
-  const client = clients.find(c => c._id === invoice.clientId);
+  const client = clients.find((c: any) => c._id === invoice.clientId);
 
   const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
     draft:     { label: common.status.draft,     class: 'text-fog bg-fog/10 border-fog/20'       },
@@ -126,9 +126,12 @@ export default function Billing() {
   const { t, lang } = useLang();
   const b = t.app.billing;
 
-  const invoices = useQuery(api.invoices.list) ?? [];
-  const retainers = useQuery(api.retainers.list) ?? [];
-  const clients = useQuery(api.clients.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const invoices = useQuery(api.invoices.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const retainers = useQuery(api.retainers.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
 
   const [filter, setFilter] = useState<string | 'all'>('all');
   const [query, setQuery]   = useState('');
@@ -176,7 +179,7 @@ export default function Billing() {
           { label: b.summary.outstanding,   value: fmt(outstanding, lang), color: outstanding > 0 ? 'text-warm'  : 'text-sage', sub: b.summary.outstandingSub },
           { label: b.summary.overdue,       value: String(overdueCount),  color: overdueCount > 0      ? 'text-ember' : 'text-sage', sub: overdueCount > 0 ? b.summary.overdueSub : b.summary.overdueNone },
           { label: b.summary.collected,     value: fmt(paidMTD, lang),     color: 'text-sage',   sub: b.summary.collectedSub },
-        ].map(s => (
+        ].map((s: any) => (
           <div key={s.label} className="bg-card border border-border rounded-xl p-4">
             <p className={cn('text-2xl font-semibold tabular-nums', s.color)}>{s.value}</p>
             <p className="text-xs text-fog mt-1">{s.label}</p>
@@ -186,12 +189,12 @@ export default function Billing() {
       </div>
 
       {/* Retainers */}
-      {retainers.filter(r => r.status === 'active').length > 0 && (
+      {retainers.filter((r: any) => r.status === 'active').length > 0 && (
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-ivory mb-3">{b.retainers.title}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {retainers.filter(r => r.status === 'active').map(ret => {
-              const client = clients.find(c => c._id === ret.clientId);
+            {retainers.filter((r: any) => r.status === 'active').map((ret: any) => {
+              const client = clients.find((c: any) => c._id === ret.clientId);
               const pct = ret.hoursIncluded > 0 ? Math.round((ret.hoursUsed / ret.hoursIncluded) * 100) : 0;
               const barColor = pct >= 100 ? '#A86A6A' : pct >= 80 ? '#B89B6A' : '#7FA38A';
               return (
@@ -267,7 +270,7 @@ export default function Billing() {
           {visible.length === 0 && (
             <p className="text-sm text-fog text-center py-10">{b.invoices.empty}</p>
           )}
-          {visible.map(inv => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
+          {visible.map((inv: any) => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
         </div>
       </section>
     </>

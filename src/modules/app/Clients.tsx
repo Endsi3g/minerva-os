@@ -39,21 +39,25 @@ export default function Clients() {
   const { t } = useLang();
   const cKeys = t.app.clients;
 
-  const clients = useQuery(api.clients.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const addClient = useMutation(api.clients.add);
 
   const [query, setQuery] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewClientForm>(EMPTY_FORM);
 
-  const filtered = clients.filter(c =>
+  const filtered = clients.filter((c: any) =>
     c.company.toLowerCase().includes(query.toLowerCase())
   );
 
   async function handleAdd() {
-    if (!form.company.trim()) return;
+    if (!form.company.trim() || !workspaceId) return;
     
     await addClient({
+      workspaceId,
       company: form.company.trim(),
       contact: form.contact.trim(),
       email: form.email.trim(),
@@ -94,7 +98,7 @@ export default function Clients() {
       {/* Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(client => (
+          {filtered.map((client: any) => (
             <ClientCard key={client._id} client={{
               ...client,
               id: client._id,

@@ -5,7 +5,7 @@ import { api } from "./_generated/api";
 // This action would call OpenAI/Anthropic to generate embeddings
 export const generateEmbedding = action({
   args: { text: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args): Promise<number[]> => {
     // Placeholder: In production, call your LLM provider here
     // const embedding = await getOpenAIEmbedding(args.text);
     
@@ -17,7 +17,7 @@ export const generateEmbedding = action({
 
 export const searchProjects = action({
   args: { workspaceId: v.id("workspaces"), query: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<any[]> => {
     // 1. Generate embedding for the query
     const embedding = await ctx.runAction(api.ai.generateEmbedding, { text: args.query });
 
@@ -25,12 +25,12 @@ export const searchProjects = action({
     const results = await ctx.vectorSearch("projects", "by_embedding", {
       vector: embedding,
       limit: 5,
-      filter: (q) => q.eq("workspaceId", args.workspaceId),
+      filter: (q) => q.eq("workspaceId", args.workspaceId as any),
     });
 
     // 3. Fetch full project documents
     const projects = await Promise.all(
-      results.map(async (r) => {
+      results.map(async (r: any) => {
         const doc = await ctx.runQuery(api.projects.get, { id: r._id });
         return { ...doc, _score: r._score };
       })
@@ -42,17 +42,17 @@ export const searchProjects = action({
 
 export const searchKnowledgeBase = action({
   args: { workspaceId: v.id("workspaces"), query: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<any[]> => {
     const embedding = await ctx.runAction(api.ai.generateEmbedding, { text: args.query });
 
     const results = await ctx.vectorSearch("knowledgeBase", "by_embedding", {
       vector: embedding,
       limit: 5,
-      filter: (q) => q.eq("workspaceId", args.workspaceId),
+      filter: (q) => q.eq("workspaceId", args.workspaceId as any),
     });
 
     const entries = await Promise.all(
-      results.map(async (r) => {
+      results.map(async (r: any) => {
         const doc = await ctx.runQuery(api.ai.getKnowledgeEntry, { id: r._id as any });
         return { ...doc, _score: r._score };
       })

@@ -7,7 +7,6 @@ import { useLang } from '@/i18n';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useAuth } from '@/contexts/AuthContext';
 import { CommentSection } from '@/components/minerva/CommentSection';
 import { Id } from '../../../convex/_generated/dataModel';
 
@@ -16,10 +15,13 @@ export default function Approvals() {
   const a = t.app.approvals;
   const common = t.app.common;
 
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
   // Real data from Convex
-  const approvalsRaw = useQuery(api.approvals.list) ?? [];
-  const projects = useQuery(api.projects.list) ?? [];
-  const clients = useQuery(api.clients.list) ?? [];
+  const approvalsRaw = useQuery(api.approvals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   
   const [selectedId, setSelectedId] = useState<any | null>(null);
 

@@ -8,25 +8,29 @@ import { Progress } from '@/components/ui/progress';
 import { useLang } from '@/i18n';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 
 export default function Fulfillment() {
   const { t } = useLang();
   const fl = t.app.fulfillmentModule;
   
-  const deliveries = useQuery(api.fulfillment.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const deliveries = useQuery(api.fulfillment.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const updateDelivery = useMutation(api.fulfillment.update);
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const activeDelivery = deliveries.find(d => d._id === activeId);
+  const activeDelivery = deliveries.find((d: any) => d._id === activeId);
 
-  const toggleItem = async (deliveryId: any, itemIndex: number) => {
-    const delivery = deliveries.find(d => d._id === deliveryId);
+  const toggleItem = async (deliveryId: Id<"fulfillment">, itemIndex: number) => {
+    const delivery = deliveries.find((d: any) => d._id === deliveryId);
     if (!delivery) return;
     
     const newChecklist = [...delivery.checklist];
     newChecklist[itemIndex] = { ...newChecklist[itemIndex], done: !newChecklist[itemIndex].done };
     
-    const doneCount = newChecklist.filter(i => i.done).length;
+    const doneCount = newChecklist.filter((i: any) => i.done).length;
     const progress = Math.round((doneCount / newChecklist.length) * 100);
     
     await updateDelivery({
@@ -65,7 +69,7 @@ export default function Fulfillment() {
                 No active fulfillments found.
               </p>
             )}
-            {deliveries.map((delivery) => (
+            {deliveries.map((delivery: any) => (
               <button
                 key={delivery._id}
                 onClick={() => setActiveId(delivery._id)}
@@ -119,7 +123,7 @@ export default function Fulfillment() {
                     <ListTodo size={16} className="text-warm" /> {fl.checklist}
                   </h3>
                   <div className="grid grid-cols-1 gap-1">
-                    {activeDelivery.checklist.map((item, i) => (
+                    {activeDelivery.checklist.map((item: any, i: number) => (
                       <div
                         key={i}
                         onClick={() => toggleItem(activeDelivery._id, i)}

@@ -22,6 +22,7 @@ import type { DealStage } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 
 function fmt(n: number, lang: string) {
   return new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US', { 
@@ -32,7 +33,7 @@ function fmt(n: number, lang: string) {
 }
 
 function totalValue(leads: any[], stage: DealStage) {
-  return leads.filter(l => l.stage === stage).reduce((s, l) => s + l.value, 0);
+  return leads.filter((l: any) => l.stage === stage).reduce((s: number, l: any) => s + l.value, 0);
 }
 
 const STAGE_STYLE: Partial<Record<DealStage, string>> = {
@@ -57,7 +58,10 @@ export default function Pipeline() {
   const { t, lang } = useLang();
   const p = t.app.pipeline;
   
-  const leads = useQuery(api.deals.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const leads = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const addDeal = useMutation(api.deals.add);
   const updateStage = useMutation(api.deals.updateStage);
   
@@ -103,16 +107,17 @@ export default function Pipeline() {
 
   const handleDrop = (e: React.DragEvent, stageId: DealStage) => {
     const leadId = e.dataTransfer.getData('leadId');
-    updateStage({ id: leadId as any, stage: stageId });
+    updateStage({ id: leadId as Id<"deals">, stage: stageId });
   };
 
   async function handleSaveDeal() {
-    if (!form.company.trim()) return;
+    if (!form.company.trim() || !workspaceId) return;
 
     if (editingLead) {
       // Not implemented full update for simplicity in this turn, but could be added
     } else {
       await addDeal({
+        workspaceId,
         company: form.company.trim(),
         contact: form.contact.trim(),
         email: form.email.trim(),
@@ -120,7 +125,7 @@ export default function Pipeline() {
         stage: form.stage,
         notes: form.notes.trim() || undefined,
         lastContact: new Date().toISOString().split('T')[0],
-      });
+      } as any);
     }
     
     setSheetOpen(false);
@@ -137,7 +142,7 @@ export default function Pipeline() {
           <p className="text-sm text-fog mt-0.5">
             {p.stats
               .replace('{{count}}', String(leads.length))
-              .replace('{{total}}', fmt(leads.reduce((s, l) => s + l.value, 0), lang))}
+              .replace('{{total}}', fmt(leads.reduce((s: number, l: any) => s + l.value, 0), lang))}
           </p>
         </div>
         <Button size="sm" onClick={() => openSheet('new_lead')}>
@@ -148,8 +153,8 @@ export default function Pipeline() {
 
       {/* Kanban board */}
       <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6" style={{ minHeight: 'calc(100vh - 200px)' }}>
-        {STAGES.map(stage => {
-          const stageLeads = leads.filter(l => l.stage === stage.id);
+        {STAGES.map((stage: any) => {
+          const stageLeads = leads.filter((l: any) => l.stage === stage.id);
           const total = totalValue(leads, stage.id);
           return (
             <div
@@ -158,7 +163,7 @@ export default function Pipeline() {
               onDrop={(e) => handleDrop(e, stage.id)}
               className={cn(
                 'flex flex-col shrink-0 w-64 rounded-xl border p-3 gap-2 transition-colors',
-                STAGE_STYLE[stage.id] ?? 'border-border bg-card/50'
+                (STAGE_STYLE as any)[stage.id] ?? 'border-border bg-card/50'
               )}
             >
               {/* Column header */}
@@ -178,7 +183,7 @@ export default function Pipeline() {
 
               {/* Deal cards */}
               <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
-                {stageLeads.map(lead => (
+                {stageLeads.map((lead: any) => (
                   <DealCard 
                     key={lead._id} 
                     lead={lead} 

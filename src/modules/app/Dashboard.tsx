@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { FolderKanban, CheckSquare, ClipboardCheck, DollarSign, AlertTriangle, X, ChevronRight, Sparkles } from 'lucide-react';
+import { FolderKanban, CheckSquare, ClipboardCheck, DollarSign, AlertTriangle, X, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -111,7 +111,7 @@ function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspa
 
   return (
     <div className="space-y-4">
-      {activity.map((a) => (
+      {activity.map((a: any) => (
         <div key={a._id} className="flex items-start gap-3">
           <div className="h-7 w-7 rounded-full bg-dusk border border-white/5 flex items-center justify-center shrink-0 text-[10px] text-silver font-medium mt-0.5">
             {a.user[0]}
@@ -135,27 +135,28 @@ export default function Dashboard() {
   const { t } = useLang();
   const { user } = useAuth();
   
-  const projects = useQuery(api.projects.list, workspaceId ? { workspaceId } : "skip") ?? [];
-  const invoices = useQuery(api.invoices.list) ?? []; // TODO: Add workspaceId to invoices
-  const approvals = useQuery(api.approvals.list) ?? [];
-  const deals = useQuery(api.deals.list, workspaceId ? { workspaceId } : "skip") ?? [];
-  const tasks = useQuery(api.tasks.get, workspaceId ? { workspaceId } : "skip") ?? [];
-  
   // Get first workspace for now
-  const workspaces = useQuery(api.workspaces.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
   const workspaceId = workspaces[0]?._id;
+
+  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const invoices = useQuery(api.invoices.list as any) ?? []; // TODO: Add workspaceId to invoices
+  const approvals = useQuery(api.approvals.list as any) ?? [];
+  const deals = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  
 
   const d = t.app.dashboard;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? d.greetingMorning : hour < 18 ? d.greetingAfternoon : d.greetingEvening;
   const displayName = user?.name ?? 'Uprising Studio';
 
-  const activeProjectsCount = projects.filter(p => p.status === 'active').length;
-  const openTasksCount = tasks.filter(t => t.status !== 'done').length;
-  const pendingApprovalsCount = approvals.filter(a => a.status === 'pending').length;
+  const activeProjectsCount = projects.filter((p: any) => p.status === 'active').length;
+  const openTasksCount = tasks.filter((t: any) => t.status !== 'done').length;
+  const pendingApprovalsCount = approvals.filter((a: any) => a.status === 'pending').length;
   const revenueMtd = invoices
-    .filter(i => i.status === 'paid' && new Date(i.date).getMonth() === new Date().getMonth())
-    .reduce((acc, i) => acc + i.amount, 0);
+    .filter((i: any) => i.status === 'paid' && new Date(i.date).getMonth() === new Date().getMonth())
+    .reduce((acc: any, i: any) => acc + i.amount, 0);
 
   const kpis = [
     { 

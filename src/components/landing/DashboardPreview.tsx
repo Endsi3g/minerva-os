@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingDown, TrendingUp, ChevronDown, X } from 'lucide-react';
+import { TrendingUp, ChevronDown, X } from 'lucide-react';
 import Gauge from './Gauge';
 import { useLang } from '@/i18n';
 

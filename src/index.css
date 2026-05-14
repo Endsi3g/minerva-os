@@ -1,5 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
 @source not "**/*.md";
 
 /* ── Minerva OS — Celestial Editorial Noir ──────────────────────────────── */
@@ -10,14 +12,15 @@
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
 
   /* Named palette — use bg-obsidian, text-ivory, etc. */
-  --color-parchment:    #f5f4ed;
-  --color-near-black:   #141413;
-  --color-terracotta:   #c96442;
-  --color-warm-gray:    #e8e6da;
-  --color-clay:         #d4d0bc;
-  --color-sage:         #7FA38A;
-  --color-ember:        #A86A6A;
-  --color-blue-accent:  #3898ec;
+  --color-obsidian:   #0A0D14;
+  --color-midnight:   #111522;
+  --color-dusk:       #171C2A;
+  --color-ivory:      #F5F1E8;
+  --color-silver:     #B8BDC7;
+  --color-fog:        #8A9099;
+  --color-sage:       #7FA38A;
+  --color-warm:       #B89B6A;
+  --color-ember:      #A86A6A;
 
   /* Antigravity Tokens */
   --shadow-floating:    0 20px 40px rgba(0, 0, 0, 0.05);
@@ -96,36 +99,36 @@
     --sidebar-ring:                   rgba(201, 100, 66, 0.2);
   }
 
-  /* ── Dark mode (Premium Obsidian Gold) ────────────────────────────────── */
+  /* ── Dark mode (Celestial Editorial Noir) ─────────────────────────────── */
   .dark {
-    --background:               #0e0e0d;
-    --foreground:               #f5f4ed;
-    --card:                     #1a1a19;
-    --card-foreground:          #f5f4ed;
-    --popover:                  #1a1a19;
-    --popover-foreground:       #f5f4ed;
-    --primary:                  #c96442;
-    --primary-foreground:       #ffffff;
-    --secondary:                #262624;
-    --secondary-foreground:     #f5f4ed;
-    --muted:                    #262624;
-    --muted-foreground:         #a1a19f;
-    --accent:                   #262624;
-    --accent-foreground:        #c96442;
+    --background:               #0A0D14;
+    --foreground:               #F5F1E8;
+    --card:                     #111522;
+    --card-foreground:          #F5F1E8;
+    --popover:                  #111522;
+    --popover-foreground:       #F5F1E8;
+    --primary:                  #F5F1E8;
+    --primary-foreground:       #0A0D14;
+    --secondary:                #171C2A;
+    --secondary-foreground:     #B8BDC7;
+    --muted:                    #171C2A;
+    --muted-foreground:         #8A9099;
+    --accent:                   #171C2A;
+    --accent-foreground:        #7FA38A;
     --destructive:              #A86A6A;
-    --destructive-foreground:   #ffffff;
-    --border:                   rgba(245, 244, 237, 0.1);
-    --input:                    #1a1a19;
-    --ring:                     rgba(201, 100, 66, 0.3);
+    --destructive-foreground:   #F5F1E8;
+    --border:                   rgba(255, 255, 255, 0.08);
+    --input:                    #111522;
+    --ring:                     rgba(127, 163, 138, 0.3);
 
-    --sidebar:                        #141413;
-    --sidebar-foreground:             #f5f4ed;
-    --sidebar-primary:                #c96442;
-    --sidebar-primary-foreground:     #ffffff;
+    --sidebar:                        #0A0D14;
+    --sidebar-foreground:             #B8BDC7;
+    --sidebar-primary:                #F5F1E8;
+    --sidebar-primary-foreground:     #0A0D14;
     --sidebar-accent:                 rgba(255, 255, 255, 0.05);
-    --sidebar-accent-foreground:      #c96442;
-    --sidebar-border:                 rgba(255, 255, 255, 0.05);
-    --sidebar-ring:                   rgba(201, 100, 66, 0.3);
+    --sidebar-accent-foreground:      #7FA38A;
+    --sidebar-border:                 rgba(255, 255, 255, 0.08);
+    --sidebar-ring:                   rgba(127, 163, 138, 0.3);
   }
 
   body {
@@ -253,4 +256,37 @@
 
 @media (prefers-reduced-motion: reduce) {
   .c5-animated-gradient { animation: none; }
+}
+
+:root {
+  --sidebar: hsl(0 0% 98%);
+  --sidebar-foreground: hsl(240 5.3% 26.1%);
+  --sidebar-primary: hsl(240 5.9% 10%);
+  --sidebar-primary-foreground: hsl(0 0% 98%);
+  --sidebar-accent: hsl(240 4.8% 95.9%);
+  --sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+.dark {
+  --sidebar: hsl(240 5.9% 10%);
+  --sidebar-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-primary: hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-border: hsl(240 3.7% 15.9%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+@theme inline {
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }

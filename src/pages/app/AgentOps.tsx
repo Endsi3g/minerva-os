@@ -3,13 +3,12 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { useLang } from '@/i18n';
 import { Sparkles, History, ShieldCheck, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AgentOps() {
   // Get first workspace for now
-  const workspaces = useQuery(api.workspaces.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
   const workspaceId = workspaces[0]?._id;
   
   const agents = useQuery(api.agents.list, workspaceId ? { workspaceId } : "skip") ?? [];

@@ -8,9 +8,9 @@ import { z } from "zod";
 // Project Orchestrator Agent
 // - Primary model: GPT-5.4 for deep project analysis
 // - Fallback: Claude 4.6 Sonnet for nuanced language generation
-export const projectOrchestratorAgent = new Agent(components.agent, {
+export const projectOrchestratorAgent = new Agent((components as any).agent, {
   name: "Project Orchestrator",
-  chat: openai("gpt-5.4"),
+  languageModel: openai("gpt-4o"),
   instructions: `
 You are the Project Orchestrator agent for Minerva OS, an agency operating system.
 Your role:

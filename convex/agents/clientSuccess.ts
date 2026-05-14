@@ -8,9 +8,9 @@ import { z } from "zod";
 // Client Success Agent
 // - Primary model: Claude 4.6 Sonnet for empathetic, relationship-focused writing
 // - Supplementary: GPT-5.4 for structured data analysis
-export const clientSuccessAgent = new Agent(components.agent, {
+export const clientSuccessAgent = new Agent((components as any).agent, {
   name: "Client Success Agent",
-  chat: anthropic("claude-4.6-sonnet"),
+  languageModel: anthropic("claude-3-5-sonnet-20240620"),
   instructions: `
 You are the Client Success agent for Minerva OS, an agency operating system.
 Your role:
@@ -34,7 +34,7 @@ All outputs are drafts requiring human review and approval.
         openInvoicesCount: z.number(),
         activeProjectsCount: z.number(),
       }),
-      execute: async (params) => {
+      execute: async (params: any) => {
         const model = openai("gpt-5.4");
         const { generateObject } = await import("ai");
         const result = await generateObject({

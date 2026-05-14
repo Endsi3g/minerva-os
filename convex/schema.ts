@@ -91,7 +91,7 @@ export default defineSchema({
     contact: v.string(),
     email: v.string(),
     status: v.string(), // "active", "lead", "inactive"
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   calls: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     title: v.string(),

@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 export function PresenceAvatars() {
   const pathname = usePathname();
   const { t } = useLang();
-  const activeUsers = usePresence(pathname);
+  const activeUsers = usePresence(pathname ?? undefined);
 
   if (activeUsers.length === 0) return null;
 

@@ -35,7 +35,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
       }}
     >
       <p className="font-medium mb-1">{label}</p>
-      {payload.map((entry, i) => (
+      {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color ?? SILVER }}>
           {entry.name}: <span className="font-semibold">{
             typeof entry.value === 'number' && String(entry.name).includes('$')
@@ -68,38 +68,41 @@ export default function Reports() {
   const { t, lang } = useLang();
   const r = t.app.reports;
 
-  const clients = useQuery(api.clients.list) ?? [];
-  const deals = useQuery(api.deals.list) ?? [];
-  const tasks = useQuery(api.tasks.list) ?? [];
-  const approvals = useQuery(api.approvals.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const deals = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const approvals = useQuery(api.approvals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
 
   const STAGE_ORDER = ['new_lead', 'qualified', 'proposal', 'negotiation', 'won'] as const;
 
   // Data transforms
   const revenueData = useMemo(() => clients
-    .map(c => ({ name: c.company.split(' ')[0], value: 5000 /* Placeholder since no monthlyValue in schema */ }))
+    .map((c: any) => ({ name: c.company.split(' ')[0], value: 5000 /* Placeholder since no monthlyValue in schema */ }))
     .slice(0, 5), [clients]);
 
   const teamData = useMemo(() => {
-    const assignees = [...new Set(tasks.map(t => t.assignee))];
-    return assignees.map(a => ({
+    const assignees = [...new Set(tasks.map((t: any) => t.assignee))];
+    return assignees.map((a: any) => ({
       name: a,
-      done: tasks.filter(t => t.assignee === a && t.status === 'done').length,
-      open: tasks.filter(t => t.assignee === a && t.status !== 'done').length,
-    })).sort((a, b) => (b.done + b.open) - (a.done + a.open));
+      done: tasks.filter((t: any) => t.assignee === a && t.status === 'done').length,
+      open: tasks.filter((t: any) => t.assignee === a && t.status !== 'done').length,
+    })).sort((a: any, b: any) => (b.done + b.open) - (a.done + a.open));
   }, [tasks]);
 
-  const funnelData = useMemo(() => STAGE_ORDER.map(stage => ({
+  const funnelData = useMemo(() => STAGE_ORDER.map((stage: any) => ({
     name: t.app.pipeline.stages[stage as keyof typeof t.app.pipeline.stages] || stage,
-    count: deals.filter(l => l.stage === stage).length,
-    value: deals.filter(l => l.stage === stage).reduce((s, l) => s + l.value, 0),
+    count: deals.filter((l: any) => l.stage === stage).length,
+    value: deals.filter((l: any) => l.stage === stage).reduce((s: number, l: any) => s + l.value, 0),
   })), [deals, t]);
 
   // Quick stats
-  const totalPending  = approvals.filter(a => a.status === 'pending').length;
-  const totalApproved = approvals.filter(a => a.status === 'approved').length;
-  const wonDeals = deals.filter(l => l.stage === 'won');
-  const totalPipeline = deals.reduce((s, l) => s + l.value, 0);
+  const totalPending  = approvals.filter((a: any) => a.status === 'pending').length;
+  const totalApproved = approvals.filter((a: any) => a.status === 'approved').length;
+  const wonDeals = deals.filter((l: any) => l.stage === 'won');
+  const totalPipeline = deals.reduce((s: number, l: any) => s + l.value, 0);
   const conversionRate = deals.length > 0
     ? Math.round((wonDeals.length / deals.length) * 100)
     : 0;
@@ -167,7 +170,7 @@ export default function Reports() {
               />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
               <Bar dataKey="value" name={r.revenue.label} radius={[4, 4, 0, 0]}>
-                {revenueData.map((_, i) => (
+                {revenueData.map((_: any, i: number) => (
                   <Cell key={i} fill={i === 0 ? SAGE : `rgba(127,163,138,${0.7 - i * 0.1})`} />
                 ))}
               </Bar>

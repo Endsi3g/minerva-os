@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CommentSectionProps {
   targetId: string;
@@ -69,13 +70,12 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
       </div>
 
       <div className="relative">
-        <textarea
+        <Textarea
           placeholder="Write a comment..."
           value={content}
           onChange={(e: any) => setContent(e.target.value)}
           className={cn(
-            "flex w-full rounded-md border border-white/5 bg-midnight px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/20 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-            "min-h-[80px] resize-none pr-10"
+            "bg-midnight text-xs min-h-[80px] resize-none pr-10 border-white/5 focus-visible:ring-sage/20",
           )}
           onKeyDown={(e: any) => {
             if (e.key === 'Enter' && !e.shiftKey) {

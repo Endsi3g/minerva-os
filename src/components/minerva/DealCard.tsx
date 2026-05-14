@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { Lead } from '@/lib/types';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
@@ -9,9 +11,9 @@ function fmt(n: number) {
 function ProbBadge({ p }: { p: number }) {
   const color = p >= 70 ? 'text-sage bg-sage/10' : p >= 40 ? 'text-warm bg-warm/10' : 'text-fog bg-fog/10';
   return (
-    <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', color)}>
+    <Badge variant="outline" className={cn('text-[10px] font-medium px-1.5 py-0.5 border-none rounded-full', color)}>
       {p}%
-    </span>
+    </Badge>
   );
 }
 
@@ -23,11 +25,11 @@ interface DealCardProps {
 
 export function DealCard({ lead, onEdit, onDragStart }: DealCardProps) {
   return (
-    <div 
+    <Card 
       draggable
       onDragStart={onDragStart}
       onClick={onEdit}
-      className="bg-card border border-border rounded-xl p-4 space-y-3 cursor-pointer hover:border-white/15 hover:bg-dusk/40 transition-colors select-none active:opacity-50"
+      className="bg-card border-border rounded-xl p-4 space-y-3 cursor-pointer hover:border-white/15 hover:bg-dusk/40 transition-colors select-none active:opacity-50 shadow-none"
     >
       {/* Company + value */}
       <div className="flex items-start justify-between gap-2">
@@ -50,6 +52,6 @@ export function DealCard({ lead, onEdit, onDragStart }: DealCardProps) {
           <AvatarFallback className="text-[8px]">{lead.owner}</AvatarFallback>
         </Avatar>
       </div>
-    </div>
+    </Card>
   );
 }
