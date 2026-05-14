@@ -11,9 +11,9 @@ const translations = {
       requestAccess: 'Request Access',
     },
     landing: {
-      badge: 'Convix Software',
-      headline: 'Shaping Agencies of tomorrow',
-      subtitle: 'The All-In-One Software Powering the Future of PR Agencies',
+      badge: 'Minerva OS · Intelligence for Agencies',
+      headline: 'The Operating System for Elite Agencies',
+      subtitle: 'Centralize your leads, projects, and billing in one seamless, high-performance workspace.',
       cta: 'Get Started',
       nav: {
         home: 'Home',
@@ -56,7 +56,7 @@ const translations = {
       }
     },
     signup: {
-      leftHeading: 'Join Aurora',
+      leftHeading: 'Join Minerva',
       leftDesc: 'Follow these 3 quick phases to activate your space.',
       steps: ['Register your identity', 'Configure your studio', 'Finalize your profile'] as string[],
       heading: 'Create New Profile',
@@ -550,9 +550,9 @@ const translations = {
       requestAccess: "Demander l'accès",
     },
     landing: {
-      badge: 'Convix Software',
-      headline: 'Faconner les Agences de demain',
-      subtitle: 'Le logiciel tout-en-un pour propulser les agences PR de demain',
+      badge: 'Minerva OS · Intelligence pour Agences',
+      headline: 'Le système d\'exploitation pour agences d\'élite',
+      subtitle: 'Centralisez vos leads, vos projets et votre facturation dans un espace de travail fluide et performant.',
       cta: 'Commencer',
       nav: {
         home: 'Accueil',

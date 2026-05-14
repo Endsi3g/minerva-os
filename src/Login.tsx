@@ -7,9 +7,7 @@ import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 
-const HERO_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
-
+const HERO_IMAGE = '/api/artifacts/orange_abstract_premium_bg_1778774964646.png'; // Using generated orange background
 const ACCENT = '#ef4d23';
 
 const containerVariants = {
@@ -59,9 +57,8 @@ export default function Login() {
     >
       {/* ── Left column — hero video ────────────────────────────────────────── */}
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
-        <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline>
-          <source src={HERO_VIDEO} type="video/mp4" />
-        </video>
+        <img className="absolute inset-0 w-full h-full object-cover" src={HERO_IMAGE} alt="Orange Abstract Background" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
@@ -231,9 +228,9 @@ function FeatureItem({ text }: { text: string }) {
   return (
     <div
       className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-      style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)' }}
     >
-      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ backgroundColor: '#ef4d23', color: '#FFFFFF' }}>
+      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}>
         <ArrowRight size={12} strokeWidth={3} />
       </span>
       <span className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{text}</span>

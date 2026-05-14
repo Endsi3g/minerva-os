@@ -5,7 +5,7 @@ import { api } from "./_generated/api";
 // This action would call OpenAI/Anthropic to generate embeddings
 export const generateEmbedding = action({
   args: { text: v.string() },
-  handler: async (_ctx, args): Promise<number[]> => {
+  handler: async (_ctx, _args): Promise<number[]> => {
     // Placeholder: In production, call your LLM provider here
     // const embedding = await getOpenAIEmbedding(args.text);
     
@@ -25,7 +25,7 @@ export const searchProjects = action({
     const results = await ctx.vectorSearch("projects", "by_embedding", {
       vector: embedding,
       limit: 5,
-      filter: (q) => q.eq("workspaceId", args.workspaceId as any),
+      filter: (q) => q.eq("workspaceId", args.workspaceId),
     });
 
     // 3. Fetch full project documents
@@ -48,7 +48,7 @@ export const searchKnowledgeBase = action({
     const results = await ctx.vectorSearch("knowledgeBase", "by_embedding", {
       vector: embedding,
       limit: 5,
-      filter: (q) => q.eq("workspaceId", args.workspaceId as any),
+      filter: (q) => q.eq("workspaceId", args.workspaceId),
     });
 
     const entries = await Promise.all(

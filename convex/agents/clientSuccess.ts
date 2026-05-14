@@ -2,7 +2,7 @@ import { Agent } from "@convex-dev/agent";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { components } from "../_generated/api";
-import { tool } from "ai";
+import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
 
 // Client Success Agent
@@ -23,10 +23,10 @@ You never contact the client directly. You only prepare materials for the team.
 All outputs are drafts requiring human review and approval.
 `,
   tools: {
-    analyzeEngagementWithGPT: tool({
+    analyzeEngagementWithGPT: createTool({
       description:
         "Use GPT-4o to score client engagement and generate a structured health assessment",
-      parameters: z.object({
+      inputSchema: z.object({
         clientName: z.string(),
         portalLoginCount: z.number(),
         daysSinceLastLogin: z.number(),
@@ -34,7 +34,7 @@ All outputs are drafts requiring human review and approval.
         openInvoicesCount: z.number(),
         activeProjectsCount: z.number(),
       }),
-      execute: async (params: any) => {
+      execute: async (_ctx, params: any) => {
         const model = openai("gpt-5.4");
         const { generateObject } = await import("ai");
         const result = await generateObject({

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -202,11 +202,11 @@
 .c5-animated-gradient {
   background-color: #0A0D14;
   background-image:
-    radial-gradient(circle at var(--c5-x1) var(--c5-y1), #9D50BB 0px, transparent var(--c5-s1)),
-    radial-gradient(circle at var(--c5-x2) var(--c5-y2), #6E48AA 0px, transparent var(--c5-s2)),
-    radial-gradient(circle at var(--c5-x3) var(--c5-y3), #E91E63 0px, transparent var(--c5-s3)),
-    radial-gradient(circle at var(--c5-x4) var(--c5-y4), #3F51B5 0px, transparent var(--c5-s4)),
-    radial-gradient(circle at var(--c5-x5) var(--c5-y5), #8E24AA 0px, transparent var(--c5-s5));
+    radial-gradient(circle at var(--c5-x1) var(--c5-y1), #ef4d23 0px, transparent var(--c5-s1)),
+    radial-gradient(circle at var(--c5-x2) var(--c5-y2), #ea580c 0px, transparent var(--c5-s2)),
+    radial-gradient(circle at var(--c5-x3) var(--c5-y3), #f59e0b 0px, transparent var(--c5-s3)),
+    radial-gradient(circle at var(--c5-x4) var(--c5-y4), #c2410c 0px, transparent var(--c5-s4)),
+    radial-gradient(circle at var(--c5-x5) var(--c5-y5), #7c2d12 0px, transparent var(--c5-s5));
   animation:
     c5-blob1 5s ease-in-out infinite,
     c5-blob2 6s ease-in-out infinite,

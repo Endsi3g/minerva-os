@@ -129,9 +129,9 @@ export default function Billing() {
   const workspaces = useQuery(api.workspaces.list, {}) ?? [];
   const workspaceId = workspaces[0]?._id;
 
-  const invoices = useQuery(api.invoices.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const retainers = useQuery(api.retainers.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : "skip") ?? [];
+  const retainers = useQuery(api.retainers.list, workspaceId ? { workspaceId } : "skip") ?? [];
+  const clients = useQuery(api.clients.list, workspaceId ? { workspaceId } : "skip") ?? [];
 
   const [filter, setFilter] = useState<string | 'all'>('all');
   const [query, setQuery]   = useState('');

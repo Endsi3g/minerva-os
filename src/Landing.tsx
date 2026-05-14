@@ -16,14 +16,14 @@ export default function Landing() {
   return (
     <div
       className="min-h-screen w-full p-3 sm:p-4"
-      style={{ backgroundColor: '#ededed', fontFamily: 'Inter, sans-serif' }}
+      style={{ backgroundColor: '#05070A', fontFamily: 'Inter, sans-serif' }}
     >
       {/* Hero container — clips everything inside */}
       <div
-        className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl"
+        className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/5"
         style={{
           height: 'calc(100vh - 24px)',
-          backgroundColor: '#d9d9d9',
+          backgroundColor: '#0A0D14',
         }}
       >
         {/* Background Video */}
@@ -38,8 +38,8 @@ export default function Landing() {
           poster={POSTER}
         />
 
-        {/* White overlay */}
-        <div className="absolute inset-0 bg-white/10" />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/40" />
 
         {/* Foreground content */}
         <div className="relative z-10 flex flex-col h-full">
@@ -49,9 +49,9 @@ export default function Landing() {
           {/* Hero Content */}
           <div className="flex flex-col items-center px-4 pt-10 sm:pt-16 pb-8 sm:pb-12 text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 shadow-sm mb-5 sm:mb-6">
+            <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 shadow-sm mb-5 sm:mb-6">
               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: '#ef4d23' }} />
-              <span className="text-[13px] font-medium text-neutral-700">{l.badge}</span>
+              <span className="text-[13px] font-medium text-silver/80">{l.badge}</span>
             </div>
 
             {/* Headline */}
@@ -62,26 +62,26 @@ export default function Landing() {
                 lineHeight: 1.05,
                 fontWeight: 500,
                 letterSpacing: '-0.02em',
-                color: '#0b0f1a',
+                color: '#F5F1E8',
               }}
             >
-              Shaping{' '}
+              The Operating{' '}
               <span
                 style={{
-                  fontFamily: "'Instrument Serif', serif",
+                  fontFamily: "'Playfair Display', serif",
                   fontStyle: 'italic',
                   fontWeight: 400,
                 }}
               >
-                Agencies
+                System
               </span>
               <br />
-              of tomorrow
+              for Elite Agencies
             </h1>
 
             {/* Subtitle */}
             <p
-              className="mt-4 sm:mt-6 text-neutral-700 px-2 max-w-2xl"
+              className="mt-4 sm:mt-6 text-silver/60 px-2 max-w-2xl"
               style={{ fontSize: 'clamp(13px, 3.5vw, 16px)' }}
             >
               {l.subtitle}
@@ -90,15 +90,15 @@ export default function Landing() {
             {/* CTA */}
             <Link
               href="/signup"
-              className="mt-6 sm:mt-8 inline-flex items-center gap-3 rounded-full pl-6 sm:pl-7 pr-2 py-2 sm:py-2.5 text-white hover:brightness-110 active:scale-[0.98] transition-all"
+              className="mt-6 sm:mt-8 inline-flex items-center gap-3 rounded-full pl-6 sm:pl-7 pr-2 py-2 sm:py-2.5 text-obsidian hover:scale-[1.02] active:scale-[0.98] transition-all"
               style={{
-                backgroundColor: '#0b0f1a',
+                backgroundColor: '#F5F1E8',
                 fontSize: '14px',
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             >
               {l.cta}
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center bg-obsidian text-ivory">
                 <ChevronRight size={16} strokeWidth={3} />
               </div>
             </Link>

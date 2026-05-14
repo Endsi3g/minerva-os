@@ -46,6 +46,7 @@ export default defineSchema({
     .vectorIndex("by_embedding", {
     vectorField: "embedding",
     dimensions: 1536,
+    filterFields: ["workspaceId"],
   }),
   tasks: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
@@ -318,6 +319,7 @@ export default defineSchema({
   }).vectorIndex("by_embedding", {
     vectorField: "embedding",
     dimensions: 1536,
+    filterFields: ["workspaceId"],
   }),
 
   riskFlags: defineTable({

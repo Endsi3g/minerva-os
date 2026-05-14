@@ -2,8 +2,13 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const list = query({
-  handler: async (ctx) => {
-    return await ctx.db.query("retainers").order("desc").collect();
+  args: { workspaceId: v.optional(v.id("workspaces")) },
+  handler: async (ctx, args) => {
+    let q = ctx.db.query("retainers");
+    if (args.workspaceId) {
+      q = q.filter((q) => q.eq(q.field("workspaceId"), args.workspaceId));
+    }
+    return await q.order("desc").collect();
   },
 });
 
