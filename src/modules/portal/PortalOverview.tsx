@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { CheckCircle2, Clock, AlertCircle, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
+import { useLang } from '@/i18n';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 16 },
@@ -26,7 +27,11 @@ function ProgressBar({ value, max, color = '#7FA38A' }: { value: number; max: nu
 }
 
 export default function PortalOverview() {
-  const { token, isValid, clientName, projects, approvals, invoices, milestones } = usePortalData();
+  const { t, lang } = useLang();
+  const pc = t.portal.common;
+  const po = t.portal.overview;
+
+  const { token, isValid, clientName, projects, tasks, approvals, invoices, milestones } = usePortalData();
 
   if (!isValid) return null;
 
@@ -42,9 +47,9 @@ export default function PortalOverview() {
     .slice(0, 4);
 
   const stats = [
-    { label: 'Active projects',    value: String(activeProjects),  sub: 'in progress', color: 'text-[#7FA38A]' },
-    { label: 'Pending approvals',  value: String(pendingApprovals), sub: 'awaiting review', color: pendingApprovals > 0 ? 'text-[#B89B6A]' : 'text-[#7FA38A]' },
-    { label: 'Outstanding',        value: outstandingTotal > 0 ? `$${outstandingTotal.toLocaleString()}` : '—', sub: 'invoices due', color: outstandingTotal > 0 ? 'text-[#B89B6A]' : 'text-[#7FA38A]' },
+    { label: po.stats.activeProjects,    value: String(activeProjects),  sub: po.stats.activeProjectsSub, color: 'text-[#7FA38A]' },
+    { label: po.stats.pendingApprovals,  value: String(pendingApprovals), sub: po.stats.pendingApprovalsSub, color: pendingApprovals > 0 ? 'text-[#B89B6A]' : 'text-[#7FA38A]' },
+    { label: po.stats.outstanding,        value: outstandingTotal > 0 ? `$${outstandingTotal.toLocaleString()}` : '—', sub: po.stats.outstandingSub, color: outstandingTotal > 0 ? 'text-[#B89B6A]' : 'text-[#7FA38A]' },
   ];
 
   return (
@@ -52,7 +57,7 @@ export default function PortalOverview() {
       {/* Welcome */}
       <motion.div custom={0} variants={fadeInUp} initial="hidden" animate="visible">
         <p className="text-xs tracking-[0.18em] uppercase mb-2" style={{ color: '#7FA38A', opacity: 0.7 }}>
-          Welcome back
+          {pc.welcomeBack}
         </p>
         <h1
           className="text-3xl font-normal"
@@ -61,10 +66,10 @@ export default function PortalOverview() {
           {clientName}
         </h1>
         <p className="text-sm mt-2" style={{ color: '#8A9099' }}>
-          Here's a snapshot of your active engagement with Uprising Studio.
+          {pc.snapshot}
         </p>
       </motion.div>
-
+      
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {stats.map((s, i) => (
@@ -86,15 +91,18 @@ export default function PortalOverview() {
 
       {/* Active projects */}
       <motion.div custom={4} variants={fadeInUp} initial="hidden" animate="visible">
-        <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>Active Projects</h2>
+        <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>{po.projects.title}</h2>
         <div className="space-y-3">
           {projects.filter(p => p.status === 'active').map(project => {
-            const pct = project.totalTasks > 0
-              ? Math.round((project.doneTasks / project.totalTasks) * 100)
+            const projectTasks = tasks.filter(t => t.projectId === project._id);
+            const totalTasks = projectTasks.length;
+            const doneTasks = projectTasks.filter(t => t.status === 'done').length;
+            const pct = totalTasks > 0
+              ? Math.round((doneTasks / totalTasks) * 100)
               : 0;
             return (
               <div
-                key={project.id}
+                key={project._id}
                 className="rounded-[14px] border p-4"
                 style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
               >
@@ -102,19 +110,21 @@ export default function PortalOverview() {
                   <div>
                     <p className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{project.name}</p>
                     <p className="text-xs mt-0.5" style={{ color: '#8A9099' }}>
-                      Due {new Date(project.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {po.projects.due} {new Date(project.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
                   <span
                     className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
                     style={{ backgroundColor: 'rgba(127,163,138,0.12)', color: '#7FA38A' }}
                   >
-                    {pct}% done
+                    {pct}% {po.projects.done}
                   </span>
                 </div>
-                <ProgressBar value={project.doneTasks} max={project.totalTasks} />
+                <ProgressBar value={doneTasks} max={totalTasks} />
                 <p className="text-[11px] mt-2" style={{ color: '#8A9099' }}>
-                  {project.doneTasks} of {project.totalTasks} tasks complete
+                  {po.projects.tasksComplete
+                    .replace('{{done}}', String(doneTasks))
+                    .replace('{{total}}', String(totalTasks))}
                 </p>
               </div>
             );
@@ -125,9 +135,10 @@ export default function PortalOverview() {
       {/* Upcoming milestones */}
       {upcomingMilestones.length > 0 && (
         <motion.div custom={5} variants={fadeInUp} initial="hidden" animate="visible">
-          <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>Upcoming Milestones</h2>
+          <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>{po.milestones.title}</h2>
           <div className="space-y-2">
             {upcomingMilestones.map(m => {
+              const project = projects.find(p => p._id === m.projectId);
               const daysLeft = Math.ceil(
                 (new Date(m.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
               );
@@ -135,7 +146,7 @@ export default function PortalOverview() {
               const isNear     = daysLeft >= 0 && daysLeft <= 7;
               return (
                 <div
-                  key={m.id}
+                  key={m._id}
                   className="flex items-center gap-4 px-4 py-3 rounded-[12px] border"
                   style={{ backgroundColor: 'rgba(255,255,255,0.015)', borderColor: 'rgba(255,255,255,0.05)' }}
                 >
@@ -148,16 +159,16 @@ export default function PortalOverview() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate" style={{ color: '#F5F1E8' }}>{m.title}</p>
-                    <p className="text-[11px]" style={{ color: '#8A9099' }}>{m.project}</p>
+                    <p className="text-[11px]" style={{ color: '#8A9099' }}>{project?.name || '...'}</p>
                   </div>
                   <span
                     className="text-[10px] shrink-0"
                     style={{ color: isOverdue ? '#A86A6A' : isNear ? '#B89B6A' : '#8A9099' }}
                   >
                     {isOverdue
-                      ? `${Math.abs(daysLeft)}d overdue`
+                      ? `${Math.abs(daysLeft)}${po.milestones.overdueSuffix}`
                       : daysLeft === 0
-                      ? 'today'
+                      ? po.milestones.today
                       : `${daysLeft}d`}
                   </span>
                 </div>
@@ -180,9 +191,9 @@ export default function PortalOverview() {
           >
             <div>
               <p className="text-sm font-medium" style={{ color: '#F5F1E8' }}>
-                {pendingApprovals} deliverable{pendingApprovals !== 1 ? 's' : ''} awaiting your review
+                {po.approvals.alert.replace('{{count}}', String(pendingApprovals))}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: '#7FA38A' }}>Review and approve</p>
+              <p className="text-xs mt-0.5" style={{ color: '#7FA38A' }}>{po.approvals.action}</p>
             </div>
             <ArrowRight size={16} style={{ color: '#7FA38A', flexShrink: 0 }} />
           </Link>

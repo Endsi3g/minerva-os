@@ -3,12 +3,14 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Circle, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 
 const HERO_VIDEO =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
+
+const ACCENT = '#ef4d23';
 
 const containerVariants = {
   hidden: {},
@@ -52,10 +54,10 @@ export default function Login() {
 
   return (
     <main
-      className="flex h-screen w-full selection:bg-white/20 p-2 transition-all duration-500 lg:p-4"
+      className="flex min-h-screen w-full selection:bg-white/20 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4"
       style={{ backgroundColor: '#0A0D14' }}
     >
-      {/* Left column */}
+      {/* ── Left column — hero video ────────────────────────────────────────── */}
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
         <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline>
           <source src={HERO_VIDEO} type="video/mp4" />
@@ -67,22 +69,34 @@ export default function Login() {
           initial="hidden"
           animate="show"
         >
+          {/* Brand */}
           <motion.div variants={itemVariants} className="flex items-center gap-2.5">
-            <Circle size={18} style={{ fill: '#F5F1E8', color: '#F5F1E8' }} />
-            <span className="text-xl font-semibold tracking-tight" style={{ color: '#F5F1E8' }}>
-              {t.nav.brand}
+            {/* Minerva 8-petal logo */}
+            <svg width="22" height="22" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="3.5" fill={ACCENT} />
+              {Array.from({ length: 8 }).map((_, i) => {
+                const angle = (i * Math.PI * 2) / 8;
+                const x = 16 + 10 * Math.cos(angle);
+                const y = 16 + 10 * Math.sin(angle);
+                return <circle key={i} cx={x} cy={y} r="3.5" fill={ACCENT} />;
+              })}
+            </svg>
+            <span className="text-xl font-semibold tracking-tight" style={{ color: '#F5F1E8', fontFamily: 'Inter, sans-serif' }}>
+              Minerva OS
             </span>
           </motion.div>
 
+          {/* Heading */}
           <motion.div variants={itemVariants} className="space-y-3">
             <h1 className="text-4xl font-medium tracking-tight" style={{ color: '#F5F1E8' }}>
               {l.leftHeading}
             </h1>
-            <p className="text-sm leading-relaxed px-4" style={{ color: 'rgba(184,189,199,0.75)' }}>
+            <p className="text-sm leading-relaxed px-0" style={{ color: 'rgba(184,189,199,0.75)' }}>
               {l.leftDesc}
             </p>
           </motion.div>
 
+          {/* Features */}
           <motion.div variants={itemVariants} className="space-y-2.5">
             {l.features.map((f) => (
               <FeatureItem key={f} text={f} />
@@ -91,7 +105,7 @@ export default function Login() {
         </motion.div>
       </div>
 
-      {/* Right column */}
+      {/* ── Right column — login form ──────────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center py-12 lg:py-6 px-4 sm:px-12 lg:px-16 xl:px-24 overflow-y-auto lg:overflow-hidden">
         <motion.div
           className="w-full max-w-xl space-y-8 lg:space-y-6 sm:space-y-10"
@@ -99,6 +113,7 @@ export default function Login() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
+          {/* Header */}
           <div className="space-y-2">
             <h2 className="text-3xl font-medium tracking-tight" style={{ color: '#F5F1E8' }}>
               {l.heading}
@@ -108,6 +123,7 @@ export default function Login() {
             </p>
           </div>
 
+          {/* Form */}
           <div className="space-y-4">
             {/* Email */}
             <div className="space-y-1.5">
@@ -173,7 +189,7 @@ export default function Login() {
             </button>
 
             {error && (
-              <p className="text-center text-xs text-ember mt-2">{error}</p>
+              <p className="text-center text-xs text-ember mt-2" style={{ color: '#ef4d23' }}>{error}</p>
             )}
 
             {/* Divider */}
@@ -217,7 +233,9 @@ function FeatureItem({ text }: { text: string }) {
       className="flex items-center gap-3 px-4 py-3 rounded-2xl"
       style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
     >
-      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#7FA38A' }} />
+      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ backgroundColor: '#ef4d23', color: '#FFFFFF' }}>
+        <ArrowRight size={12} strokeWidth={3} />
+      </span>
       <span className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{text}</span>
     </div>
   );

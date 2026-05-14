@@ -23,6 +23,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useSidebar, useChat } from './AppShell';
 import { useTheme } from '@/theme';
+import { cn } from '@/lib/utils';
+import { PresenceAvatars } from '../minerva/PresenceAvatars';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/contexts/AuthContext';
+import { Id } from '../../../convex/_generated/dataModel';
 
 const PAGE_LABELS: Record<string, string> = {
   '/app/dashboard': 'Dashboard',
@@ -35,15 +43,27 @@ const PAGE_LABELS: Record<string, string> = {
   '/app/billing':   'Billing',
   '/app/reports':   'Reports',
   '/app/settings':  'Settings',
+  '/app/call-preps': 'Call Preps',
+  '/app/fulfillment': 'Fulfillment',
+  '/app/finance': 'Finance',
 };
 
 export function AppHeader() {
   const { collapsed, toggle } = useSidebar();
   const { toggleChat } = useChat();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const pageLabel = PAGE_LABELS[pathname ?? ''] ?? 'Minerva OS';
+
+  const notifications = useQuery(api.notifications.list, { userId: user?.email ?? 'anonymous' }) ?? [];
+  const markRead = useMutation(api.notifications.markAsRead);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  async function handleMarkRead(id: Id<"notifications">) {
+    await markRead({ id });
+  }
 
   return (
     <header className="h-14 flex items-center px-4 gap-3 border-b border-border shrink-0">
@@ -89,10 +109,52 @@ export function AppHeader() {
         {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
       </Button>
 
-      <Button variant="ghost" size="icon" className="text-fog hover:text-ivory relative" aria-label="Notifications">
-        <Bell size={16} />
-        <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-sage" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="text-fog hover:text-ivory relative" aria-label="Notifications">
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-sage" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-80 bg-midnight border-white/5 p-0">
+          <div className="p-3 border-b border-white/5 flex items-center justify-between">
+            <span className="text-xs font-semibold text-ivory">Notifications</span>
+            {unreadCount > 0 && (
+              <span className="text-[10px] text-sage">{unreadCount} new</span>
+            )}
+          </div>
+          <ScrollArea className="h-[300px]">
+            {notifications.length === 0 ? (
+              <div className="p-10 text-center text-fog text-xs opacity-50">
+                No notifications yet.
+              </div>
+            ) : (
+              notifications.map((n: any) => (
+                <div
+                  key={n._id}
+                  className={cn(
+                    "p-3 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors cursor-pointer",
+                    !n.read && "bg-sage/5"
+                  )}
+                  onClick={() => handleMarkRead(n._id)}
+                >
+                  <p className="text-xs font-medium text-ivory">{n.title}</p>
+                  <p className="text-[11px] text-fog mt-0.5 leading-relaxed">{n.message}</p>
+                  <p className="text-[9px] text-fog/60 mt-1">
+                    {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              ))
+            )}
+          </ScrollArea>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <TooltipProvider delayDuration={0}>
+        <PresenceAvatars />
+      </TooltipProvider>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

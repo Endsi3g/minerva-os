@@ -3,12 +3,14 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Circle, Chrome, Github, Eye, EyeOff } from 'lucide-react';
+import { Chrome, Github, Eye, EyeOff } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 
 const HERO_VIDEO =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
+
+const ACCENT = '#ef4d23';
 
 const containerVariants = {
   hidden: {},
@@ -56,10 +58,10 @@ export default function SignUp() {
 
   return (
     <main
-      className="flex h-screen w-full selection:bg-white/20 p-2 transition-all duration-500 lg:p-4"
+      className="flex min-h-screen w-full selection:bg-white/20 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4"
       style={{ backgroundColor: '#0A0D14' }}
     >
-      {/* Left column */}
+      {/* ── Left column — hero video ────────────────────────────────────────── */}
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
         <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline>
           <source src={HERO_VIDEO} type="video/mp4" />
@@ -71,22 +73,34 @@ export default function SignUp() {
           initial="hidden"
           animate="show"
         >
+          {/* Brand */}
           <motion.div variants={itemVariants} className="flex items-center gap-2.5">
-            <Circle size={18} style={{ fill: '#F5F1E8', color: '#F5F1E8' }} />
-            <span className="text-xl font-semibold tracking-tight" style={{ color: '#F5F1E8' }}>
-              {t.nav.brand}
+            {/* Minerva 8-petal logo */}
+            <svg width="22" height="22" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="3.5" fill={ACCENT} />
+              {Array.from({ length: 8 }).map((_, i) => {
+                const angle = (i * Math.PI * 2) / 8;
+                const x = 16 + 10 * Math.cos(angle);
+                const y = 16 + 10 * Math.sin(angle);
+                return <circle key={i} cx={x} cy={y} r="3.5" fill={ACCENT} />;
+              })}
+            </svg>
+            <span className="text-xl font-semibold tracking-tight" style={{ color: '#F5F1E8', fontFamily: 'Inter, sans-serif' }}>
+              Minerva OS
             </span>
           </motion.div>
 
+          {/* Heading */}
           <motion.div variants={itemVariants} className="space-y-3">
             <h1 className="text-4xl font-medium tracking-tight whitespace-nowrap" style={{ color: '#F5F1E8' }}>
               {s.leftHeading}
             </h1>
-            <p className="text-sm leading-relaxed px-4" style={{ color: 'rgba(184,189,199,0.75)' }}>
+            <p className="text-sm leading-relaxed px-0" style={{ color: 'rgba(184,189,199,0.75)' }}>
               {s.leftDesc}
             </p>
           </motion.div>
 
+          {/* Steps */}
           <motion.div variants={itemVariants} className="space-y-2.5">
             {s.steps.map((step, i) => (
               <StepItem key={step} number={i + 1} text={step} active={i === 0} />
@@ -95,7 +109,7 @@ export default function SignUp() {
         </motion.div>
       </div>
 
-      {/* Right column */}
+      {/* ── Right column — signup form ──────────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center py-12 lg:py-6 px-4 sm:px-12 lg:px-16 xl:px-24 overflow-y-auto lg:overflow-hidden">
         <motion.div
           className="w-full max-w-xl space-y-8 lg:space-y-6 sm:space-y-10"
@@ -103,6 +117,7 @@ export default function SignUp() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
+          {/* Header */}
           <div className="space-y-2">
             <h2 className="text-3xl font-medium tracking-tight" style={{ color: '#F5F1E8' }}>
               {s.heading}
@@ -112,13 +127,16 @@ export default function SignUp() {
             </p>
           </div>
 
+          {/* Social Buttons */}
           <div className="grid grid-cols-2 gap-4">
             <SocialButton icon={<Chrome size={17} />} label={s.google} />
             <SocialButton icon={<Github size={17} />} label={s.github} />
           </div>
 
+          {/* Divider */}
           <Divider label={s.or} />
 
+          {/* Form */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <InputField label={s.firstName} placeholder={s.firstNamePlaceholder} type="text" value={firstName} onChange={setFirstName} />
@@ -127,6 +145,7 @@ export default function SignUp() {
 
             <InputField label={s.email} placeholder={s.emailPlaceholder} type="email" value={email} onChange={setEmail} />
 
+            {/* Password field */}
             <div className="space-y-1.5">
               <label className="block text-sm font-medium" style={{ color: '#F5F1E8' }}>
                 {s.password}
@@ -142,7 +161,7 @@ export default function SignUp() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v) => !v)}
+                  onClick={() => setShowPassword(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
                   style={{ color: 'rgba(184,189,199,0.35)' }}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -190,7 +209,7 @@ function StepItem({ number, text, active = false }: { number: number; text: stri
       className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200"
       style={
         active
-          ? { backgroundColor: '#F5F1E8', border: '1px solid #F5F1E8' }
+          ? { backgroundColor: '#ef4d23', border: '1px solid #ef4d23' }
           : { backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }
       }
     >
@@ -198,13 +217,13 @@ function StepItem({ number, text, active = false }: { number: number; text: stri
         className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
         style={
           active
-            ? { backgroundColor: '#0A0D14', color: '#F5F1E8' }
+            ? { backgroundColor: 'rgba(0,0,0,0.25)', color: '#FFFFFF' }
             : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(184,189,199,0.5)' }
         }
       >
         {number}
       </span>
-      <span className="text-sm font-medium" style={{ color: active ? '#0A0D14' : '#F5F1E8' }}>
+      <span className="text-sm font-medium" style={{ color: active ? '#FFFFFF' : '#F5F1E8' }}>
         {text}
       </span>
     </div>
@@ -223,15 +242,15 @@ function SocialButton({ icon, label }: { icon: React.ReactNode; label: string })
   );
 }
 
-function InputField({ 
-  label, 
-  placeholder, 
-  type, 
-  value, 
-  onChange 
-}: { 
-  label: string; 
-  placeholder: string; 
+function InputField({
+  label,
+  placeholder,
+  type,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
   type: string;
   value: string;
   onChange: (val: string) => void;

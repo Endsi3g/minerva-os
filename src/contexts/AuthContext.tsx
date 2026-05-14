@@ -1,5 +1,7 @@
-'use client';
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useMemo } from 'react';
+import { useAuthActions } from "@convex-dev/auth/react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export type UserRole = 'owner' | 'strategist' | 'project_manager' | 'designer' | 'developer' | 'finance' | 'client_stakeholder' | 'client_reviewer';
 
@@ -21,52 +23,39 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
+  const { signIn, signOut } = useAuthActions();
+  
+  // Get full user profile from Convex
+  const viewer = useQuery(api.userProfiles.viewer);
+  
+  const user = useMemo(() => {
+    if (!isAuthenticated || !viewer) return null;
+    return {
+      id: viewer._id,
+      email: viewer.email,
+      name: viewer.name,
+      role: (viewer.role || 'project_manager') as UserRole,
+    };
+  }, [isAuthenticated, viewer]);
 
-  useEffect(() => {
-    // On mount, try to restore session from cookie (server validates on each request in middleware)
-    const stored = sessionStorage.getItem('minerva_user');
-    if (stored) {
-      try { setUser(JSON.parse(stored) as AuthUser); } catch { /* corrupt storage */ }
-    }
-    setIsLoading(false);
-  }, []);
+  const isLoading = isAuthLoading || (isAuthenticated && viewer === undefined);
 
   async function login(email: string, password: string) {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
-      const { error } = await res.json() as { error: string };
-      throw new Error(error);
-    }
-    const { user: authUser } = await res.json() as { user: AuthUser };
-    setUser(authUser);
-    sessionStorage.setItem('minerva_user', JSON.stringify(authUser));
+    await signIn("password", { email, password, flow: "signIn" });
   }
 
   async function signup(firstName: string, lastName: string, email: string, password: string) {
-    const res = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ firstName, lastName, email, password }),
+    await signIn("password", { 
+      email, 
+      password, 
+      name: `${firstName} ${lastName}`,
+      flow: "signUp" 
     });
-    if (!res.ok) {
-      const { error } = await res.json() as { error: string };
-      throw new Error(error);
-    }
-    const { user: authUser } = await res.json() as { user: AuthUser };
-    setUser(authUser);
-    sessionStorage.setItem('minerva_user', JSON.stringify(authUser));
   }
 
   async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
-    sessionStorage.removeItem('minerva_user');
+    await signOut();
   }
 
   return (

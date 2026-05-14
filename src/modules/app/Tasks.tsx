@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Circle, Loader2, Eye, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MOCK_TASKS, MOCK_PROJECTS } from '@/lib/mock-data';
-import type { Task, TaskStatus, TaskPriority } from '@/lib/types';
+import type { TaskStatus, TaskPriority } from '@/lib/types';
+import { useLang } from '@/i18n';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { CommentSection } from '@/components/minerva/CommentSection';
+import { Id } from '../../../convex/_generated/dataModel';
 
 type Filter = TaskStatus | 'all';
 
@@ -51,14 +55,6 @@ const PRIORITY_COLOR: Record<TaskPriority, string> = {
   low:    'text-fog   bg-fog/10',
 };
 
-const FILTER_TABS: { id: Filter; label: string }[] = [
-  { id: 'all',         label: 'All' },
-  { id: 'todo',        label: 'To Do' },
-  { id: 'in_progress', label: 'In Progress' },
-  { id: 'review',      label: 'Review' },
-  { id: 'done',        label: 'Done' },
-];
-
 interface NewTaskForm {
   title: string;
   projectId: string;
@@ -73,33 +69,46 @@ const EMPTY_FORM: NewTaskForm = {
 };
 
 export default function Tasks() {
-  const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
+  const { t, lang } = useLang();
+  const tk = t.app.tasks;
+
+  const tasks = useQuery(api.tasks.get) ?? [];
+  const projects = useQuery(api.projects.list) ?? [];
+  const createTask = useMutation(api.tasks.create);
+
   const [filter, setFilter] = useState<Filter>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewTaskForm>(EMPTY_FORM);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const updateTask = useMutation(api.tasks.update);
+
+  const FILTER_TABS = useMemo(() => [
+    { id: 'all' as Filter,         label: tk.filters.all },
+    { id: 'todo' as Filter,        label: tk.filters.todo },
+    { id: 'in_progress' as Filter, label: tk.filters.in_progress },
+    { id: 'review' as Filter,      label: tk.filters.review },
+    { id: 'done' as Filter,        label: tk.filters.done },
+  ], [tk]);
 
   const visible = filter === 'all' ? tasks : tasks.filter(t => t.status === filter);
 
-  function cycleStatus(id: string) {
-    setTasks(prev => prev.map(t =>
-      t.id === id ? { ...t, status: STATUS_CYCLE[t.status] } : t
-    ));
+  async function cycleStatus(id: any, currentStatus: TaskStatus) {
+    const nextStatus = STATUS_CYCLE[currentStatus];
+    await updateTask({ id, status: nextStatus });
   }
 
-  function handleAdd() {
-    if (!form.title.trim()) return;
-    const project = MOCK_PROJECTS.find(p => p.id === form.projectId);
-    const task: Task = {
-      id: `t${Date.now()}`,
+  async function handleAdd() {
+    if (!form.title.trim() || !form.projectId) return;
+    
+    await createTask({
       title: form.title.trim(),
-      project: project?.name ?? 'Unassigned',
-      projectId: form.projectId,
+      projectId: form.projectId as any,
+      status: form.status,
+      priority: form.priority,
       assignee: form.assignee.trim() || 'US',
       dueDate: form.dueDate || '2026-12-31',
-      priority: form.priority,
-      status: form.status,
-    };
-    setTasks(prev => [task, ...prev]);
+    });
+    
     setSheetOpen(false);
     setForm(EMPTY_FORM);
   }
@@ -109,12 +118,16 @@ export default function Tasks() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">Tasks</h1>
-          <p className="text-sm text-fog mt-0.5">{tasks.length} total · {tasks.filter(t => t.status !== 'done').length} open</p>
+          <h1 className="text-2xl font-semibold text-ivory">{tk.title}</h1>
+          <p className="text-sm text-fog mt-0.5">
+            {tk.stats
+              .replace('total', String(tasks.length))
+              .replace('open', String(tasks.filter(t => t.status !== 'done').length))}
+          </p>
         </div>
         <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
           <Plus size={14} />
-          Add task
+          {tk.addTask}
         </Button>
       </div>
 
@@ -144,22 +157,27 @@ export default function Tasks() {
       {/* Task list */}
       <div className="space-y-1">
         {visible.length === 0 && (
-          <p className="text-sm text-fog py-8 text-center">No tasks in this view.</p>
+          <p className="text-sm text-fog py-8 text-center">{tk.empty}</p>
         )}
         {visible.map(task => {
-          const StatusIcon = STATUS_ICON[task.status];
+          const StatusIcon = STATUS_ICON[task.status as TaskStatus] || Circle;
+          const project = projects.find(p => p._id === task.projectId);
           return (
             <div
-              key={task.id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-card/80 transition-colors group"
+              key={task._id}
+              onClick={() => setSelectedTask(task)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-card/80 transition-colors group cursor-pointer"
             >
               {/* Status toggle */}
               <button
-                onClick={() => cycleStatus(task.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  cycleStatus(task._id, task.status as TaskStatus);
+                }}
                 className="shrink-0 transition-opacity hover:opacity-80"
-                aria-label="Cycle status"
+                aria-label={lang === 'fr' ? 'Changer le statut' : 'Cycle status'}
               >
-                <StatusIcon size={16} className={STATUS_COLOR[task.status]} />
+                <StatusIcon size={16} className={STATUS_COLOR[task.status as TaskStatus]} />
               </button>
 
               {/* Title */}
@@ -169,17 +187,17 @@ export default function Tasks() {
 
               {/* Project pill */}
               <span className="hidden sm:block text-[10px] px-2 py-0.5 rounded-full bg-dusk text-fog border border-border shrink-0 max-w-[120px] truncate">
-                {task.project}
+                {project?.name || '...'}
               </span>
 
               {/* Priority */}
-              <span className={cn('hidden md:block text-[10px] font-medium px-1.5 py-0.5 rounded-full capitalize shrink-0', PRIORITY_COLOR[task.priority])}>
-                {task.priority}
+              <span className={cn('hidden md:block text-[10px] font-medium px-1.5 py-0.5 rounded-full capitalize shrink-0', PRIORITY_COLOR[task.priority as TaskPriority])}>
+                {tk.priorities[task.priority as TaskPriority]}
               </span>
 
               {/* Due date */}
               <span className="hidden lg:block text-[10px] text-fog shrink-0">
-                {new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                {new Date(task.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
               </span>
 
               {/* Assignee */}
@@ -191,64 +209,86 @@ export default function Tasks() {
         })}
       </div>
 
+      {/* Task detail sheet */}
+      <Sheet open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
+        <SheetContent side="right" className="w-[400px] bg-midnight border-white/5 flex flex-col p-0">
+          <SheetHeader className="p-6 border-b border-white/5">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={cn('text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full', PRIORITY_COLOR[selectedTask?.priority as TaskPriority])}>
+                {tk.priorities[selectedTask?.priority as TaskPriority]}
+              </span>
+              <span className="text-[10px] text-fog">Due {new Date(selectedTask?.dueDate).toLocaleDateString()}</span>
+            </div>
+            <SheetTitle className="text-xl font-semibold text-ivory leading-tight">{selectedTask?.title}</SheetTitle>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-hidden p-6">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-fog mb-4">Discussion</p>
+            {selectedTask && (
+              <CommentSection targetId={selectedTask._id} targetType="task" />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* Add task sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
           <SheetHeader>
-            <SheetTitle>New Task</SheetTitle>
+            <SheetTitle>{tk.newTask}</SheetTitle>
           </SheetHeader>
 
           <div className="flex flex-col gap-4 flex-1">
             <div className="space-y-1.5">
-              <Label>Task title</Label>
-              <Input placeholder="Finalise homepage wireframes" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+              <Label>{tk.form.title}</Label>
+              <Input placeholder={tk.form.titlePlaceholder} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Project</Label>
+              <Label>{tk.form.project}</Label>
               <Select value={form.projectId} onValueChange={v => setForm(f => ({ ...f, projectId: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select project..." /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tk.form.projectPlaceholder} /></SelectTrigger>
                 <SelectContent>
-                  {MOCK_PROJECTS.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  {projects.map(p => (
+                    <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Assignee initials</Label>
-              <Input placeholder="US" maxLength={3} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value.toUpperCase() }))} />
+              <Label>{tk.form.assignee}</Label>
+              <Input placeholder={tk.form.assigneePlaceholder} maxLength={3} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value.toUpperCase() }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Due date</Label>
+              <Label>{tk.form.dueDate}</Label>
               <Input type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} className="[color-scheme:dark]" />
             </div>
             <div className="space-y-1.5">
-              <Label>Priority</Label>
+              <Label>{tk.form.priority}</Label>
               <Select value={form.priority} onValueChange={v => setForm(f => ({ ...f, priority: v as TaskPriority }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="low">{tk.priorities.low}</SelectItem>
+                  <SelectItem value="medium">{tk.priorities.medium}</SelectItem>
+                  <SelectItem value="high">{tk.priorities.high}</SelectItem>
+                  <SelectItem value="urgent">{tk.priorities.urgent}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Status</Label>
+              <Label>{tk.form.status}</Label>
               <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v as TaskStatus }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="review">Review</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
+                  <SelectItem value="todo">{tk.filters.todo}</SelectItem>
+                  <SelectItem value="in_progress">{tk.filters.in_progress}</SelectItem>
+                  <SelectItem value="review">{tk.filters.review}</SelectItem>
+                  <SelectItem value="done">{tk.filters.done}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <Button className="w-full" onClick={handleAdd}>Add Task</Button>
+          <Button className="w-full" onClick={handleAdd}>{tk.form.add}</Button>
         </SheetContent>
       </Sheet>
     </>

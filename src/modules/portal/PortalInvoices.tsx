@@ -18,9 +18,23 @@ function fmt(amount: number, currency: string) {
 }
 
 export default function PortalInvoices() {
-  const { isValid, invoices } = usePortalData();
+  const { isValid, invoices: rawInvoices, projects } = usePortalData();
 
   if (!isValid) return null;
+
+  // Map to local UI format
+  const invoices = rawInvoices.map(inv => {
+    const project = projects.find(p => p._id === inv.projectId);
+    return {
+      ...inv,
+      id: inv._id,
+      number: inv.invoiceNumber,
+      issuedDate: inv.date,
+      project: project?.name || '...',
+      currency: 'USD', // Default as it's not in schema
+      paidDate: null,   // Default as it's not in schema
+    };
+  });
 
   const outstanding = invoices
     .filter(i => i.status === 'sent' || i.status === 'overdue')
@@ -68,7 +82,7 @@ export default function PortalInvoices() {
           <p className="text-sm text-center py-12" style={{ color: '#8A9099' }}>No invoices yet.</p>
         )}
         {invoices.map((invoice, i) => {
-          const sc = STATUS_CONFIG[invoice.status];
+          const sc = STATUS_CONFIG[invoice.status as InvoiceStatus] || STATUS_CONFIG.draft;
           return (
             <motion.div
               key={invoice.id}
@@ -106,7 +120,7 @@ export default function PortalInvoices() {
 
               {/* Actions */}
               <div className="flex items-center gap-2 shrink-0">
-                {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'pending') && (
                   <button
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
                     style={{

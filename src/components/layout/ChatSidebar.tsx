@@ -65,7 +65,7 @@ export function ChatSidebar() {
                   <Bot size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-ivory leading-tight">{t.chat.title}</h3>
+                  <h3 className="text-sm font-semibold text-ivory leading-tight">{t.app.chat.title}</h3>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-sage animate-pulse" />
                     <span className="text-[10px] text-fog uppercase tracking-wider font-medium">Online</span>
@@ -102,7 +102,7 @@ export function ChatSidebar() {
                       <MessageSquare size={24} />
                     </div>
                     <p className="text-sm text-silver italic leading-relaxed">
-                      {t.chat.empty}
+                      {t.app.chat.empty}
                     </p>
                   </div>
                 )}
@@ -152,7 +152,7 @@ export function ChatSidebar() {
 
                 {error && (
                   <div className="p-3 rounded-xl bg-ember/10 border border-ember/20 text-ember text-xs text-center mt-2">
-                    {t.chat.error}
+                    {t.app.chat.error}
                   </div>
                 )}
 
@@ -167,7 +167,7 @@ export function ChatSidebar() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  placeholder={t.chat.placeholder}
+                  placeholder={t.app.chat.placeholder}
                   rows={1}
                   className="w-full bg-dusk text-ivory text-sm rounded-xl py-3 pl-4 pr-12 border border-border focus:border-sage/50 focus:ring-1 focus:ring-sage/20 outline-none transition-all resize-none placeholder:text-fog/50"
                 />

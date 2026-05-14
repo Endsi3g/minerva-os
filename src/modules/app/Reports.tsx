@@ -2,7 +2,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
 } from 'recharts';
-import { MOCK_CLIENTS, MOCK_LEADS, MOCK_TASKS, MOCK_APPROVALS } from '@/lib/mock-data';
+import { useLang } from '@/i18n';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { useMemo } from 'react';
 
 /* ── Palette ─────────────────────────────────────────────────────────────── */
 
@@ -59,71 +62,69 @@ function ReportSection({ title, subtitle, children }: { title: string; subtitle?
   );
 }
 
-/* ── Data transforms ─────────────────────────────────────────────────────── */
-
-// Revenue by active client (monthly value)
-const revenueData = MOCK_CLIENTS
-  .filter(c => c.monthlyValue > 0)
-  .sort((a, b) => b.monthlyValue - a.monthlyValue)
-  .map(c => ({ name: c.company.split(' ')[0], value: c.monthlyValue }));
-
-// Pipeline funnel — lead count per stage
-const STAGE_ORDER = ['new_lead', 'qualified', 'proposal', 'negotiation', 'won'] as const;
-const STAGE_LABELS: Record<string, string> = {
-  new_lead:    'New',
-  qualified:   'Qualified',
-  proposal:    'Proposal',
-  negotiation: 'Negotiation',
-  won:         'Won',
-};
-const funnelData = STAGE_ORDER.map(stage => ({
-  name: STAGE_LABELS[stage],
-  count: MOCK_LEADS.filter(l => l.stage === stage).length,
-  value: MOCK_LEADS.filter(l => l.stage === stage).reduce((s, l) => s + l.value, 0),
-}));
-
-// Team task distribution
-const assignees = [...new Set(MOCK_TASKS.map(t => t.assignee))];
-const teamData = assignees.map(a => ({
-  name: a,
-  done: MOCK_TASKS.filter(t => t.assignee === a && t.status === 'done').length,
-  open: MOCK_TASKS.filter(t => t.assignee === a && t.status !== 'done').length,
-})).sort((a, b) => (b.done + b.open) - (a.done + a.open));
-
-// Approval cycle time (days from submitted to resolved, for non-pending)
-const cycleData = [
-  { name: 'Design',   avg: 3.2 },
-  { name: 'Copy',     avg: 5.8 },
-  { name: 'Video',    avg: 4.1 },
-  { name: 'Document', avg: 2.4 },
-];
-
-// Quick stats
-const totalPending  = MOCK_APPROVALS.filter(a => a.status === 'pending').length;
-const totalApproved = MOCK_APPROVALS.filter(a => a.status === 'approved').length;
-const wonDeals = MOCK_LEADS.filter(l => l.stage === 'won');
-const totalPipeline = MOCK_LEADS.reduce((s, l) => s + l.value, 0);
-const conversionRate = MOCK_LEADS.length > 0
-  ? Math.round((wonDeals.length / MOCK_LEADS.length) * 100)
-  : 0;
-
 /* ── Page ─────────────────────────────────────────────────────────────────── */
 
 export default function Reports() {
+  const { t, lang } = useLang();
+  const r = t.app.reports;
+
+  const clients = useQuery(api.clients.list) ?? [];
+  const deals = useQuery(api.deals.list) ?? [];
+  const tasks = useQuery(api.tasks.list) ?? [];
+  const approvals = useQuery(api.approvals.list) ?? [];
+
+  const STAGE_ORDER = ['new_lead', 'qualified', 'proposal', 'negotiation', 'won'] as const;
+
+  // Data transforms
+  const revenueData = useMemo(() => clients
+    .map(c => ({ name: c.company.split(' ')[0], value: 5000 /* Placeholder since no monthlyValue in schema */ }))
+    .slice(0, 5), [clients]);
+
+  const teamData = useMemo(() => {
+    const assignees = [...new Set(tasks.map(t => t.assignee))];
+    return assignees.map(a => ({
+      name: a,
+      done: tasks.filter(t => t.assignee === a && t.status === 'done').length,
+      open: tasks.filter(t => t.assignee === a && t.status !== 'done').length,
+    })).sort((a, b) => (b.done + b.open) - (a.done + a.open));
+  }, [tasks]);
+
+  const funnelData = useMemo(() => STAGE_ORDER.map(stage => ({
+    name: t.app.pipeline.stages[stage as keyof typeof t.app.pipeline.stages] || stage,
+    count: deals.filter(l => l.stage === stage).length,
+    value: deals.filter(l => l.stage === stage).reduce((s, l) => s + l.value, 0),
+  })), [deals, t]);
+
+  // Quick stats
+  const totalPending  = approvals.filter(a => a.status === 'pending').length;
+  const totalApproved = approvals.filter(a => a.status === 'approved').length;
+  const wonDeals = deals.filter(l => l.stage === 'won');
+  const totalPipeline = deals.reduce((s, l) => s + l.value, 0);
+  const conversionRate = deals.length > 0
+    ? Math.round((wonDeals.length / deals.length) * 100)
+    : 0;
+
+  const cycleData = [
+    { name: 'Design',   avg: 3.2 },
+    { name: 'Copy',     avg: 5.8 },
+    { name: 'Video',    avg: 4.1 },
+    { name: 'Document', avg: 2.4 },
+  ];
+
   return (
     <>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">Reports</h1>
-          <p className="text-sm text-fog mt-0.5">Agency performance overview</p>
+          <h1 className="text-2xl font-semibold text-ivory">{r.title}</h1>
+          <p className="text-sm text-fog mt-0.5">{r.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
           <span
             className="text-[10px] px-3 py-1.5 rounded-full border text-fog"
             style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)' }}
           >
-            May 2026
+            {new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { month: 'long', year: 'numeric' })}
           </span>
         </div>
       </div>
@@ -131,10 +132,10 @@ export default function Reports() {
       {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
-          { label: 'Pipeline value',    value: `$${(totalPipeline / 1000).toFixed(0)}k`, color: 'text-silver' },
-          { label: 'Win rate',          value: `${conversionRate}%`,                     color: 'text-sage' },
-          { label: 'Pending approvals', value: String(totalPending),                     color: totalPending > 0 ? 'text-warm' : 'text-sage' },
-          { label: 'Approvals resolved',value: String(totalApproved),                    color: 'text-sage' },
+          { label: r.kpis.pipelineValue,    value: `$${(totalPipeline / 1000).toFixed(0)}k`, color: 'text-silver' },
+          { label: r.kpis.winRate,          value: `${conversionRate}%`,                     color: 'text-sage' },
+          { label: r.kpis.pendingApprovals, value: String(totalPending),                     color: totalPending > 0 ? 'text-warm' : 'text-sage' },
+          { label: r.kpis.approvalsResolved,value: String(totalApproved),                    color: 'text-sage' },
         ].map(s => (
           <div key={s.label} className="bg-card border border-border rounded-xl p-4">
             <p className={`text-2xl font-semibold tabular-nums ${s.color}`}>{s.value}</p>
@@ -147,7 +148,7 @@ export default function Reports() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Revenue by client */}
-        <ReportSection title="Monthly Revenue by Client" subtitle="Active clients only">
+        <ReportSection title={r.revenue.title} subtitle={r.revenue.subtitle}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={revenueData} barCategoryGap="30%">
               <CartesianGrid vertical={false} stroke={GRID} />
@@ -165,7 +166,7 @@ export default function Reports() {
                 width={40}
               />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Bar dataKey="value" name="$MRR" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="value" name={r.revenue.label} radius={[4, 4, 0, 0]}>
                 {revenueData.map((_, i) => (
                   <Cell key={i} fill={i === 0 ? SAGE : `rgba(127,163,138,${0.7 - i * 0.1})`} />
                 ))}
@@ -175,7 +176,7 @@ export default function Reports() {
         </ReportSection>
 
         {/* Pipeline funnel */}
-        <ReportSection title="Pipeline Funnel" subtitle="Deal count by stage">
+        <ReportSection title={r.funnel.title} subtitle={r.funnel.subtitle}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={funnelData} barCategoryGap="30%">
               <CartesianGrid vertical={false} stroke={GRID} />
@@ -193,11 +194,11 @@ export default function Reports() {
                 width={24}
               />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Bar dataKey="count" name="Deals" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="count" name={r.funnel.label} radius={[4, 4, 0, 0]}>
                 {funnelData.map((entry, i) => (
                   <Cell
                     key={i}
-                    fill={entry.name === 'Won' ? SAGE : entry.name === 'Negotiation' ? WARM : FOG}
+                    fill={entry.name === (t.app.pipeline.stages.won || 'Won') ? SAGE : entry.name === (t.app.pipeline.stages.negotiation || 'Negotiation') ? WARM : FOG}
                   />
                 ))}
               </Bar>
@@ -206,7 +207,7 @@ export default function Reports() {
         </ReportSection>
 
         {/* Team utilisation */}
-        <ReportSection title="Team Task Distribution" subtitle="Open vs completed tasks per team member">
+        <ReportSection title={r.team.title} subtitle={r.team.subtitle}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={teamData} layout="vertical" barCategoryGap="25%">
               <CartesianGrid horizontal={false} stroke={GRID} />
@@ -226,12 +227,12 @@ export default function Reports() {
                 width={24}
               />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Bar dataKey="done" name="Completed" stackId="a" fill={SAGE}   radius={[0, 0, 0, 0]} />
-              <Bar dataKey="open" name="Open"      stackId="a" fill={SILVER} radius={[4, 4, 4, 4]} />
+              <Bar dataKey="done" name={r.team.labels.completed} stackId="a" fill={SAGE}   radius={[0, 0, 0, 0]} />
+              <Bar dataKey="open" name={r.team.labels.open}      stackId="a" fill={SILVER} radius={[4, 4, 4, 4]} />
             </BarChart>
           </ResponsiveContainer>
           <div className="flex items-center gap-4 mt-3">
-            {[{ color: SAGE, label: 'Completed' }, { color: SILVER, label: 'Open' }].map(l => (
+            {[{ color: SAGE, label: r.team.labels.completed }, { color: SILVER, label: r.team.labels.open }].map(l => (
               <div key={l.label} className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: l.color }} />
                 <span className="text-[11px] text-fog">{l.label}</span>
@@ -241,7 +242,7 @@ export default function Reports() {
         </ReportSection>
 
         {/* Approval cycle time */}
-        <ReportSection title="Approval Cycle Time" subtitle="Average days from submission to resolution">
+        <ReportSection title={r.cycle.title} subtitle={r.cycle.subtitle}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={cycleData} barCategoryGap="30%">
               <CartesianGrid vertical={false} stroke={GRID} />
@@ -259,14 +260,14 @@ export default function Reports() {
                 width={28}
               />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Bar dataKey="avg" name="Avg days" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="avg" name={r.cycle.label} radius={[4, 4, 0, 0]}>
                 {cycleData.map((entry, i) => (
                   <Cell key={i} fill={entry.avg > 5 ? EMBER : entry.avg > 3 ? WARM : SAGE} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-[11px] text-fog mt-2">Target: under 3 days · Green = on track · Amber = approaching limit · Red = exceeded</p>
+          <p className="text-[11px] text-fog mt-2">{r.cycle.target}</p>
         </ReportSection>
 
       </div>

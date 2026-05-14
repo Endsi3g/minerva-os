@@ -1,36 +1,37 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MOCK_INVOICES, MOCK_RETAINERS } from '@/lib/mock-data';
-import type { Invoice, InvoiceStatus } from '@/lib/types';
+import { useLang } from '@/i18n';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import type { Doc } from '../../../convex/_generated/dataModel';
 
-const STATUS_CONFIG: Record<InvoiceStatus, { label: string; class: string }> = {
-  draft:     { label: 'Draft',     class: 'text-fog bg-fog/10 border-fog/20'       },
-  sent:      { label: 'Sent',      class: 'text-warm bg-warm/10 border-warm/20'    },
-  overdue:   { label: 'Overdue',   class: 'text-ember bg-ember/10 border-ember/20' },
-  paid:      { label: 'Paid',      class: 'text-sage bg-sage/10 border-sage/20'    },
-  cancelled: { label: 'Cancelled', class: 'text-fog bg-fog/5 border-fog/15'        },
-};
-
-type StatusFilter = InvoiceStatus | 'all';
-
-const FILTER_TABS: { id: StatusFilter; label: string }[] = [
-  { id: 'all',     label: 'All' },
-  { id: 'sent',    label: 'Sent' },
-  { id: 'overdue', label: 'Overdue' },
-  { id: 'draft',   label: 'Draft' },
-  { id: 'paid',    label: 'Paid' },
-];
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+function fmt(n: number, lang: string) {
+  return new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US', { 
+    style: 'currency', 
+    currency: 'USD', 
+    maximumFractionDigits: 0 
+  }).format(n);
 }
 
-function InvoiceRow({ invoice }: { invoice: Invoice }) {
+function InvoiceRow({ invoice, t, lang, clients }: { invoice: Doc<"invoices">; t: any; lang: string, clients: Doc<"clients">[] }) {
   const [expanded, setExpanded] = useState(false);
-  const sc = STATUS_CONFIG[invoice.status];
+  const b = t.app.billing;
+  const common = t.app.common;
+  
+  const client = clients.find(c => c._id === invoice.clientId);
+
+  const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
+    draft:     { label: common.status.draft,     class: 'text-fog bg-fog/10 border-fog/20'       },
+    sent:      { label: common.status.pending,   class: 'text-warm bg-warm/10 border-warm/20'    },
+    overdue:   { label: common.status.overdue,   class: 'text-ember bg-ember/10 border-ember/20' },
+    paid:      { label: common.status.paid,      class: 'text-sage bg-sage/10 border-sage/20'    },
+    cancelled: { label: common.status.rejected, class: 'text-fog bg-fog/5 border-fog/15'        },
+  };
+
+  const sc = STATUS_CONFIG[invoice.status] || STATUS_CONFIG.draft;
 
   return (
     <div
@@ -43,13 +44,12 @@ function InvoiceRow({ invoice }: { invoice: Invoice }) {
       >
         {/* Number */}
         <div className="w-32 shrink-0">
-          <p className="text-sm font-semibold text-ivory tabular-nums">{invoice.number}</p>
+          <p className="text-sm font-semibold text-ivory tabular-nums">{invoice.invoiceNumber}</p>
         </div>
 
         {/* Client + project */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-ivory truncate">{invoice.client}</p>
-          <p className="text-[11px] text-fog truncate">{invoice.project}</p>
+          <p className="text-sm text-ivory truncate">{client?.company || '...'}</p>
         </div>
 
         {/* Status */}
@@ -60,15 +60,15 @@ function InvoiceRow({ invoice }: { invoice: Invoice }) {
         {/* Dates */}
         <div className="hidden md:block text-right shrink-0">
           <p className="text-xs text-fog">
-            {invoice.status === 'paid' && invoice.paidDate
-              ? `Paid ${new Date(invoice.paidDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-              : `Due ${new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+            {invoice.status === 'paid'
+              ? `${b.invoices.paid} ${new Date(invoice.date).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`
+              : `${b.invoices.due} ${new Date(invoice.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`}
           </p>
         </div>
 
         {/* Amount */}
         <p className="text-sm font-semibold text-ivory tabular-nums shrink-0 w-20 text-right">
-          {fmt(invoice.amount)}
+          {fmt(invoice.amount, lang)}
         </p>
 
         {/* Expand toggle */}
@@ -91,26 +91,26 @@ function InvoiceRow({ invoice }: { invoice: Invoice }) {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-fog uppercase tracking-wider">
-                    <th className="text-left py-1.5 font-medium">Description</th>
-                    <th className="text-right py-1.5 font-medium w-12">Qty</th>
-                    <th className="text-right py-1.5 font-medium w-24">Unit price</th>
-                    <th className="text-right py-1.5 font-medium w-24">Total</th>
+                    <th className="text-left py-1.5 font-medium">{b.table.description}</th>
+                    <th className="text-right py-1.5 font-medium w-12">{b.table.qty}</th>
+                    <th className="text-right py-1.5 font-medium w-24">{b.table.unitPrice}</th>
+                    <th className="text-right py-1.5 font-medium w-24">{b.table.total}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {invoice.lineItems.map((item, i) => (
+                  {invoice.items.map((item: any, i: number) => (
                     <tr key={i} className="border-t" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
                       <td className="py-1.5 text-silver">{item.description}</td>
-                      <td className="py-1.5 text-right text-fog tabular-nums">{item.qty}</td>
-                      <td className="py-1.5 text-right text-fog tabular-nums">{fmt(item.unitPrice)}</td>
-                      <td className="py-1.5 text-right text-silver tabular-nums font-medium">{fmt(item.qty * item.unitPrice)}</td>
+                      <td className="py-1.5 text-right text-fog tabular-nums">{item.quantity}</td>
+                      <td className="py-1.5 text-right text-fog tabular-nums">{fmt(item.price, lang)}</td>
+                      <td className="py-1.5 text-right text-silver tabular-nums font-medium">{fmt(item.quantity * item.price, lang)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     <td colSpan={3} className="pt-2 text-right text-fog font-medium">Total</td>
-                    <td className="pt-2 text-right text-ivory font-semibold tabular-nums">{fmt(invoice.amount)}</td>
+                    <td className="pt-2 text-right text-ivory font-semibold tabular-nums">{fmt(invoice.amount, lang)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -123,20 +123,32 @@ function InvoiceRow({ invoice }: { invoice: Invoice }) {
 }
 
 export default function Billing() {
-  const [invoices] = useState<Invoice[]>(MOCK_INVOICES);
-  const [filter, setFilter] = useState<StatusFilter>('all');
+  const { t, lang } = useLang();
+  const b = t.app.billing;
+
+  const invoices = useQuery(api.invoices.list) ?? [];
+  const retainers = useQuery(api.retainers.list) ?? [];
+  const clients = useQuery(api.clients.list) ?? [];
+
+  const [filter, setFilter] = useState<string | 'all'>('all');
   const [query, setQuery]   = useState('');
 
-  const outstanding = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
-  const paidMTD     = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
-  const overdue     = invoices.filter(i => i.status === 'overdue').length;
+  const FILTER_TABS = useMemo(() => [
+    { id: 'all' as const,     label: t.app.tasks.filters.all },
+    { id: 'sent' as const,    label: t.app.common.status.pending },
+    { id: 'overdue' as const, label: t.app.common.status.overdue },
+    { id: 'draft' as const,   label: t.app.common.status.draft },
+    { id: 'paid' as const,    label: t.app.common.status.paid },
+  ], [t]);
 
-  const visible = invoices.filter(i => {
+  const outstanding = invoices.filter((i: any) => i.status === 'sent' || i.status === 'overdue').reduce((s: any, i: any) => s + i.amount, 0);
+  const paidMTD     = invoices.filter((i: any) => i.status === 'paid').reduce((s: any, i: any) => s + i.amount, 0);
+  const overdueCount = invoices.filter((i: any) => i.status === 'overdue').length;
+
+  const visible = invoices.filter((i: any) => {
     const matchFilter = filter === 'all' || i.status === filter;
     const matchQuery  = query === '' ||
-      i.number.toLowerCase().includes(query.toLowerCase()) ||
-      i.client.toLowerCase().includes(query.toLowerCase()) ||
-      i.project.toLowerCase().includes(query.toLowerCase());
+      i.invoiceNumber.toLowerCase().includes(query.toLowerCase());
     return matchFilter && matchQuery;
   });
 
@@ -145,21 +157,25 @@ export default function Billing() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">Billing</h1>
-          <p className="text-sm text-fog mt-0.5">{invoices.length} invoices · {MOCK_RETAINERS.filter(r => r.status === 'active').length} active retainers</p>
+          <h1 className="text-2xl font-semibold text-ivory">{b.title}</h1>
+          <p className="text-sm text-fog mt-0.5">
+            {b.stats
+              .replace('invoices', String(invoices.length))
+              .replace('active retainers', String(retainers.filter((r: any) => r.status === 'active').length))}
+          </p>
         </div>
         <Button size="sm">
           <Plus size={14} />
-          New invoice
+          {b.newInvoice}
         </Button>
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Outstanding',   value: fmt(outstanding), color: outstanding > 0 ? 'text-warm'  : 'text-sage', sub: 'sent + overdue' },
-          { label: 'Overdue',       value: String(overdue),  color: overdue > 0      ? 'text-ember' : 'text-sage', sub: overdue > 0 ? 'need follow-up' : 'none' },
-          { label: 'Collected',     value: fmt(paidMTD),     color: 'text-sage',   sub: 'total paid' },
+          { label: b.summary.outstanding,   value: fmt(outstanding, lang), color: outstanding > 0 ? 'text-warm'  : 'text-sage', sub: b.summary.outstandingSub },
+          { label: b.summary.overdue,       value: String(overdueCount),  color: overdueCount > 0      ? 'text-ember' : 'text-sage', sub: overdueCount > 0 ? b.summary.overdueSub : b.summary.overdueNone },
+          { label: b.summary.collected,     value: fmt(paidMTD, lang),     color: 'text-sage',   sub: b.summary.collectedSub },
         ].map(s => (
           <div key={s.label} className="bg-card border border-border rounded-xl p-4">
             <p className={cn('text-2xl font-semibold tabular-nums', s.color)}>{s.value}</p>
@@ -170,26 +186,29 @@ export default function Billing() {
       </div>
 
       {/* Retainers */}
-      {MOCK_RETAINERS.filter(r => r.status === 'active').length > 0 && (
+      {retainers.filter(r => r.status === 'active').length > 0 && (
         <section className="mb-8">
-          <h2 className="text-sm font-semibold text-ivory mb-3">Active Retainers</h2>
+          <h2 className="text-sm font-semibold text-ivory mb-3">{b.retainers.title}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {MOCK_RETAINERS.filter(r => r.status === 'active').map(ret => {
+            {retainers.filter(r => r.status === 'active').map(ret => {
+              const client = clients.find(c => c._id === ret.clientId);
               const pct = ret.hoursIncluded > 0 ? Math.round((ret.hoursUsed / ret.hoursIncluded) * 100) : 0;
               const barColor = pct >= 100 ? '#A86A6A' : pct >= 80 ? '#B89B6A' : '#7FA38A';
               return (
-                <div key={ret.id} className="rounded-xl border border-border bg-card p-4">
+                <div key={ret._id} className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="text-sm font-medium text-ivory">{ret.client}</p>
-                      <p className="text-[10px] text-fog capitalize">{ret.cycle} · renews {new Date(ret.renewalDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                      <p className="text-sm font-medium text-ivory">{client?.company || '...'}</p>
+                      <p className="text-[10px] text-fog capitalize">
+                        {ret.cycle} · {b.retainers.renews} {new Date(ret.renewalDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
+                      </p>
                     </div>
-                    <p className="text-sm font-semibold text-ivory tabular-nums">{fmt(ret.amount)}</p>
+                    <p className="text-sm font-semibold text-ivory tabular-nums">{fmt(ret.amount, lang)}</p>
                   </div>
                   {/* Hours bar */}
                   <div>
                     <div className="flex justify-between text-[10px] text-fog mb-1">
-                      <span>Hours</span>
+                      <span>{b.retainers.hours}</span>
                       <span>{ret.hoursUsed} / {ret.hoursIncluded}h</span>
                     </div>
                     <div className="w-full h-1 rounded-full overflow-hidden bg-dusk">
@@ -231,7 +250,7 @@ export default function Billing() {
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-fog pointer-events-none" />
             <input
               type="text"
-              placeholder="Search invoices..."
+              placeholder={b.invoices.searchPlaceholder}
               value={query}
               onChange={e => setQuery(e.target.value)}
               className="pl-8 pr-3 py-1.5 rounded-lg text-xs text-ivory placeholder:text-fog outline-none transition-colors"
@@ -246,9 +265,9 @@ export default function Billing() {
 
         <div className="space-y-2">
           {visible.length === 0 && (
-            <p className="text-sm text-fog text-center py-10">No invoices match this filter.</p>
+            <p className="text-sm text-fog text-center py-10">{b.invoices.empty}</p>
           )}
-          {visible.map(inv => <InvoiceRow key={inv.id} invoice={inv} />)}
+          {visible.map(inv => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
         </div>
       </section>
     </>

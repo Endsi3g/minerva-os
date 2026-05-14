@@ -17,8 +17,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCard } from '@/components/minerva/ProjectCard';
-import { MOCK_PROJECTS, MOCK_CLIENTS } from '@/lib/mock-data';
-import type { Project } from '@/lib/types';
+import { useLang } from '@/i18n';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 interface NewProjectForm {
   name: string;
@@ -30,29 +31,30 @@ interface NewProjectForm {
 const EMPTY_FORM: NewProjectForm = { name: '', clientId: '', dueDate: '', budget: '' };
 
 export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
+  const { t } = useLang();
+  const p = t.app.projects;
+
+  const projects = useQuery(api.projects.list) ?? [];
+  const clients = useQuery(api.clients.list) ?? [];
+  const createProject = useMutation(api.projects.add);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM);
 
-  const active = projects.filter(p => p.status === 'active').length;
+  const activeCount = projects.filter(p => p.status === 'active').length;
 
-  function handleAdd() {
+  async function handleAdd() {
     if (!form.name.trim() || !form.clientId) return;
-    const client = MOCK_CLIENTS.find(c => c.id === form.clientId);
-    const project: Project = {
-      id: `p${Date.now()}`,
+    const client = clients.find(c => c._id === form.clientId);
+    
+    await createProject({
       name: form.name.trim(),
-      client: client?.company ?? '',
-      clientId: form.clientId,
+      clientName: client?.company ?? '',
       status: 'active',
       dueDate: form.dueDate || '2026-12-31',
       budget: parseFloat(form.budget) || 0,
-      spent: 0,
-      totalTasks: 0,
-      doneTasks: 0,
-      team: ['US'],
-    };
-    setProjects(prev => [project, ...prev]);
+    });
+    
     setSheetOpen(false);
     setForm(EMPTY_FORM);
   }
@@ -61,57 +63,69 @@ export default function Projects() {
     <>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">Projects</h1>
-          <p className="text-sm text-fog mt-0.5">{active} active · {projects.length} total</p>
+          <h1 className="text-2xl font-semibold text-ivory">{p.title}</h1>
+          <p className="text-sm text-fog mt-0.5">
+            {p.stats
+              .replace('active', String(activeCount))
+              .replace('total', String(projects.length))}
+          </p>
         </div>
         <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
           <Plus size={14} />
-          New project
+          {p.newProject}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map(p => (
-          <ProjectCard key={p.id} project={p} />
+        {projects.map(proj => (
+          <ProjectCard key={proj._id} project={{
+            ...proj,
+            id: proj._id,
+            client: proj.clientName,
+            spent: 0,
+            totalTasks: 0,
+            doneTasks: 0,
+            team: ['US']
+          }} />
         ))}
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
           <SheetHeader>
-            <SheetTitle>New Project</SheetTitle>
+            <SheetTitle>{p.newProject}</SheetTitle>
           </SheetHeader>
 
           <div className="flex flex-col gap-4 flex-1">
             <div className="space-y-1.5">
-              <Label>Project name</Label>
-              <Input placeholder="Website Redesign" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              <Label>{p.form.name}</Label>
+              <Input placeholder={p.form.namePlaceholder} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Client</Label>
+              <Label>{p.form.client}</Label>
               <Select value={form.clientId} onValueChange={v => setForm(f => ({ ...f, clientId: v }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select client..." />
+                  <SelectValue placeholder={p.form.clientPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  {MOCK_CLIENTS.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.company}</SelectItem>
+                  {clients.map(c => (
+                    <SelectItem key={c._id} value={c._id}>{c.company}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Due date</Label>
+              <Label>{p.form.dueDate}</Label>
               <Input type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))}
                 className="[color-scheme:dark]" />
             </div>
             <div className="space-y-1.5">
-              <Label>Budget (USD)</Label>
-              <Input type="number" placeholder="15000" value={form.budget} onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} />
+              <Label>{p.form.budget}</Label>
+              <Input type="number" placeholder={p.form.budgetPlaceholder} value={form.budget} onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} />
             </div>
           </div>
 
-          <Button className="w-full" onClick={handleAdd}>Create Project</Button>
+          <Button className="w-full" onClick={handleAdd}>{p.form.create}</Button>
         </SheetContent>
       </Sheet>
     </>

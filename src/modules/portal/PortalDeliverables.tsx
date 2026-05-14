@@ -4,37 +4,48 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Palette, FileText, Video, File, Check, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
-import type { Approval, ApprovalStatus, DeliverableType } from '@/lib/types';
-
-const TYPE_CONFIG: Record<DeliverableType, { label: string; icon: React.ElementType; class: string }> = {
-  design:   { label: 'Design',   icon: Palette,  class: 'text-[#B8BDC7] bg-[#B8BDC7]/10' },
-  copy:     { label: 'Copy',     icon: FileText, class: 'text-[#B89B6A] bg-[#B89B6A]/10' },
-  video:    { label: 'Video',    icon: Video,    class: 'text-[#8A9099] bg-[#8A9099]/10'  },
-  document: { label: 'Document', icon: File,     class: 'text-[#D8DDE6] bg-[#D8DDE6]/10' },
-};
-
-const STATUS_LABEL: Record<ApprovalStatus, string> = {
-  pending:  'Awaiting Review',
-  approved: 'Approved',
-  revision: 'Changes Requested',
-};
-
-const STATUS_COLOR: Record<ApprovalStatus, string> = {
-  pending:  'text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20',
-  approved: 'text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20',
-  revision: 'text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20',
-};
+import type { ApprovalStatus, DeliverableType } from '@/lib/types';
+import { useLang } from '@/i18n';
+import { useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { CommentSection } from '@/components/minerva/CommentSection';
+import { Id } from '../../../convex/_generated/dataModel';
 
 function DeliverableRow({
   approval,
   onAction,
+  t,
+  lang,
 }: {
-  approval: Approval;
-  onAction: (id: string, status: ApprovalStatus) => void;
+  approval: any;
+  onAction: (id: Id<"approvals">, status: ApprovalStatus) => void;
+  t: any;
+  lang: string;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [comment, setComment]   = useState('');
-  const type = TYPE_CONFIG[approval.type];
+  const pd = t.portal.deliverables;
+  const common = t.app.common;
+
+  const TYPE_CONFIG: Record<DeliverableType, { label: string; icon: React.ElementType; class: string }> = {
+    design:   { label: common.types.design,   icon: Palette,  class: 'text-[#B8BDC7] bg-[#B8BDC7]/10' },
+    copy:     { label: common.types.copy,     icon: FileText, class: 'text-[#B89B6A] bg-[#B89B6A]/10' },
+    video:    { label: common.types.video,    icon: Video,    class: 'text-[#8A9099] bg-[#8A9099]/10'  },
+    document: { label: common.types.document, icon: File,     class: 'text-[#D8DDE6] bg-[#D8DDE6]/10' },
+  };
+
+  const STATUS_LABEL: Record<ApprovalStatus, string> = {
+    pending:  pd.status.pending,
+    approved: pd.status.approved,
+    revision: pd.status.revision,
+  };
+
+  const STATUS_COLOR: Record<ApprovalStatus, string> = {
+    pending:  'text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20',
+    approved: 'text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20',
+    revision: 'text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20',
+  };
+
+  const type = TYPE_CONFIG[approval.type as DeliverableType];
   const TypeIcon = type.icon;
 
   return (
@@ -54,20 +65,20 @@ function DeliverableRow({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate" style={{ color: '#F5F1E8' }}>{approval.name}</p>
           <p className="text-[11px] mt-0.5" style={{ color: '#8A9099' }}>
-            {approval.project} · submitted {new Date(approval.submittedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+            {approval.project} · {pd.submitted} {new Date(approval.submittedDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
           </p>
         </div>
 
         {/* Status badge */}
-        <span className={cn('hidden sm:block text-[10px] font-medium px-2 py-1 rounded-full border shrink-0', STATUS_COLOR[approval.status])}>
-          {STATUS_LABEL[approval.status]}
+        <span className={cn('hidden sm:block text-[10px] font-medium px-2 py-1 rounded-full border shrink-0', STATUS_COLOR[approval.status as ApprovalStatus])}>
+          {STATUS_LABEL[approval.status as ApprovalStatus]}
         </span>
 
         {/* Actions */}
-        {approval.status === 'pending' && (
-          <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          {approval.status === 'pending' && (
             <button
-              onClick={() => onAction(approval.id, 'approved')}
+              onClick={() => onAction(approval._id, 'approved')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
               style={{
                 backgroundColor: 'rgba(127,163,138,0.12)',
@@ -76,74 +87,49 @@ function DeliverableRow({
               }}
             >
               <Check size={12} />
-              Approve
+              {pd.actions.approve}
             </button>
-            <button
-              onClick={() => setExpanded(e => !e)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
-              style={{
-                backgroundColor: 'rgba(168,106,106,0.10)',
-                border: '1px solid rgba(168,106,106,0.22)',
-                color: '#A86A6A',
-              }}
-            >
-              <MessageSquare size={12} />
-              Request changes
-              {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-            </button>
-          </div>
-        )}
-
-        {approval.status === 'approved' && (
-          <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-            <Check size={13} style={{ color: '#7FA38A' }} />
-            <span className="text-xs" style={{ color: '#7FA38A' }}>Approved</span>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#B8BDC7',
+            }}
+          >
+            <MessageSquare size={12} />
+            {pd.actions.discuss || 'Discussion'}
+            {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+        </div>
       </div>
 
       {/* Comment panel */}
       <AnimatePresence>
-        {expanded && approval.status === 'pending' && (
+        {expanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: 400, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
+            className="overflow-hidden border-t border-white/5"
           >
-            <div
-              className="px-5 pb-4 pt-1"
-              style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-            >
-              <p className="text-xs mb-2" style={{ color: '#8A9099' }}>
-                Leave a note for the team (optional):
-              </p>
-              <textarea
-                value={comment}
-                onChange={e => setComment(e.target.value)}
-                placeholder="Describe what needs to change..."
-                rows={3}
-                className="w-full resize-none text-sm outline-none rounded-xl px-4 py-3 transition-colors duration-200"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: '#F5F1E8',
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              />
-              <div className="flex justify-end mt-2">
-                <button
-                  onClick={() => { onAction(approval.id, 'revision'); setExpanded(false); setComment(''); }}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 hover:-translate-y-0.5"
-                  style={{
-                    backgroundColor: 'rgba(168,106,106,0.15)',
-                    border: '1px solid rgba(168,106,106,0.25)',
-                    color: '#A86A6A',
-                  }}
-                >
-                  Submit changes request
-                </button>
+            <div className="h-full p-5 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-medium uppercase tracking-widest text-fog">Feedback & Discussion</p>
+                {approval.status === 'pending' && (
+                  <button
+                    onClick={() => { onAction(approval._id, 'revision'); }}
+                    className="text-[10px] font-semibold text-ember hover:underline"
+                  >
+                    {pd.form.submitRequest}
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <CommentSection targetId={approval._id} targetType="approval" />
               </div>
             </div>
           </motion.div>
@@ -154,17 +140,26 @@ function DeliverableRow({
 }
 
 export default function PortalDeliverables() {
-  const { isValid, approvals: initialApprovals } = usePortalData();
-  const [approvals, setApprovals] = useState<Approval[]>(initialApprovals);
+  const { t, lang } = useLang();
+  const pd = t.portal.deliverables;
+
+  const { isValid, approvals, projects } = usePortalData();
+  const updateApproval = useMutation(api.approvals.update);
 
   if (!isValid) return null;
 
-  function handleAction(id: string, status: ApprovalStatus) {
-    setApprovals(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+  // Join project names
+  const deliverables = approvals.map(app => {
+    const project = projects.find(p => p._id === app.projectId);
+    return { ...app, project: project?.name || '...' };
+  });
+
+  async function handleAction(id: Id<"approvals">, status: ApprovalStatus) {
+    await updateApproval({ id, status });
   }
 
-  const pending  = approvals.filter(a => a.status === 'pending');
-  const resolved = approvals.filter(a => a.status !== 'pending');
+  const pending  = deliverables.filter(a => a.status === 'pending');
+  const resolved = deliverables.filter(a => a.status !== 'pending');
 
   return (
     <div className="space-y-8">
@@ -174,10 +169,10 @@ export default function PortalDeliverables() {
           className="text-2xl font-normal"
           style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}
         >
-          Deliverables
+          {pd.title}
         </h1>
         <p className="text-sm mt-1" style={{ color: '#8A9099' }}>
-          Review and approve work submitted by Uprising Studio.
+          {pd.subtitle}
         </p>
       </div>
 
@@ -185,11 +180,11 @@ export default function PortalDeliverables() {
       {pending.length > 0 && (
         <section>
           <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: '#B89B6A' }}>
-            Awaiting review · {pending.length}
+            {pd.pendingTitle} · {pending.length}
           </p>
           <div className="space-y-2">
             {pending.map(a => (
-              <DeliverableRow key={a.id} approval={a} onAction={handleAction} />
+              <DeliverableRow key={a._id} approval={a} onAction={handleAction} t={t} lang={lang} />
             ))}
           </div>
         </section>
@@ -201,8 +196,8 @@ export default function PortalDeliverables() {
           style={{ backgroundColor: 'rgba(127,163,138,0.04)', borderColor: 'rgba(127,163,138,0.15)' }}
         >
           <Check size={24} className="mx-auto mb-3" style={{ color: '#7FA38A', opacity: 0.6 }} />
-          <p className="text-sm font-medium" style={{ color: '#F5F1E8' }}>All caught up</p>
-          <p className="text-xs mt-1" style={{ color: '#8A9099' }}>No deliverables pending review at this time.</p>
+          <p className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{pd.empty.title}</p>
+          <p className="text-xs mt-1" style={{ color: '#8A9099' }}>{pd.empty.desc}</p>
         </div>
       )}
 
@@ -210,11 +205,11 @@ export default function PortalDeliverables() {
       {resolved.length > 0 && (
         <section>
           <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: '#8A9099' }}>
-            Previously resolved · {resolved.length}
+            {pd.resolvedTitle} · {resolved.length}
           </p>
           <div className="space-y-2">
             {resolved.map(a => (
-              <DeliverableRow key={a.id} approval={a} onAction={handleAction} />
+              <DeliverableRow key={a._id} approval={a} onAction={handleAction} t={t} lang={lang} />
             ))}
           </div>
         </section>
