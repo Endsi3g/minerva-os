@@ -26,15 +26,20 @@ export default function Landing() {
           backgroundColor: '#0A0D14',
         }}
       >
-        {/* Background Image */}
-        <img
+        {/* Background Video */}
+        <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          src="/brand/hero.png"
-          alt="Background"
+          src={BG_VIDEO}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          poster={POSTER}
         />
 
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-black/40" />
 
         {/* Foreground content */}
         <div className="relative z-10 flex flex-col h-full">

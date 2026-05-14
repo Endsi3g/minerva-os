@@ -7,7 +7,8 @@ import { Chrome, Github, Eye, EyeOff } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 
-const HERO_IMAGE = '/brand/hero.png'; // Using local orange background
+const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4';
+const POSTER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1600&q=60';
 const ACCENT = '#ef4d23';
 
 const containerVariants = {
@@ -61,8 +62,17 @@ export default function SignUp() {
     >
       {/* ── Left column — hero video ────────────────────────────────────────── */}
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
-        <img className="absolute inset-0 w-full h-full object-cover" src={HERO_IMAGE} alt="Orange Abstract Background" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+        <video
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ filter: 'hue-rotate(-260deg) saturate(1.5) contrast(1.1)' }}
+          src={BG_VIDEO}
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={POSTER}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/20" />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
