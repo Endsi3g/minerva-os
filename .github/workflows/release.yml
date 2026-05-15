@@ -53,4 +53,4 @@ jobs:
 
             ${{ steps.changelog.outputs.changelog }}
           files: |
-            dist/**
+            .next/**
