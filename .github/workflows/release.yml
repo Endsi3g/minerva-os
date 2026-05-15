@@ -9,9 +9,12 @@ permissions:
   contents: write
 
 jobs:
+  # ── Web release (Next.js build) ─────────────────────────────────────────────
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,11 +49,84 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub release
+        id: create_release
         uses: softprops/action-gh-release@v2
         with:
           body: |
             ## Changes
 
             ${{ steps.changelog.outputs.changelog }}
-          files: |
-            .next/**
+
+            ## Downloads
+
+            | Platform | File |
+            |----------|------|
+            | macOS | `Minerva OS.dmg` (see assets below) |
+            | Windows | `Minerva OS Setup.exe` (see assets below) |
+            | Web | Deployed via Next.js |
+
+  # ── macOS Electron build ────────────────────────────────────────────────────
+  electron-mac:
+    name: Electron — macOS
+    needs: release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Compile Electron TypeScript
+        run: npm run electron:compile
+
+      - name: Package Electron app (macOS)
+        run: npx electron-builder --mac --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS DMG
+        uses: softprops/action-gh-release@v2
+        with:
+          files: electron-dist/*.dmg
+
+  # ── Windows Electron build ──────────────────────────────────────────────────
+  electron-win:
+    name: Electron — Windows
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Compile Electron TypeScript
+        run: npm run electron:compile
+
+      - name: Package Electron app (Windows)
+        run: npx electron-builder --win --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows installer
+        uses: softprops/action-gh-release@v2
+        with:
+          files: electron-dist/*.exe

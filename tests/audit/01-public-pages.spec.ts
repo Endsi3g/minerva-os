@@ -116,16 +116,17 @@ const MARKETING_PAGES = [
 
 for (const { route, name } of MARKETING_PAGES) {
   test(`${name} ${route} — renders content`, async ({ page }) => {
-    await page.goto(route);
-    await page.waitForLoadState('domcontentloaded');
+    const response = await page.goto(route);
+    await page.waitForLoadState('networkidle');
     await page.screenshot({ path: `tests/screenshots/01-${name.toLowerCase()}.png`, fullPage: true });
 
-    const body = await page.locator('body').textContent();
-    expect(body!.length).toBeGreaterThan(100);
+    // Status code is the authoritative 404 check — not body text (Next.js injects
+    // a hidden NotFound boundary fragment in the hydration HTML)
+    expect(response?.status()).toBeLessThan(400);
 
-    // Should not be a 404 page
-    const is404 = body!.toLowerCase().includes('404') || body!.toLowerCase().includes('not found');
-    expect(is404).toBeFalsy();
+    // Verify real content rendered (visible text only)
+    const visibleText = await page.locator('body').innerText();
+    expect(visibleText.length).toBeGreaterThan(100);
   });
 }
 
