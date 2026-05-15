@@ -13,7 +13,7 @@ export default function CallPreps() {
   const { t } = useLang();
   const cp = t.app.callPreps;
   
-  const calls = useQuery(api.calls.list) ?? [];
+  const calls = useQuery(api.calls.list, {}) ?? [];
   const updateCall = useMutation(api.calls.update);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);

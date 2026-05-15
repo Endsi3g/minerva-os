@@ -50,7 +50,7 @@ export default defineSchema({
   }),
   tasks: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
-    projectId: v.id("projects"),
+    projectId: v.optional(v.id("projects")),
     title: v.string(),
     status: v.string(), // "todo", "in_progress", "review", "done"
     priority: v.string(), // "low", "medium", "high", "urgent"
@@ -66,7 +66,8 @@ export default defineSchema({
     status: v.string(), // "pending", "approved", "revision"
     submittedDate: v.string(),
     fileUrl: v.optional(v.string()),
-  }).index("by_project", ["projectId"]),
+  }).index("by_project", ["projectId"])
+    .index("by_workspace", ["workspaceId"]),
   comments: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     targetId: v.string(), // ID of the approval, task, etc.
@@ -106,7 +107,7 @@ export default defineSchema({
       task: v.string(),
       completed: v.boolean(),
     })),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   finances: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     type: v.string(), // "income", "expense"
@@ -117,7 +118,7 @@ export default defineSchema({
     tps: v.number(),
     tvq: v.number(),
     status: v.string(),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   fulfillment: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     projectId: v.id("projects"),
@@ -128,7 +129,7 @@ export default defineSchema({
       item: v.string(),
       done: v.boolean(),
     })),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   presence: defineTable({
     user: v.string(),
     lastActive: v.number(),
@@ -144,7 +145,7 @@ export default defineSchema({
     stage: v.string(), // "new_lead", "qualified", "proposal", "negotiation", "won", "lost"
     notes: v.optional(v.string()),
     lastContact: v.string(),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   invoices: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     clientId: v.id("clients"),
@@ -171,7 +172,7 @@ export default defineSchema({
     projectId: v.optional(v.id("projects")),
     clientId: v.optional(v.id("clients")),
     uploadedAt: v.string(),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   userProfiles: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     email: v.string(),
@@ -190,14 +191,15 @@ export default defineSchema({
     hoursIncluded: v.number(),
     hoursUsed: v.number(),
     notes: v.optional(v.string()),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   milestones: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     projectId: v.id("projects"),
     title: v.string(),
     dueDate: v.string(),
     status: v.string(), // "upcoming", "completed", "overdue"
-  }).index("by_project", ["projectId"]),
+  }).index("by_project", ["projectId"])
+    .index("by_workspace", ["workspaceId"]),
   portalTokens: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     token: v.string(),
@@ -262,7 +264,7 @@ export default defineSchema({
     instructions: v.string(),
     tools: v.array(v.string()),
     status: v.string(), // "active", "idle", "busy"
-  }),
+  }).index("by_workspace", ["workspaceId"]),
 
   agentThreads: defineTable({
     workspaceId: v.optional(v.id("workspaces")),

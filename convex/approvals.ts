@@ -2,7 +2,15 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const list = query({
-  handler: async (ctx) => {
+  args: { workspaceId: v.optional(v.id("workspaces")) },
+  handler: async (ctx, args) => {
+    if (args.workspaceId) {
+      return await ctx.db
+        .query("approvals")
+        .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
+        .order("desc")
+        .collect();
+    }
     return await ctx.db.query("approvals").order("desc").collect();
   },
 });
