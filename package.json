@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:audit": "playwright test",
+    "test:audit:report": "playwright show-report tests/report"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.77",
@@ -56,6 +58,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^25.6.2",
     "@types/react": "^18.3.1",
