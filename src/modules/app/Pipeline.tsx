@@ -61,8 +61,9 @@ export default function Pipeline() {
   const workspaces = useQuery(api.workspaces.list, {}) ?? [];
   const workspaceId = workspaces[0]?._id;
 
-  const leads = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const leads = useQuery(api.deals.list, workspaceId ? { workspaceId } : "skip") ?? [];
   const addDeal = useMutation(api.deals.add);
+  const updateDeal = useMutation(api.deals.update);
   const updateStage = useMutation(api.deals.updateStage);
   
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -114,7 +115,16 @@ export default function Pipeline() {
     if (!form.company.trim() || !workspaceId) return;
 
     if (editingLead) {
-      // Not implemented full update for simplicity in this turn, but could be added
+      await updateDeal({
+        id: editingLead._id as Id<"deals">,
+        company: form.company.trim(),
+        contact: form.contact.trim(),
+        email: form.email.trim(),
+        value: parseFloat(form.value) || 0,
+        stage: form.stage,
+        notes: form.notes.trim() || undefined,
+        lastContact: editingLead.lastContact,
+      });
     } else {
       await addDeal({
         workspaceId,
@@ -125,7 +135,7 @@ export default function Pipeline() {
         stage: form.stage,
         notes: form.notes.trim() || undefined,
         lastContact: new Date().toISOString().split('T')[0],
-      } as any);
+      });
     }
     
     setSheetOpen(false);

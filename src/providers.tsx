@@ -10,7 +10,6 @@ const convex = new ConvexReactClient(
 );
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  console.log('Providers rendering');
   return (
     <ConvexAuthProvider client={convex}>
       <ThemeProvider>

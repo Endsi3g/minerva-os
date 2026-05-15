@@ -19,6 +19,7 @@ export const add = mutation({
     contact: v.string(),
     email: v.string(),
     status: v.string(),
+    monthlyValue: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("clients", args);
@@ -31,6 +32,7 @@ export const update = mutation({
     status: v.optional(v.string()),
     contact: v.optional(v.string()),
     email: v.optional(v.string()),
+    monthlyValue: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;

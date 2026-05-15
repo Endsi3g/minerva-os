@@ -62,6 +62,7 @@ export default function Clients() {
       contact: form.contact.trim(),
       email: form.email.trim(),
       status: form.status,
+      monthlyValue: parseFloat(form.monthlyValue) || undefined,
     });
     
     setSheetOpen(false);

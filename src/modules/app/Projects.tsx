@@ -55,7 +55,7 @@ export default function Projects() {
       name: form.name.trim(),
       clientName: client?.company ?? '',
       status: 'active',
-      dueDate: form.dueDate || '2026-12-31',
+      dueDate: form.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       budget: parseFloat(form.budget) || 0,
     });
     

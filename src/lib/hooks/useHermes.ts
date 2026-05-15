@@ -19,7 +19,13 @@ export function useHermes() {
     setMessages(updatedMessages);
 
     try {
-      const response = await fetch('http://localhost:8642/v1/chat/completions', {
+      const hermesUrl = process.env.NEXT_PUBLIC_HERMES_URL;
+      if (!hermesUrl) {
+        setError('AI chat not configured. Set NEXT_PUBLIC_HERMES_URL to enable.');
+        setIsLoading(false);
+        return;
+      }
+      const response = await fetch(`${hermesUrl}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

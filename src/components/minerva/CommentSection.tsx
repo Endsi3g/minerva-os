@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLang } from '@/i18n';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
@@ -16,6 +17,8 @@ interface CommentSectionProps {
 
 export function CommentSection({ targetId, targetType }: CommentSectionProps) {
   const { user } = useAuth();
+  const { t } = useLang();
+  const c = t.comments;
   const comments = useQuery(api.comments.list, { targetId, targetType }) ?? [];
   const addComment = useMutation(api.comments.add);
   const [content, setContent] = useState('');
@@ -42,8 +45,8 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
         {comments.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-fog text-xs py-10 opacity-50">
-            <p>No comments yet.</p>
-            <p>Start the conversation.</p>
+            <p>{c.empty}</p>
+            <p>{c.startConversation}</p>
           </div>
         ) : (
           comments.slice().reverse().map((c: any) => (
@@ -71,7 +74,7 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
 
       <div className="relative">
         <Textarea
-          placeholder="Write a comment..."
+          placeholder={c.placeholder}
           value={content}
           onChange={(e: any) => setContent(e.target.value)}
           className={cn(

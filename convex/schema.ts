@@ -93,6 +93,7 @@ export default defineSchema({
     contact: v.string(),
     email: v.string(),
     status: v.string(), // "active", "lead", "inactive"
+    monthlyValue: v.optional(v.number()),
   }).index("by_workspace", ["workspaceId"]),
   calls: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
@@ -162,7 +163,8 @@ export default defineSchema({
     paidDate: v.optional(v.string()),
     tps: v.number(),
     tvq: v.number(),
-  }).index("by_client", ["clientId"]),
+  }).index("by_client", ["clientId"])
+    .index("by_workspace", ["workspaceId"]),
   assets: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     name: v.string(),

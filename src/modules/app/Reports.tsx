@@ -75,13 +75,20 @@ export default function Reports() {
   const deals = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const approvals = useQuery(api.approvals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : "skip") ?? [];
 
   const STAGE_ORDER = ['new_lead', 'qualified', 'proposal', 'negotiation', 'won'] as const;
 
   // Data transforms
   const revenueData = useMemo(() => clients
-    .map((c: any) => ({ name: c.company.split(' ')[0], value: 5000 /* Placeholder since no monthlyValue in schema */ }))
-    .slice(0, 5), [clients]);
+    .map((c: any) => ({
+      name: c.company.split(' ')[0],
+      value: invoices
+        .filter((i: any) => i.clientId === c._id && i.status === 'paid')
+        .reduce((sum: number, i: any) => sum + i.amount, 0),
+    }))
+    .filter((c: any) => c.value > 0)
+    .slice(0, 5), [clients, invoices]);
 
   const teamData = useMemo(() => {
     const assignees = [...new Set(tasks.map((t: any) => t.assignee))];

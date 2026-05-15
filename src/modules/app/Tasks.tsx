@@ -110,7 +110,7 @@ export default function Tasks() {
       status: form.status,
       priority: form.priority,
       assignee: form.assignee.trim() || 'US',
-      dueDate: form.dueDate || '2026-12-31',
+      dueDate: form.dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     });
     
     setSheetOpen(false);

@@ -76,6 +76,10 @@ const translations = {
       or: 'Or',
       google: 'Google',
       github: 'Github',
+      errorFillAll: 'Please fill in all fields.',
+      errorPasswordLength: 'Password must be at least 8 characters.',
+      errorFailed: 'Account creation failed. Please try again.',
+      creating: 'Creating account...',
     },
     login: {
       leftHeading: 'Welcome back.',
@@ -97,6 +101,13 @@ const translations = {
       magicLink: 'Continue with magic link',
       footer: 'New to Minerva?',
       footerLink: 'Create account',
+      errorRequired: 'Please enter your email and password.',
+      errorFailed: 'Sign in failed. Please try again.',
+    },
+    comments: {
+      empty: 'No comments yet.',
+      startConversation: 'Start the conversation.',
+      placeholder: 'Write a comment...',
     },
     app: {
       sidebar: {
@@ -615,6 +626,10 @@ const translations = {
       or: 'Ou',
       google: 'Google',
       github: 'Github',
+      errorFillAll: 'Veuillez remplir tous les champs.',
+      errorPasswordLength: 'Le mot de passe doit contenir au moins 8 caractères.',
+      errorFailed: 'La création du compte a échoué. Veuillez réessayer.',
+      creating: 'Création du compte...',
     },
     login: {
       leftHeading: 'Bon retour.',
@@ -636,6 +651,13 @@ const translations = {
       magicLink: 'Continuer avec un lien magique',
       footer: 'Nouveau sur Minerva ?',
       footerLink: 'Créer un compte',
+      errorRequired: 'Veuillez entrer votre courriel et mot de passe.',
+      errorFailed: 'La connexion a échoué. Veuillez réessayer.',
+    },
+    comments: {
+      empty: 'Pas encore de commentaires.',
+      startConversation: 'Lancez la conversation.',
+      placeholder: 'Écrire un commentaire...',
     },
     app: {
       sidebar: {

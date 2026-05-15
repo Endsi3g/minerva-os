@@ -140,7 +140,7 @@ export default function Dashboard() {
   const workspaceId = workspaces[0]?._id;
 
   const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const invoices = useQuery(api.invoices.list as any) ?? []; // TODO: Add workspaceId to invoices
+  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : "skip") ?? [];
   const approvals = useQuery(api.approvals.list as any) ?? [];
   const deals = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];

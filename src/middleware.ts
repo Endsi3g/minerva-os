@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import {
+  convexAuthNextjsMiddleware,
+  createRouteMatcher,
+  nextjsMiddlewareRedirect,
+} from "@convex-dev/auth/nextjs/server";
 
-export function middleware(req: NextRequest) {
-  const session = req.cookies.get('minerva_session');
+const isProtectedRoute = createRouteMatcher(["/app(.*)"]);
 
-  if (!session) {
-    const loginUrl = new URL('/login', req.url);
-    loginUrl.searchParams.set('next', req.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+  if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
+    return nextjsMiddlewareRedirect(request, "/login");
   }
-
-  return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ['/app/:path*'],
+  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };

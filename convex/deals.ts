@@ -31,6 +31,23 @@ export const add = mutation({
   },
 });
 
+export const update = mutation({
+  args: {
+    id: v.id("deals"),
+    company: v.string(),
+    contact: v.string(),
+    email: v.string(),
+    value: v.number(),
+    stage: v.string(),
+    notes: v.optional(v.string()),
+    lastContact: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...fields } = args;
+    await ctx.db.patch(id, fields);
+  },
+});
+
 export const updateStage = mutation({
   args: {
     id: v.id("deals"),

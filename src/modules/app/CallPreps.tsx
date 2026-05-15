@@ -32,7 +32,7 @@ export default function CallPreps() {
       {/* Sidebar: Upcoming Calls */}
       <div className="w-80 shrink-0 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-playfair text-ivory">{cp.title}</h2>
+          <h2 className="text-xl font-serif text-ivory">{cp.title}</h2>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-fog hover:text-ivory">
             <Plus size={16} />
           </Button>
@@ -76,7 +76,7 @@ export default function CallPreps() {
               <div className="flex items-center gap-2 text-fog text-xs uppercase tracking-widest mb-2">
                 <Video size={14} /> {cp.calendar}
               </div>
-              <h1 className="text-3xl font-playfair text-ivory">{selectedCall.title}</h1>
+              <h1 className="text-3xl font-serif text-ivory">{selectedCall.title}</h1>
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex -space-x-2">
                   {selectedCall.attendees.map((a: string, i: number) => (
@@ -160,7 +160,7 @@ export default function CallPreps() {
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
             <Calendar size={48} className="mb-4" />
-            <p className="text-lg font-playfair">Select a meeting to prepare</p>
+            <p className="text-lg font-serif">Select a meeting to prepare</p>
             <p className="text-sm">Strategic clarity begins with preparation.</p>
           </div>
         )}

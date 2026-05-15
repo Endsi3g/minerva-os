@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { NavLink } from '@/components/ui/nav-link';
-import { MOCK_PORTAL_TOKENS } from '@/lib/mock-data';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 const PORTAL_TABS = [
   { label: 'Overview',     path: '' },
@@ -15,16 +16,17 @@ const PORTAL_TABS = [
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const token = params?.token as string | undefined;
-  const portalToken = MOCK_PORTAL_TOKENS.find(t => t.token === token);
+  const portalData = useQuery(api.portal.getByToken, token ? { token } : 'skip');
   const router = useRouter();
 
   useEffect(() => {
-    if (!portalToken) router.replace('/');
-  }, [portalToken, router]);
+    if (portalData === null) router.replace('/');
+  }, [portalData, router]);
 
-  if (!portalToken) return null;
+  if (portalData === undefined) return null; // loading
+  if (portalData === null) return null;      // invalid token, redirecting
 
-  const { clientName } = portalToken;
+  const clientName = portalData.client?.company ?? 'Client';
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif" }}>
@@ -75,7 +77,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               className="text-xs transition-colors duration-200 hover:text-white/60"
               style={{ color: '#8A9099' }}
             >
-              ← Back to site
+              &larr; Back to site
             </Link>
           </div>
 

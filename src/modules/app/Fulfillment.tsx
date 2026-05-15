@@ -46,7 +46,7 @@ export default function Fulfillment() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-playfair text-ivory tracking-tight">{fl.title}</h1>
+          <h1 className="text-3xl font-serif text-ivory tracking-tight">{fl.title}</h1>
           <p className="text-sm text-fog mt-1">{deliveries.length} {fl.stats}</p>
         </div>
         <div className="flex gap-2">
@@ -97,7 +97,7 @@ export default function Fulfillment() {
             <Card className="bg-midnight/30 border-white/5 shadow-none p-8 rounded-3xl">
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-2xl font-playfair text-ivory mb-2">{fl.delivery}</h2>
+                  <h2 className="text-2xl font-serif text-ivory mb-2">{fl.delivery}</h2>
                   <p className="text-sm text-fog">Management and execution of {activeDelivery.serviceType} services.</p>
                 </div>
 
@@ -147,7 +147,7 @@ export default function Fulfillment() {
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-40 border-2 border-dashed border-white/5 rounded-3xl p-12">
               <PackageCheck size={48} className="mb-4 text-fog" />
-              <p className="text-lg font-playfair">Select a project delivery</p>
+              <p className="text-lg font-serif">Select a project delivery</p>
               <p className="text-sm">Track every step of client fulfillment.</p>
             </div>
           )}

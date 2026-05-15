@@ -4,6 +4,9 @@ import { User, Building2, Users, Bell, Shield, Check } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -32,8 +35,12 @@ function ProfileTab() {
   const s = t.app.settings.profile;
   const [name, setName] = useState(user?.name ?? 'Uprising Studio');
   const [saved, setSaved] = useState(false);
+  const updateProfile = useMutation(api.userProfiles.update);
 
-  function handleSave() {
+  async function handleSave() {
+    if (user?.id) {
+      await updateProfile({ id: user.id as Id<"userProfiles">, name });
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -94,11 +101,26 @@ function ProfileTab() {
 function WorkspaceTab() {
   const { t, setLang, lang } = useLang();
   const s = t.app.settings.workspace;
-  const [studioName, setStudioName] = useState('Uprising Studio');
-  const [timezone, setTimezone] = useState('America/Montreal');
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+  const currentWorkspace = workspaces[0];
+  const [studioName, setStudioName] = useState(currentWorkspace?.name ?? 'Uprising Studio');
+  const [timezone, setTimezone] = useState(currentWorkspace?.settings?.timezone ?? 'America/Montreal');
   const [saved, setSaved] = useState(false);
+  const updateWorkspace = useMutation(api.workspaces.update);
 
-  function handleSave() {
+  async function handleSave() {
+    if (workspaceId && currentWorkspace) {
+      await updateWorkspace({
+        id: workspaceId,
+        name: studioName,
+        settings: {
+          ...currentWorkspace.settings,
+          timezone,
+          language: lang,
+        },
+      });
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
