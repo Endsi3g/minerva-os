@@ -30,32 +30,42 @@ const MOCK_TEAM: TeamMember[] = [
 /* ── Sub-sections ────────────────────────────────────────────────────────── */
 
 function ProfileTab() {
-  const { t } = useLang();
+  const { t, setLang, lang } = useLang();
   const { user } = useAuth();
   const s = t.app.settings.profile;
+  const ws = t.app.settings.workspace;
   const [name, setName] = useState(user?.name ?? 'Uprising Studio');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [saved, setSaved] = useState(false);
   const updateProfile = useMutation(api.userProfiles.update);
 
   async function handleSave() {
     if (user?.id) {
-      await updateProfile({ id: user.id as Id<"userProfiles">, name });
+      await updateProfile({
+        id: user.id as Id<"userProfiles">,
+        name,
+        ...(avatarUrl.trim() ? { avatar: avatarUrl.trim() } : {}),
+      });
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
 
   const roleLabels = t.app.settings.team.roles as Record<string, string>;
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
       {/* Avatar */}
       <div className="flex items-center gap-4 mb-6">
         <div
-          className="h-16 w-16 rounded-2xl flex items-center justify-center text-lg font-semibold shrink-0"
+          className="h-16 w-16 rounded-2xl flex items-center justify-center text-lg font-semibold shrink-0 overflow-hidden"
           style={{ backgroundColor: '#1A1F32', color: '#F5F1E8', border: '1px solid rgba(255,255,255,0.10)' }}
         >
-          {name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+          ) : initials}
         </div>
         <div>
           <p className="text-sm font-medium text-ivory">{name}</p>
@@ -82,6 +92,17 @@ function ProfileTab() {
           />
         </SettingsField>
 
+        <SettingsField label={s.avatarUrl}>
+          <input
+            type="url"
+            value={avatarUrl}
+            onChange={e => setAvatarUrl(e.target.value)}
+            placeholder="https://..."
+            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
+            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+          />
+        </SettingsField>
+
         <SettingsField label={s.email}>
           <input
             type="email"
@@ -90,6 +111,28 @@ function ProfileTab() {
             className="w-full rounded-xl h-10 px-3 text-sm opacity-50 cursor-not-allowed"
             style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
           />
+        </SettingsField>
+
+        <SettingsField label={ws.language}>
+          <div className="flex gap-2">
+            {(['en', 'fr'] as Lang[]).map(l => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={cn(
+                  'flex-1 h-10 rounded-xl text-sm font-medium transition-all',
+                  lang === l ? 'text-obsidian' : 'text-silver hover:text-ivory'
+                )}
+                style={
+                  lang === l
+                    ? { backgroundColor: '#F5F1E8' }
+                    : { backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)' }
+                }
+              >
+                {l === 'en' ? ws.langEn : ws.langFr}
+              </button>
+            ))}
+          </div>
         </SettingsField>
 
         <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />

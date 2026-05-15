@@ -54,10 +54,7 @@ const studioNavItems: NavItem[] = [
   { href: '/app/finance',   icon: WalletCards,    labelKey: 'finance' },
   { href: '/app/reports',   icon: BarChart2,      labelKey: 'reports' },
   { href: '/app/fulfillment', icon: PackageCheck, labelKey: 'fulfillment' },
-];
-
-const intelligenceNavItems: NavItem[] = [
-  { href: '/app/agent-ops', icon: Sparkles, labelKey: 'agentOps' },
+  { href: '/app/agent-ops', icon: Sparkles,       labelKey: 'agentOps' },
 ];
 
 function SidebarNavItem({ item, collapsed, sidebar }: { item: NavItem; collapsed: boolean; sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'] }) {
@@ -147,7 +144,6 @@ export function AppSidebar() {
       <nav className="flex-1 overflow-y-auto px-2 space-y-4 py-2">
         <SidebarSection label={sidebar.workspace} items={workspaceNavItems} collapsed={collapsed} sidebar={sidebar} />
         <SidebarSection label={sidebar.studio} items={studioNavItems} collapsed={collapsed} sidebar={sidebar} />
-        <SidebarSection label="Intelligence" items={intelligenceNavItems} collapsed={collapsed} sidebar={sidebar} />
       </nav>
 
       {/* Footer */}

@@ -189,9 +189,11 @@ export default function Billing() {
       </div>
 
       {/* Retainers */}
-      {retainers.filter((r: any) => r.status === 'active').length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-sm font-semibold text-ivory mb-3">{b.retainers.title}</h2>
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold text-ivory mb-3">{b.retainers.title}</h2>
+        {retainers.filter((r: any) => r.status === 'active').length === 0 ? (
+          <p className="text-sm text-fog py-4">{b.retainers.empty}</p>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {retainers.filter((r: any) => r.status === 'active').map((ret: any) => {
               const client = clients.find((c: any) => c._id === ret.clientId);
@@ -226,8 +228,8 @@ export default function Billing() {
               );
             })}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* Invoices */}
       <section>

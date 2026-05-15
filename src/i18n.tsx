@@ -160,6 +160,7 @@ const translations = {
         newClient: 'New Client',
         searchPlaceholder: 'Search clients...',
         noClients: 'No clients match',
+        noClientsYet: 'No clients yet. Add your first client to get started.',
         clearSearch: 'Clear search',
         form: {
           company: 'Company name',
@@ -189,7 +190,7 @@ const translations = {
         stages: {
           new_lead: 'New Lead',
           qualified: 'Qualified',
-          proposal: 'Proposal Sent',
+          proposal: 'Proposal',
           negotiation: 'Negotiation',
           won: 'Closed Won',
           lost: 'Closed Lost',
@@ -302,6 +303,7 @@ const translations = {
           title: 'Active Retainers',
           renews: 'renews',
           hours: 'Hours',
+          empty: 'No active retainers. Retainers will appear here once activated.',
         },
         invoices: {
           searchPlaceholder: 'Search invoices...',
@@ -329,6 +331,7 @@ const translations = {
           title: 'Monthly Revenue by Client',
           subtitle: 'Active clients only',
           label: '$MRR',
+          empty: 'Revenue data will appear once invoices are marked as paid.',
         },
         funnel: {
           title: 'Pipeline Funnel',
@@ -364,6 +367,7 @@ const translations = {
           heading: 'Profile',
           subtitle: 'Your personal account details.',
           displayName: 'Display Name',
+          avatarUrl: 'Avatar URL',
           email: 'Email',
           role: 'Role',
           saveChanges: 'Save Changes',
@@ -710,6 +714,7 @@ const translations = {
         newClient: 'Nouveau Client',
         searchPlaceholder: 'Rechercher des clients...',
         noClients: 'Aucun client ne correspond',
+        noClientsYet: 'Aucun client pour l\'instant. Ajoutez votre premier client pour commencer.',
         clearSearch: 'Effacer la recherche',
         form: {
           company: 'Nom de l\'entreprise',
@@ -739,7 +744,7 @@ const translations = {
         stages: {
           new_lead: 'Nouveau Lead',
           qualified: 'Qualifié',
-          proposal: 'Proposition Envoyée',
+          proposal: 'Proposition',
           negotiation: 'Négociation',
           won: 'Gagné',
           lost: 'Perdu',
@@ -852,6 +857,7 @@ const translations = {
           title: 'Retainers Actifs',
           renews: 'renouvellement',
           hours: 'Heures',
+          empty: 'Aucun retainer actif. Les retainers apparaîtront ici une fois activés.',
         },
         invoices: {
           searchPlaceholder: 'Rechercher des factures...',
@@ -879,6 +885,7 @@ const translations = {
           title: 'Revenus mensuels par client',
           subtitle: 'Clients actifs uniquement',
           label: '$MRR',
+          empty: 'Les données de revenus apparaîtront dès que des factures seront marquées comme payées.',
         },
         funnel: {
           title: 'Entonnoir de vente',
@@ -914,6 +921,7 @@ const translations = {
           heading: 'Profil',
           subtitle: 'Vos informations de compte personnelles.',
           displayName: 'Nom affiche',
+          avatarUrl: 'URL de l\'avatar',
           email: 'Email',
           role: 'Role',
           saveChanges: 'Sauvegarder',

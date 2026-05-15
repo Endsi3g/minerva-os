@@ -9,9 +9,6 @@ test.describe('Cross-cutting interactions', () => {
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
-    const bodyBefore = await page.locator('body').textContent();
-    const hasEnglish = /dashboard|project|setting/i.test(bodyBefore!);
-
     // Click FR button
     const frBtn = page.locator('button').filter({ hasText: /^fr$/i }).first();
     if (await frBtn.count() > 0) {

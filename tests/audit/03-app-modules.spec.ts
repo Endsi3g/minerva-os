@@ -14,12 +14,6 @@ async function assertRendered(page: any, name: string) {
   expect(body!.length).toBeGreaterThan(50);
 }
 
-// Helper: look for a heading matching the module name
-async function findHeading(page: any, pattern: RegExp): Promise<boolean> {
-  const h = page.locator('h1, h2, h3').filter({ hasText: pattern }).first();
-  return (await h.count()) > 0;
-}
-
 // Helper: try to open a button by text and check something appeared
 async function tryOpenButton(page: any, btnText: RegExp): Promise<boolean> {
   const btn = page.locator(`button`).filter({ hasText: btnText }).first();

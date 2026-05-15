@@ -159,7 +159,12 @@ export default function Reports() {
 
         {/* Revenue by client */}
         <ReportSection title={r.revenue.title} subtitle={r.revenue.subtitle}>
-          <ResponsiveContainer width="100%" height={220}>
+          {revenueData.length === 0 ? (
+            <p className="text-sm text-fog text-center py-16">
+              {r.revenue.empty}
+            </p>
+          ) : null}
+          <ResponsiveContainer width="100%" height={revenueData.length === 0 ? 0 : 220}>
             <BarChart data={revenueData} barCategoryGap="30%">
               <CartesianGrid vertical={false} stroke={GRID} />
               <XAxis
