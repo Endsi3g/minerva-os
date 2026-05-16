@@ -325,6 +325,13 @@ const translations = {
           qty: 'Qty',
           unitPrice: 'Unit price',
           total: 'Total',
+        },
+        actions: {
+          exportPdf: 'Export PDF',
+          paymentLink: 'Payment Link',
+          paymentLinkCopied: 'Link copied!',
+          paymentLinkError: 'Failed to generate link.',
+          generating: 'Generating...',
         }
       },
       reports: {
@@ -917,6 +924,13 @@ const translations = {
           qty: 'Qté',
           unitPrice: 'Prix unitaire',
           total: 'Total',
+        },
+        actions: {
+          exportPdf: 'Exporter PDF',
+          paymentLink: 'Lien de paiement',
+          paymentLinkCopied: 'Lien copié !',
+          paymentLinkError: 'Impossible de générer le lien.',
+          generating: 'Génération...',
         }
       },
       reports: {
