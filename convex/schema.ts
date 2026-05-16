@@ -423,6 +423,16 @@ export default defineSchema({
     .index("by_token", ["token"])
     .index("by_client", ["clientId"]),
 
+  // --- RESOURCE PLANNING ---
+
+  memberAvailability: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.string(),
+    displayName: v.string(),
+    weeklyHours: v.number(),
+    role: v.optional(v.string()),
+  }).index("by_workspace", ["workspaceId"]),
+
   // --- NPS ---
 
   npsResponses: defineTable({

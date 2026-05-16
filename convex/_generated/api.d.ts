@@ -41,6 +41,7 @@ import type * as riskWorkflow from "../riskWorkflow.js";
 import type * as seed from "../seed.js";
 import type * as expenses from "../expenses.js";
 import type * as nps from "../nps.js";
+import type * as resources from "../resources.js";
 import type * as proposals from "../proposals.js";
 import type * as services from "../services.js";
 import type * as sla from "../sla.js";
@@ -91,6 +92,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   expenses: typeof expenses;
   nps: typeof nps;
+  resources: typeof resources;
   proposals: typeof proposals;
   services: typeof services;
   sla: typeof sla;

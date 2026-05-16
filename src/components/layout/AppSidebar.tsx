@@ -24,6 +24,7 @@ import {
   Library,
   Headphones,
   Star,
+  CalendarRange,
 } from 'lucide-react';
 import { TimerWidget } from './TimerWidget';
 import { cn } from '@/lib/utils';
@@ -69,6 +70,7 @@ const studioNavItems: NavItem[] = [
   { href: '/app/knowledge',  icon: Library,         labelKey: 'knowledge' },
   { href: '/app/tickets',    icon: Headphones,      labelKey: 'tickets' },
   { href: '/app/nps',        icon: Star,            labelKey: 'nps' },
+  { href: '/app/resources',  icon: CalendarRange,   labelKey: 'resources' },
   { href: '/app/agent-ops',  icon: Sparkles,        labelKey: 'agentOps' },
 ];
 
