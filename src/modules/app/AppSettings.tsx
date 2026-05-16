@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { User, Building2, Users, Bell, Shield, Check } from 'lucide-react';
+import { User, Building2, Users, Bell, Shield, Check, Lock, Download } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -10,7 +10,7 @@ import { Id } from '../../../convex/_generated/dataModel';
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
-type Tab = 'profile' | 'workspace' | 'team' | 'notifications' | 'security';
+type Tab = 'profile' | 'workspace' | 'team' | 'notifications' | 'security' | 'privacy';
 
 interface TeamMember {
   id: string;
@@ -452,6 +452,93 @@ function Toggle({ on }: { on: boolean }) {
   );
 }
 
+/* ── Privacy / GDPR Tab ──────────────────────────────────────────────────── */
+
+function PrivacyTab() {
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
+  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
+  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : 'skip') ?? [];
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState(false);
+
+  function handleExport() {
+    setExporting(true);
+    const data = {
+      exportedAt: new Date().toISOString(),
+      workspace: workspaces[0] ?? null,
+      clients,
+      projects,
+      invoices,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `minerva-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExporting(false);
+    setExported(true);
+    setTimeout(() => setExported(false), 3000);
+  }
+
+  return (
+    <Section title="Privacy & Data" subtitle="Manage your data and compliance settings.">
+      <div className="space-y-4 max-w-md">
+        <div
+          className="rounded-2xl p-5 space-y-4"
+          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <div>
+            <p className="text-sm font-semibold text-ivory mb-0.5">Export your data</p>
+            <p className="text-xs text-fog">Download a complete JSON export of your workspace data (clients, projects, invoices).</p>
+          </div>
+          <button
+            onClick={handleExport}
+            disabled={exporting || !workspaceId}
+            className="flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-medium transition-colors"
+            style={{ backgroundColor: exported ? 'rgba(127,163,138,0.15)' : 'rgba(255,255,255,0.05)', color: exported ? '#7FA38A' : '#B8BDC7', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            {exported ? <Check size={14} /> : <Download size={14} />}
+            {exported ? 'Export downloaded' : exporting ? 'Preparing...' : 'Download JSON export'}
+          </button>
+        </div>
+
+        <div
+          className="rounded-2xl p-5 space-y-3"
+          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <p className="text-sm font-semibold text-ivory">Data retention</p>
+          <p className="text-xs text-fog leading-relaxed">
+            Your workspace data is retained indefinitely while your account is active.
+            Deleted records are permanently removed within 30 days.
+          </p>
+        </div>
+
+        <div
+          className="rounded-2xl p-5 space-y-3"
+          style={{ backgroundColor: 'rgba(168,106,106,0.05)', border: '1px solid rgba(168,106,106,0.2)' }}
+        >
+          <p className="text-sm font-semibold" style={{ color: '#A86A6A' }}>Delete workspace</p>
+          <p className="text-xs text-fog leading-relaxed">
+            Permanently delete your workspace and all associated data. This action cannot be undone.
+            Contact support to initiate account deletion.
+          </p>
+          <button
+            disabled
+            className="h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed"
+            style={{ backgroundColor: 'rgba(168,106,106,0.15)', color: '#A86A6A', border: '1px solid rgba(168,106,106,0.2)' }}
+          >
+            Request deletion
+          </button>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 /* ── Main page ───────────────────────────────────────────────────────────── */
 
 const TAB_ICONS: Record<Tab, React.ElementType> = {
@@ -460,6 +547,7 @@ const TAB_ICONS: Record<Tab, React.ElementType> = {
   team: Users,
   notifications: Bell,
   security: Shield,
+  privacy: Lock,
 };
 
 export default function AppSettings() {
@@ -473,6 +561,7 @@ export default function AppSettings() {
     { id: 'team',          label: s.tabs.team },
     { id: 'notifications', label: s.tabs.notifications },
     { id: 'security',      label: s.tabs.security },
+    { id: 'privacy',       label: 'Privacy' },
   ];
 
   return (
@@ -513,6 +602,7 @@ export default function AppSettings() {
           {activeTab === 'team'          && <TeamTab />}
           {activeTab === 'notifications' && <NotificationsTab />}
           {activeTab === 'security'      && <SecurityTab />}
+          {activeTab === 'privacy'       && <PrivacyTab />}
         </div>
       </div>
     </div>
