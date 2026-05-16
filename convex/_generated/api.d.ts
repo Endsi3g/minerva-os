@@ -39,6 +39,8 @@ import type * as retainers from "../retainers.js";
 import type * as riskFlags from "../riskFlags.js";
 import type * as riskWorkflow from "../riskWorkflow.js";
 import type * as seed from "../seed.js";
+import type * as expenses from "../expenses.js";
+import type * as proposals from "../proposals.js";
 import type * as services from "../services.js";
 import type * as sla from "../sla.js";
 import type * as tasks from "../tasks.js";
@@ -86,6 +88,8 @@ declare const fullApi: ApiFromModules<{
   riskFlags: typeof riskFlags;
   riskWorkflow: typeof riskWorkflow;
   seed: typeof seed;
+  expenses: typeof expenses;
+  proposals: typeof proposals;
   services: typeof services;
   sla: typeof sla;
   tasks: typeof tasks;

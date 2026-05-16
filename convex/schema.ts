@@ -393,4 +393,52 @@ export default defineSchema({
     description: v.string(),
     startTime: v.number(),
   }).index("by_user", ["userId"]),
+
+  // --- PROPOSALS ---
+
+  proposals: defineTable({
+    workspaceId: v.id("workspaces"),
+    dealId: v.optional(v.id("deals")),
+    clientId: v.optional(v.id("clients")),
+    title: v.string(),
+    sections: v.array(v.object({
+      type: v.string(), // "intro" | "scope" | "timeline" | "pricing" | "terms"
+      content: v.string(),
+    })),
+    serviceIds: v.array(v.string()),
+    totalAmount: v.number(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("sent"),
+      v.literal("signed"),
+      v.literal("declined")
+    ),
+    token: v.string(),
+    sentAt: v.optional(v.number()),
+    signedAt: v.optional(v.number()),
+    signedBy: v.optional(v.string()),
+    validUntil: v.optional(v.number()),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_token", ["token"])
+    .index("by_client", ["clientId"]),
+
+  // --- EXPENSES ---
+
+  expenses: defineTable({
+    workspaceId: v.id("workspaces"),
+    submittedBy: v.string(),
+    amount: v.number(),
+    currency: v.string(),
+    category: v.string(),
+    description: v.string(),
+    date: v.number(),
+    receiptStorageId: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    approvedBy: v.optional(v.string()),
+    projectId: v.optional(v.id("projects")),
+    clientId: v.optional(v.id("clients")),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_project", ["projectId"]),
 });

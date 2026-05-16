@@ -5,7 +5,7 @@ import {
   LayoutDashboard, GitBranch, Users, FolderKanban, CheckSquare,
   ClipboardCheck, FileBox, Receipt, BarChart2, CalendarCheck,
   PackageCheck, WalletCards, Sparkles, Clock, Settings,
-  Plus, UserPlus, DollarSign,
+  Plus, UserPlus, DollarSign, BookOpen, FileSignature,
 } from 'lucide-react';
 import {
   CommandDialog,
@@ -65,6 +65,8 @@ const navItems = [
   { label: 'Call Preps', href: '/app/call-preps', icon: CalendarCheck },
   { label: 'Fulfillment', href: '/app/fulfillment', icon: PackageCheck },
   { label: 'Time Tracking', href: '/app/time-tracking', icon: Clock },
+  { label: 'Service Catalog', href: '/app/services', icon: BookOpen },
+  { label: 'Proposals', href: '/app/proposals', icon: FileSignature },
   { label: 'Agent Ops', href: '/app/agent-ops', icon: Sparkles },
   { label: 'Settings', href: '/app/settings', icon: Settings },
 ];

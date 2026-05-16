@@ -18,6 +18,8 @@ import {
   WalletCards,
   Sparkles,
   Clock,
+  BookOpen,
+  FileSignature,
 } from 'lucide-react';
 import { TimerWidget } from './TimerWidget';
 import { cn } from '@/lib/utils';
@@ -51,13 +53,15 @@ const workspaceNavItems: NavItem[] = [
 ];
 
 const studioNavItems: NavItem[] = [
-  { href: '/app/approvals', icon: ClipboardCheck, labelKey: 'approvals' },
-  { href: '/app/files',     icon: FileBox,        labelKey: 'files' },
-  { href: '/app/billing',   icon: Receipt,        labelKey: 'billing' },
-  { href: '/app/finance',   icon: WalletCards,    labelKey: 'finance' },
-  { href: '/app/reports',   icon: BarChart2,      labelKey: 'reports' },
-  { href: '/app/fulfillment', icon: PackageCheck, labelKey: 'fulfillment' },
-  { href: '/app/agent-ops', icon: Sparkles,       labelKey: 'agentOps' },
+  { href: '/app/approvals',  icon: ClipboardCheck, labelKey: 'approvals' },
+  { href: '/app/files',      icon: FileBox,         labelKey: 'files' },
+  { href: '/app/billing',    icon: Receipt,         labelKey: 'billing' },
+  { href: '/app/finance',    icon: WalletCards,     labelKey: 'finance' },
+  { href: '/app/reports',    icon: BarChart2,       labelKey: 'reports' },
+  { href: '/app/fulfillment', icon: PackageCheck,   labelKey: 'fulfillment' },
+  { href: '/app/services',   icon: BookOpen,        labelKey: 'serviceCatalog' },
+  { href: '/app/proposals',  icon: FileSignature,   labelKey: 'proposals' },
+  { href: '/app/agent-ops',  icon: Sparkles,        labelKey: 'agentOps' },
 ];
 
 function SidebarNavItem({ item, collapsed, sidebar }: { item: NavItem; collapsed: boolean; sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'] }) {

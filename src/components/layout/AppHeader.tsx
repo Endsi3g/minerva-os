@@ -49,6 +49,8 @@ const PAGE_LABELS: Record<string, string> = {
   '/app/finance': 'Finance',
   '/app/time-tracking': 'Time Tracking',
   '/app/agent-ops': 'Agent Ops',
+  '/app/services': 'Service Catalog',
+  '/app/proposals': 'Proposals',
 };
 
 export function AppHeader() {
