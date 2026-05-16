@@ -16,7 +16,8 @@
       "bundleIdentifier": "com.uprisingstudio.minervaos",
       "infoPlist": {
         "NSCameraUsageDescription": "Upload deliverable files and receipt photos.",
-        "NSPhotoLibraryUsageDescription": "Attach files and receipts from your photo library."
+        "NSPhotoLibraryUsageDescription": "Attach files and receipts from your photo library.",
+        "NSMicrophoneUsageDescription": "Record audio for video deliverables."
       }
     },
     "android": {
@@ -29,12 +30,26 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
-      ]
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "notification": {
+        "icon": "./assets/notification-icon.png",
+        "color": "#7FA38A"
+      }
     },
     "plugins": [
       "expo-router",
-      "expo-notifications",
+      "expo-localization",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#7FA38A",
+          "sounds": []
+        }
+      ],
       [
         "expo-camera",
         { "cameraPermission": "Allow Minerva to access your camera." }
@@ -42,6 +57,14 @@
       [
         "expo-image-picker",
         { "photosPermission": "Allow Minerva to access your photos." }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
       ]
     ],
     "experiments": {

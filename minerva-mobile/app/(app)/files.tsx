@@ -1,7 +1,8 @@
-import { FlatList, View, Text, TouchableOpacity, Alert, RefreshControl, Image } from 'react-native';
+import { FlatList, View, Text, TouchableOpacity, Alert, RefreshControl, Platform, ActionSheetIOS } from 'react-native';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useCallback } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import { useMobileLang } from '@/lib/i18n';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — symlinked from parent repo
 import { api } from '../convex/_generated/api';
@@ -10,7 +11,6 @@ type FileAsset = {
   _id: string;
   name: string;
   type: string;
-  storageId: string;
   size: number;
   url?: string;
 };
@@ -44,15 +44,16 @@ function FileItem({ file }: { file: FileAsset }) {
 }
 
 export default function Files() {
+  const { t } = useMobileLang();
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const workspaces = useQuery(api.workspaces.list, {}) ?? [];
   const workspaceId = workspaces[0]?._id;
-  const files = (useQuery(api.files.list, workspaceId ? { workspaceId } : 'skip') ?? []) as FileAsset[];
+  const files = (useQuery(api.assets.list, workspaceId ? { workspaceId } : 'skip') ?? []) as FileAsset[];
 
-  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-  const saveFile = useMutation(api.files.save);
+  const generateUploadUrl = useMutation(api.assets.generateUploadUrl);
+  const saveFile = useMutation(api.assets.add);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -77,7 +78,6 @@ export default function Files() {
         body: { uri: asset.uri } as unknown as BodyInit,
       });
       if (!response.ok) throw new Error('Upload failed');
-      const { storageId } = await response.json() as { storageId: string };
 
       const name = asset.fileName ?? asset.uri.split('/').pop() ?? 'upload';
       const type = (asset.mimeType ?? '').startsWith('image') ? 'image'
@@ -85,24 +85,32 @@ export default function Files() {
 
       await saveFile({
         workspaceId,
-        storageId,
         name,
         type,
         size: asset.fileSize ?? 0,
+        url: '',
+        uploadedAt: Date.now(),
       });
     } catch (err) {
-      Alert.alert('Upload failed', String(err));
+      Alert.alert(t.errors.uploadFailed, String(err));
     } finally {
       setUploading(false);
     }
   }
 
   function showUploadOptions() {
-    Alert.alert('Upload file', 'Choose a source', [
-      { text: 'Camera', onPress: () => pickAndUpload(true) },
-      { text: 'Photo Library', onPress: () => pickAndUpload(false) },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: [t.files.camera, t.files.photoLibrary, t.common.cancel], cancelButtonIndex: 2 },
+        (idx) => { if (idx === 0) pickAndUpload(true); else if (idx === 1) pickAndUpload(false); }
+      );
+    } else {
+      Alert.alert(t.files.uploadFile, t.files.chooseSource, [
+        { text: t.files.camera, onPress: () => pickAndUpload(true) },
+        { text: t.files.photoLibrary, onPress: () => pickAndUpload(false) },
+        { text: t.common.cancel, style: 'cancel' },
+      ]);
+    }
   }
 
   return (
@@ -110,8 +118,8 @@ export default function Files() {
       {/* Header */}
       <View className="px-4 pt-14 pb-4 flex-row items-center justify-between">
         <View>
-          <Text className="text-ivory text-2xl font-semibold">Files</Text>
-          <Text className="text-fog text-sm mt-0.5">{files.length} assets</Text>
+          <Text className="text-ivory text-2xl font-semibold">{t.files.title}</Text>
+          <Text className="text-fog text-sm mt-0.5">{files.length} {t.files.assets}</Text>
         </View>
         <TouchableOpacity
           onPress={showUploadOptions}
@@ -119,14 +127,14 @@ export default function Files() {
           className="px-4 py-2 rounded-xl"
           style={{ backgroundColor: '#F5F1E8', opacity: uploading ? 0.6 : 1 }}
         >
-          <Text className="text-obsidian text-sm font-semibold">{uploading ? 'Uploading...' : 'Upload'}</Text>
+          <Text className="text-obsidian text-sm font-semibold">{uploading ? t.files.uploading : t.files.upload}</Text>
         </TouchableOpacity>
       </View>
 
       {files.length === 0 ? (
         <View className="flex-1 items-center justify-center gap-3">
           <Text className="text-4xl">📁</Text>
-          <Text className="text-fog text-sm">No files yet. Upload your first asset.</Text>
+          <Text className="text-fog text-sm">{t.files.noFiles} {t.files.uploadFirst}</Text>
         </View>
       ) : (
         <FlatList

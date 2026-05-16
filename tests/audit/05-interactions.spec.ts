@@ -104,6 +104,8 @@ test.describe('Cross-cutting interactions', () => {
       '/app/tasks', '/app/approvals', '/app/files', '/app/billing',
       '/app/finance', '/app/reports', '/app/settings', '/app/agent-ops',
       '/app/call-preps', '/app/fulfillment',
+      '/app/services', '/app/proposals', '/app/expenses', '/app/knowledge',
+      '/app/tickets', '/app/nps', '/app/resources', '/app/time-tracking',
     ];
 
     const broken: string[] = [];

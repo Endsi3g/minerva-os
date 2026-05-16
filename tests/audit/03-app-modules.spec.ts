@@ -265,6 +265,146 @@ test('Fulfillment — renders delivery tracking', async ({ page }) => {
   if (!hasFulfillment) console.log('AUDIT: Fulfillment — no fulfillment/delivery label found');
 });
 
+// ─── Sprint 9-10 new modules ──────────────────────────────────────────────────
+
+test('Services — catalog renders with add button', async ({ page }) => {
+  await goTo(page, '/app/services');
+  await page.screenshot({ path: 'tests/screenshots/03-services.png', fullPage: true });
+  await assertRendered(page, 'Services');
+
+  const bodyText = (await page.locator('body').textContent())!;
+  const hasService = /service|catalog|package|prix|price/i.test(bodyText);
+  if (!hasService) console.log('AUDIT: Services — no service/catalog label found');
+
+  const addBtn = page.locator('button').filter({ hasText: /add service|new service|add|ajouter/i }).first();
+  if (await addBtn.count() === 0) console.log('AUDIT: Services — no add service button found');
+  else {
+    await addBtn.click();
+    await page.waitForTimeout(600);
+    const sheetVisible = await page.locator('[role="dialog"], [data-state="open"]').count();
+    if (sheetVisible === 0) console.log('AUDIT: Services — add button clicked but no modal appeared');
+  }
+});
+
+test('Proposals — list renders with status badges', async ({ page }) => {
+  await goTo(page, '/app/proposals');
+  await page.screenshot({ path: 'tests/screenshots/03-proposals.png', fullPage: true });
+  await assertRendered(page, 'Proposals');
+
+  const bodyText = (await page.locator('body').textContent())!;
+  const hasProposal = /proposal|proposition|draft|brouillon|sent|envoyé/i.test(bodyText);
+  if (!hasProposal) console.log('AUDIT: Proposals — no proposal/draft label found');
+
+  const addBtn = page.locator('button').filter({ hasText: /new proposal|add proposal|nouveau|ajouter/i }).first();
+  if (await addBtn.count() === 0) console.log('AUDIT: Proposals — no new proposal button found');
+  else {
+    await addBtn.click();
+    await page.waitForTimeout(600);
+    const sheetVisible = await page.locator('[role="dialog"], [data-state="open"]').count();
+    if (sheetVisible === 0) console.log('AUDIT: Proposals — button clicked but no modal appeared');
+  }
+});
+
+test('Expenses — KPI chips and list render', async ({ page }) => {
+  await goTo(page, '/app/expenses');
+  await page.screenshot({ path: 'tests/screenshots/03-expenses.png', fullPage: true });
+  await assertRendered(page, 'Expenses');
+
+  const bodyText = (await page.locator('body').textContent())!;
+  const hasExpense = /expense|dépense|pending|approved|en attente/i.test(bodyText);
+  if (!hasExpense) console.log('AUDIT: Expenses — no expense label found');
+
+  const addBtn = page.locator('button').filter({ hasText: /add expense|new expense|ajouter/i }).first();
+  if (await addBtn.count() === 0) console.log('AUDIT: Expenses — no add expense button found');
+  else {
+    await addBtn.click();
+    await page.waitForTimeout(600);
+  }
+});
+
+test('Knowledge Base — search input and article list render', async ({ page }) => {
+  await goTo(page, '/app/knowledge');
+  await page.screenshot({ path: 'tests/screenshots/03-knowledge.png', fullPage: true });
+  await assertRendered(page, 'KnowledgeBase');
+
+  const bodyText = (await page.locator('body').textContent())!;
+  const hasKB = /knowledge|article|base de connaissances|category/i.test(bodyText);
+  if (!hasKB) console.log('AUDIT: KnowledgeBase — no knowledge/article label found');
+
+  const searchInput = page.locator('input[type="text"], input[type="search"]').first();
+  if (await searchInput.count() === 0) console.log('AUDIT: KnowledgeBase — no search input found');
+
+  const addBtn = page.locator('button').filter({ hasText: /new article|add article|nouvel article|ajouter/i }).first();
+  if (await addBtn.count() === 0) console.log('AUDIT: KnowledgeBase — no add article button found');
+  else {
+    await addBtn.click();
+    await page.waitForTimeout(600);
+  }
+});
+
+test('Tickets — status filter tabs and new ticket button', async ({ page }) => {
+  await goTo(page, '/app/tickets');
+  await page.screenshot({ path: 'tests/screenshots/03-tickets.png', fullPage: true });
+  await assertRendered(page, 'Tickets');
+
+  const bodyText = (await page.locator('body').textContent())!;
+  const hasTicket = /ticket|support|open|resolved|in progress|en cours/i.test(bodyText);
+  if (!hasTicket) console.log('AUDIT: Tickets — no ticket/status label found');
+
+  const addBtn = page.locator('button').filter({ hasText: /new ticket|add ticket|nouveau ticket|ajouter/i }).first();
+  if (await addBtn.count() === 0) console.log('AUDIT: Tickets — no new ticket button found');
+  else {
+    await addBtn.click();
+    await page.waitForTimeout(600);
+    const sheetVisible = await page.locator('[role="dialog"], [data-state="open"]').count();
+    if (sheetVisible === 0) console.log('AUDIT: Tickets — button clicked but no modal appeared');
+  }
+});
+
+test('NPS — gauge and KPI cards render', async ({ page }) => {
+  await goTo(page, '/app/nps');
+  await page.screenshot({ path: 'tests/screenshots/03-nps.png', fullPage: true });
+  await assertRendered(page, 'NPS');
+
+  const bodyText = (await page.locator('body').textContent())!;
+  const hasNps = /nps|promoter|detractor|passive|score/i.test(bodyText);
+  if (!hasNps) console.log('AUDIT: NPS — no NPS/promoter label found');
+
+  const addBtn = page.locator('button').filter({ hasText: /record nps|add response|enregistrer|ajouter/i }).first();
+  if (await addBtn.count() === 0) console.log('AUDIT: NPS — no record response button found');
+  else {
+    await addBtn.click();
+    await page.waitForTimeout(600);
+  }
+});
+
+test('Resource Planning — team capacity table renders', async ({ page }) => {
+  await goTo(page, '/app/resources');
+  await page.screenshot({ path: 'tests/screenshots/03-resources.png', fullPage: true });
+  await assertRendered(page, 'ResourcePlanning');
+
+  const bodyText = (await page.locator('body').textContent())!;
+  const hasResource = /resource|capacity|team|member|utilization|planification/i.test(bodyText);
+  if (!hasResource) console.log('AUDIT: ResourcePlanning — no resource/capacity label found');
+
+  const addBtn = page.locator('button').filter({ hasText: /add member|new member|ajouter/i }).first();
+  if (await addBtn.count() === 0) console.log('AUDIT: ResourcePlanning — no add member button found');
+  else {
+    await addBtn.click();
+    await page.waitForTimeout(600);
+  }
+});
+
+test('Time Tracking — timesheet and timer widget visible', async ({ page }) => {
+  await goTo(page, '/app/time-tracking');
+  await page.screenshot({ path: 'tests/screenshots/03-time-tracking.png', fullPage: true });
+  await assertRendered(page, 'TimeTracking');
+
+  const bodyText = (await page.locator('body').textContent())!;
+  const hasTime = /time|hours|timer|week|timesheet|heure|semaine/i.test(bodyText);
+  if (!hasTime) console.log('AUDIT: TimeTracking — no time/hours label found');
+});
+
 // ─── /app redirect ────────────────────────────────────────────────────────────
 
 test('/app root — redirects to dashboard', async ({ page }) => {

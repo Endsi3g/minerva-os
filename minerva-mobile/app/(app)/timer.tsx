@@ -10,7 +10,11 @@ import {
 } from 'react-native';
 import { useQuery, useMutation } from 'convex/react';
 import * as Notifications from 'expo-notifications';
+import * as Haptics from 'expo-haptics';
 import { TimerControls } from '@/components/TimerControls';
+import { useMobileLang } from '@/lib/i18n';
+import { useAppAuth } from '@/lib/auth';
+import { storeActiveTimerStart, clearActiveTimerStart } from '@/lib/backgroundTimer';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — symlinked from parent repo
 import { api } from '../convex/_generated/api';
@@ -26,6 +30,8 @@ function formatElapsed(ms: number): string {
 type Project = { _id: string; name: string };
 
 export default function Timer() {
+  const { t } = useMobileLang();
+  const { user } = useAppAuth();
   const [description, setDescription] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -34,7 +40,7 @@ export default function Timer() {
 
   const workspaces = useQuery(api.workspaces.list, {}) ?? [];
   const workspaceId = workspaces[0]?._id;
-  const userEmail = 'user@example.com'; // TODO: pull from auth context
+  const userEmail = user?.email ?? '';
 
   const activeTimer = useQuery(api.timers.getActive, { userId: userEmail });
   const projects = (useQuery(api.projects.list, workspaceId ? { workspaceId } : 'skip') ?? []) as Project[];
@@ -69,6 +75,8 @@ export default function Timer() {
         projectId: selectedProjectId as Parameters<typeof startTimer>[0]['projectId'] ?? undefined,
         description: description.trim(),
       });
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      storeActiveTimerStart(Date.now());
       await Notifications.scheduleNotificationAsync({
         content: {
           title: 'Timer running',
@@ -86,6 +94,8 @@ export default function Timer() {
     setLoading(true);
     try {
       await stopTimer({ userId: userEmail, workspaceId, billable: true });
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      clearActiveTimerStart();
       await Notifications.dismissAllNotificationsAsync();
       setDescription('');
       setSelectedProjectId(null);
@@ -95,12 +105,13 @@ export default function Timer() {
   }
 
   async function handleCancel() {
-    Alert.alert('Discard timer?', 'This will discard the current timer without saving.', [
-      { text: 'Keep running', style: 'cancel' },
+    Alert.alert(t.timer.discardConfirm, t.timer.discardConfirmBody, [
+      { text: t.timer.keepRunning, style: 'cancel' },
       {
-        text: 'Discard', style: 'destructive',
+        text: t.timer.discard, style: 'destructive',
         onPress: async () => {
           await cancelTimer({ userId: userEmail });
+          clearActiveTimerStart();
           await Notifications.dismissAllNotificationsAsync();
           setDescription('');
         },
@@ -114,7 +125,7 @@ export default function Timer() {
       contentContainerStyle={{ padding: 16, paddingTop: 56 }}
       keyboardShouldPersistTaps="handled"
     >
-      <Text className="text-ivory text-2xl font-semibold mb-8">Timer</Text>
+      <Text className="text-ivory text-2xl font-semibold mb-8">{t.timer.title}</Text>
 
       {/* Timer display */}
       <View className="items-center py-8">
@@ -129,7 +140,7 @@ export default function Timer() {
 
         {isRunning && (
           <TouchableOpacity onPress={handleCancel} className="mt-4">
-            <Text className="text-fog text-xs">Discard timer</Text>
+            <Text className="text-fog text-xs">{t.timer.discardTimer}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -140,16 +151,16 @@ export default function Timer() {
           <TextInput
             value={description}
             onChangeText={setDescription}
-            placeholder="What are you working on?"
+            placeholder={t.timer.whatWorkingOn}
             placeholderTextColor="#8A9099"
             className="bg-midnight border border-white/10 rounded-xl px-4 py-3 text-ivory text-sm"
             returnKeyType="done"
           />
 
           {/* Project selector */}
-          <Text className="text-fog text-xs uppercase tracking-widest mt-2">Project</Text>
+          <Text className="text-fog text-xs uppercase tracking-widest mt-2">{t.timer.project}</Text>
           <FlatList
-            data={[{ _id: '', name: 'No project' }, ...projects]}
+            data={[{ _id: '', name: t.timer.noProject }, ...projects]}
             keyExtractor={item => item._id}
             horizontal
             showsHorizontalScrollIndicator={false}
