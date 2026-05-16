@@ -33,6 +33,7 @@ export const submit = mutation({
     trigger: v.string(),
   },
   handler: async (ctx, args) => {
+    if (args.score < 0 || args.score > 10) throw new Error("Score must be between 0 and 10");
     return await ctx.db.insert("npsResponses", {
       ...args,
       respondedAt: Date.now(),

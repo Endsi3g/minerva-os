@@ -51,6 +51,7 @@ import type * as timeEntries from "../timeEntries.js";
 import type * as timers from "../timers.js";
 import type * as userProfiles from "../userProfiles.js";
 import type * as workspaces from "../workspaces.js";
+import type * as pushTokens from "../pushTokens.js";
 
 import type {
   ApiFromModules,
@@ -102,6 +103,7 @@ declare const fullApi: ApiFromModules<{
   timers: typeof timers;
   userProfiles: typeof userProfiles;
   workspaces: typeof workspaces;
+  pushTokens: typeof pushTokens;
 }>;
 
 /**

@@ -15,6 +15,15 @@ const NAV_ITEMS = [
   { label: /fulfillment/i, href: '/app/fulfillment' },
   { label: /agent/i, href: '/app/agent-ops' },
   { label: /setting/i, href: '/app/settings' },
+  // Sprint 1-9 new routes
+  { label: /time/i, href: '/app/time-tracking' },
+  { label: /service|catalog/i, href: '/app/services' },
+  { label: /proposal/i, href: '/app/proposals' },
+  { label: /expense/i, href: '/app/expenses' },
+  { label: /knowledge/i, href: '/app/knowledge' },
+  { label: /ticket|support/i, href: '/app/tickets' },
+  { label: /nps/i, href: '/app/nps' },
+  { label: /resource/i, href: '/app/resources' },
 ];
 
 test.describe('App Shell', () => {

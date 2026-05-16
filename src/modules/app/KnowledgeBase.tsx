@@ -4,7 +4,7 @@ import { Plus, Search, BookOpen, Tag, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
+import { useLang } from '@/i18n';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 
@@ -16,7 +16,17 @@ const CATEGORY_COLORS: Record<string, string> = {
   Finance: 'text-ember bg-ember/10',
 };
 
-function ArticleCard({ article, onEdit, onDelete }: { article: any; onEdit: (a: any) => void; onDelete: (id: string) => void }) {
+const CATEGORIES = ['Process', 'Client', 'Technical', 'Strategy', 'Finance', 'Other'];
+
+type Article = {
+  _id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+};
+
+function ArticleCard({ article, onEdit, onDelete }: { article: Article; onEdit: (a: Article) => void; onDelete: (id: string) => void }) {
   const color = CATEGORY_COLORS[article.category] ?? 'text-fog bg-fog/10';
   return (
     <div
@@ -36,7 +46,7 @@ function ArticleCard({ article, onEdit, onDelete }: { article: any; onEdit: (a: 
       <p className="text-xs text-fog line-clamp-3 leading-relaxed">{article.content}</p>
       {article.tags?.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-3">
-          {article.tags.slice(0, 4).map((tag: string) => (
+          {article.tags.slice(0, 4).map((tag) => (
             <span key={tag} className="flex items-center gap-0.5 text-[10px] text-fog/70 bg-white/3 px-1.5 py-0.5 rounded-full">
               <Tag size={9} />
               {tag}
@@ -48,9 +58,11 @@ function ArticleCard({ article, onEdit, onDelete }: { article: any; onEdit: (a: 
   );
 }
 
-const CATEGORIES = ['Process', 'Client', 'Technical', 'Strategy', 'Finance', 'Other'];
+type ModalState = 'closed' | 'new' | Article;
 
-function ArticleModal({ article, workspaceId, onClose }: { article: any | null; workspaceId: any; onClose: () => void }) {
+function ArticleModal({ article, workspaceId, onClose }: { article: Article | null; workspaceId: string; onClose: () => void }) {
+  const { t } = useLang();
+  const f = t.app.knowledgeBase.form;
   const addArticle = useMutation(api.knowledgeBase.add);
   const updateArticle = useMutation(api.knowledgeBase.update);
   const isEdit = Boolean(article);
@@ -72,10 +84,10 @@ function ArticleModal({ article, workspaceId, onClose }: { article: any | null; 
     e.preventDefault();
     if (!title || !content) return;
     setSaving(true);
-    if (isEdit) {
-      await updateArticle({ id: article._id, title, content, category, tags });
+    if (isEdit && article) {
+      await updateArticle({ id: article._id as Parameters<typeof updateArticle>[0]['id'], title, content, category, tags });
     } else {
-      await addArticle({ workspaceId, title, content, category, tags });
+      await addArticle({ workspaceId: workspaceId as Parameters<typeof addArticle>[0]['workspaceId'], title, content, category, tags });
     }
     onClose();
   }
@@ -89,11 +101,11 @@ function ArticleModal({ article, workspaceId, onClose }: { article: any | null; 
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-white/5">
-          <h2 className="text-sm font-semibold text-ivory">{isEdit ? 'Edit article' : 'New article'}</h2>
+          <h2 className="text-sm font-semibold text-ivory">{isEdit ? f.editTitle : f.newTitle}</h2>
           <button type="button" onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
         <div className="overflow-y-auto flex-1 p-5 space-y-3">
-          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Article title"
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder={f.titlePlaceholder}
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
           <select value={category} onChange={e => setCategory(e.target.value)}
@@ -101,14 +113,14 @@ function ArticleModal({ article, workspaceId, onClose }: { article: any | null; 
             style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Write content here..." rows={8}
+          <textarea value={content} onChange={e => setContent(e.target.value)} placeholder={f.contentPlaceholder} rows={8}
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
           <div>
             <div className="flex gap-2">
               <input value={tagInput} onChange={e => setTagInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                placeholder="Add tag (Enter to add)"
+                placeholder={f.tagPlaceholder}
                 className="flex-1 px-3 py-1.5 rounded-lg text-xs text-ivory placeholder:text-fog outline-none"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
             </div>
@@ -125,8 +137,8 @@ function ArticleModal({ article, workspaceId, onClose }: { article: any | null; 
           </div>
         </div>
         <div className="flex gap-2 p-5 border-t border-white/5">
-          <button type="button" onClick={onClose} className="flex-1 py-2 text-xs text-fog hover:text-silver">Cancel</button>
-          <Button type="submit" size="sm" className="flex-1" disabled={saving}>Save article</Button>
+          <button type="button" onClick={onClose} className="flex-1 py-2 text-xs text-fog hover:text-silver">{f.cancel}</button>
+          <Button type="submit" size="sm" className="flex-1" disabled={saving}>{f.save}</Button>
         </div>
       </form>
     </div>
@@ -134,58 +146,59 @@ function ArticleModal({ article, workspaceId, onClose }: { article: any | null; 
 }
 
 export default function KnowledgeBase() {
-
+  const { t } = useLang();
+  const kb = t.app.knowledgeBase;
 
   const workspaces = useQuery(api.workspaces.list, {}) ?? [];
   const workspaceId = workspaces[0]?._id;
 
-  const articles = useQuery(api.knowledgeBase.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
+  const articles = (useQuery(api.knowledgeBase.list as Parameters<typeof useQuery>[0], workspaceId ? { workspaceId } : 'skip') ?? []) as Article[];
   const removeArticle = useMutation(api.knowledgeBase.remove);
 
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [modalArticle, setModalArticle] = useState<any | null | 'new'>('closed');
+  const [modal, setModal] = useState<ModalState>('closed');
 
-  const filtered = (articles as any[]).filter(a => {
-    const matchQuery = !query || a.title.toLowerCase().includes(query.toLowerCase()) || a.content.toLowerCase().includes(query.toLowerCase()) || a.tags?.some((tag: string) => tag.includes(query.toLowerCase()));
+  const filtered = articles.filter(a => {
+    const matchQuery = !query || a.title.toLowerCase().includes(query.toLowerCase()) || a.content.toLowerCase().includes(query.toLowerCase()) || a.tags?.some(tag => tag.includes(query.toLowerCase()));
     const matchCat = !activeCategory || a.category === activeCategory;
     return matchQuery && matchCat;
   });
 
-  const categories = Array.from(new Set((articles as any[]).map(a => a.category)));
+  const categories = Array.from(new Set(articles.map(a => a.category)));
 
   return (
     <>
-      {modalArticle !== 'closed' && workspaceId && (
+      {modal !== 'closed' && workspaceId && (
         <ArticleModal
-          article={modalArticle === 'new' ? null : modalArticle}
+          article={modal === 'new' ? null : modal}
           workspaceId={workspaceId}
-          onClose={() => setModalArticle('closed')}
+          onClose={() => setModal('closed')}
         />
       )}
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">Knowledge Base</h1>
-          <p className="text-sm text-fog mt-0.5">{(articles as any[]).length} articles</p>
+          <h1 className="text-2xl font-semibold text-ivory">{kb.title}</h1>
+          <p className="text-sm text-fog mt-0.5">{kb.articleCount.replace('{{count}}', String(articles.length))}</p>
         </div>
-        <Button size="sm" onClick={() => setModalArticle('new')} disabled={!workspaceId}>
+        <Button size="sm" onClick={() => setModal('new')} disabled={!workspaceId}>
           <Plus size={14} />
-          New article
+          {kb.addArticle}
         </Button>
       </div>
 
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <div className="relative max-w-sm flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-fog pointer-events-none" />
-          <Input className="pl-8" placeholder="Search articles, tags..." value={query} onChange={e => setQuery(e.target.value)} />
+          <Input className="pl-8" placeholder={kb.searchPlaceholder} value={query} onChange={e => setQuery(e.target.value)} />
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveCategory(null)}
             className={cn('px-3 py-1 rounded-lg text-xs transition-colors', !activeCategory ? 'bg-sage/20 text-sage' : 'text-fog hover:text-ivory hover:bg-white/5')}
           >
-            All
+            {kb.all}
           </button>
           {categories.map(cat => (
             <button
@@ -202,21 +215,21 @@ export default function KnowledgeBase() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <BookOpen size={36} className="text-fog/30" />
-          <p className="text-sm text-fog">{query ? `No articles match "${query}"` : 'No articles yet. Add your first knowledge base entry.'}</p>
+          <p className="text-sm text-fog">{query ? kb.noMatch.replace('{{query}}', query) : kb.noArticles}</p>
           {workspaceId && !query && (
-            <Button size="sm" variant="outline" onClick={() => setModalArticle('new')}>
-              <Plus size={12} />New article
+            <Button size="sm" variant="outline" onClick={() => setModal('new')}>
+              <Plus size={12} />{kb.addArticle}
             </Button>
           )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map((article: any) => (
+          {filtered.map(article => (
             <ArticleCard
               key={article._id}
               article={article}
-              onEdit={a => setModalArticle(a)}
-              onDelete={id => removeArticle({ id: id as any })}
+              onEdit={a => setModal(a)}
+              onDelete={id => removeArticle({ id: id as Parameters<typeof removeArticle>[0]['id'] })}
             />
           ))}
         </div>

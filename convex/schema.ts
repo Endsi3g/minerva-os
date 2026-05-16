@@ -447,6 +447,18 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_client", ["clientId"]),
 
+  // --- PUSH NOTIFICATIONS ---
+
+  pushTokens: defineTable({
+    userId: v.string(),
+    workspaceId: v.id("workspaces"),
+    token: v.string(),
+    platform: v.union(v.literal("ios"), v.literal("android")),
+    registeredAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_workspace", ["workspaceId"]),
+
   // --- EXPENSES ---
 
   expenses: defineTable({
