@@ -17,7 +17,9 @@ import {
   PackageCheck,
   WalletCards,
   Sparkles,
+  Clock,
 } from 'lucide-react';
+import { TimerWidget } from './TimerWidget';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -45,6 +47,7 @@ const workspaceNavItems: NavItem[] = [
   { href: '/app/projects',  icon: FolderKanban,    labelKey: 'projects' },
   { href: '/app/tasks',     icon: CheckSquare,     labelKey: 'tasks' },
   { href: '/app/call-preps', icon: CalendarCheck,  labelKey: 'callPreps' },
+  { href: '/app/time-tracking', icon: Clock,       labelKey: 'timeTracking' },
 ];
 
 const studioNavItems: NavItem[] = [
@@ -141,10 +144,15 @@ export function AppSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-2 space-y-4 py-2">
+      <nav className="flex-1 overflow-y-auto px-2 space-y-4 py-2 min-h-0">
         <SidebarSection label={sidebar.workspace} items={workspaceNavItems} collapsed={collapsed} sidebar={sidebar} />
         <SidebarSection label={sidebar.studio} items={studioNavItems} collapsed={collapsed} sidebar={sidebar} />
       </nav>
+
+      {/* Timer Widget */}
+      <div className="shrink-0 border-t border-sidebar-border pt-2 pb-1">
+        <TimerWidget collapsed={collapsed} />
+      </div>
 
       {/* Footer */}
       <div className="shrink-0 px-2 pb-3 space-y-0.5 border-t border-sidebar-border pt-2">

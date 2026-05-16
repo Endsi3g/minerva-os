@@ -43,6 +43,8 @@ import type * as services from "../services.js";
 import type * as sla from "../sla.js";
 import type * as tasks from "../tasks.js";
 import type * as tickets from "../tickets.js";
+import type * as timeEntries from "../timeEntries.js";
+import type * as timers from "../timers.js";
 import type * as userProfiles from "../userProfiles.js";
 import type * as workspaces from "../workspaces.js";
 
@@ -88,6 +90,8 @@ declare const fullApi: ApiFromModules<{
   sla: typeof sla;
   tasks: typeof tasks;
   tickets: typeof tickets;
+  timeEntries: typeof timeEntries;
+  timers: typeof timers;
   userProfiles: typeof userProfiles;
   workspaces: typeof workspaces;
 }>;

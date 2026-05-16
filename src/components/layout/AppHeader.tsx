@@ -31,6 +31,7 @@ import { api } from '../../../convex/_generated/api';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { Id } from '../../../convex/_generated/dataModel';
+import { useCommandPalette } from './CommandPalette';
 
 const PAGE_LABELS: Record<string, string> = {
   '/app/dashboard': 'Dashboard',
@@ -46,6 +47,8 @@ const PAGE_LABELS: Record<string, string> = {
   '/app/call-preps': 'Call Preps',
   '/app/fulfillment': 'Fulfillment',
   '/app/finance': 'Finance',
+  '/app/time-tracking': 'Time Tracking',
+  '/app/agent-ops': 'Agent Ops',
 };
 
 export function AppHeader() {
@@ -53,6 +56,7 @@ export function AppHeader() {
   const { toggleChat } = useChat();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
+  const { setOpen: openPalette } = useCommandPalette();
   const pathname = usePathname();
   const router = useRouter();
   const pageLabel = PAGE_LABELS[pathname ?? ''] ?? 'Minerva OS';
@@ -85,7 +89,17 @@ export function AppHeader() {
       <div className="flex-1" />
 
       {/* Actions */}
-      <Button variant="ghost" size="icon" className="text-fog hover:text-ivory" aria-label="Search">
+      <Button
+        variant="ghost"
+        onClick={() => openPalette(true)}
+        className="text-fog hover:text-ivory h-8 px-3 gap-2 text-xs hidden sm:flex items-center"
+        aria-label="Search"
+      >
+        <Search size={14} />
+        <span>Search</span>
+        <kbd className="ml-1 text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 font-mono">⌘K</kbd>
+      </Button>
+      <Button variant="ghost" size="icon" className="text-fog hover:text-ivory sm:hidden" onClick={() => openPalette(true)} aria-label="Search">
         <Search size={16} />
       </Button>
       

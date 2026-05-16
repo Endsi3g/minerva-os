@@ -367,4 +367,30 @@ export default defineSchema({
     author: v.string(),
     timestamp: v.string(),
   }).index("by_project", ["projectId"]),
+
+  // --- TIME TRACKING ---
+
+  timeEntries: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.string(),
+    projectId: v.optional(v.id("projects")),
+    taskId: v.optional(v.id("tasks")),
+    description: v.string(),
+    startTime: v.number(),
+    endTime: v.number(),
+    duration: v.number(), // minutes
+    billable: v.boolean(),
+    hourlyRate: v.optional(v.number()),
+  }).index("by_workspace", ["workspaceId"])
+    .index("by_project", ["projectId"])
+    .index("by_user", ["userId"]),
+
+  activeTimers: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.string(),
+    projectId: v.optional(v.id("projects")),
+    taskId: v.optional(v.id("tasks")),
+    description: v.string(),
+    startTime: v.number(),
+  }).index("by_user", ["userId"]),
 });
