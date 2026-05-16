@@ -20,6 +20,7 @@ import {
   Clock,
   BookOpen,
   FileSignature,
+  CreditCard,
 } from 'lucide-react';
 import { TimerWidget } from './TimerWidget';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,7 @@ const studioNavItems: NavItem[] = [
   { href: '/app/fulfillment', icon: PackageCheck,   labelKey: 'fulfillment' },
   { href: '/app/services',   icon: BookOpen,        labelKey: 'serviceCatalog' },
   { href: '/app/proposals',  icon: FileSignature,   labelKey: 'proposals' },
+  { href: '/app/expenses',   icon: CreditCard,      labelKey: 'expenses' },
   { href: '/app/agent-ops',  icon: Sparkles,        labelKey: 'agentOps' },
 ];
 
