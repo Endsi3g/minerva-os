@@ -54,6 +54,7 @@ const PAGE_LABELS: Record<string, string> = {
   '/app/expenses': 'Expenses',
   '/app/knowledge': 'Knowledge Base',
   '/app/tickets': 'Support Tickets',
+  '/app/nps': 'NPS',
 };
 
 export function AppHeader() {

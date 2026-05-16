@@ -423,6 +423,20 @@ export default defineSchema({
     .index("by_token", ["token"])
     .index("by_client", ["clientId"]),
 
+  // --- NPS ---
+
+  npsResponses: defineTable({
+    workspaceId: v.id("workspaces"),
+    clientId: v.id("clients"),
+    score: v.number(), // 0-10
+    reason: v.optional(v.string()),
+    suggestion: v.optional(v.string()),
+    trigger: v.string(), // "phase_complete" | "delivery" | "renewal" | "manual"
+    respondedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_client", ["clientId"]),
+
   // --- EXPENSES ---
 
   expenses: defineTable({
