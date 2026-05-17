@@ -153,9 +153,9 @@ export default function Login() {
                 <label className="block text-sm font-medium" style={{ color: '#F5F1E8' }}>
                   {l.password}
                 </label>
-                <span className="text-xs cursor-not-allowed opacity-40" style={{ color: '#B8BDC7' }}>
+                <Link href="/forgot-password" className="text-xs hover:opacity-80 transition-opacity" style={{ color: '#B8BDC7' }}>
                   {l.forgot}
-                </span>
+                </Link>
               </div>
               <div className="relative">
                 <input

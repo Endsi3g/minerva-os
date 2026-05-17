@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Plus, Search, FileText, Send, Copy, Trash2, X, Check } from 'lucide-react';
+import { Plus, Search, FileText, Send, Copy, Trash2, X, Check, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -195,6 +195,27 @@ export default function Proposals() {
     setTimeout(() => setCopiedId(null), 2000);
   }
 
+  function printProposal(proposal: any) {
+    const client = (clients as any[]).find(c => c._id === proposal.clientId);
+    const sectionsHtml = (proposal.sections ?? [])
+      .map((s: any) => `<section><h2>${s.type}</h2><p>${s.content}</p></section>`)
+      .join('');
+    const html = `<!DOCTYPE html><html><head><title>${proposal.title}</title>
+    <style>body{font-family:Inter,system-ui,sans-serif;padding:48px;max-width:780px;margin:0 auto;color:#111}
+    h1{font-size:28px}h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;margin-top:32px;color:#555}
+    p{font-size:13px;line-height:1.7}.total{margin-top:48px;border-top:2px solid #111;padding-top:16px;font-size:18px;font-weight:600}
+    @media print{body{padding:0}}</style></head>
+    <body><h1>${proposal.title}</h1>
+    <p style="color:#777">Prepared for ${client?.company ?? 'Client'}</p>
+    ${sectionsHtml}
+    <div class="total">Investment: ${fmt(proposal.totalAmount)}</div>
+    <script>window.onload=()=>{window.print();}</script></body></html>`;
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+  }
+
   return (
     <>
       {showForm && workspaceId && (
@@ -270,6 +291,13 @@ export default function Proposals() {
                     title={isCopied ? p.actions.linkCopied : p.actions.copyLink}
                   >
                     {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                  </button>
+                  <button
+                    onClick={() => printProposal(proposal)}
+                    className="h-7 w-7 flex items-center justify-center rounded-md text-fog hover:text-ivory hover:bg-white/5 transition-colors"
+                    title="Export PDF"
+                  >
+                    <FileDown size={12} />
                   </button>
                   <button
                     onClick={() => removeProposal({ id: proposal._id })}
