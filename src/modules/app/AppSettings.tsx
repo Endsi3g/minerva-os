@@ -1,13 +1,16 @@
 'use client';
 import { useState } from 'react';
-import { User, Building2, Users, Bell, Shield, Check } from 'lucide-react';
+import { User, Building2, Users, Bell, Shield, Check, Lock, Download } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
-type Tab = 'profile' | 'workspace' | 'team' | 'notifications' | 'security';
+type Tab = 'profile' | 'workspace' | 'team' | 'notifications' | 'security' | 'privacy';
 
 interface TeamMember {
   id: string;
@@ -27,28 +30,42 @@ const MOCK_TEAM: TeamMember[] = [
 /* ── Sub-sections ────────────────────────────────────────────────────────── */
 
 function ProfileTab() {
-  const { t } = useLang();
+  const { t, setLang, lang } = useLang();
   const { user } = useAuth();
   const s = t.app.settings.profile;
+  const ws = t.app.settings.workspace;
   const [name, setName] = useState(user?.name ?? 'Uprising Studio');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [saved, setSaved] = useState(false);
+  const updateProfile = useMutation(api.userProfiles.update);
 
-  function handleSave() {
+  async function handleSave() {
+    if (user?.id) {
+      await updateProfile({
+        id: user.id as Id<"userProfiles">,
+        name,
+        ...(avatarUrl.trim() ? { avatar: avatarUrl.trim() } : {}),
+      });
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
 
   const roleLabels = t.app.settings.team.roles as Record<string, string>;
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
       {/* Avatar */}
       <div className="flex items-center gap-4 mb-6">
         <div
-          className="h-16 w-16 rounded-2xl flex items-center justify-center text-lg font-semibold shrink-0"
+          className="h-16 w-16 rounded-2xl flex items-center justify-center text-lg font-semibold shrink-0 overflow-hidden"
           style={{ backgroundColor: '#1A1F32', color: '#F5F1E8', border: '1px solid rgba(255,255,255,0.10)' }}
         >
-          {name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+          ) : initials}
         </div>
         <div>
           <p className="text-sm font-medium text-ivory">{name}</p>
@@ -75,6 +92,17 @@ function ProfileTab() {
           />
         </SettingsField>
 
+        <SettingsField label={s.avatarUrl}>
+          <input
+            type="url"
+            value={avatarUrl}
+            onChange={e => setAvatarUrl(e.target.value)}
+            placeholder="https://..."
+            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
+            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+          />
+        </SettingsField>
+
         <SettingsField label={s.email}>
           <input
             type="email"
@@ -83,6 +111,28 @@ function ProfileTab() {
             className="w-full rounded-xl h-10 px-3 text-sm opacity-50 cursor-not-allowed"
             style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
           />
+        </SettingsField>
+
+        <SettingsField label={ws.language}>
+          <div className="flex gap-2">
+            {(['en', 'fr'] as Lang[]).map(l => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={cn(
+                  'flex-1 h-10 rounded-xl text-sm font-medium transition-all',
+                  lang === l ? 'text-obsidian' : 'text-silver hover:text-ivory'
+                )}
+                style={
+                  lang === l
+                    ? { backgroundColor: '#F5F1E8' }
+                    : { backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)' }
+                }
+              >
+                {l === 'en' ? ws.langEn : ws.langFr}
+              </button>
+            ))}
+          </div>
         </SettingsField>
 
         <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />
@@ -94,11 +144,26 @@ function ProfileTab() {
 function WorkspaceTab() {
   const { t, setLang, lang } = useLang();
   const s = t.app.settings.workspace;
-  const [studioName, setStudioName] = useState('Uprising Studio');
-  const [timezone, setTimezone] = useState('America/Montreal');
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+  const currentWorkspace = workspaces[0];
+  const [studioName, setStudioName] = useState(currentWorkspace?.name ?? 'Uprising Studio');
+  const [timezone, setTimezone] = useState(currentWorkspace?.settings?.timezone ?? 'America/Montreal');
   const [saved, setSaved] = useState(false);
+  const updateWorkspace = useMutation(api.workspaces.update);
 
-  function handleSave() {
+  async function handleSave() {
+    if (workspaceId && currentWorkspace) {
+      await updateWorkspace({
+        id: workspaceId,
+        name: studioName,
+        settings: {
+          ...currentWorkspace.settings,
+          timezone,
+          language: lang,
+        },
+      });
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -387,6 +452,93 @@ function Toggle({ on }: { on: boolean }) {
   );
 }
 
+/* ── Privacy / GDPR Tab ──────────────────────────────────────────────────── */
+
+function PrivacyTab() {
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
+  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
+  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : 'skip') ?? [];
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState(false);
+
+  function handleExport() {
+    setExporting(true);
+    const data = {
+      exportedAt: new Date().toISOString(),
+      workspace: workspaces[0] ?? null,
+      clients,
+      projects,
+      invoices,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `minerva-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExporting(false);
+    setExported(true);
+    setTimeout(() => setExported(false), 3000);
+  }
+
+  return (
+    <Section title="Privacy & Data" subtitle="Manage your data and compliance settings.">
+      <div className="space-y-4 max-w-md">
+        <div
+          className="rounded-2xl p-5 space-y-4"
+          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <div>
+            <p className="text-sm font-semibold text-ivory mb-0.5">Export your data</p>
+            <p className="text-xs text-fog">Download a complete JSON export of your workspace data (clients, projects, invoices).</p>
+          </div>
+          <button
+            onClick={handleExport}
+            disabled={exporting || !workspaceId}
+            className="flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-medium transition-colors"
+            style={{ backgroundColor: exported ? 'rgba(127,163,138,0.15)' : 'rgba(255,255,255,0.05)', color: exported ? '#7FA38A' : '#B8BDC7', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            {exported ? <Check size={14} /> : <Download size={14} />}
+            {exported ? 'Export downloaded' : exporting ? 'Preparing...' : 'Download JSON export'}
+          </button>
+        </div>
+
+        <div
+          className="rounded-2xl p-5 space-y-3"
+          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <p className="text-sm font-semibold text-ivory">Data retention</p>
+          <p className="text-xs text-fog leading-relaxed">
+            Your workspace data is retained indefinitely while your account is active.
+            Deleted records are permanently removed within 30 days.
+          </p>
+        </div>
+
+        <div
+          className="rounded-2xl p-5 space-y-3"
+          style={{ backgroundColor: 'rgba(168,106,106,0.05)', border: '1px solid rgba(168,106,106,0.2)' }}
+        >
+          <p className="text-sm font-semibold" style={{ color: '#A86A6A' }}>Delete workspace</p>
+          <p className="text-xs text-fog leading-relaxed">
+            Permanently delete your workspace and all associated data. This action cannot be undone.
+            Contact support to initiate account deletion.
+          </p>
+          <button
+            disabled
+            className="h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed"
+            style={{ backgroundColor: 'rgba(168,106,106,0.15)', color: '#A86A6A', border: '1px solid rgba(168,106,106,0.2)' }}
+          >
+            Request deletion
+          </button>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 /* ── Main page ───────────────────────────────────────────────────────────── */
 
 const TAB_ICONS: Record<Tab, React.ElementType> = {
@@ -395,6 +547,7 @@ const TAB_ICONS: Record<Tab, React.ElementType> = {
   team: Users,
   notifications: Bell,
   security: Shield,
+  privacy: Lock,
 };
 
 export default function AppSettings() {
@@ -408,6 +561,7 @@ export default function AppSettings() {
     { id: 'team',          label: s.tabs.team },
     { id: 'notifications', label: s.tabs.notifications },
     { id: 'security',      label: s.tabs.security },
+    { id: 'privacy',       label: 'Privacy' },
   ];
 
   return (
@@ -448,6 +602,7 @@ export default function AppSettings() {
           {activeTab === 'team'          && <TeamTab />}
           {activeTab === 'notifications' && <NotificationsTab />}
           {activeTab === 'security'      && <SecurityTab />}
+          {activeTab === 'privacy'       && <PrivacyTab />}
         </div>
       </div>
     </div>

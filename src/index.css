@@ -22,6 +22,14 @@
   --color-warm:       #B89B6A;
   --color-ember:      #A86A6A;
 
+  /* Extended palette — light/dark editorial system */
+  --color-void:       #0A0D14;  /* outermost dark frame, always dark */
+  --color-near-black: #141413;  /* editorial foreground in light mode */
+  --color-parchment:  #F5F1E8;  /* warm ivory for text on dark surfaces */
+  --color-terracotta: #c96442;  /* brand accent — warm orange-red */
+  --color-clay:       #8B7355;  /* warm earthy brown for borders/accents */
+  --color-mist:       #D8DDE6;  /* cool light gray for accent highlights */
+
   /* Antigravity Tokens */
   --shadow-floating:    0 20px 40px rgba(0, 0, 0, 0.05);
   --glass-blur:         blur(12px);

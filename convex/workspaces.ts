@@ -1,5 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
+import { requireWorkspaceMember } from "./auth";
 
 export const list = query({
   args: { workspaceId: v.optional(v.id("workspaces")) },
@@ -50,7 +52,20 @@ export const create = mutation({
     }),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("workspaces", args);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthenticated");
+    const id = await ctx.db.insert("workspaces", {
+      ...args,
+      ownerUserId: identity.tokenIdentifier,
+      memberIds: [identity.tokenIdentifier],
+    });
+    if (identity.email) {
+      await ctx.scheduler.runAfter(0, internal.email.sendWelcome, {
+        to: identity.email,
+        workspaceName: args.name,
+      });
+    }
+    return id;
   },
 });
 
@@ -74,6 +89,7 @@ export const update = mutation({
     })),
   },
   handler: async (ctx, args) => {
+    await requireWorkspaceMember(ctx, args.id);
     const { id, ...fields } = args;
     await ctx.db.patch(id, fields);
   },

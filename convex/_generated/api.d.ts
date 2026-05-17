@@ -39,12 +39,21 @@ import type * as retainers from "../retainers.js";
 import type * as riskFlags from "../riskFlags.js";
 import type * as riskWorkflow from "../riskWorkflow.js";
 import type * as seed from "../seed.js";
+import type * as expenses from "../expenses.js";
+import type * as nps from "../nps.js";
+import type * as resources from "../resources.js";
+import type * as proposals from "../proposals.js";
 import type * as services from "../services.js";
 import type * as sla from "../sla.js";
 import type * as tasks from "../tasks.js";
 import type * as tickets from "../tickets.js";
+import type * as timeEntries from "../timeEntries.js";
+import type * as timers from "../timers.js";
 import type * as userProfiles from "../userProfiles.js";
 import type * as workspaces from "../workspaces.js";
+import type * as pushTokens from "../pushTokens.js";
+import type * as email from "../email.js";
+import type * as invitations from "../invitations.js";
 
 import type {
   ApiFromModules,
@@ -84,12 +93,21 @@ declare const fullApi: ApiFromModules<{
   riskFlags: typeof riskFlags;
   riskWorkflow: typeof riskWorkflow;
   seed: typeof seed;
+  expenses: typeof expenses;
+  nps: typeof nps;
+  resources: typeof resources;
+  proposals: typeof proposals;
   services: typeof services;
   sla: typeof sla;
   tasks: typeof tasks;
   tickets: typeof tickets;
+  timeEntries: typeof timeEntries;
+  timers: typeof timers;
   userProfiles: typeof userProfiles;
   workspaces: typeof workspaces;
+  pushTokens: typeof pushTokens;
+  email: typeof email;
+  invitations: typeof invitations;
 }>;
 
 /**

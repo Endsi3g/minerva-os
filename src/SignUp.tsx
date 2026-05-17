@@ -36,11 +36,11 @@ export default function SignUp() {
 
   async function handleSubmit() {
     if (!firstName || !lastName || !email || !password) {
-      setError('Please fill in all fields.');
+      setError(s.errorFillAll);
       return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError(s.errorPasswordLength);
       return;
     }
     setError('');
@@ -49,7 +49,7 @@ export default function SignUp() {
       await signup(firstName, lastName, email, password);
       router.push('/app/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Account creation failed. Please try again.');
+      setError(err instanceof Error ? err.message : s.errorFailed);
     } finally {
       setIsLoading(false);
     }

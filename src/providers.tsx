@@ -5,10 +5,11 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const convex = new ConvexReactClient(
+  process.env.NEXT_PUBLIC_CONVEX_URL ?? 'https://placeholder.convex.cloud'
+);
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  console.log('Providers rendering');
   return (
     <ConvexAuthProvider client={convex}>
       <ThemeProvider>

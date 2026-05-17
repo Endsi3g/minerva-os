@@ -1,0 +1,67 @@
+{
+  appId: "co.uprising.minerva",
+  productName: "Minerva OS",
+  copyright: "Copyright © 2026 Uprising Studio",
+  directories: {
+    output: "electron-dist",
+    buildResources: "electron/assets",
+  },
+  files: [
+    ".next/**",
+    "public/**",
+    "electron/dist/**",
+    "package.json",
+    "!node_modules/**",
+    "!electron/assets/**",
+    "!src/**",
+    "!tests/**",
+    "!minerva-mcp/**",
+  ],
+  extraResources: [
+    {
+      from: "electron/assets",
+      to: "assets",
+    },
+  ],
+  mac: {
+    category: "public.app-category.business",
+    icon: "electron/assets/icon.icns",
+    hardenedRuntime: true,
+    gatekeeperAssess: false,
+    target: [
+      { target: "dmg", arch: ["x64", "arm64"] },
+      { target: "zip", arch: ["x64", "arm64"] },
+    ],
+    darkModeSupport: true,
+  },
+  dmg: {
+    title: "Minerva OS",
+    background: null,
+    contents: [
+      { x: 130, y: 220 },
+      { x: 410, y: 220, type: "link", path: "/Applications" },
+    ],
+  },
+  win: {
+    icon: "electron/assets/icon.ico",
+    target: [{ target: "nsis", arch: ["x64"] }],
+    publisherName: "Uprising Studio",
+    verifyUpdateCodeSignature: false,
+  },
+  nsis: {
+    oneClick: false,
+    perMachine: false,
+    allowToChangeInstallationDirectory: true,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: "Minerva OS",
+    installerIcon: "electron/assets/icon.ico",
+    uninstallerIcon: "electron/assets/icon.ico",
+  },
+  publish: {
+    provider: "github",
+    owner: "Endsi3g",
+    repo: "minerva-os",
+    releaseType: "release",
+  },
+}

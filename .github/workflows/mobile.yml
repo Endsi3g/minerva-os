@@ -1,0 +1,44 @@
+name: Mobile Build (EAS)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "minerva-mobile/**"
+      - "convex/**"
+
+jobs:
+  build:
+    name: EAS Preview Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: minerva-mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: minerva-mobile
+        run: npm ci
+
+      - name: Create convex symlink
+        working-directory: minerva-mobile
+        run: |
+          if [ ! -L convex ]; then
+            ln -s ../convex convex
+          fi
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build (preview)
+        working-directory: minerva-mobile
+        run: eas build --profile preview --platform all --non-interactive

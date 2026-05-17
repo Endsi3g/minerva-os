@@ -51,11 +51,11 @@ jobs:
       - name: Report bundle size
         run: |
           echo "### Build artifact sizes" >> $GITHUB_STEP_SUMMARY
-          du -sh dist/ >> $GITHUB_STEP_SUMMARY
+          du -sh .next/ >> $GITHUB_STEP_SUMMARY
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: .next/
           retention-days: 7

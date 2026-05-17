@@ -9,7 +9,7 @@ export const listAgents = query({
     if (args.workspaceId) {
       return await ctx.db
         .query("agents")
-        .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+        .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
         .collect();
     }
     return await ctx.db.query("agents").collect();

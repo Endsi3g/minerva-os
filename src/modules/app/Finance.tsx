@@ -93,7 +93,7 @@ export default function Finance() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-playfair text-ivory tracking-tight">{f.title}</h1>
+          <h1 className="text-3xl font-serif text-ivory tracking-tight">{f.title}</h1>
           <p className="text-sm text-fog mt-1">{f.stats}</p>
         </div>
         <Button onClick={() => setShowAdd(true)} className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90">
@@ -207,7 +207,7 @@ export default function Finance() {
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-midnight border border-white/10 rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-xl font-playfair text-ivory mb-6">New Transaction</h2>
+            <h2 className="text-xl font-serif text-ivory mb-6">New Transaction</h2>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-fog">Type</Label>

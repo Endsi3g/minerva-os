@@ -35,7 +35,7 @@ export default function Login() {
 
   async function handleSubmit() {
     if (!email || !password) {
-      setError('Please enter your email and password.');
+      setError(l.errorRequired);
       return;
     }
     setError('');
@@ -45,7 +45,7 @@ export default function Login() {
       const next = searchParams?.get('next') ?? '/app/dashboard';
       router.push(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed. Please try again.');
+      setError(err instanceof Error ? err.message : l.errorFailed);
     } finally {
       setIsLoading(false);
     }
@@ -153,9 +153,9 @@ export default function Login() {
                 <label className="block text-sm font-medium" style={{ color: '#F5F1E8' }}>
                   {l.password}
                 </label>
-                <a href="#" className="text-xs transition-colors" style={{ color: 'rgba(184,189,199,0.5)' }}>
+                <Link href="/forgot-password" className="text-xs hover:opacity-80 transition-opacity" style={{ color: '#B8BDC7' }}>
                   {l.forgot}
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input

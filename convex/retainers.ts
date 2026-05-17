@@ -4,16 +4,20 @@ import { v } from "convex/values";
 export const list = query({
   args: { workspaceId: v.optional(v.id("workspaces")) },
   handler: async (ctx, args) => {
-    let q = ctx.db.query("retainers");
     if (args.workspaceId) {
-      q = q.filter((q) => q.eq(q.field("workspaceId"), args.workspaceId));
+      return await ctx.db
+        .query("retainers")
+        .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
+        .order("desc")
+        .collect();
     }
-    return await q.order("desc").collect();
+    return await ctx.db.query("retainers").order("desc").collect();
   },
 });
 
 export const add = mutation({
   args: {
+    workspaceId: v.optional(v.id("workspaces")),
     clientId: v.id("clients"),
     amount: v.number(),
     cycle: v.string(),

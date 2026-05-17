@@ -62,6 +62,7 @@ export default function Clients() {
       contact: form.contact.trim(),
       email: form.email.trim(),
       status: form.status,
+      monthlyValue: parseFloat(form.monthlyValue) || undefined,
     });
     
     setSheetOpen(false);
@@ -110,7 +111,9 @@ export default function Clients() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
-          <p className="text-sm text-silver">{cKeys.noClients} {query ? `"${query}"` : ''}</p>
+          <p className="text-sm text-silver">
+            {query ? `${cKeys.noClients} "${query}"` : cKeys.noClientsYet}
+          </p>
           {query && (
             <button onClick={() => setQuery('')} className="text-xs text-fog hover:text-silver transition-colors">
               {cKeys.clearSearch}

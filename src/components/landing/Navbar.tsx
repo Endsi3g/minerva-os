@@ -12,10 +12,10 @@ export default function Navbar() {
   const l = t.landing.nav;
 
   const navItems = [
-    { label: l.home, href: '#', hasDot: true },
-    { label: l.features, href: '#' },
-    { label: l.about, href: '#' },
-    { label: l.pages, href: '#', hasChevron: true },
+    { label: l.home, href: '/', hasDot: true },
+    { label: l.features, href: '/platform' },
+    { label: l.about, href: '/modules' },
+    { label: l.pages, href: '/security', hasChevron: true },
   ];
 
   return (

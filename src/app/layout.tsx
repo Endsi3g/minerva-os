@@ -1,11 +1,34 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Providers } from '@/providers';
 import Script from 'next/script';
 import '@/index.css';
 
 export const metadata: Metadata = {
   title: 'Minerva OS',
-  description: 'The agency operating system for Uprising Studio',
+  description: 'The agency operating system for Uprising Studio — CRM, projects, billing and AI agents.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Minerva',
+  },
+  icons: {
+    apple: '/icons/icon-192.png',
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0A0D14',
+  width: 'device-width',
+  initialScale: 1,
+  minimumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

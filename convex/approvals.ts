@@ -1,8 +1,17 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const list = query({
-  handler: async (ctx) => {
+  args: { workspaceId: v.optional(v.id("workspaces")) },
+  handler: async (ctx, args) => {
+    if (args.workspaceId) {
+      return await ctx.db
+        .query("approvals")
+        .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
+        .order("desc")
+        .collect();
+    }
     return await ctx.db.query("approvals").order("desc").collect();
   },
 });
@@ -15,6 +24,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...fields } = args;
     const old = await ctx.db.get(id);
+    if (old?.workspaceId) await requireWorkspaceMember(ctx, old.workspaceId);
     await ctx.db.patch(id, fields);
 
     if (fields.status && old?.status !== fields.status) {
