@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const list = query({
   args: { workspaceId: v.id("workspaces") },
@@ -48,6 +49,7 @@ export const create = mutation({
     hourlyRate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requireWorkspaceMember(ctx, args.workspaceId);
     return await ctx.db.insert("timeEntries", args);
   },
 });
@@ -60,6 +62,8 @@ export const update = mutation({
     duration: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const entry = await ctx.db.get(args.id);
+    await requireWorkspaceMember(ctx, entry!.workspaceId);
     const { id, ...patch } = args;
     await ctx.db.patch(id, patch);
   },
@@ -68,6 +72,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("timeEntries") },
   handler: async (ctx, args) => {
+    const entry = await ctx.db.get(args.id);
+    await requireWorkspaceMember(ctx, entry!.workspaceId);
     await ctx.db.delete(args.id);
   },
 });

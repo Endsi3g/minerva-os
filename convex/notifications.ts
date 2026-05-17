@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const list = query({
   args: {
@@ -67,6 +68,7 @@ export const notifyPMAboutRisk = mutation({
     suggestedActions: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireWorkspaceMember(ctx, args.workspaceId);
     const project = await ctx.db.get(args.projectId);
     const actionsText = args.suggestedActions.slice(0, 3).join(" · ");
     return await ctx.db.insert("notifications", {
@@ -89,6 +91,7 @@ export const notifyOwnerAboutStalledRisk = mutation({
     pmId: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireWorkspaceMember(ctx, args.workspaceId);
     const project = await ctx.db.get(args.projectId);
     return await ctx.db.insert("notifications", {
       workspaceId: args.workspaceId,

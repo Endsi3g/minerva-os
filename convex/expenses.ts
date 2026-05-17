@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const list = query({
   args: { workspaceId: v.id("workspaces") },
@@ -37,6 +38,7 @@ export const create = mutation({
     clientId: v.optional(v.id("clients")),
   },
   handler: async (ctx, args) => {
+    await requireWorkspaceMember(ctx, args.workspaceId);
     return await ctx.db.insert("expenses", { ...args, status: "pending" });
   },
 });
@@ -44,6 +46,8 @@ export const create = mutation({
 export const approve = mutation({
   args: { id: v.id("expenses"), approvedBy: v.string() },
   handler: async (ctx, args) => {
+    const expense = await ctx.db.get(args.id);
+    await requireWorkspaceMember(ctx, expense!.workspaceId);
     await ctx.db.patch(args.id, { status: "approved", approvedBy: args.approvedBy });
   },
 });
@@ -51,6 +55,8 @@ export const approve = mutation({
 export const reject = mutation({
   args: { id: v.id("expenses") },
   handler: async (ctx, args) => {
+    const expense = await ctx.db.get(args.id);
+    await requireWorkspaceMember(ctx, expense!.workspaceId);
     await ctx.db.patch(args.id, { status: "rejected" });
   },
 });
@@ -58,6 +64,8 @@ export const reject = mutation({
 export const remove = mutation({
   args: { id: v.id("expenses") },
   handler: async (ctx, args) => {
+    const expense = await ctx.db.get(args.id);
+    await requireWorkspaceMember(ctx, expense!.workspaceId);
     await ctx.db.delete(args.id);
   },
 });

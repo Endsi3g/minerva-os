@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const getActive = query({
   args: { userId: v.string() },
@@ -20,6 +21,7 @@ export const start = mutation({
     description: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireWorkspaceMember(ctx, args.workspaceId);
     const existing = await ctx.db
       .query("activeTimers")
       .withIndex("by_user", q => q.eq("userId", args.userId))
@@ -42,6 +44,7 @@ export const stop = mutation({
     hourlyRate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requireWorkspaceMember(ctx, args.workspaceId);
     const timer = await ctx.db
       .query("activeTimers")
       .withIndex("by_user", q => q.eq("userId", args.userId))

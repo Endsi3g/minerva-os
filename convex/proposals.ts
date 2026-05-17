@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 function generateToken(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -38,6 +39,7 @@ export const create = mutation({
     validUntil: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requireWorkspaceMember(ctx, args.workspaceId);
     return await ctx.db.insert("proposals", {
       ...args,
       status: "draft",

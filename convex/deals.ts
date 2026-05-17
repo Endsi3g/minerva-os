@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const list = query({
   args: { workspaceId: v.optional(v.id("workspaces")) },
@@ -27,6 +28,7 @@ export const add = mutation({
     lastContact: v.string(),
   },
   handler: async (ctx, args) => {
+    if (args.workspaceId) await requireWorkspaceMember(ctx, args.workspaceId);
     return await ctx.db.insert("deals", args);
   },
 });
@@ -43,6 +45,8 @@ export const update = mutation({
     lastContact: v.string(),
   },
   handler: async (ctx, args) => {
+    const deal = await ctx.db.get(args.id);
+    if (deal?.workspaceId) await requireWorkspaceMember(ctx, deal.workspaceId);
     const { id, ...fields } = args;
     await ctx.db.patch(id, fields);
   },
@@ -54,6 +58,8 @@ export const updateStage = mutation({
     stage: v.string(),
   },
   handler: async (ctx, args) => {
+    const deal = await ctx.db.get(args.id);
+    if (deal?.workspaceId) await requireWorkspaceMember(ctx, deal.workspaceId);
     await ctx.db.patch(args.id, { stage: args.stage });
   },
 });
@@ -61,6 +67,8 @@ export const updateStage = mutation({
 export const remove = mutation({
   args: { id: v.id("deals") },
   handler: async (ctx, args) => {
+    const deal = await ctx.db.get(args.id);
+    if (deal?.workspaceId) await requireWorkspaceMember(ctx, deal.workspaceId);
     await ctx.db.delete(args.id);
   },
 });

@@ -29,6 +29,8 @@ export default defineSchema({
         rate: v.number(),
       })),
     }),
+    memberIds: v.optional(v.array(v.string())),
+    ownerUserId: v.optional(v.string()),
   }).index("by_slug", ["slug"]),
 
   projects: defineTable({
@@ -179,9 +181,13 @@ export default defineSchema({
     workspaceId: v.optional(v.id("workspaces")),
     email: v.string(),
     name: v.string(),
-    role: v.string(), // "admin", "manager", "member"
+    role: v.string(), // "owner", "member", "admin", "manager"
     avatar: v.optional(v.string()),
-  }),
+    userId: v.optional(v.string()),
+    onboardingCompleted: v.optional(v.boolean()),
+    onboardingTourCompleted: v.optional(v.boolean()),
+    completedChecklist: v.optional(v.array(v.string())),
+  }).index("by_user_id", ["userId"]),
   retainers: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     clientId: v.id("clients"),
@@ -457,6 +463,19 @@ export default defineSchema({
     registeredAt: v.number(),
   })
     .index("by_user", ["userId"])
+    .index("by_workspace", ["workspaceId"]),
+
+  // --- INVITATIONS ---
+
+  invitations: defineTable({
+    token: v.string(),
+    email: v.string(),
+    workspaceId: v.id("workspaces"),
+    role: v.union(v.literal("owner"), v.literal("member")),
+    expiresAt: v.number(),
+    acceptedAt: v.optional(v.number()),
+  })
+    .index("by_token", ["token"])
     .index("by_workspace", ["workspaceId"]),
 
   // --- EXPENSES ---

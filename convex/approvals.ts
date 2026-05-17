@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const list = query({
   args: { workspaceId: v.optional(v.id("workspaces")) },
@@ -23,6 +24,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...fields } = args;
     const old = await ctx.db.get(id);
+    if (old?.workspaceId) await requireWorkspaceMember(ctx, old.workspaceId);
     await ctx.db.patch(id, fields);
 
     if (fields.status && old?.status !== fields.status) {

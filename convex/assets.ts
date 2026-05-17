@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const generateUploadUrl = mutation({
   args: {},
@@ -34,6 +35,7 @@ export const add = mutation({
     uploadedAt: v.string(),
   },
   handler: async (ctx, args) => {
+    if (args.workspaceId) await requireWorkspaceMember(ctx, args.workspaceId);
     return await ctx.db.insert("assets", args);
   },
 });
@@ -41,6 +43,8 @@ export const add = mutation({
 export const remove = mutation({
   args: { id: v.id("assets") },
   handler: async (ctx, args) => {
+    const asset = await ctx.db.get(args.id);
+    if (asset?.workspaceId) await requireWorkspaceMember(ctx, asset.workspaceId);
     await ctx.db.delete(args.id);
   },
 });
