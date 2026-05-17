@@ -104,7 +104,7 @@ export default function ServiceCatalog() {
 
   return (
     <>
-      {showForm && workspaceId && (
+      {showForm && (
         <ServiceForm
           workspaceId={workspaceId}
           categories={sc.form.categories}
@@ -120,7 +120,7 @@ export default function ServiceCatalog() {
             {sc.subtitle.replace('{{count}}', String(services.length)).replace('{{packages}}', String(packages.length))}
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowForm(true)} disabled={!workspaceId}>
+        <Button size="sm" onClick={() => setShowForm(true)}>
           <Plus size={14} />
           {tab === 'services' ? sc.addService : sc.addPackage}
         </Button>

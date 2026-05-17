@@ -218,7 +218,7 @@ export default function Proposals() {
 
   return (
     <>
-      {showForm && workspaceId && (
+      {showForm && (
         <ProposalForm workspaceId={workspaceId} onClose={() => setShowForm(false)} t={t} />
       )}
 
@@ -229,7 +229,7 @@ export default function Proposals() {
             {p.subtitle.replace('{{count}}', String((proposals as any[]).length))}
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowForm(true)} disabled={!workspaceId}>
+        <Button size="sm" onClick={() => setShowForm(true)}>
           <Plus size={14} />
           {p.newProposal}
         </Button>

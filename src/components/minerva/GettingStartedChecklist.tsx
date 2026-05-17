@@ -1,7 +1,7 @@
 'use client';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '../../../../convex/_generated/api';
-import { Check, X } from 'lucide-react';
+import { api } from '../../../convex/_generated/api';
+import { Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const CHECKLIST_STEPS = [
@@ -14,9 +14,6 @@ const CHECKLIST_STEPS = [
 
 export function GettingStartedChecklist() {
   const { user } = useAuth();
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-
   const profile = useQuery(
     api.userProfiles.getByEmail,
     user?.email ? { email: user.email } : 'skip'

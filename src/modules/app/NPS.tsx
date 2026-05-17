@@ -44,7 +44,7 @@ function NPSGauge({ score }: { score: number }) {
   );
 }
 
-function NPSForm({ workspaceId, clients, onClose }: { workspaceId: string; clients: Client[]; onClose: () => void }) {
+function NPSForm({ workspaceId, clients, onClose }: { workspaceId: string | undefined; clients: Client[]; onClose: () => void }) {
   const { t } = useLang();
   const f = t.app.nps.form;
   const submit = useMutation(api.nps.submit as Parameters<typeof useMutation>[0]);
@@ -152,12 +152,12 @@ export default function NPSPage() {
     : 0;
   const atRisk = typedResponses.filter(r => (r.score as number) < 7).map(r => {
     const client = typedClients.find(c => c._id === r.clientId);
-    return { ...r, clientName: (client?.company as string) ?? nps.unknown };
+    return { score: r.score as number, clientName: (client?.company as string) ?? nps.unknown };
   });
 
   return (
     <>
-      {showForm && workspaceId && (
+      {showForm && (
         <NPSForm workspaceId={workspaceId} clients={typedClients} onClose={() => setShowForm(false)} />
       )}
 
@@ -166,7 +166,7 @@ export default function NPSPage() {
           <h1 className="text-2xl font-semibold text-ivory">{nps.title}</h1>
           <p className="text-sm text-fog mt-0.5">{nps.responseCount.replace('{{count}}', String(total))}</p>
         </div>
-        <Button size="sm" onClick={() => setShowForm(true)} disabled={!workspaceId}>
+        <Button size="sm" onClick={() => setShowForm(true)}>
           <Plus size={14} />
           {nps.addResponse}
         </Button>
@@ -204,8 +204,8 @@ export default function NPSPage() {
             </span>
           </div>
           <div className="space-y-1">
-            {atRisk.map(r => (
-              <div key={r._id as string} className="flex items-center justify-between text-xs">
+            {atRisk.map((r, i) => (
+              <div key={i} className="flex items-center justify-between text-xs">
                 <span className="text-silver">{r.clientName as string}</span>
                 <span className={cn('font-mono font-bold', scoreColor(r.score as number))}>{r.score as number}/10</span>
               </div>
@@ -234,7 +234,7 @@ export default function NPSPage() {
                 <div className={cn('text-2xl font-bold tabular-nums w-10 text-right', scoreColor(r.score as number))}>{r.score as number}</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-ivory">{(client?.company as string) ?? nps.unknown}</p>
-                  {r.reason && <p className="text-[11px] text-fog mt-0.5 truncate">{r.reason as string}</p>}
+                  {Boolean(r.reason) && <p className="text-[11px] text-fog mt-0.5 truncate">{r.reason as string}</p>}
                 </div>
                 <span className={cn('text-[10px] font-medium', scoreColor(r.score as number))}>{scoreLabel(r.score as number)}</span>
                 <span className="text-[10px] text-fog">{new Date(r.respondedAt as number).toLocaleDateString()}</span>

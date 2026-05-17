@@ -41,6 +41,8 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@react-pdf/renderer": "^4.3.0",
+    "@sentry/nextjs": "^9.47.1",
     "@serwist/next": "^9.5.11",
     "@supabase/supabase-js": "^2.105.4",
     "ai": "^6.0.182",
@@ -56,11 +58,9 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.468.0",
     "motion": "^11.15.0",
-    "@react-pdf/renderer": "^4.3.0",
-    "@sentry/nextjs": "^9.0.0",
     "next": "^15.0.0",
     "next-themes": "^0.4.6",
-    "posthog-js": "^1.247.0",
+    "posthog-js": "^1.373.5",
     "radix-ui": "^1.4.3",
     "react": "^18.3.1",
     "react-day-picker": "^10.0.0",
@@ -106,22 +106,47 @@
       "entitlements": "electron/assets/entitlements.mac.plist",
       "entitlementsInherit": "electron/assets/entitlements.mac.plist",
       "target": [
-        { "target": "dmg", "arch": ["arm64", "x64"] },
-        { "target": "zip", "arch": ["arm64", "x64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ]
     },
     "dmg": {
       "title": "Minerva OS ${version}",
       "icon": "electron/assets/icon.png",
       "background": null,
-      "window": { "width": 660, "height": 420 }
+      "window": {
+        "width": 660,
+        "height": 420
+      }
     },
     "win": {
       "icon": "electron/assets/icon.png",
       "publisherName": "Uprising Studio",
       "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {
@@ -134,7 +159,10 @@
     "linux": {
       "icon": "electron/assets/icon.png",
       "category": "Office",
-      "target": ["AppImage", "deb"]
+      "target": [
+        "AppImage",
+        "deb"
+      ]
     },
     "publish": {
       "provider": "github",

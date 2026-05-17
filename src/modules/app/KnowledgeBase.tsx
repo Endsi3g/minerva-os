@@ -60,7 +60,7 @@ function ArticleCard({ article, onEdit, onDelete }: { article: Article; onEdit: 
 
 type ModalState = 'closed' | 'new' | Article;
 
-function ArticleModal({ article, workspaceId, onClose }: { article: Article | null; workspaceId: string; onClose: () => void }) {
+function ArticleModal({ article, workspaceId, onClose }: { article: Article | null; workspaceId: string | undefined; onClose: () => void }) {
   const { t } = useLang();
   const f = t.app.knowledgeBase.form;
   const addArticle = useMutation(api.knowledgeBase.add);
@@ -169,7 +169,7 @@ export default function KnowledgeBase() {
 
   return (
     <>
-      {modal !== 'closed' && workspaceId && (
+      {modal !== 'closed' && (
         <ArticleModal
           article={modal === 'new' ? null : modal}
           workspaceId={workspaceId}
@@ -182,7 +182,7 @@ export default function KnowledgeBase() {
           <h1 className="text-2xl font-semibold text-ivory">{kb.title}</h1>
           <p className="text-sm text-fog mt-0.5">{kb.articleCount.replace('{{count}}', String(articles.length))}</p>
         </div>
-        <Button size="sm" onClick={() => setModal('new')} disabled={!workspaceId}>
+        <Button size="sm" onClick={() => setModal('new')}>
           <Plus size={14} />
           {kb.addArticle}
         </Button>

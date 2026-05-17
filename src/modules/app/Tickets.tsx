@@ -28,7 +28,7 @@ const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
 type Ticket = Record<string, unknown>;
 type Client = Record<string, unknown>;
 
-function TicketForm({ workspaceId, clients, onClose }: { workspaceId: string; clients: Client[]; onClose: () => void }) {
+function TicketForm({ workspaceId, clients, onClose }: { workspaceId: string | undefined; clients: Client[]; onClose: () => void }) {
   const { t } = useLang();
   const f = t.app.tickets.form;
   const addTicket = useMutation(api.tickets.add);
@@ -44,7 +44,7 @@ function TicketForm({ workspaceId, clients, onClose }: { workspaceId: string; cl
     if (!subject || !clientId) return;
     setSaving(true);
     await addTicket({
-      workspaceId,
+      workspaceId: workspaceId as Parameters<typeof addTicket>[0]['workspaceId'],
       clientId: clientId as Parameters<typeof addTicket>[0]['clientId'],
       subject,
       description,
@@ -128,7 +128,7 @@ export default function Tickets() {
 
   return (
     <>
-      {showForm && workspaceId && (
+      {showForm && (
         <TicketForm workspaceId={workspaceId} clients={typedClients} onClose={() => setShowForm(false)} />
       )}
 
@@ -137,7 +137,7 @@ export default function Tickets() {
           <h1 className="text-2xl font-semibold text-ivory">{tk.title}</h1>
           <p className="text-sm text-fog mt-0.5">{tk.ticketCount.replace('{{count}}', String(typedTickets.length)).replace('{{open}}', String(openCount))}</p>
         </div>
-        <Button size="sm" onClick={() => setShowForm(true)} disabled={!workspaceId}>
+        <Button size="sm" onClick={() => setShowForm(true)}>
           <Plus size={14} />
           {tk.addTicket}
         </Button>

@@ -120,7 +120,7 @@ export default function Expenses() {
 
   return (
     <>
-      {showForm && workspaceId && (
+      {showForm && (
         <ExpenseForm
           workspaceId={workspaceId}
           submittedBy={user?.name ?? 'Unknown'}
@@ -138,7 +138,7 @@ export default function Expenses() {
             {ex.subtitle.replace('{{count}}', String((expenses as any[]).length))}
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowForm(true)} disabled={!workspaceId}>
+        <Button size="sm" onClick={() => setShowForm(true)}>
           <Plus size={14} />
           {ex.addExpense}
         </Button>

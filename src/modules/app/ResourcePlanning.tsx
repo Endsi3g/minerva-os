@@ -32,7 +32,7 @@ function CapacityBar({ used, total }: { used: number; total: number }) {
   );
 }
 
-function AddMemberForm({ workspaceId, onClose }: { workspaceId: string; onClose: () => void }) {
+function AddMemberForm({ workspaceId, onClose }: { workspaceId: string | undefined; onClose: () => void }) {
   const { t } = useLang();
   const f = t.app.resources.form;
   const upsert = useMutation(api.resources.upsertMember as Parameters<typeof useMutation>[0]);
@@ -120,7 +120,7 @@ export default function ResourcePlanning() {
 
   return (
     <>
-      {showForm && workspaceId && (
+      {showForm && (
         <AddMemberForm workspaceId={workspaceId} onClose={() => setShowForm(false)} />
       )}
 
@@ -131,7 +131,7 @@ export default function ResourcePlanning() {
             {res.memberCount.replace('{{count}}', String(typedMembers.length)).replace('{{capacity}}', String(Math.round(totalCapacity)))}
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowForm(true)} disabled={!workspaceId}>
+        <Button size="sm" onClick={() => setShowForm(true)}>
           <Plus size={14} />
           {res.addMember}
         </Button>
@@ -189,7 +189,7 @@ export default function ResourcePlanning() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-ivory">{member.displayName as string}</p>
-                      {member.role && <p className="text-[10px] text-fog">{member.role as string}</p>}
+                      {Boolean(member.role) && <p className="text-[10px] text-fog">{member.role as string}</p>}
                     </div>
                   </div>
                   <button
