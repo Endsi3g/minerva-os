@@ -35,6 +35,44 @@ export const add = mutation({
     return await ctx.db.insert("userProfiles", args);
   },
 });
+export const getByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("userProfiles")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .first();
+  },
+});
+
+export const markChecklistItem = mutation({
+  args: { email: v.string(), itemId: v.string() },
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .first();
+    if (!profile) return;
+    const existing = profile.completedChecklist ?? [];
+    if (!existing.includes(args.itemId)) {
+      await ctx.db.patch(profile._id, { completedChecklist: [...existing, args.itemId] });
+    }
+  },
+});
+
+export const markOnboardingDone = mutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .first();
+    if (profile) {
+      await ctx.db.patch(profile._id, { onboardingCompleted: true });
+    }
+  },
+});
+
 export const viewer = query({
   args: {},
   handler: async (ctx) => {

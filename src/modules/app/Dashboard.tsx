@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { FolderKanban, CheckSquare, ClipboardCheck, DollarSign, AlertTriangle, X, ChevronRight, Flame, RefreshCw, Sparkles } from 'lucide-react';
+import { GettingStartedChecklist } from '@/components/minerva/GettingStartedChecklist';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -372,6 +373,9 @@ export default function Dashboard() {
 
       {tab === 'overview' && (
         <>
+          {/* Getting Started checklist — shown until all 5 steps complete */}
+          <GettingStartedChecklist />
+
           {/* AI Daily Briefing */}
           {workspaceId && (
             <DailyBriefing
