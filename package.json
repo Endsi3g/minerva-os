@@ -1,7 +1,10 @@
 {
   "name": "minerva-os",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "The strategic operating system for elite agencies",
+  "author": "Uprising Studio <hello@uprisingstudio.com>",
+  "homepage": "https://minerva-os.vercel.app",
   "main": "electron/dist/main.js",
   "scripts": {
     "dev": "next dev",
@@ -82,5 +85,62 @@
     "electron-builder": "^26.8.1",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.6.2"
+  },
+  "build": {
+    "appId": "app.minervaos.desktop",
+    "productName": "Minerva OS",
+    "copyright": "Copyright 2025 Uprising Studio",
+    "directories": {
+      "output": "dist-electron",
+      "buildResources": "electron/assets"
+    },
+    "files": [
+      "electron/dist/**",
+      "electron/assets/**"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "electron/assets/icon.png",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "electron/assets/entitlements.mac.plist",
+      "entitlementsInherit": "electron/assets/entitlements.mac.plist",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ]
+    },
+    "dmg": {
+      "title": "Minerva OS ${version}",
+      "icon": "electron/assets/icon.png",
+      "background": null,
+      "window": { "width": 660, "height": 420 }
+    },
+    "win": {
+      "icon": "electron/assets/icon.png",
+      "publisherName": "Uprising Studio",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Minerva OS"
+    },
+    "linux": {
+      "icon": "electron/assets/icon.png",
+      "category": "Office",
+      "target": ["AppImage", "deb"]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Endsi3g",
+      "repo": "minerva-os",
+      "releaseType": "release"
+    }
   }
 }

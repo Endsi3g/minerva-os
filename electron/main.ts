@@ -15,7 +15,8 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const IS_DEV = process.env.NODE_ENV === 'development';
-const APP_URL = IS_DEV ? 'http://localhost:3000' : 'http://localhost:3000';
+const PROD_URL = process.env.MINERVA_APP_URL ?? 'https://minerva-os.vercel.app';
+const APP_URL = IS_DEV ? 'http://localhost:3000' : PROD_URL;
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
