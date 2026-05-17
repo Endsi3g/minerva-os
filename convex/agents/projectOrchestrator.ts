@@ -2,15 +2,15 @@ import { Agent } from "@convex-dev/agent";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { components } from "../_generated/api";
-import { tool } from "ai";
+import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
 
 // Project Orchestrator Agent
 // - Primary model: GPT-5.4 for deep project analysis
 // - Fallback: Claude 4.6 Sonnet for nuanced language generation
-export const projectOrchestratorAgent = new Agent(components.agent, {
+export const projectOrchestratorAgent = new Agent((components as any).agent, {
   name: "Project Orchestrator",
-  chat: openai("gpt-5.4"),
+  languageModel: openai("gpt-4o"),
   instructions: `
 You are the Project Orchestrator agent for Minerva OS, an agency operating system.
 Your role:
@@ -23,16 +23,26 @@ When analyzing a project, consider: overdue tasks, pending approvals older than 
 health score below 60, scope change count, and client sentiment from notes.
 `,
   tools: {
-    assessRiskWithClaude: tool({
+    assessRiskWithClaude: createTool({
       description:
         "Use Claude to generate a nuanced, empathetic risk summary suitable for client-facing communication",
-      parameters: z.object({
+      inputSchema: z.object({
         projectName: z.string(),
         riskType: z.string(),
         severity: z.string(),
         internalSummary: z.string(),
       }),
-      execute: async ({ projectName, riskType, severity, internalSummary }) => {
+      execute: async (_ctx, { 
+        projectName, 
+        riskType, 
+        severity, 
+        internalSummary 
+      }: { 
+        projectName: string; 
+        riskType: string; 
+        severity: string; 
+        internalSummary: string; 
+      }) => {
         const model = anthropic("claude-4.6-sonnet");
         const { generateText } = await import("ai");
         const { text } = await generateText({

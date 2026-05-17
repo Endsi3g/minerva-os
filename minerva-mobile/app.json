@@ -1,0 +1,74 @@
+{
+  "expo": {
+    "name": "Minerva",
+    "slug": "minerva-os",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "minerva",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0A0D14",
+    "splash": {
+      "backgroundColor": "#0A0D14"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.uprisingstudio.minervaos",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Upload deliverable files and receipt photos.",
+        "NSPhotoLibraryUsageDescription": "Attach files and receipts from your photo library.",
+        "NSMicrophoneUsageDescription": "Record audio for video deliverables."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0D14"
+      },
+      "package": "com.uprisingstudio.minervaos",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "notification": {
+        "icon": "./assets/notification-icon.png",
+        "color": "#7FA38A"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#7FA38A",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-camera",
+        { "cameraPermission": "Allow Minerva to access your camera." }
+      ],
+      [
+        "expo-image-picker",
+        { "photosPermission": "Allow Minerva to access your photos." }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

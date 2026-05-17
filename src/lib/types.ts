@@ -141,3 +141,27 @@ export interface ClientPortalToken {
   scopes: ('approvals' | 'files' | 'invoices' | 'reports')[];
 }
 
+// ── Time Tracking ──────────────────────────────────────────────────────────────
+
+export interface TimeEntry {
+  id: string;
+  userId: string;
+  projectId?: string;
+  taskId?: string;
+  description: string;
+  startTime: number;
+  endTime: number;
+  duration: number; // minutes
+  billable: boolean;
+  hourlyRate?: number;
+}
+
+export interface ActiveTimer {
+  id: string;
+  userId: string;
+  projectId?: string;
+  taskId?: string;
+  description: string;
+  startTime: number;
+}
+

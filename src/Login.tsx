@@ -7,9 +7,8 @@ import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 
-const HERO_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
-
+const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4';
+const POSTER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1600&q=60';
 const ACCENT = '#ef4d23';
 
 const containerVariants = {
@@ -36,17 +35,17 @@ export default function Login() {
 
   async function handleSubmit() {
     if (!email || !password) {
-      setError('Please enter your email and password.');
+      setError(l.errorRequired);
       return;
     }
     setError('');
     setIsLoading(true);
     try {
       await login(email, password);
-      const next = searchParams.get('next') ?? '/app/dashboard';
+      const next = searchParams?.get('next') ?? '/app/dashboard';
       router.push(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed. Please try again.');
+      setError(err instanceof Error ? err.message : l.errorFailed);
     } finally {
       setIsLoading(false);
     }
@@ -59,9 +58,17 @@ export default function Login() {
     >
       {/* ── Left column — hero video ────────────────────────────────────────── */}
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
-        <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline>
-          <source src={HERO_VIDEO} type="video/mp4" />
-        </video>
+        <video
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ filter: 'hue-rotate(-260deg) saturate(1.5) contrast(1.1)' }}
+          src={BG_VIDEO}
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={POSTER}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/20" />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
@@ -146,9 +153,9 @@ export default function Login() {
                 <label className="block text-sm font-medium" style={{ color: '#F5F1E8' }}>
                   {l.password}
                 </label>
-                <a href="#" className="text-xs transition-colors" style={{ color: 'rgba(184,189,199,0.5)' }}>
+                <Link href="/forgot-password" className="text-xs hover:opacity-80 transition-opacity" style={{ color: '#B8BDC7' }}>
                   {l.forgot}
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input
@@ -231,9 +238,9 @@ function FeatureItem({ text }: { text: string }) {
   return (
     <div
       className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-      style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)' }}
     >
-      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ backgroundColor: '#ef4d23', color: '#FFFFFF' }}>
+      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}>
         <ArrowRight size={12} strokeWidth={3} />
       </span>
       <span className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{text}</span>

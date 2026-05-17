@@ -43,7 +43,7 @@ export const getByToken = query({
       .query("tasks")
       .collect();
     
-    const clientTasks = tasks.filter(t => projectIds.includes(t.projectId));
+    const clientTasks = tasks.filter(t => t.projectId !== undefined && projectIds.includes(t.projectId));
 
     const assets = await ctx.db
       .query("assets")

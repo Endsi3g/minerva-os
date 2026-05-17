@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { NavLink } from '@/components/ui/nav-link';
-import { MOCK_PORTAL_TOKENS } from '@/lib/mock-data';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 const PORTAL_TABS = [
   { label: 'Overview',     path: '' },
@@ -12,19 +13,70 @@ const PORTAL_TABS = [
   { label: 'Invoices',     path: 'invoices' },
 ];
 
+function PortalLoadingSkeleton() {
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif" }}>
+      <header
+        className="sticky top-0 z-50"
+        style={{
+          backgroundColor: 'rgba(10,13,20,0.96)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(16px)',
+        }}
+      >
+        <div className="max-w-5xl mx-auto px-5">
+          <div className="h-14 flex items-center gap-3">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="h-6 w-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F1E8' }}>
+                <span className="text-[10px] font-bold" style={{ color: '#0A0D14' }}>M</span>
+              </div>
+              <span className="text-sm font-semibold tracking-wide" style={{ color: '#F5F1E8' }}>Minerva</span>
+            </div>
+            <div className="h-4 w-px" style={{ backgroundColor: 'rgba(255,255,255,0.10)' }} />
+            <span className="text-sm" style={{ color: '#8A9099' }}>Client Portal</span>
+          </div>
+          <div className="flex gap-0 -mb-px">
+            {PORTAL_TABS.map(tab => (
+              <span
+                key={tab.label}
+                className="px-4 py-2.5 text-sm border-b-2 border-transparent"
+                style={{ color: '#8A9099' }}
+              >
+                {tab.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </header>
+      <main className="max-w-5xl mx-auto px-5 py-10">
+        <div className="space-y-4">
+          <div className="h-8 w-48 rounded-xl animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }} />
+          <div className="h-4 w-72 rounded-xl animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }} />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-28 rounded-xl animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }} />
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const token = params?.token as string | undefined;
-  const portalToken = MOCK_PORTAL_TOKENS.find(t => t.token === token);
+  const portalData = useQuery(api.portal.getByToken, token ? { token } : 'skip');
   const router = useRouter();
 
   useEffect(() => {
-    if (!portalToken) router.replace('/');
-  }, [portalToken, router]);
+    if (portalData === null) router.replace('/');
+  }, [portalData, router]);
 
-  if (!portalToken) return null;
+  if (portalData === undefined) return <PortalLoadingSkeleton />;
+  if (portalData === null) return null;      // invalid token, redirecting
 
-  const { clientName } = portalToken;
+  const clientName = portalData.client?.company ?? 'Client';
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif" }}>
@@ -75,7 +127,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               className="text-xs transition-colors duration-200 hover:text-white/60"
               style={{ color: '#8A9099' }}
             >
-              ← Back to site
+              &larr; Back to site
             </Link>
           </div>
 

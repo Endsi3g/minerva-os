@@ -2,6 +2,9 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { CalendarDays } from 'lucide-react';
 import type { Project, ProjectStatus } from '@/lib/types';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
@@ -28,16 +31,16 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const budgetColor = budgetPct >= 90 ? 'bg-ember' : budgetPct >= 70 ? 'bg-warm' : 'bg-sage';
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4 cursor-pointer hover:border-white/15 hover:bg-dusk/30 transition-colors">
+    <Card className="bg-card border-border rounded-xl p-5 space-y-4 cursor-pointer hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ivory truncate">{project.name}</p>
           <p className="text-xs text-fog mt-0.5">{project.client}</p>
         </div>
-        <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 mt-0.5', status.class)}>
+        <Badge variant="outline" className={cn('text-[10px] font-semibold px-2 py-0.5 border-none rounded-full shrink-0 mt-0.5', status.class)}>
           {status.label}
-        </span>
+        </Badge>
       </div>
 
       {/* Task progress */}
@@ -46,9 +49,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <span>Progress</span>
           <span>{project.doneTasks}/{project.totalTasks} tasks · {pct}%</span>
         </div>
-        <div className="h-1 rounded-full bg-dusk overflow-hidden">
-          <div className="h-full rounded-full bg-ivory/70 transition-all" style={{ width: `${pct}%` }} />
-        </div>
+        <Progress value={pct} className="h-1 bg-dusk" />
       </div>
 
       {/* Budget */}
@@ -84,6 +85,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
           {new Date(project.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

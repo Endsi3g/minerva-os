@@ -5,7 +5,9 @@ import {
 import { useLang } from '@/i18n';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { Download } from 'lucide-react';
 
 /* ── Palette ─────────────────────────────────────────────────────────────── */
 
@@ -35,7 +37,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
       }}
     >
       <p className="font-medium mb-1">{label}</p>
-      {payload.map((entry, i) => (
+      {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color ?? SILVER }}>
           {entry.name}: <span className="font-semibold">{
             typeof entry.value === 'number' && String(entry.name).includes('$')
@@ -64,21 +66,40 @@ function ReportSection({ title, subtitle, children }: { title: string; subtitle?
 
 /* ── Page ─────────────────────────────────────────────────────────────────── */
 
+type ReportTab = 'overview' | 'profitability' | 'time';
+
+function fmtCurrency(n: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+}
+
 export default function Reports() {
   const { t, lang } = useLang();
   const r = t.app.reports;
+  const [tab, setTab] = useState<ReportTab>('overview');
 
-  const clients = useQuery(api.clients.list) ?? [];
-  const deals = useQuery(api.deals.list) ?? [];
-  const tasks = useQuery(api.tasks.list) ?? [];
-  const approvals = useQuery(api.approvals.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const deals = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const approvals = useQuery(api.approvals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : "skip") ?? [];
+  const timeEntries = useQuery(api.timeEntries.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const expenses = useQuery(api.expenses.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
 
   const STAGE_ORDER = ['new_lead', 'qualified', 'proposal', 'negotiation', 'won'] as const;
 
   // Data transforms
   const revenueData = useMemo(() => clients
-    .map((c: any) => ({ name: c.company.split(' ')[0], value: 5000 /* Placeholder since no monthlyValue in schema */ }))
-    .slice(0, 5), [clients]);
+    .map((c: any) => ({
+      name: c.company.split(' ')[0],
+      value: invoices
+        .filter((i: any) => i.clientId === c._id && i.status === 'paid')
+        .reduce((sum: number, i: any) => sum + i.amount, 0),
+    }))
+    .filter((c: any) => c.value > 0)
+    .slice(0, 5), [clients, invoices]);
 
   const teamData = useMemo(() => {
     const assignees = [...new Set(tasks.map((t: any) => t.assignee))];
@@ -92,14 +113,14 @@ export default function Reports() {
   const funnelData = useMemo(() => STAGE_ORDER.map((stage: any) => ({
     name: t.app.pipeline.stages[stage as keyof typeof t.app.pipeline.stages] || stage,
     count: deals.filter((l: any) => l.stage === stage).length,
-    value: deals.filter((l: any) => l.stage === stage).reduce((s: any, l: any) => s + l.value, 0),
+    value: deals.filter((l: any) => l.stage === stage).reduce((s: number, l: any) => s + l.value, 0),
   })), [deals, t]);
 
   // Quick stats
   const totalPending  = approvals.filter((a: any) => a.status === 'pending').length;
   const totalApproved = approvals.filter((a: any) => a.status === 'approved').length;
   const wonDeals = deals.filter((l: any) => l.stage === 'won');
-  const totalPipeline = deals.reduce((s: any, l: any) => s + l.value, 0);
+  const totalPipeline = deals.reduce((s: number, l: any) => s + l.value, 0);
   const conversionRate = deals.length > 0
     ? Math.round((wonDeals.length / deals.length) * 100)
     : 0;
@@ -110,6 +131,23 @@ export default function Reports() {
     { name: 'Video',    avg: 4.1 },
     { name: 'Document', avg: 2.4 },
   ];
+
+  // Profitability per client
+  const profitabilityData = useMemo(() => clients.map((c: any) => {
+    const revenue = invoices.filter((i: any) => i.clientId === c._id && i.status === 'paid').reduce((s: number, i: any) => s + i.amount, 0);
+    const laborCost = (timeEntries as any[]).filter((e: any) => e.clientId === c._id || e.billable).reduce((s: number, e: any) => s + (e.duration / 60) * (e.hourlyRate ?? 75), 0);
+    const expenseCost = (expenses as any[]).filter((e: any) => e.clientId === c._id && e.status === 'approved').reduce((s: number, e: any) => s + e.amount, 0);
+    const margin = revenue - laborCost - expenseCost;
+    const marginPct = revenue > 0 ? Math.round((margin / revenue) * 100) : 0;
+    return { name: c.company.split(' ')[0], revenue, laborCost, expenseCost, margin, marginPct };
+  }).filter((d: any) => d.revenue > 0 || d.laborCost > 0), [clients, invoices, timeEntries, expenses]);
+
+  // Time tracking summary (last 30 days)
+  const cutoff30 = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const recentEntries = (timeEntries as any[]).filter((e: any) => e.startTime >= cutoff30);
+  const totalHours = recentEntries.reduce((s: number, e: any) => s + e.duration, 0) / 60;
+  const billableHours = recentEntries.filter((e: any) => e.billable).reduce((s: number, e: any) => s + e.duration, 0) / 60;
+  const billableRate = totalHours > 0 ? Math.round((billableHours / totalHours) * 100) : 0;
 
   return (
     <>
@@ -128,6 +166,28 @@ export default function Reports() {
           </span>
         </div>
       </div>
+
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 border-b border-white/5 mb-6">
+        {([
+          ['overview', 'Overview'],
+          ['profitability', 'Profitability'],
+          ['time', 'Time & Hours'],
+        ] as [ReportTab, string][]).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={cn(
+              'px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors',
+              tab === key ? 'border-sage text-sage' : 'border-transparent text-fog hover:text-silver'
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'overview' && (<>
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
@@ -149,7 +209,12 @@ export default function Reports() {
 
         {/* Revenue by client */}
         <ReportSection title={r.revenue.title} subtitle={r.revenue.subtitle}>
-          <ResponsiveContainer width="100%" height={220}>
+          {revenueData.length === 0 ? (
+            <p className="text-sm text-fog text-center py-16">
+              {r.revenue.empty}
+            </p>
+          ) : null}
+          <ResponsiveContainer width="100%" height={revenueData.length === 0 ? 0 : 220}>
             <BarChart data={revenueData} barCategoryGap="30%">
               <CartesianGrid vertical={false} stroke={GRID} />
               <XAxis
@@ -167,7 +232,7 @@ export default function Reports() {
               />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
               <Bar dataKey="value" name={r.revenue.label} radius={[4, 4, 0, 0]}>
-                {revenueData.map((_, i) => (
+                {revenueData.map((_: any, i: number) => (
                   <Cell key={i} fill={i === 0 ? SAGE : `rgba(127,163,138,${0.7 - i * 0.1})`} />
                 ))}
               </Bar>
@@ -271,6 +336,114 @@ export default function Reports() {
         </ReportSection>
 
       </div>
+
+      </>)} {/* end overview tab */}
+
+      {tab === 'profitability' && (
+        <div className="space-y-4">
+          {/* Summary */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[
+              { label: 'Total Revenue', value: fmtCurrency(profitabilityData.reduce((s: number, d: any) => s + d.revenue, 0)), color: 'text-ivory' },
+              { label: 'Total Labor Cost', value: fmtCurrency(profitabilityData.reduce((s: number, d: any) => s + d.laborCost, 0)), color: 'text-warm' },
+              { label: 'Gross Margin', value: fmtCurrency(profitabilityData.reduce((s: number, d: any) => s + d.margin, 0)), color: profitabilityData.reduce((s: number, d: any) => s + d.margin, 0) >= 0 ? 'text-sage' : 'text-ember' },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl p-4 border border-border bg-card">
+                <p className={cn('text-xl font-semibold tabular-nums', s.color)}>{s.value}</p>
+                <p className="text-xs text-fog mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Per-client profitability table */}
+          <ReportSection title="Profitability by Client" subtitle="Revenue vs labor + expenses">
+            {profitabilityData.length === 0 ? (
+              <p className="text-sm text-fog text-center py-10">Add invoices and time entries to see profitability data.</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="grid grid-cols-5 gap-2 text-[10px] text-fog uppercase tracking-widest px-1 pb-2 border-b border-white/5">
+                  <span className="col-span-2">Client</span>
+                  <span className="text-right">Revenue</span>
+                  <span className="text-right">Costs</span>
+                  <span className="text-right">Margin</span>
+                </div>
+                {profitabilityData.map((d: any) => (
+                  <div key={d.name} className="grid grid-cols-5 gap-2 text-xs items-center py-1.5 border-b border-white/[0.03]">
+                    <span className="col-span-2 text-silver">{d.name}</span>
+                    <span className="text-right text-ivory tabular-nums">{fmtCurrency(d.revenue)}</span>
+                    <span className="text-right text-warm tabular-nums">{fmtCurrency(d.laborCost + d.expenseCost)}</span>
+                    <div className="text-right">
+                      <span className={cn('tabular-nums font-medium', d.margin >= 0 ? 'text-sage' : 'text-ember')}>
+                        {fmtCurrency(d.margin)}
+                      </span>
+                      <span className={cn('text-[10px] ml-1', d.marginPct >= 50 ? 'text-sage' : d.marginPct >= 20 ? 'text-warm' : 'text-ember')}>
+                        {d.marginPct}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ReportSection>
+        </div>
+      )}
+
+      {tab === 'time' && (
+        <div className="space-y-4">
+          {/* Time KPIs */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Total hours (30d)', value: `${totalHours.toFixed(1)}h`, color: 'text-ivory' },
+              { label: 'Billable hours', value: `${billableHours.toFixed(1)}h`, color: 'text-sage' },
+              { label: 'Billable rate', value: `${billableRate}%`, color: billableRate >= 70 ? 'text-sage' : billableRate >= 50 ? 'text-warm' : 'text-ember' },
+              { label: 'Entries (30d)', value: String(recentEntries.length), color: 'text-silver' },
+            ].map(kpi => (
+              <div key={kpi.label} className="rounded-xl p-4 border border-border bg-card">
+                <p className={cn('text-xl font-semibold tabular-nums', kpi.color)}>{kpi.value}</p>
+                <p className="text-xs text-fog mt-1">{kpi.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <ReportSection title="Hours by Project (last 30 days)" subtitle="Billable vs non-billable breakdown">
+            {recentEntries.length === 0 ? (
+              <p className="text-sm text-fog text-center py-10">No time entries in the last 30 days. Start tracking time to see data here.</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {recentEntries.slice(0, 20).map((e: any) => (
+                  <div key={e._id} className="flex items-center gap-3 py-1.5 border-b border-white/[0.03]">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-ivory truncate">{e.description || 'Untitled'}</p>
+                      <p className="text-[10px] text-fog">{new Date(e.startTime).toLocaleDateString()}</p>
+                    </div>
+                    <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full', e.billable ? 'text-sage bg-sage/10' : 'text-fog bg-fog/10')}>
+                      {e.billable ? 'Billable' : 'Non-bill'}
+                    </span>
+                    <span className="text-xs text-silver tabular-nums font-mono w-12 text-right">
+                      {(e.duration / 60).toFixed(1)}h
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ReportSection>
+
+          {/* Export */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                const rows = [['Date', 'Description', 'Duration (h)', 'Billable', 'Rate'], ...recentEntries.map((e: any) => [new Date(e.startTime).toLocaleDateString(), e.description, (e.duration / 60).toFixed(2), e.billable ? 'Yes' : 'No', e.hourlyRate ?? ''])];
+                const csv = rows.map(r => r.join(',')).join('\n');
+                const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'time-report.csv'; a.click();
+              }}
+              className="flex items-center gap-1.5 text-xs text-fog hover:text-silver transition-colors"
+            >
+              <Download size={12} />
+              Export CSV
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

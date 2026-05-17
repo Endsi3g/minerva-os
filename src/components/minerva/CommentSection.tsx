@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLang } from '@/i18n';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CommentSectionProps {
   targetId: string;
@@ -15,6 +17,8 @@ interface CommentSectionProps {
 
 export function CommentSection({ targetId, targetType }: CommentSectionProps) {
   const { user } = useAuth();
+  const { t } = useLang();
+  const c = t.comments;
   const comments = useQuery(api.comments.list, { targetId, targetType }) ?? [];
   const addComment = useMutation(api.comments.add);
   const [content, setContent] = useState('');
@@ -41,8 +45,8 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
         {comments.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-fog text-xs py-10 opacity-50">
-            <p>No comments yet.</p>
-            <p>Start the conversation.</p>
+            <p>{c.empty}</p>
+            <p>{c.startConversation}</p>
           </div>
         ) : (
           comments.slice().reverse().map((c: any) => (
@@ -69,13 +73,12 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
       </div>
 
       <div className="relative">
-        <textarea
-          placeholder="Write a comment..."
+        <Textarea
+          placeholder={c.placeholder}
           value={content}
           onChange={(e: any) => setContent(e.target.value)}
           className={cn(
-            "flex w-full rounded-md border border-white/5 bg-midnight px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/20 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-            "min-h-[80px] resize-none pr-10"
+            "bg-midnight text-xs min-h-[80px] resize-none pr-10 border-white/5 focus-visible:ring-sage/20",
           )}
           onKeyDown={(e: any) => {
             if (e.key === 'Enter' && !e.shiftKey) {

@@ -2,6 +2,8 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { FolderKanban, Mail } from 'lucide-react';
 import type { Client, ClientStatus } from '@/lib/types';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
@@ -25,15 +27,15 @@ export function ClientCard({ client }: ClientCardProps) {
   const status = STATUS_CONFIG[client.status];
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4 cursor-pointer hover:border-white/15 hover:bg-dusk/30 transition-colors">
+    <Card className="bg-card border-border rounded-xl p-5 space-y-4 cursor-pointer hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <Avatar className="h-10 w-10 shrink-0">
           <AvatarFallback className="text-sm font-semibold">{initials(client.company)}</AvatarFallback>
         </Avatar>
-        <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full mt-0.5', status.class)}>
+        <Badge variant="outline" className={cn('text-[10px] font-semibold px-2 py-0.5 border-none rounded-full mt-0.5', status.class)}>
           {status.label}
-        </span>
+        </Badge>
       </div>
 
       {/* Name + industry */}
@@ -61,6 +63,6 @@ export function ClientCard({ client }: ClientCardProps) {
           {client.monthlyValue > 0 ? `${fmt(client.monthlyValue)}/mo` : 'No retainer'}
         </p>
       </div>
-    </div>
+    </Card>
   );
 }

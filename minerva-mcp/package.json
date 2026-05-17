@@ -1,0 +1,23 @@
+{
+  "name": "minerva-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Minerva OS — exposes agency data and browser automation to Claude",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "minerva-mcp": "dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node --esm server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "playwright": "^1.60.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "~5.6.2"
+  }
+}

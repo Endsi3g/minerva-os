@@ -29,6 +29,8 @@ export default defineSchema({
         rate: v.number(),
       })),
     }),
+    memberIds: v.optional(v.array(v.string())),
+    ownerUserId: v.optional(v.string()),
   }).index("by_slug", ["slug"]),
 
   projects: defineTable({
@@ -46,10 +48,11 @@ export default defineSchema({
     .vectorIndex("by_embedding", {
     vectorField: "embedding",
     dimensions: 1536,
+    filterFields: ["workspaceId"],
   }),
   tasks: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
-    projectId: v.id("projects"),
+    projectId: v.optional(v.id("projects")),
     title: v.string(),
     status: v.string(), // "todo", "in_progress", "review", "done"
     priority: v.string(), // "low", "medium", "high", "urgent"
@@ -65,7 +68,8 @@ export default defineSchema({
     status: v.string(), // "pending", "approved", "revision"
     submittedDate: v.string(),
     fileUrl: v.optional(v.string()),
-  }).index("by_project", ["projectId"]),
+  }).index("by_project", ["projectId"])
+    .index("by_workspace", ["workspaceId"]),
   comments: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     targetId: v.string(), // ID of the approval, task, etc.
@@ -91,7 +95,8 @@ export default defineSchema({
     contact: v.string(),
     email: v.string(),
     status: v.string(), // "active", "lead", "inactive"
-  }),
+    monthlyValue: v.optional(v.number()),
+  }).index("by_workspace", ["workspaceId"]),
   calls: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     title: v.string(),
@@ -105,7 +110,7 @@ export default defineSchema({
       task: v.string(),
       completed: v.boolean(),
     })),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   finances: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     type: v.string(), // "income", "expense"
@@ -116,7 +121,7 @@ export default defineSchema({
     tps: v.number(),
     tvq: v.number(),
     status: v.string(),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   fulfillment: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     projectId: v.id("projects"),
@@ -127,7 +132,7 @@ export default defineSchema({
       item: v.string(),
       done: v.boolean(),
     })),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   presence: defineTable({
     user: v.string(),
     lastActive: v.number(),
@@ -143,7 +148,7 @@ export default defineSchema({
     stage: v.string(), // "new_lead", "qualified", "proposal", "negotiation", "won", "lost"
     notes: v.optional(v.string()),
     lastContact: v.string(),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   invoices: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     clientId: v.id("clients"),
@@ -160,7 +165,8 @@ export default defineSchema({
     paidDate: v.optional(v.string()),
     tps: v.number(),
     tvq: v.number(),
-  }).index("by_client", ["clientId"]),
+  }).index("by_client", ["clientId"])
+    .index("by_workspace", ["workspaceId"]),
   assets: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     name: v.string(),
@@ -170,14 +176,18 @@ export default defineSchema({
     projectId: v.optional(v.id("projects")),
     clientId: v.optional(v.id("clients")),
     uploadedAt: v.string(),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   userProfiles: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     email: v.string(),
     name: v.string(),
-    role: v.string(), // "admin", "manager", "member"
+    role: v.string(), // "owner", "member", "admin", "manager"
     avatar: v.optional(v.string()),
-  }),
+    userId: v.optional(v.string()),
+    onboardingCompleted: v.optional(v.boolean()),
+    onboardingTourCompleted: v.optional(v.boolean()),
+    completedChecklist: v.optional(v.array(v.string())),
+  }).index("by_user_id", ["userId"]),
   retainers: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     clientId: v.id("clients"),
@@ -189,14 +199,15 @@ export default defineSchema({
     hoursIncluded: v.number(),
     hoursUsed: v.number(),
     notes: v.optional(v.string()),
-  }),
+  }).index("by_workspace", ["workspaceId"]),
   milestones: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     projectId: v.id("projects"),
     title: v.string(),
     dueDate: v.string(),
     status: v.string(), // "upcoming", "completed", "overdue"
-  }).index("by_project", ["projectId"]),
+  }).index("by_project", ["projectId"])
+    .index("by_workspace", ["workspaceId"]),
   portalTokens: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
     token: v.string(),
@@ -261,7 +272,7 @@ export default defineSchema({
     instructions: v.string(),
     tools: v.array(v.string()),
     status: v.string(), // "active", "idle", "busy"
-  }),
+  }).index("by_workspace", ["workspaceId"]),
 
   agentThreads: defineTable({
     workspaceId: v.optional(v.id("workspaces")),
@@ -318,6 +329,7 @@ export default defineSchema({
   }).vectorIndex("by_embedding", {
     vectorField: "embedding",
     dimensions: 1536,
+    filterFields: ["workspaceId"],
   }),
 
   riskFlags: defineTable({
@@ -361,4 +373,127 @@ export default defineSchema({
     author: v.string(),
     timestamp: v.string(),
   }).index("by_project", ["projectId"]),
+
+  // --- TIME TRACKING ---
+
+  timeEntries: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.string(),
+    projectId: v.optional(v.id("projects")),
+    taskId: v.optional(v.id("tasks")),
+    description: v.string(),
+    startTime: v.number(),
+    endTime: v.number(),
+    duration: v.number(), // minutes
+    billable: v.boolean(),
+    hourlyRate: v.optional(v.number()),
+  }).index("by_workspace", ["workspaceId"])
+    .index("by_project", ["projectId"])
+    .index("by_user", ["userId"]),
+
+  activeTimers: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.string(),
+    projectId: v.optional(v.id("projects")),
+    taskId: v.optional(v.id("tasks")),
+    description: v.string(),
+    startTime: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // --- PROPOSALS ---
+
+  proposals: defineTable({
+    workspaceId: v.id("workspaces"),
+    dealId: v.optional(v.id("deals")),
+    clientId: v.optional(v.id("clients")),
+    title: v.string(),
+    sections: v.array(v.object({
+      type: v.string(), // "intro" | "scope" | "timeline" | "pricing" | "terms"
+      content: v.string(),
+    })),
+    serviceIds: v.array(v.string()),
+    totalAmount: v.number(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("sent"),
+      v.literal("signed"),
+      v.literal("declined")
+    ),
+    token: v.string(),
+    sentAt: v.optional(v.number()),
+    signedAt: v.optional(v.number()),
+    signedBy: v.optional(v.string()),
+    validUntil: v.optional(v.number()),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_token", ["token"])
+    .index("by_client", ["clientId"]),
+
+  // --- RESOURCE PLANNING ---
+
+  memberAvailability: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.string(),
+    displayName: v.string(),
+    weeklyHours: v.number(),
+    role: v.optional(v.string()),
+  }).index("by_workspace", ["workspaceId"]),
+
+  // --- NPS ---
+
+  npsResponses: defineTable({
+    workspaceId: v.id("workspaces"),
+    clientId: v.id("clients"),
+    score: v.number(), // 0-10
+    reason: v.optional(v.string()),
+    suggestion: v.optional(v.string()),
+    trigger: v.string(), // "phase_complete" | "delivery" | "renewal" | "manual"
+    respondedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_client", ["clientId"]),
+
+  // --- PUSH NOTIFICATIONS ---
+
+  pushTokens: defineTable({
+    userId: v.string(),
+    workspaceId: v.id("workspaces"),
+    token: v.string(),
+    platform: v.union(v.literal("ios"), v.literal("android")),
+    registeredAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_workspace", ["workspaceId"]),
+
+  // --- INVITATIONS ---
+
+  invitations: defineTable({
+    token: v.string(),
+    email: v.string(),
+    workspaceId: v.id("workspaces"),
+    role: v.union(v.literal("owner"), v.literal("member")),
+    expiresAt: v.number(),
+    acceptedAt: v.optional(v.number()),
+  })
+    .index("by_token", ["token"])
+    .index("by_workspace", ["workspaceId"]),
+
+  // --- EXPENSES ---
+
+  expenses: defineTable({
+    workspaceId: v.id("workspaces"),
+    submittedBy: v.string(),
+    amount: v.number(),
+    currency: v.string(),
+    category: v.string(),
+    description: v.string(),
+    date: v.number(),
+    receiptStorageId: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    approvedBy: v.optional(v.string()),
+    projectId: v.optional(v.id("projects")),
+    clientId: v.optional(v.id("clients")),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_project", ["projectId"]),
 });

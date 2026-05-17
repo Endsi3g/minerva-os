@@ -1,7 +1,6 @@
 import { v } from "convex/values";
-import { action, internalAction, internalMutation, mutation, query } from "./_generated/server";
-import { api, internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
+import { action, mutation, query } from "./_generated/server";
+import { api } from "./_generated/api";
 
 
 
@@ -40,7 +39,7 @@ export const runAgent = action({
         model: "claude-3-5-sonnet-20240620",
         max_tokens: 4096,
         system: agent.instructions,
-        messages: history.map((m) => ({
+        messages: history.map((m: any) => ({
           role: m.role === "assistant" ? "assistant" : "user",
           content: m.content,
         })),

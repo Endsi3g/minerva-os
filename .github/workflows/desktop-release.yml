@@ -1,0 +1,147 @@
+name: Desktop Release (Electron)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. v1.7.0)"
+        required: true
+        default: "v1.7.0"
+      prerelease:
+        description: "Mark as pre-release?"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      tag: ${{ steps.set-tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set tag name
+        id: set-tag
+        run: echo "tag=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Create tag
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git tag ${{ github.event.inputs.version }}
+          git push origin ${{ github.event.inputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: "${{ github.event.inputs.version }} — Minerva OS"
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          draft: false
+          generate_release_notes: true
+          body: |
+            ## Minerva OS ${{ github.event.inputs.version }}
+
+            **Sprint 11 — Production Readiness**
+
+            ### What's new
+            - Auth RBAC — `requireWorkspaceMember` + `requireOwner` on all Convex mutations
+            - Transactional email via Resend (invoices, proposals, invitations, password reset, risk alerts)
+            - Team invitations with 7-day expiry + `/invite/[token]` accept page
+            - Forgot / reset password flows (Convex Auth Password provider)
+            - Sentry error monitoring (web + mobile) + PostHog analytics
+            - Dark/light mode toggle + system preference detection
+            - PDF export for invoices and proposals
+            - Onboarding wizard (4 steps) + Getting Started checklist on Dashboard
+            - Mobile: 22 Expo screens, full EN/FR i18n, iOS-native UX (ActionSheetIOS, Haptics, BlurView)
+            - 146/146 Playwright tests passing
+
+            ### Desktop installers
+            The `.dmg` (macOS arm64 + x64) and `.exe` (Windows NSIS) are attached below once the build jobs complete.
+
+            ### Requirements
+            Set the following GitHub Secrets before building:
+            `MINERVA_APP_URL`, `NEXT_PUBLIC_CONVEX_URL`, `MAC_CERTIFICATE_P12`, `MAC_CERTIFICATE_PASSWORD`, `APPLE_ID`, `APPLE_TEAM_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `WIN_CERTIFICATE_P12`, `WIN_CERTIFICATE_PASSWORD`
+
+  build-mac:
+    name: macOS (DMG · arm64 + x64)
+    runs-on: macos-latest
+    needs: [create-release]
+    if: always() && (github.event_name == 'push' || needs.create-release.result == 'success')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+
+      - name: Compile Electron TypeScript
+        run: npm run electron:compile
+
+      - name: Build DMG
+        run: npx electron-builder --mac --publish always
+        env:
+          MINERVA_APP_URL: ${{ secrets.MINERVA_APP_URL }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.MAC_CERTIFICATE_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+
+  build-windows:
+    name: Windows (NSIS · x64)
+    runs-on: windows-latest
+    needs: [create-release]
+    if: always() && (github.event_name == 'push' || needs.create-release.result == 'success')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+
+      - name: Compile Electron TypeScript
+        run: npm run electron:compile
+
+      - name: Build EXE
+        run: npx electron-builder --win --publish always
+        env:
+          MINERVA_APP_URL: ${{ secrets.MINERVA_APP_URL }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CERTIFICATE_P12 }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}

@@ -1,12 +1,24 @@
 {
   "name": "minerva-os",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.7.0",
+  "description": "The strategic operating system for elite agencies",
+  "author": "Uprising Studio <hello@uprisingstudio.com>",
+  "homepage": "https://minerva-os.vercel.app",
+  "main": "electron/dist/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:audit": "playwright test",
+    "test:audit:report": "playwright show-report tests/report",
+    "pwa:icons": "node scripts/generate-icons.mjs",
+    "electron:compile": "tsc --project electron/tsconfig.json",
+    "electron:dev": "npm run dev & npx wait-on http://localhost:3000 && electron electron/dist/main.js",
+    "electron:build": "npm run build && npm run electron:compile && electron-builder",
+    "electron:dist:mac": "npm run build && npm run electron:compile && electron-builder --mac",
+    "electron:dist:win": "npm run build && npm run electron:compile && electron-builder --win"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.77",
@@ -14,9 +26,12 @@
     "@ai-sdk/provider-utils": "^4.0.27",
     "@anthropic-ai/sdk": "^0.95.2",
     "@auth/core": "^0.37.0",
+    "@base-ui/react": "^1.4.1",
     "@convex-dev/agent": "^0.6.1",
     "@convex-dev/auth": "^0.0.92",
     "@convex-dev/workflow": "^0.3.12",
+    "@convex-dev/workpool": "^0.4.6",
+    "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -26,26 +41,134 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@react-pdf/renderer": "^4.3.0",
+    "@sentry/nextjs": "^9.47.1",
+    "@serwist/next": "^9.5.11",
     "@supabase/supabase-js": "^2.105.4",
     "ai": "^6.0.182",
+    "canvas": "^3.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "convex": "^1.38.0",
     "convex-helpers": "^0.1.117",
+    "date-fns": "^4.1.0",
+    "electron-updater": "^6.8.3",
+    "embla-carousel-react": "^8.6.0",
+    "input-otp": "^1.4.2",
     "lucide-react": "^0.468.0",
     "motion": "^11.15.0",
     "next": "^15.0.0",
+    "next-themes": "^0.4.6",
+    "posthog-js": "^1.373.5",
+    "radix-ui": "^1.4.3",
     "react": "^18.3.1",
+    "react-day-picker": "^10.0.0",
     "react-dom": "^18.3.1",
-    "recharts": "^3.8.1",
-    "tailwind-merge": "^3.6.0"
+    "react-hook-form": "^7.75.0",
+    "react-is": "^19.2.6",
+    "react-resizable-panels": "^4.11.1",
+    "recharts": "^3.8.0",
+    "serwist": "^9.5.11",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.6.0",
+    "vaul": "^1.1.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^25.6.2",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
+    "electron": "^42.1.0",
+    "electron-builder": "^26.8.1",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.6.2"
+  },
+  "build": {
+    "appId": "app.minervaos.desktop",
+    "productName": "Minerva OS",
+    "copyright": "Copyright 2025 Uprising Studio",
+    "directories": {
+      "output": "dist-electron",
+      "buildResources": "electron/assets"
+    },
+    "files": [
+      "electron/dist/**",
+      "electron/assets/**"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "electron/assets/icon.png",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "electron/assets/entitlements.mac.plist",
+      "entitlementsInherit": "electron/assets/entitlements.mac.plist",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Minerva OS ${version}",
+      "icon": "electron/assets/icon.png",
+      "background": null,
+      "window": {
+        "width": 660,
+        "height": 420
+      }
+    },
+    "win": {
+      "icon": "electron/assets/icon.png",
+      "publisherName": "Uprising Studio",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Minerva OS"
+    },
+    "linux": {
+      "icon": "electron/assets/icon.png",
+      "category": "Office",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Endsi3g",
+      "repo": "minerva-os",
+      "releaseType": "release"
+    }
   }
 }

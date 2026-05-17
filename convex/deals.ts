@@ -1,14 +1,24 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireWorkspaceMember } from "./auth";
 
 export const list = query({
-  handler: async (ctx) => {
+  args: { workspaceId: v.optional(v.id("workspaces")) },
+  handler: async (ctx, args) => {
+    if (args.workspaceId) {
+      return await ctx.db
+        .query("deals")
+        .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
+        .order("desc")
+        .collect();
+    }
     return await ctx.db.query("deals").order("desc").collect();
   },
 });
 
 export const add = mutation({
   args: {
+    workspaceId: v.optional(v.id("workspaces")),
     company: v.string(),
     contact: v.string(),
     email: v.string(),
@@ -18,7 +28,27 @@ export const add = mutation({
     lastContact: v.string(),
   },
   handler: async (ctx, args) => {
+    if (args.workspaceId) await requireWorkspaceMember(ctx, args.workspaceId);
     return await ctx.db.insert("deals", args);
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("deals"),
+    company: v.string(),
+    contact: v.string(),
+    email: v.string(),
+    value: v.number(),
+    stage: v.string(),
+    notes: v.optional(v.string()),
+    lastContact: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const deal = await ctx.db.get(args.id);
+    if (deal?.workspaceId) await requireWorkspaceMember(ctx, deal.workspaceId);
+    const { id, ...fields } = args;
+    await ctx.db.patch(id, fields);
   },
 });
 
@@ -28,6 +58,8 @@ export const updateStage = mutation({
     stage: v.string(),
   },
   handler: async (ctx, args) => {
+    const deal = await ctx.db.get(args.id);
+    if (deal?.workspaceId) await requireWorkspaceMember(ctx, deal.workspaceId);
     await ctx.db.patch(args.id, { stage: args.stage });
   },
 });
@@ -35,6 +67,8 @@ export const updateStage = mutation({
 export const remove = mutation({
   args: { id: v.id("deals") },
   handler: async (ctx, args) => {
+    const deal = await ctx.db.get(args.id);
+    if (deal?.workspaceId) await requireWorkspaceMember(ctx, deal.workspaceId);
     await ctx.db.delete(args.id);
   },
 });

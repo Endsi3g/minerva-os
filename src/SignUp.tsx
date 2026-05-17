@@ -7,9 +7,8 @@ import { Chrome, Github, Eye, EyeOff } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 
-const HERO_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
-
+const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4';
+const POSTER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1600&q=60';
 const ACCENT = '#ef4d23';
 
 const containerVariants = {
@@ -37,11 +36,11 @@ export default function SignUp() {
 
   async function handleSubmit() {
     if (!firstName || !lastName || !email || !password) {
-      setError('Please fill in all fields.');
+      setError(s.errorFillAll);
       return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError(s.errorPasswordLength);
       return;
     }
     setError('');
@@ -50,7 +49,7 @@ export default function SignUp() {
       await signup(firstName, lastName, email, password);
       router.push('/app/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Account creation failed. Please try again.');
+      setError(err instanceof Error ? err.message : s.errorFailed);
     } finally {
       setIsLoading(false);
     }
@@ -63,9 +62,17 @@ export default function SignUp() {
     >
       {/* ── Left column — hero video ────────────────────────────────────────── */}
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
-        <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline>
-          <source src={HERO_VIDEO} type="video/mp4" />
-        </video>
+        <video
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ filter: 'hue-rotate(-260deg) saturate(1.5) contrast(1.1)' }}
+          src={BG_VIDEO}
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={POSTER}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/20" />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
@@ -209,21 +216,21 @@ function StepItem({ number, text, active = false }: { number: number; text: stri
       className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200"
       style={
         active
-          ? { backgroundColor: '#ef4d23', border: '1px solid #ef4d23' }
-          : { backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }
+          ? { backgroundColor: '#F5F1E8', border: '1px solid #F5F1E8' } // White/Ivory for visibility against orange
+          : { backgroundColor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)' }
       }
     >
       <span
         className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
         style={
           active
-            ? { backgroundColor: 'rgba(0,0,0,0.25)', color: '#FFFFFF' }
-            : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(184,189,199,0.5)' }
+            ? { backgroundColor: '#0A0D14', color: '#F5F1E8' }
+            : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }
         }
       >
         {number}
       </span>
-      <span className="text-sm font-medium" style={{ color: active ? '#FFFFFF' : '#F5F1E8' }}>
+      <span className="text-sm font-medium" style={{ color: active ? '#0A0D14' : '#F5F1E8' }}>
         {text}
       </span>
     </div>

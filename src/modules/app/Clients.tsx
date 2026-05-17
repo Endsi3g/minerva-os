@@ -39,7 +39,10 @@ export default function Clients() {
   const { t } = useLang();
   const cKeys = t.app.clients;
 
-  const clients = useQuery(api.clients.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const addClient = useMutation(api.clients.add);
 
   const [query, setQuery] = useState('');
@@ -51,13 +54,15 @@ export default function Clients() {
   );
 
   async function handleAdd() {
-    if (!form.company.trim()) return;
+    if (!form.company.trim() || !workspaceId) return;
     
     await addClient({
+      workspaceId,
       company: form.company.trim(),
       contact: form.contact.trim(),
       email: form.email.trim(),
       status: form.status,
+      monthlyValue: parseFloat(form.monthlyValue) || undefined,
     });
     
     setSheetOpen(false);
@@ -106,7 +111,9 @@ export default function Clients() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
-          <p className="text-sm text-silver">{cKeys.noClients} {query ? `"${query}"` : ''}</p>
+          <p className="text-sm text-silver">
+            {query ? `${cKeys.noClients} "${query}"` : cKeys.noClientsYet}
+          </p>
           {query && (
             <button onClick={() => setQuery('')} className="text-xs text-fog hover:text-silver transition-colors">
               {cKeys.clearSearch}

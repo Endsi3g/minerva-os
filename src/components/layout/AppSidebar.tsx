@@ -17,7 +17,16 @@ import {
   PackageCheck,
   WalletCards,
   Sparkles,
+  Clock,
+  BookOpen,
+  FileSignature,
+  CreditCard,
+  Library,
+  Headphones,
+  Star,
+  CalendarRange,
 } from 'lucide-react';
+import { TimerWidget } from './TimerWidget';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -45,19 +54,24 @@ const workspaceNavItems: NavItem[] = [
   { href: '/app/projects',  icon: FolderKanban,    labelKey: 'projects' },
   { href: '/app/tasks',     icon: CheckSquare,     labelKey: 'tasks' },
   { href: '/app/call-preps', icon: CalendarCheck,  labelKey: 'callPreps' },
+  { href: '/app/time-tracking', icon: Clock,       labelKey: 'timeTracking' },
 ];
 
 const studioNavItems: NavItem[] = [
-  { href: '/app/approvals', icon: ClipboardCheck, labelKey: 'approvals' },
-  { href: '/app/files',     icon: FileBox,        labelKey: 'files' },
-  { href: '/app/billing',   icon: Receipt,        labelKey: 'billing' },
-  { href: '/app/finance',   icon: WalletCards,    labelKey: 'finance' },
-  { href: '/app/reports',   icon: BarChart2,      labelKey: 'reports' },
-  { href: '/app/fulfillment', icon: PackageCheck, labelKey: 'fulfillment' },
-];
-
-const intelligenceNavItems: NavItem[] = [
-  { href: '/app/agent-ops', icon: Sparkles, labelKey: 'agentOps' },
+  { href: '/app/approvals',  icon: ClipboardCheck, labelKey: 'approvals' },
+  { href: '/app/files',      icon: FileBox,         labelKey: 'files' },
+  { href: '/app/billing',    icon: Receipt,         labelKey: 'billing' },
+  { href: '/app/finance',    icon: WalletCards,     labelKey: 'finance' },
+  { href: '/app/reports',    icon: BarChart2,       labelKey: 'reports' },
+  { href: '/app/fulfillment', icon: PackageCheck,   labelKey: 'fulfillment' },
+  { href: '/app/services',   icon: BookOpen,        labelKey: 'serviceCatalog' },
+  { href: '/app/proposals',  icon: FileSignature,   labelKey: 'proposals' },
+  { href: '/app/expenses',   icon: CreditCard,      labelKey: 'expenses' },
+  { href: '/app/knowledge',  icon: Library,         labelKey: 'knowledge' },
+  { href: '/app/tickets',    icon: Headphones,      labelKey: 'tickets' },
+  { href: '/app/nps',        icon: Star,            labelKey: 'nps' },
+  { href: '/app/resources',  icon: CalendarRange,   labelKey: 'resources' },
+  { href: '/app/agent-ops',  icon: Sparkles,        labelKey: 'agentOps' },
 ];
 
 function SidebarNavItem({ item, collapsed, sidebar }: { item: NavItem; collapsed: boolean; sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'] }) {
@@ -144,11 +158,15 @@ export function AppSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-2 space-y-4 py-2">
+      <nav className="flex-1 overflow-y-auto px-2 space-y-4 py-2 min-h-0">
         <SidebarSection label={sidebar.workspace} items={workspaceNavItems} collapsed={collapsed} sidebar={sidebar} />
         <SidebarSection label={sidebar.studio} items={studioNavItems} collapsed={collapsed} sidebar={sidebar} />
-        <SidebarSection label="Intelligence" items={intelligenceNavItems} collapsed={collapsed} sidebar={sidebar} />
       </nav>
+
+      {/* Timer Widget */}
+      <div className="shrink-0 border-t border-sidebar-border pt-2 pb-1">
+        <TimerWidget collapsed={collapsed} />
+      </div>
 
       {/* Footer */}
       <div className="shrink-0 px-2 pb-3 space-y-0.5 border-t border-sidebar-border pt-2">

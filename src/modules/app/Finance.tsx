@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useLang } from '@/i18n';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+import { useLang } from '@/i18n';
 
 const TPS_RATE = 0.05;
 const TVQ_RATE = 0.09975;
@@ -17,7 +17,10 @@ export default function Finance() {
   const { t, lang } = useLang();
   const f = t.app.financeModule;
   
-  const finances = useQuery(api.finances.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const finances = useQuery(api.finances.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const addEntry = useMutation(api.finances.add);
 
   const [showAdd, setShowAdd] = useState(false);
@@ -68,8 +71,10 @@ export default function Finance() {
     const baseAmount = parseFloat(form.amount);
     if (isNaN(baseAmount)) return;
 
+    if (!workspaceId) return;
     await addEntry({
-      type: form.type,
+      workspaceId,
+      type: form.type as any,
       amount: baseAmount,
       description: form.description,
       category: form.category,
@@ -77,7 +82,7 @@ export default function Finance() {
       tps: baseAmount * TPS_RATE,
       tvq: baseAmount * TVQ_RATE,
       status: 'paid',
-    });
+    } as any);
 
     setShowAdd(false);
     setForm({ ...form, description: '', amount: '' });
@@ -88,7 +93,7 @@ export default function Finance() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-playfair text-ivory tracking-tight">{f.title}</h1>
+          <h1 className="text-3xl font-serif text-ivory tracking-tight">{f.title}</h1>
           <p className="text-sm text-fog mt-1">{f.stats}</p>
         </div>
         <Button onClick={() => setShowAdd(true)} className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90">
@@ -202,7 +207,7 @@ export default function Finance() {
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-midnight border border-white/10 rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-xl font-playfair text-ivory mb-6">New Transaction</h2>
+            <h2 className="text-xl font-serif text-ivory mb-6">New Transaction</h2>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-fog">Type</Label>

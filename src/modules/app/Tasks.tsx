@@ -72,8 +72,11 @@ export default function Tasks() {
   const { t, lang } = useLang();
   const tk = t.app.tasks;
 
-  const tasks = useQuery(api.tasks.get) ?? [];
-  const projects = useQuery(api.projects.list) ?? [];
+  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaceId = workspaces[0]?._id;
+
+  const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
   const createTask = useMutation(api.tasks.create);
 
   const [filter, setFilter] = useState<Filter>('all');
@@ -92,21 +95,22 @@ export default function Tasks() {
 
   const visible = filter === 'all' ? tasks : tasks.filter((t: any) => t.status === filter);
 
-  async function cycleStatus(id: any, currentStatus: TaskStatus) {
+  async function cycleStatus(id: Id<"tasks">, currentStatus: TaskStatus) {
     const nextStatus = STATUS_CYCLE[currentStatus];
     await updateTask({ id, status: nextStatus });
   }
 
   async function handleAdd() {
-    if (!form.title.trim() || !form.projectId) return;
+    if (!form.title.trim() || !form.projectId || !workspaceId) return;
     
     await createTask({
+      workspaceId,
       title: form.title.trim(),
       projectId: form.projectId as any,
       status: form.status,
       priority: form.priority,
       assignee: form.assignee.trim() || 'US',
-      dueDate: form.dueDate || '2026-12-31',
+      dueDate: form.dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     });
     
     setSheetOpen(false);
@@ -159,9 +163,9 @@ export default function Tasks() {
         {visible.length === 0 && (
           <p className="text-sm text-fog py-8 text-center">{tk.empty}</p>
         )}
-        {visible.map((task: any) => {
-          const StatusIcon = STATUS_ICON[task.status as TaskStatus] || Circle;
-          const project = projects.find((p: any) => p._id === task.projectId);
+          {visible.map((task: any) => {
+            const StatusIcon = STATUS_ICON[task.status as TaskStatus] || Circle;
+            const project = projects.find((p: any) => p._id === task.projectId);
           return (
             <div
               key={task._id}
