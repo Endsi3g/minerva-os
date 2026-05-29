@@ -48,7 +48,7 @@ if not exist "%~dp0..\.env.local" (
 )
 
 cd /d "%~dp0.."
-npm run dev
+pnpm dev
 goto :EOF
 
 :: ─────────────────────────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ echo   Compilation OK.
 :: Start Next.js in background then wait for it before launching Electron
 echo.
 echo   Demarrage Next.js en arriere-plan (port 3000)...
-start "Minerva Next.js" cmd /c "npm run dev"
+start "Minerva Next.js" cmd /c "pnpm dev"
 
 echo   Attente que Next.js soit pret...
 :WAIT_NEXT
@@ -171,20 +171,20 @@ echo.
 cd /d "%~dp0.."
 
 echo   [1/3] Installation racine (Next.js / Electron)...
-call npm install
+call pnpm install
 echo   Racine OK.
 echo.
 
 echo   [2/3] Installation minerva-mcp...
 cd minerva-mcp
-call npm install
+call pnpm install
 cd ..
 echo   MCP OK.
 echo.
 
 echo   [3/3] Installation minerva-mobile...
 cd minerva-mobile
-call npm install
+call pnpm install
 cd ..
 echo   Mobile OK.
 echo.

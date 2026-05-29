@@ -34,10 +34,10 @@ NODE_VER=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
 [[ $NODE_VER -lt 20 ]] && error "Node.js v20+ required (found v$NODE_VER). Update at https://nodejs.org"
 success "Node.js $(node -v)"
 
-command -v npm >/dev/null 2>&1 || error "npm not found"
-success "npm $(npm -v)"
+command -v pnpm >/dev/null 2>&1 || error "pnpm not found"
+success "pnpm $(pnpm -v)"
 
-command -v npx >/dev/null 2>&1 || error "npx not found"
+command -v pnpm >/dev/null 2>&1 || error "pnpm not found"
 
 # ── 2. Environment file ─────────────────────────────────────────────────────
 
@@ -70,7 +70,7 @@ fi
 
 if [[ $RESET == true ]] || [[ ! -d "node_modules" ]]; then
   info "Installing dependencies..."
-  npm ci
+  pnpm install
   success "Dependencies installed"
 else
   success "node_modules exists (run with --reset to reinstall)"
@@ -98,12 +98,12 @@ if [[ $RUN_TESTS == true ]]; then
   echo -e "${BLUE}─────────────────────────────────────────────────${NC}"
   echo ""
   info "Building production bundle for tests..."
-  npm run build
+  pnpm build
   info "Running Playwright tests (146 tests)..."
-  npx playwright test --reporter=list
+  pnpm playwright test --reporter=list
   echo ""
-  success "All tests complete. Report: npm run test:audit:report"
+  success "All tests complete. Report: pnpm run test:audit:report"
   echo ""
 fi
 
-npm run dev
+pnpm dev
