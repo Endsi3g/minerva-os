@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Search, FileText, Send, Copy, Trash2, X, Check, FileDown } from 'lucide-react';
+import { Plus, Search, FileText, Send, Copy, Trash2, X, Check, FileDown, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +49,39 @@ function ProposalForm({
   const [totalAmount, setTotalAmount] = useState('');
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('intro');
+
+  const [aiBrief, setAiBrief] = useState('');
+  const [generating, setGenerating] = useState(false);
+
+  const handleGenerate = async () => {
+    if (!aiBrief.trim() || generating) return;
+    setGenerating(true);
+    try {
+      const selectedClient = clients.find(c => c._id === clientId);
+      const res = await fetch('/api/ai/proposal-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brief: aiBrief.trim(),
+          clientCompany: selectedClient?.company || ''
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setSections([
+        { type: 'intro', content: data.intro },
+        { type: 'scope', content: data.scope },
+        { type: 'timeline', content: data.timeline },
+        { type: 'pricing', content: data.pricing },
+        { type: 'terms', content: DEFAULT_SECTIONS.find(s => s.type === 'terms')?.content || '' },
+      ]);
+    } catch (err) {
+      console.error('Failed to generate proposal:', err);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -140,6 +173,49 @@ function ProposalForm({
             <input type="number" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder={f.totalAmount}
               className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+          </div>
+
+          {/* Hermes AI Scoping Assistant */}
+          <div 
+            className="rounded-xl border p-4 space-y-3"
+            style={{ backgroundColor: 'rgba(255,255,255,0.01)', borderColor: 'rgba(127,163,138,0.15)' }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] text-sage uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                <Sparkles size={11} className="animate-pulse" />
+                Hermes AI Scoping Assistant
+              </p>
+            </div>
+            <textarea
+              value={aiBrief}
+              onChange={e => setAiBrief(e.target.value)}
+              placeholder="Enter general scoping details, budget requirements, and deliverables brief to draft all sections automatically..."
+              rows={2}
+              className="w-full px-3 py-1.5 rounded-lg text-xs text-ivory placeholder:text-fog/50 outline-none resize-none"
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+            />
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                onClick={handleGenerate}
+                disabled={generating || !aiBrief.trim()}
+                size="sm"
+                variant="outline"
+                className="text-[10px] h-7 border-white/10 font-sans"
+              >
+                {generating ? (
+                  <>
+                    <Loader2 size={10} className="mr-1.5 animate-spin" />
+                    Drafting sections...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={10} className="mr-1.5" />
+                    Draft Proposal with AI
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Services */}
