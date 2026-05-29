@@ -944,7 +944,9 @@ SUPABASE_KEY=votre_cle_anon
 ### Prochaines etapes suggérées (Mises à jour - 2026-05-29)
 
 1. **Appliquer la migration SQL vectorielle** — Exécutez le script [20260529000001_vector_rag_gte.sql](file:///c:/Users/upris/Minerva%20OS/minerva-os/supabase/migrations/20260529000001_vector_rag_gte.sql) dans le console SQL Editor de votre projet Supabase en ligne (`https://supabase.com`). Cela redéfinira la taille des colonnes `embedding` de `1536` à `384` dimensions et déploiera les fonctions Postgres `match_knowledge_base` et `match_projects` correspondantes.
-2. **Tester la recherche sémantique** — Ajoutez un article dans la base de connaissances (Knowledge Base) et testez la recherche sémantique. Les requêtes généreront des embeddings via le modèle local `@xenova/transformers`.
-3. **Converser avec Hermes en RAG** — Posez des questions à Hermes dans le volet d'assistant (AI Chat) sur les projets et les articles créés. Hermes effectuera automatiquement une recherche vectorielle pour s'injecter le contexte exact.
+2. **Tester la recherche sémantique & RAG** — Ajoutez un article dans la base de connaissances (Knowledge Base) ou créez un projet, et observez la génération d'embeddings automatique. Posez des questions à Hermes dans le volet d'assistant (AI Chat) sur les projets et les articles créés.
+3. **Valider les résumés et briefs de réunions** — Allez sur l'onglet Call Preps, sélectionnez un appel à venir, et cliquez sur "Generate AI Brief" pour obtenir un brief stratégique et une checklist de tâches automatiques.
+4. **Lancer un audit stratégique** — Ouvrez l'onglet Firefighter sur le Tableau de bord et lancez un "AI Strategic Audit" pour évaluer la santé de l'agence (cashflow, délais, charges).
+5. **Rédiger des propositions avec l'IA** — Créez une nouvelle proposition dans Proposals et utilisez le "Scoping Assistant" pour rédiger les sections de manière automatique.
 
 
