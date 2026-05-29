@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
+import { motion } from 'framer-motion';
+
 
 function formatElapsed(ms: number) {
   const s = Math.floor(ms / 1000);
@@ -43,9 +45,10 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
 
   const workspaceId = workspaces[0]?.id;
 
-  // Fetch active timer
+  // Fetch and subscribe to active timer via Supabase Realtime
   useEffect(() => {
     if (!userId) return;
+    
     async function loadActiveTimer() {
       const { data } = await supabase
         .from('active_timers')
@@ -63,6 +66,40 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
       }
     }
     loadActiveTimer();
+
+    const channel = supabase
+      .channel(`active_timers_user_${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'active_timers',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setActiveTimer({
+              ...payload.new,
+              _id: payload.new.id,
+              startTime: Number(payload.new.start_time),
+            });
+          } else if (payload.eventType === 'DELETE') {
+            setActiveTimer(null);
+          } else if (payload.eventType === 'UPDATE') {
+            setActiveTimer({
+              ...payload.new,
+              _id: payload.new.id,
+              startTime: Number(payload.new.start_time),
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   // Fetch projects
@@ -192,21 +229,28 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
     <div className="px-2 py-1">
       {activeTimer ? (
         <div
-          className="rounded-lg px-3 py-2 flex items-center gap-2"
-          style={{ background: 'rgba(127,163,138,0.08)', border: '1px solid rgba(127,163,138,0.15)' }}
+          className="rounded-lg px-3 py-2 flex items-center gap-3 relative overflow-hidden"
+          style={{ background: 'rgba(127,163,138,0.04)', border: '1px solid rgba(127,163,138,0.12)' }}
         >
-          <span className="relative flex h-1.5 w-1.5 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sage opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sage" />
-          </span>
+          {/* Circular widget with slow breathing/oscillating animation */}
+          <div className="relative flex items-center justify-center h-8 w-8 shrink-0">
+            <motion.div
+              className="absolute inset-0 rounded-full bg-sage/10"
+              animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <div className="h-6 w-6 rounded-full bg-midnight border border-sage/30 flex items-center justify-center">
+              <Clock size={11} className="text-sage animate-spin" style={{ animationDuration: '12s' }} />
+            </div>
+          </div>
           <span className="flex-1 min-w-0">
-            <p className="text-[11px] font-mono text-sage font-medium">{formatElapsed(elapsed)}</p>
+            <p className="text-[11px] font-mono text-sage font-medium tracking-wider">{formatElapsed(elapsed)}</p>
             <p className="text-[9px] text-fog truncate">{activeTimer.description}</p>
           </span>
-          <button onClick={handleStop} className="text-sage hover:text-ivory transition-colors shrink-0" title="Stop timer">
-            <Square size={12} />
+          <button onClick={handleStop} className="text-sage hover:text-ivory transition-colors shrink-0 p-1 hover:bg-white/5 rounded" title="Stop timer">
+            <Square size={11} fill="currentColor" />
           </button>
-          <button onClick={handleCancel} className="text-fog hover:text-ember transition-colors shrink-0" title="Cancel">
+          <button onClick={handleCancel} className="text-fog hover:text-ember transition-colors shrink-0 p-1 hover:bg-white/5 rounded" title="Cancel">
             <X size={10} />
           </button>
         </div>

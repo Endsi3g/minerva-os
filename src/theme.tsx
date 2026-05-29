@@ -11,10 +11,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
 function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'dark';
-  const stored = localStorage.getItem('minerva-theme');
-  if (stored === 'light' || stored === 'dark') return stored;
-  return 'dark';
+  return 'dark'; // Thème sombre forcé sans exception
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

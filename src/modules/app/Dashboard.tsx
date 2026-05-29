@@ -414,7 +414,7 @@ export default function Dashboard() {
           )}
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {kpis.map((kpi, index) => (
               <motion.div
                 key={kpi.label}
@@ -425,15 +425,15 @@ export default function Dashboard() {
                 <Card className="glass-card border-white/10 bg-midnight">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</CardTitle>
+                      <CardTitle className="text-[10px] sm:text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</CardTitle>
                       <kpi.icon size={14} className={cn(kpi.color, "opacity-70")} />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-ivory">{kpi.value}</p>
-                    <p className="text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-ivory tracking-tight truncate">{kpi.value}</p>
+                    <p className="text-[9px] sm:text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
                       <span className="text-sage">{kpi.delta.split(' ')[0]}</span>
-                      {kpi.delta.split(' ').slice(1).join(' ')}
+                      <span className="truncate">{kpi.delta.split(' ').slice(1).join(' ')}</span>
                     </p>
                   </CardContent>
                 </Card>
