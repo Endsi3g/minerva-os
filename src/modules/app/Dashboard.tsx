@@ -1,10 +1,11 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { FolderKanban, CheckSquare, ClipboardCheck, DollarSign, AlertTriangle, X, ChevronRight, Flame, RefreshCw, Sparkles } from 'lucide-react';
+import { FolderKanban, CheckSquare, ClipboardCheck, DollarSign, AlertTriangle, X, ChevronRight, Flame, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
 import { GettingStartedChecklist } from '@/components/minerva/GettingStartedChecklist';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
@@ -200,47 +201,208 @@ function DailyBriefing({ context, labels }: {
 
 /* ── Firefighter View ─────────────────────────────────────────────────────── */
 
-function FirefighterView({ flags, dismissed, onDismiss, onNavigate, labels }: {
+interface AuditFinding {
+  title: string;
+  description: string;
+  severity: 'high' | 'medium';
+  impact: string;
+}
+
+interface AuditResult {
+  healthScore: number;
+  findings: AuditFinding[];
+  recommendations: string;
+}
+
+function FirefighterView({ flags, dismissed, onDismiss, onNavigate, labels, workspaceId }: {
   flags: RiskFlag[];
   dismissed: string[];
   onDismiss: (id: string) => void;
   onNavigate: (link: string) => void;
   labels: { allClear: string; allClearSub: string };
+  workspaceId: string;
 }) {
   const active = flags.filter(f => !dismissed.includes(f.id));
+  const [auditing, setAuditing] = useState(false);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
 
-  if (active.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-sage/10 flex items-center justify-center">
-          <Flame size={20} className="text-sage" />
-        </div>
-        <p className="text-sm text-silver font-medium">{labels.allClear}</p>
-        <p className="text-xs text-fog">{labels.allClearSub}</p>
-      </div>
-    );
-  }
+  const runAudit = async () => {
+    if (!workspaceId || auditing) return;
+    setAuditing(true);
+    try {
+      const res = await fetch('/api/ai/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setAuditResult(data);
+    } catch (err) {
+      console.error('Audit failed:', err);
+    } finally {
+      setAuditing(false);
+    }
+  };
 
   const high = active.filter(f => f.severity === 'high');
   const medium = active.filter(f => f.severity === 'medium');
 
   return (
     <div className="space-y-6">
-      {high.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[10px] text-ember uppercase tracking-widest font-medium">Critical · {high.length}</p>
-          {high.map(flag => (
-            <FlagCard key={flag.id} flag={flag} onDismiss={onDismiss} onNavigate={onNavigate} />
-          ))}
+      {/* Strategic Audit Trigger */}
+      <div className="rounded-xl border border-white/5 bg-midnight/35 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-semibold text-ivory flex items-center gap-2">
+            <Sparkles size={14} className="text-sage animate-pulse" />
+            AI Strategic Audit
+          </h3>
+          <p className="text-xs text-fog mt-0.5">
+            Run a deep operational audit of projects, financial logs, and backlog capacity.
+          </p>
+        </div>
+        <Button 
+          onClick={runAudit} 
+          disabled={auditing || !workspaceId}
+          size="sm"
+          className="shrink-0"
+        >
+          {auditing ? (
+            <>
+              <Loader2 size={13} className="mr-1.5 animate-spin" />
+              Auditing...
+            </>
+          ) : (
+            <>
+              <Sparkles size={13} className="mr-1.5" />
+              Run Strategic Audit
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Auditing State */}
+      {auditing && (
+        <div className="rounded-xl border border-white/5 bg-midnight/20 p-8 flex flex-col items-center justify-center text-center gap-3">
+          <Loader2 size={24} className="animate-spin text-sage" />
+          <p className="text-xs text-silver italic animate-pulse">Hermes is reviewing project budget consumption, timeline health, and client receivables...</p>
         </div>
       )}
-      {medium.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[10px] text-warm uppercase tracking-widest font-medium">Attention · {medium.length}</p>
-          {medium.map(flag => (
-            <FlagCard key={flag.id} flag={flag} onDismiss={onDismiss} onNavigate={onNavigate} />
-          ))}
-        </div>
+
+      {/* Audit Results View */}
+      {auditResult && !auditing && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-5"
+        >
+          {/* Health Score Gauge */}
+          <div className="bg-card border border-border p-5 rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div className="absolute top-2 right-2">
+              <span className="text-[9px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded-full">AUDIT REPORT</span>
+            </div>
+            
+            <div className="relative h-24 w-24 flex items-center justify-center mb-3">
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-white/5"
+                  strokeWidth="3"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <motion.path
+                  initial={{ strokeDasharray: "0 100" }}
+                  animate={{ strokeDasharray: `${auditResult.healthScore} 100` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="text-sage"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <span className="text-2xl font-bold font-mono text-ivory tracking-tighter">{auditResult.healthScore}</span>
+            </div>
+            <p className="text-[10px] text-fog uppercase tracking-widest font-medium">Workspace Health Score</p>
+          </div>
+
+          {/* Strategic Findings list */}
+          <div className="lg:col-span-2 bg-card border border-border p-5 rounded-xl flex flex-col justify-between">
+            <div>
+              <h4 className="text-xs font-semibold text-ivory uppercase tracking-wider mb-3">Strategic Findings</h4>
+              {auditResult.findings.length === 0 ? (
+                <p className="text-xs text-fog italic py-4">No strategic issues detected. Your workspace operational margins are well protected.</p>
+              ) : (
+                <div className="space-y-3">
+                  {auditResult.findings.map((f, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/3 border border-white/5">
+                      <span className={cn(
+                        "text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full shrink-0",
+                        f.severity === 'high' ? "text-ember bg-ember/10" : "text-warm bg-warm/10"
+                      )}>
+                        {f.severity}
+                      </span>
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-medium text-ivory">{f.title}</p>
+                        <p className="text-[11px] text-silver leading-relaxed">{f.description}</p>
+                        <p className="text-[10px] text-fog italic"><span className="text-warm font-semibold">Impact:</span> {f.impact}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recommendations Brief */}
+            {auditResult.recommendations && (
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <p className="text-[10px] text-fog uppercase tracking-widest font-medium mb-1 flex items-center gap-1">
+                  <Sparkles size={10} className="text-warm" />
+                  Hermes Executive Recommendations
+                </p>
+                <p className="text-xs text-silver leading-relaxed italic">
+                  "{auditResult.recommendations}"
+                </p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Static Alerts view */}
+      {!auditing && (
+        <>
+          {active.length === 0 && !auditResult ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-sage/10 flex items-center justify-center">
+                <Flame size={20} className="text-sage" />
+              </div>
+              <p className="text-sm text-silver font-medium">{labels.allClear}</p>
+              <p className="text-xs text-fog">{labels.allClearSub}</p>
+            </div>
+          ) : (
+            <div className="space-y-6 pt-2">
+              {high.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-ember uppercase tracking-widest font-medium">Critical Alerts · {high.length}</p>
+                  {high.map(flag => (
+                    <FlagCard key={flag.id} flag={flag} onDismiss={onDismiss} onNavigate={onNavigate} />
+                  ))}
+                </div>
+              )}
+              {medium.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-warm uppercase tracking-widest font-medium">Attention Required · {medium.length}</p>
+                  {medium.map(flag => (
+                    <FlagCard key={flag.id} flag={flag} onDismiss={onDismiss} onNavigate={onNavigate} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -481,6 +643,7 @@ export default function Dashboard() {
           onDismiss={id => setDismissed(prev => [...prev, id])}
           onNavigate={link => router.push(link)}
           labels={{ allClear: d.allClear, allClearSub: d.allClearSub }}
+          workspaceId={workspaceId}
         />
       )}
     </div>
