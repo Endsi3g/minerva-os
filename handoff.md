@@ -941,11 +941,10 @@ SUPABASE_URL=https://kcwdmufkyjsitsuxmqld.supabase.co
 SUPABASE_KEY=votre_cle_anon
 ```
 
-### Prochaines etapes suggérées
+### Prochaines etapes suggérées (Mises à jour - 2026-05-29)
 
-1. **Activer RLS Supabase** — configurer les politiques Row Level Security pour `workspace_id` sur toutes les tables
-2. **Auth callbacks** — configurer la redirection Supabase OAuth dans `src/app/api/auth/callback/route.ts`
-3. **Realtime** — implémenter `usePresence.ts` avec les canaux Supabase Realtime pour la collaboration
-4. **Mobile Expo** — créer `minerva-mobile/.env.local` avec les vraies clés Supabase
-5. **Claude Desktop MCP** — pointer `claude_desktop_config.json` vers `minerva-mcp/dist/server.js`
+1. **Appliquer la migration SQL vectorielle** — Exécutez le script [20260529000001_vector_rag_gte.sql](file:///c:/Users/upris/Minerva%20OS/minerva-os/supabase/migrations/20260529000001_vector_rag_gte.sql) dans le console SQL Editor de votre projet Supabase en ligne (`https://supabase.com`). Cela redéfinira la taille des colonnes `embedding` de `1536` à `384` dimensions et déploiera les fonctions Postgres `match_knowledge_base` et `match_projects` correspondantes.
+2. **Tester la recherche sémantique** — Ajoutez un article dans la base de connaissances (Knowledge Base) et testez la recherche sémantique. Les requêtes généreront des embeddings via le modèle local `@xenova/transformers`.
+3. **Converser avec Hermes en RAG** — Posez des questions à Hermes dans le volet d'assistant (AI Chat) sur les projets et les articles créés. Hermes effectuera automatiquement une recherche vectorielle pour s'injecter le contexte exact.
+
 
