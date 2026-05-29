@@ -4,6 +4,8 @@ import Header from './components/Header';
 import LandingFooter from './components/LandingFooter';
 import { motion } from 'motion/react';
 import { IntroDisclosure } from './components/ui/intro-disclosure';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Platform() {
   const { t } = useLang();
@@ -47,6 +49,18 @@ export default function Platform() {
       <Header />
       
       <main className="flex-1 flex flex-col items-center pt-32 pb-20 px-6 sm:px-10">
+        <div className="w-full max-w-4xl mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors duration-200 group"
+            style={{ color: 'rgba(184,189,199,0.45)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#B8BDC7')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(184,189,199,0.45)')}
+          >
+            <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
+            {t.nav.back}
+          </Link>
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -9,6 +9,7 @@ const translations = {
       items: ['Platform', 'Modules', 'Client Portal', 'Security', 'Insights'] as string[],
       signIn: 'Sign in',
       requestAccess: 'Request Access',
+      back: 'Back',
     },
     landing: {
       badge: 'Minerva OS · Intelligence for Agencies',
@@ -27,12 +28,35 @@ const translations = {
         logo: 'Minerva OS',
         headline: 'The operating system\nfor elite agencies.',
         subheading: 'Centralize clients, projects, approvals and billing in one seamless, high-performance workspace.',
-        navLinks: ['Platform', 'Modules', 'Security', 'Insights'] as string[],
         chatButton: 'Get Started',
         exploreButton: 'Sign In',
         tag: 'CRM · Projects · Billing · AI',
         changelogTitle: "What's new",
         changelogSub: 'Latest releases and improvements to Minerva OS',
+        sections: {
+          features: {
+            heading: 'Everything your agency needs.',
+            cards: [
+              { title: 'CRM Pipeline', desc: 'Track leads, deals and accounts in a single high-signal view.' },
+              { title: 'Projects', desc: 'Kanban, tasks and timelines — from kickoff to final delivery.' },
+              { title: 'Billing', desc: 'Retainers, invoices and Stripe payments in one place.' },
+              { title: 'AI Automation', desc: 'Hermes AI watches risks, drafts proposals and surfaces insights.' },
+              { title: 'File Vault', desc: 'Secure asset storage with client-safe sharing and versioning.' },
+              { title: 'Client Portal', desc: 'A white-labeled space for approvals, files and communication.' },
+            ] as { title: string; desc: string }[],
+          },
+          stats: [
+            { value: '10 000+', label: 'Tasks managed' },
+            { value: '98%', label: 'Client satisfaction' },
+            { value: '< 3 min', label: 'Avg. onboarding' },
+          ] as { value: string; label: string }[],
+          cta: {
+            heading: 'Your agency, elevated.',
+            sub: 'Join the agencies already running on Minerva OS.',
+            primary: 'Get Started',
+            secondary: 'Sign In',
+          },
+        },
         releases: [
           {
             version: 'v1.9.0',
@@ -861,6 +885,7 @@ const translations = {
       items: ['Plateforme', 'Modules', 'Portail Client', 'Sécurité', 'Rapports'] as string[],
       signIn: 'Se connecter',
       requestAccess: "Demander l'accès",
+      back: 'Retour',
     },
     landing: {
       badge: 'Minerva OS · Intelligence pour Agences',
@@ -879,12 +904,35 @@ const translations = {
         logo: 'Minerva OS',
         headline: 'Le systeme d\'exploitation\npour agences d\'elite.',
         subheading: 'Centralisez clients, projets, approbations et facturation dans un espace de travail fluide et performant.',
-        navLinks: ['Plateforme', 'Modules', 'Securite', 'Rapports'] as string[],
         chatButton: 'Commencer',
         exploreButton: 'Se connecter',
         tag: 'CRM · Projets · Facturation · IA',
         changelogTitle: 'Nouveautés',
         changelogSub: 'Dernières versions et améliorations de Minerva OS',
+        sections: {
+          features: {
+            heading: 'Tout ce dont votre agence a besoin.',
+            cards: [
+              { title: 'Pipeline CRM', desc: 'Suivez vos leads, deals et comptes dans une vue claire et précise.' },
+              { title: 'Projets', desc: 'Kanban, tâches et timelines — du lancement à la livraison finale.' },
+              { title: 'Facturation', desc: 'Retainers, factures et paiements Stripe centralisés.' },
+              { title: 'Automatisation IA', desc: 'Hermes surveille les risques, rédige des propositions et génère des insights.' },
+              { title: 'Coffre de fichiers', desc: 'Stockage sécurisé avec partage client et gestion des versions.' },
+              { title: 'Portail Client', desc: 'Un espace blanc pour les approbations, fichiers et communications.' },
+            ] as { title: string; desc: string }[],
+          },
+          stats: [
+            { value: '10 000+', label: 'Tâches gérées' },
+            { value: '98%', label: 'Satisfaction client' },
+            { value: '< 3 min', label: 'Onboarding moyen' },
+          ] as { value: string; label: string }[],
+          cta: {
+            heading: 'Votre agence, au sommet.',
+            sub: 'Rejoignez les agences qui fonctionnent déjà sur Minerva OS.',
+            primary: 'Commencer',
+            secondary: 'Se connecter',
+          },
+        },
         releases: [
           {
             version: 'v1.9.0',
