@@ -1,9 +1,12 @@
 'use client';
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Download, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import type { InvoiceStatus } from '@/lib/types';
+import { toast } from 'sonner';
+
 
 const STATUS_CONFIG: Record<InvoiceStatus, { label: string; class: string }> = {
   draft:     { label: 'Draft',    class: 'text-[#8A9099] bg-[#8A9099]/10 border-[#8A9099]/20' },
@@ -18,9 +21,38 @@ function fmt(amount: number, currency: string) {
 }
 
 export default function PortalInvoices() {
-  const { isValid, invoices: rawInvoices, projects } = usePortalData();
+  const { isValid, invoices: rawInvoices, projects, token } = usePortalData();
+  const [payingId, setPayingId] = useState<string | null>(null);
 
   if (!isValid) return null;
+
+  async function handlePay(invoice: any) {
+    if (payingId) return;
+    setPayingId(invoice.id);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          invoiceId: invoice.id,
+          amount: invoice.amount,
+          successUrl: `/portal/${token}/invoices?success=true`,
+          cancelUrl: `/portal/${token}/invoices?cancelled=true`,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to create payment session.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Payment initiation failed.');
+    } finally {
+      setPayingId(null);
+    }
+  }
 
   // Map to local UI format
   const invoices = rawInvoices.map((inv: any) => {
@@ -122,7 +154,9 @@ export default function PortalInvoices() {
               <div className="flex items-center gap-2 shrink-0">
                 {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'pending') && (
                   <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
+                    onClick={() => handlePay(invoice)}
+                    disabled={payingId !== null}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       backgroundColor: 'rgba(127,163,138,0.10)',
                       border: '1px solid rgba(127,163,138,0.22)',
@@ -130,7 +164,7 @@ export default function PortalInvoices() {
                     }}
                   >
                     <CreditCard size={12} />
-                    Pay
+                    {payingId === invoice.id ? 'Paying...' : 'Pay'}
                   </button>
                 )}
                 <button
