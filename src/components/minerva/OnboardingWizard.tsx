@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { FlickeringGrid } from '@/components/ui/flickering-grid';
 
 const STEPS = [
   { id: 'workspace', label: 'Workspace', description: 'Set up your workspace identity' },
@@ -267,8 +268,24 @@ export function OnboardingWizard() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0D14', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ width: '100%', maxWidth: 520 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0D14', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden' }}>
+      {/* Flickering grid background */}
+      <FlickeringGrid
+        className="absolute inset-0 z-0"
+        color="#ffffff"
+        maxOpacity={0.12}
+        squareSize={4}
+        gridGap={7}
+        flickerChance={0.06}
+      />
+      {/* Radial vignette */}
+      <div
+        style={{
+          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse 70% 60% at 50% 50%, transparent 20%, #0A0D14 100%)',
+        }}
+      />
+      <div style={{ width: '100%', maxWidth: 520, position: 'relative', zIndex: 2 }}>
         <div style={{ marginBottom: 16 }}>
           <h1 style={{ color: '#F5F1E8', fontSize: 14, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>
             Minerva OS

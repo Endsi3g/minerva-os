@@ -24,13 +24,13 @@ const translations = {
         earlyAccess: 'Early access',
       },
       vex: {
-        logo: 'VEX',
-        headline: 'Shaping tomorrow\nwith vision and action.',
-        subheading: 'We back visionaries and craft ventures that define what comes next.',
-        navLinks: ['Story', 'Investing', 'Building', 'Advisory'] as string[],
-        chatButton: 'Start a Chat',
-        exploreButton: 'Explore Now',
-        tag: 'Investing. Building. Advisory.',
+        logo: 'Minerva OS',
+        headline: 'The operating system\nfor elite agencies.',
+        subheading: 'Centralize clients, projects, approvals and billing in one seamless, high-performance workspace.',
+        navLinks: ['Platform', 'Modules', 'Security', 'Insights'] as string[],
+        chatButton: 'Get Started',
+        exploreButton: 'Sign In',
+        tag: 'CRM · Projects · Billing · AI',
         changelogTitle: "What's new",
         changelogSub: 'Latest releases and improvements to Minerva OS',
         releases: [
@@ -39,11 +39,11 @@ const translations = {
             date: 'May 2026',
             tag: 'Major',
             items: [
-              'VEX Ventures hero with cinematic video background and animated typography',
+              'Minerva OS landing hero with cinematic video background and animated typography',
               'Supabase live auth connected · real session management replaces placeholders',
-              'Multi-step onboarding wizard flows from sign-up into studio configuration',
+              'Onboarding wizard separated to dedicated /app/onboarding page',
               'Cult UI integration · StripeBgGuides, TextureOverlay, TextureButton on Login',
-              'Aurora sign-up page with split-screen video hero and staggered entry form',
+              'Signup page with split-screen video hero, green hue, and staggered entry form',
             ] as string[],
           },
           {
@@ -104,7 +104,7 @@ const translations = {
       }
     },
     signup: {
-      leftHeading: 'Join Aurora',
+      leftHeading: 'Join Minerva',
       leftDesc: 'Follow these 3 quick phases to activate your space.',
       steps: ['Register your identity', 'Configure your studio', 'Finalize your profile'] as string[],
       heading: 'Create New Profile',
@@ -876,13 +876,13 @@ const translations = {
         earlyAccess: 'Acces anticipé',
       },
       vex: {
-        logo: 'VEX',
-        headline: 'Façonner l\'avenir\navec vision et action.',
-        subheading: 'Nous soutenons les visionnaires et créons les entreprises qui définissent l\'avenir.',
-        navLinks: ['Histoire', 'Investissement', 'Construction', 'Conseil'] as string[],
-        chatButton: 'Lancer un Chat',
-        exploreButton: 'Explorer Maintenant',
-        tag: 'Investissement. Construction. Conseil.',
+        logo: 'Minerva OS',
+        headline: 'Le systeme d\'exploitation\npour agences d\'elite.',
+        subheading: 'Centralisez clients, projets, approbations et facturation dans un espace de travail fluide et performant.',
+        navLinks: ['Plateforme', 'Modules', 'Securite', 'Rapports'] as string[],
+        chatButton: 'Commencer',
+        exploreButton: 'Se connecter',
+        tag: 'CRM · Projets · Facturation · IA',
         changelogTitle: 'Nouveautés',
         changelogSub: 'Dernières versions et améliorations de Minerva OS',
         releases: [
@@ -891,11 +891,11 @@ const translations = {
             date: 'Mai 2026',
             tag: 'Majeur',
             items: [
-              'Héro VEX Ventures avec vidéo de fond cinématique et typographie animée',
+              'Heros Minerva OS avec vidéo de fond cinématique et typographie animée',
               'Auth Supabase connectée · gestion de session réelle en remplacement des espaces réservés',
-              'Flux d\'inscription multi-étapes avec configuration du studio intégrée',
+              'Wizard d\'onboarding séparé sur la page dédiée /app/onboarding',
               'Intégration Cult UI · StripeBgGuides, TextureOverlay, TextureButton sur Login',
-              'Page d\'inscription Aurora avec héro vidéo splitté et formulaire animé',
+              'Page d\'inscription avec héro vidéo splitté, teinte verte et formulaire animé',
             ] as string[],
           },
           {
@@ -956,7 +956,7 @@ const translations = {
       }
     },
     signup: {
-      leftHeading: 'Rejoindre Aurora',
+      leftHeading: 'Rejoindre Minerva',
       leftDesc: 'Suivez ces 3 etapes rapides pour activer votre espace.',
       steps: ['Enregistrez votre identité', 'Configurez votre studio', 'Finalisez votre profil'] as string[],
       heading: 'Créer un profil',

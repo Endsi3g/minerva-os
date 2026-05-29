@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useLang } from '@/i18n';
 import { cn } from '@/lib/utils';
 
-// Video URL from VEX Ventures specification
+// Video URL for Minerva OS landing
 const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4';
 
 interface FadeInProps {
@@ -155,9 +155,9 @@ export default function Landing() {
             ))}
           </div>
 
-          {/* Start a Chat Button */}
+          {/* Get Started Button */}
           <Link
-            href="/signup"
+            href="/welcome"
             className="bg-white text-black px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
           >
             {vex.chatButton}
@@ -187,7 +187,7 @@ export default function Landing() {
             <FadeIn delay={1200} duration={1000}>
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/signup"
+                  href="/welcome"
                   className="bg-white text-black px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors cursor-pointer text-center text-sm"
                 >
                   {vex.chatButton}
