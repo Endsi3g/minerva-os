@@ -48,11 +48,26 @@ export function usePresence(location?: string) {
             location: location || 'dashboard',
             online_at: new Date().toISOString(),
           });
+          // Also track in db presence table
+          await supabase.from('presence').upsert({
+            user: user.email,
+            last_active: Date.now(),
+            status: 'online',
+            location: location || 'dashboard',
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user' });
         }
       });
 
     return () => {
       channel.unsubscribe();
+      if (user?.email) {
+        supabase.from('presence').update({
+          status: 'offline',
+          last_active: Date.now(),
+          updated_at: new Date().toISOString()
+        }).eq('user', user.email).then();
+      }
     };
   }, [user?.email, user?.id, user?.name, location]);
 
