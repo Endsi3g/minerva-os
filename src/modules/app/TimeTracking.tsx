@@ -1,10 +1,15 @@
 'use client';
-import { useState } from 'react';
-import { Clock, Download, Filter as FilterIcon, Trash2 } from 'lucide-react';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useState, useEffect } from 'react';
+import { Clock, Download, Filter as FilterIcon, Trash2, Plus } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 function formatDuration(minutes: number) {
   const h = Math.floor(minutes / 60);
@@ -38,15 +43,82 @@ function groupByDay(entries: any[]) {
 type Filter = 'week' | 'month' | 'all';
 
 export default function TimeTracking() {
+  const { user } = useAuth();
+  const userId = user?.email ?? 'anonymous';
   const [filter, setFilter] = useState<Filter>('week');
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const [form, setForm] = useState({
+    projectId: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0],
+    hours: '',
+    billable: true,
+  });
 
-  const workspaceList = useQuery(api.workspaces.list, {});
-  const workspace = workspaceList?.[0];
-  const entries = useQuery(
-    api.timeEntries.list,
-    workspace ? { workspaceId: workspace._id } : 'skip'
-  ) ?? [];
-  const removeEntry = useMutation(api.timeEntries.remove);
+  const [entries, setEntries] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      const wsRes = await supabase.from('workspaces').select('id').limit(1);
+      const wid = wsRes.data?.[0]?.id;
+      if (!wid) return;
+      const [entRes, projRes] = await Promise.all([
+        supabase.from('time_entries').select('*').eq('workspace_id', wid).order('start_time', { ascending: false }),
+        supabase.from('projects').select('id,name').eq('workspace_id', wid),
+      ]);
+      setEntries((entRes.data ?? []).map((e: any) => ({ ...e, startTime: new Date(e.start_time).getTime(), endTime: new Date(e.end_time).getTime() })));
+      setProjects(projRes.data ?? []);
+    }
+    load();
+  }, []);
+
+  async function handleLogTime() {
+    const wsRes = await supabase.from('workspaces').select('id').limit(1);
+    const wid = wsRes.data?.[0]?.id;
+    if (!wid) {
+      toast.error('Please fill all required fields.');
+      return;
+    }
+    if (!form.description || !form.hours || !form.date) {
+      toast.error('Please fill all required fields.');
+      return;
+    }
+
+    const duration = Math.round(parseFloat(form.hours) * 60);
+    const dateObj = new Date(form.date);
+    const startTime = dateObj.getTime();
+    const endTime = startTime + duration * 60 * 1000;
+
+    try {
+      const { data } = await supabase.from('time_entries').insert({
+        workspace_id: wid,
+        user_id: userId,
+        project_id: form.projectId || null,
+        description: form.description,
+        start_time: new Date(dateObj).toISOString(),
+        end_time: new Date(endTime).toISOString(),
+        duration,
+        billable: form.billable,
+      }).select().single();
+      if (data) {
+        const mapped = { ...data, startTime: new Date(data.start_time).getTime(), endTime: new Date(data.end_time).getTime() };
+        setEntries(prev => [mapped, ...prev]);
+      }
+      toast.success('Time entry logged successfully.');
+      setLogSheetOpen(false);
+      setForm({
+        projectId: '',
+        description: '',
+        date: new Date().toISOString().split('T')[0],
+        hours: '',
+        billable: true,
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to log time.');
+    }
+  }
 
   const now = Date.now();
   const cutoffs: Record<Filter, number> = {
@@ -92,10 +164,16 @@ export default function TimeTracking() {
           <h1 className="text-2xl font-semibold text-ivory">Time Tracking</h1>
           <p className="text-sm text-fog mt-0.5">Track billable hours across projects and clients.</p>
         </div>
-        <Button size="sm" variant="ghost" onClick={exportCSV} className="text-fog hover:text-ivory gap-1.5">
-          <Download size={14} />
-          Export CSV
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setLogSheetOpen(true)}>
+            <Plus size={14} />
+            Log Time
+          </Button>
+          <Button size="sm" variant="ghost" onClick={exportCSV} className="text-fog hover:text-ivory gap-1.5">
+            <Download size={14} />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Summary KPIs */}
@@ -181,7 +259,7 @@ export default function TimeTracking() {
                           {formatDuration(entry.duration)}
                         </span>
                         <button
-                          onClick={() => removeEntry({ id: entry._id })}
+                          onClick={async () => { await supabase.from('time_entries').delete().eq('id', entry.id); setEntries(prev => prev.filter(e => e.id !== entry.id)); }}
                           className="opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all"
                         >
                           <Trash2 size={12} />
@@ -195,6 +273,79 @@ export default function TimeTracking() {
           })}
         </div>
       )}
+      {/* Log Time Sheet */}
+      <Sheet open={logSheetOpen} onOpenChange={setLogSheetOpen}>
+        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+          <SheetHeader>
+            <SheetTitle>Log Time</SheetTitle>
+          </SheetHeader>
+
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="space-y-1.5">
+              <Label>Project (optional)</Label>
+              <Select
+                value={form.projectId}
+                onValueChange={v => setForm(f => ({ ...f, projectId: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Input
+                placeholder="What did you work on?"
+                value={form.description}
+                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Date</Label>
+              <Input
+                type="date"
+                value={form.date}
+                onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Duration (hours)</Label>
+              <Input
+                type="number"
+                step="0.25"
+                placeholder="1.5"
+                value={form.hours}
+                onChange={e => setForm(f => ({ ...f, hours: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <input
+                type="checkbox"
+                id="billable"
+                checked={form.billable}
+                onChange={e => setForm(f => ({ ...f, billable: e.target.checked }))}
+                className="rounded border-white/10 bg-midnight text-sage focus:ring-sage"
+              />
+              <Label htmlFor="billable" className="cursor-pointer text-xs font-normal">Billable</Label>
+            </div>
+          </div>
+
+          <Button className="w-full" onClick={handleLogTime}>
+            Log Time
+          </Button>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

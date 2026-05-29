@@ -1,9 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../../../convex/_generated/api';
 import { Check, FileText, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
@@ -12,16 +11,40 @@ function fmt(n: number) {
 export default function ProposalPortalPage() {
   const { token } = useParams<{ token: string }>();
 
-  const proposal = useQuery(api.proposals.getByToken as any, token ? { token } : 'skip');
-  const sign = useMutation(api.proposals.sign as any);
-  const decline = useMutation(api.proposals.decline as any);
-
+  const [proposal, setProposal] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [signedBy, setSignedBy] = useState('');
   const [signing, setSigning] = useState(false);
   const [declining, setDeclining] = useState(false);
   const [done, setDone] = useState<'signed' | 'declined' | null>(null);
 
-  if (proposal === undefined) {
+  useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    async function fetchProposal() {
+      const { data } = await supabase
+        .from('proposals')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+
+      if (data) {
+        setProposal({
+          ...data,
+          _id: data.id,
+          totalAmount: Number(data.total_amount),
+          validUntil: data.valid_until,
+          signedBy: data.signed_by,
+        });
+      }
+      setLoading(false);
+    }
+    fetchProposal();
+  }, [token]);
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0A0D14]">
         <Loader2 size={24} className="text-fog animate-spin" />
@@ -77,16 +100,40 @@ export default function ProposalPortalPage() {
     e.preventDefault();
     if (!signedBy.trim()) return;
     setSigning(true);
-    await sign({ token, signedBy: signedBy.trim() });
-    setDone('signed');
-    setSigning(false);
+    try {
+      const { error } = await supabase
+        .from('proposals')
+        .update({
+          status: 'signed',
+          signed_at: new Date().toISOString(),
+          signed_by: signedBy.trim(),
+        })
+        .eq('token', token);
+      if (!error) {
+        setDone('signed');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSigning(false);
+    }
   }
 
   async function handleDecline() {
     setDeclining(true);
-    await decline({ token });
-    setDone('declined');
-    setDeclining(false);
+    try {
+      const { error } = await supabase
+        .from('proposals')
+        .update({ status: 'declined' })
+        .eq('token', token);
+      if (!error) {
+        setDone('declined');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeclining(false);
+    }
   }
 
   return (

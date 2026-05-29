@@ -8,16 +8,13 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
-import { useQuery, useMutation } from 'convex/react';
 import * as Notifications from 'expo-notifications';
 import * as Haptics from 'expo-haptics';
 import { TimerControls } from '@/components/TimerControls';
 import { useMobileLang } from '@/lib/i18n';
 import { useAppAuth } from '@/lib/auth';
 import { storeActiveTimerStart, clearActiveTimerStart } from '@/lib/backgroundTimer';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 function formatElapsed(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
@@ -27,7 +24,8 @@ function formatElapsed(ms: number): string {
   return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
 }
 
-type Project = { _id: string; name: string };
+type Project = { id: string; name: string };
+type ActiveTimer = { id: string; description: string; start_time: string; project_id: string | null };
 
 export default function Timer() {
   const { t } = useMobileLang();
@@ -36,25 +34,50 @@ export default function Timer() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [activeTimer, setActiveTimer] = useState<ActiveTimer | null>(null);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
   const userEmail = user?.email ?? '';
 
-  const activeTimer = useQuery(api.timers.getActive, { userId: userEmail });
-  const projects = (useQuery(api.projects.list, workspaceId ? { workspaceId } : 'skip') ?? []) as Project[];
+  // Load workspace + projects + active timer
+  useEffect(() => {
+    async function load() {
+      const wsRes = await supabase.from('workspaces').select('id').limit(1);
+      const wid = wsRes.data?.[0]?.id;
+      if (!wid) return;
+      setWorkspaceId(wid);
 
-  const startTimer = useMutation(api.timers.start);
-  const stopTimer = useMutation(api.timers.stop);
-  const cancelTimer = useMutation(api.timers.cancel);
+      const [projectsRes, timerRes] = await Promise.all([
+        supabase.from('projects').select('id,name').eq('workspace_id', wid).eq('status', 'active'),
+        supabase.from('active_timers').select('*').eq('user_id', userEmail).maybeSingle(),
+      ]);
+      setProjects(projectsRes.data ?? []);
+      setActiveTimer(timerRes.data ?? null);
+    }
+    if (userEmail) load();
+  }, [userEmail]);
+
+  // Subscribe to active_timers changes
+  useEffect(() => {
+    if (!userEmail) return;
+    const channel = supabase
+      .channel('active-timer-' + userEmail)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'active_timers', filter: `user_id=eq.${userEmail}` }, () => {
+        supabase.from('active_timers').select('*').eq('user_id', userEmail).maybeSingle()
+          .then(({ data }) => setActiveTimer(data ?? null));
+      })
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, [userEmail]);
 
   const isRunning = Boolean(activeTimer);
 
   // Tick interval
   useEffect(() => {
     if (isRunning && activeTimer) {
-      const startTime = activeTimer.startTime as number;
+      const startTime = new Date(activeTimer.start_time).getTime();
       const update = () => setElapsed(Date.now() - startTime);
       update();
       intervalRef.current = setInterval(update, 1000);
@@ -69,11 +92,12 @@ export default function Timer() {
     if (!description.trim() || !workspaceId) return;
     setLoading(true);
     try {
-      await startTimer({
-        workspaceId,
-        userId: userEmail,
-        projectId: selectedProjectId as Parameters<typeof startTimer>[0]['projectId'] ?? undefined,
+      await supabase.from('active_timers').insert({
+        workspace_id: workspaceId,
+        user_id: userEmail,
+        project_id: selectedProjectId ?? null,
         description: description.trim(),
+        start_time: new Date().toISOString(),
       });
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       storeActiveTimerStart(Date.now());
@@ -91,9 +115,22 @@ export default function Timer() {
   }
 
   async function handleStop() {
+    if (!activeTimer || !workspaceId) return;
     setLoading(true);
     try {
-      await stopTimer({ userId: userEmail, workspaceId, billable: true });
+      const startTime = new Date(activeTimer.start_time).getTime();
+      const durationMs = Date.now() - startTime;
+      await supabase.from('time_entries').insert({
+        workspace_id: workspaceId,
+        user_id: userEmail,
+        project_id: activeTimer.project_id ?? null,
+        description: activeTimer.description,
+        start_time: startTime,
+        end_time: Date.now(),
+        duration: Math.round(durationMs / 60000),
+        billable: true,
+      });
+      await supabase.from('active_timers').delete().eq('user_id', userEmail);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       clearActiveTimerStart();
       await Notifications.dismissAllNotificationsAsync();
@@ -110,7 +147,7 @@ export default function Timer() {
       {
         text: t.timer.discard, style: 'destructive',
         onPress: async () => {
-          await cancelTimer({ userId: userEmail });
+          await supabase.from('active_timers').delete().eq('user_id', userEmail);
           clearActiveTimerStart();
           await Notifications.dismissAllNotificationsAsync();
           setDescription('');
@@ -132,7 +169,7 @@ export default function Timer() {
         <TimerControls
           isRunning={isRunning}
           elapsed={formatElapsed(elapsed)}
-          description={isRunning ? (activeTimer?.description as string) ?? '' : ''}
+          description={isRunning ? (activeTimer?.description ?? '') : ''}
           onStart={handleStart}
           onStop={handleStop}
           loading={loading}
@@ -160,21 +197,21 @@ export default function Timer() {
           {/* Project selector */}
           <Text className="text-fog text-xs uppercase tracking-widest mt-2">{t.timer.project}</Text>
           <FlatList
-            data={[{ _id: '', name: t.timer.noProject }, ...projects]}
-            keyExtractor={item => item._id}
+            data={[{ id: '', name: t.timer.noProject }, ...projects]}
+            keyExtractor={item => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => setSelectedProjectId(item._id || null)}
+                onPress={() => setSelectedProjectId(item.id || null)}
                 className="mr-2 px-3 py-1.5 rounded-xl border"
                 style={{
-                  borderColor: selectedProjectId === (item._id || null) ? '#7FA38A' : 'rgba(255,255,255,0.1)',
-                  backgroundColor: selectedProjectId === (item._id || null) ? '#7FA38A20' : '#111522',
+                  borderColor: selectedProjectId === (item.id || null) ? '#7FA38A' : 'rgba(255,255,255,0.1)',
+                  backgroundColor: selectedProjectId === (item.id || null) ? '#7FA38A20' : '#111522',
                 }}
               >
                 <Text
-                  style={{ color: selectedProjectId === (item._id || null) ? '#7FA38A' : '#8A9099', fontSize: 12 }}
+                  style={{ color: selectedProjectId === (item.id || null) ? '#7FA38A' : '#8A9099', fontSize: 12 }}
                   numberOfLines={1}
                 >
                   {item.name}

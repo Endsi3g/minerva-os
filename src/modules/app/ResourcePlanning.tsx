@@ -1,14 +1,27 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Users, X, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
-type Member = Record<string, unknown>;
-type Task = Record<string, unknown>;
+type Member = {
+  id: string;
+  _id: string;
+  display_name: string;
+  displayName: string;
+  weekly_hours: number;
+  weeklyHours: number;
+  role?: string;
+};
+
+type Task = {
+  assignee?: string;
+  assignedTo?: string;
+  status?: string;
+  estimatedHours?: number;
+};
 
 function CapacityBar({ used, total }: { used: number; total: number }) {
   const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0;
@@ -32,10 +45,17 @@ function CapacityBar({ used, total }: { used: number; total: number }) {
   );
 }
 
-function AddMemberForm({ workspaceId, onClose }: { workspaceId: string | undefined; onClose: () => void }) {
+function AddMemberForm({
+  workspaceId,
+  onClose,
+  onAdd,
+}: {
+  workspaceId: string;
+  onClose: () => void;
+  onAdd: (m: Member) => void;
+}) {
   const { t } = useLang();
   const f = t.app.resources.form;
-  const upsert = useMutation(api.resources.upsertMember as Parameters<typeof useMutation>[0]);
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [hours, setHours] = useState('40');
@@ -45,9 +65,56 @@ function AddMemberForm({ workspaceId, onClose }: { workspaceId: string | undefin
     e.preventDefault();
     if (!name) return;
     setSaving(true);
-    const userId = name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
-    await upsert({ workspaceId, userId, displayName: name, weeklyHours: Number(hours), role: role || undefined });
-    onClose();
+    try {
+      // 1. Create a user profile first to satisfy foreign key constraint
+      const { data: profile, error: pError } = await supabase
+        .from('user_profiles')
+        .insert({
+          workspace_id: workspaceId,
+          name,
+          role: 'developer',
+          email: `member_${Date.now()}@uprisingstudio.com`,
+          onboarding_completed: true,
+        })
+        .select()
+        .single();
+
+      if (pError) throw pError;
+
+      if (profile) {
+        // 2. Create the member availability
+        const { data: member, error: mError } = await supabase
+          .from('member_availability')
+          .insert({
+            workspace_id: workspaceId,
+            user_id: profile.id,
+            display_name: name,
+            weekly_hours: Number(hours),
+            role: role || undefined,
+          })
+          .select()
+          .single();
+
+        if (mError) throw mError;
+
+        if (member) {
+          onAdd({
+            id: member.id,
+            _id: member.id,
+            display_name: member.display_name,
+            displayName: member.display_name,
+            weekly_hours: Number(member.weekly_hours),
+            weeklyHours: Number(member.weekly_hours),
+            role: member.role || undefined,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to add member:', err);
+    } finally {
+      setSaving(false);
+      onClose();
+    }
   }
 
   return (
@@ -58,25 +125,42 @@ function AddMemberForm({ workspaceId, onClose }: { workspaceId: string | undefin
         style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.1)' }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-ivory">{f.title}</h2>
-          <button type="button" onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
+        <div className="flex items-center justify-between pb-2 border-b border-white/5">
+          <h3 className="text-sm font-semibold text-ivory">{f.title}</h3>
+          <button type="button" onClick={onClose} className="text-fog hover:text-ivory"><X size={14} /></button>
         </div>
         <div className="space-y-3">
-          <input value={name} onChange={e => setName(e.target.value)} placeholder={f.namePlaceholder}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
-          <input value={role} onChange={e => setRole(e.target.value)} placeholder={f.rolePlaceholder}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
-          <div className="flex items-center gap-3">
-            <label className="text-xs text-fog shrink-0">{f.weeklyCapacity}</label>
-            <input type="number" value={hours} onChange={e => setHours(e.target.value)} min="1" max="80"
-              className="flex-1 px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+          <div className="space-y-1">
+            <label className="text-[10px] text-fog uppercase tracking-wider">{f.namePlaceholder}</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full text-xs bg-midnight border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none focus:border-sage"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-fog uppercase tracking-wider">{f.rolePlaceholder}</label>
+            <input
+              type="text"
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              className="w-full text-xs bg-midnight border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none focus:border-sage"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-fog uppercase tracking-wider">{f.weeklyCapacity}</label>
+            <input
+              type="number"
+              required
+              value={hours}
+              onChange={e => setHours(e.target.value)}
+              className="w-full text-xs bg-midnight border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none focus:border-sage"
+            />
           </div>
         </div>
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-2 pt-2">
           <button type="button" onClick={onClose} className="flex-1 py-2 text-xs text-fog hover:text-silver">{f.cancel}</button>
           <Button type="submit" size="sm" className="flex-1" disabled={saving}>{f.save}</Button>
         </div>
@@ -88,28 +172,65 @@ function AddMemberForm({ workspaceId, onClose }: { workspaceId: string | undefin
 export default function ResourcePlanning() {
   const { t } = useLang();
   const res = t.app.resources;
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
 
-  const members = useQuery(api.resources.listMembers as Parameters<typeof useQuery>[0], workspaceId ? { workspaceId } : 'skip') ?? [];
-  const tasks = useQuery(api.tasks.get as Parameters<typeof useQuery>[0], workspaceId ? { workspaceId } : 'skip') ?? [];
-  const removeMember = useMutation(api.resources.removeMember as Parameters<typeof useMutation>[0]);
-
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
 
-  const typedMembers = members as Member[];
-  const typedTasks = tasks as Task[];
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
 
-  // Compute assigned hours per member (from tasks with assignedTo). Assumes 2h per open task.
-  function getAssignedHours(displayName: string): number {
-    return typedTasks.filter(
-      (task) => task.assignedTo === displayName && task.status !== 'done'
-    ).length * 2;
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function fetchData() {
+      const [{ data: mData }, { data: tData }] = await Promise.all([
+        supabase.from('member_availability').select('*').eq('workspace_id', workspaceId),
+        supabase.from('tasks').select('*').eq('workspace_id', workspaceId),
+      ]);
+      if (mData) {
+        setMembers(mData.map(m => ({
+          id: m.id,
+          _id: m.id,
+          display_name: m.display_name,
+          displayName: m.display_name,
+          weekly_hours: Number(m.weekly_hours),
+          weeklyHours: Number(m.weekly_hours),
+          role: m.role || undefined,
+        })));
+      }
+      if (tData) {
+        setTasks(tData.map(t => ({
+          assignee: t.assignee,
+          assignedTo: t.assignee,
+          status: t.status,
+          estimatedHours: t.estimated_hours ? Number(t.estimated_hours) : 2,
+        })));
+      }
+    }
+    fetchData();
+  }, [workspaceId]);
+
+  async function removeMember(id: string) {
+    await supabase.from('member_availability').delete().eq('id', id);
+    setMembers(prev => prev.filter(m => m.id !== id));
   }
 
-  const overloaded = typedMembers.filter(m => getAssignedHours(m.displayName as string) > (m.weeklyHours as number));
-  const totalCapacity = typedMembers.reduce((acc, m) => acc + (m.weeklyHours as number), 0);
-  const totalAssigned = typedMembers.reduce((acc, m) => acc + getAssignedHours(m.displayName as string), 0);
+  // Compute assigned hours per member (from tasks with assignee or assignedTo).
+  function getAssignedHours(displayName: string): number {
+    return tasks
+      .filter((task) => (task.assignee === displayName || task.assignedTo === displayName) && task.status !== 'done')
+      .reduce((sum, t) => sum + (t.estimatedHours ?? 2), 0);
+  }
+
+  const overloaded = members.filter(m => getAssignedHours(m.displayName) > m.weeklyHours);
+  const totalCapacity = members.reduce((acc, m) => acc + m.weeklyHours, 0);
+  const totalAssigned = members.reduce((acc, m) => acc + getAssignedHours(m.displayName), 0);
 
   const kpis = [
     { label: res.kpis.totalCapacity, value: `${totalCapacity}h`, color: 'text-ivory' },
@@ -120,15 +241,19 @@ export default function ResourcePlanning() {
 
   return (
     <>
-      {showForm && (
-        <AddMemberForm workspaceId={workspaceId} onClose={() => setShowForm(false)} />
+      {showForm && workspaceId && (
+        <AddMemberForm
+          workspaceId={workspaceId}
+          onClose={() => setShowForm(false)}
+          onAdd={(newMember) => setMembers(prev => [...prev, newMember])}
+        />
       )}
 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-ivory">{res.title}</h1>
           <p className="text-sm text-fog mt-0.5">
-            {res.memberCount.replace('{{count}}', String(typedMembers.length)).replace('{{capacity}}', String(Math.round(totalCapacity)))}
+            {res.memberCount.replace('{{count}}', String(members.length)).replace('{{capacity}}', String(Math.round(totalCapacity)))}
           </p>
         </div>
         <Button size="sm" onClick={() => setShowForm(true)}>
@@ -156,14 +281,14 @@ export default function ResourcePlanning() {
           </div>
           <div className="flex flex-wrap gap-2">
             {overloaded.map(m => (
-              <span key={m._id as string} className="text-xs text-ember bg-ember/10 px-2 py-0.5 rounded-full">{m.displayName as string}</span>
+              <span key={m._id} className="text-xs text-ember bg-ember/10 px-2 py-0.5 rounded-full">{m.displayName}</span>
             ))}
           </div>
         </div>
       )}
 
       {/* Member capacity bars */}
-      {typedMembers.length === 0 ? (
+      {members.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <Users size={36} className="text-fog/30" />
           <p className="text-sm text-fog">{res.noMembers}</p>
@@ -175,31 +300,31 @@ export default function ResourcePlanning() {
         </div>
       ) : (
         <div className="space-y-3">
-          {typedMembers.map((member) => {
-            const assigned = getAssignedHours(member.displayName as string);
+          {members.map((member) => {
+            const assigned = getAssignedHours(member.displayName);
             return (
               <div
-                key={member._id as string}
+                key={member._id}
                 className="rounded-xl p-4 border border-border bg-card group"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-dusk border border-white/10 flex items-center justify-center text-xs font-medium text-silver">
-                      {(member.displayName as string).split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
+                      {member.displayName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-ivory">{member.displayName as string}</p>
-                      {Boolean(member.role) && <p className="text-[10px] text-fog">{member.role as string}</p>}
+                      <p className="text-sm font-medium text-ivory">{member.displayName}</p>
+                      {Boolean(member.role) && <p className="text-[10px] text-fog">{member.role}</p>}
                     </div>
                   </div>
                   <button
-                    onClick={() => removeMember({ id: member._id as Parameters<typeof removeMember>[0]['id'] })}
+                    onClick={() => removeMember(member._id)}
                     className="opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-6 w-6 flex items-center justify-center rounded"
                   >
                     <X size={11} />
                   </button>
                 </div>
-                <CapacityBar used={assigned} total={member.weeklyHours as number} />
+                <CapacityBar used={assigned} total={member.weeklyHours} />
               </div>
             );
           })}

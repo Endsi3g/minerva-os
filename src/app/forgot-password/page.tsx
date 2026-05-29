@@ -1,10 +1,9 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuthActions } from '@convex-dev/auth/react';
+import { supabase } from '@/lib/supabase';
 
 export default function ForgotPasswordPage() {
-  const { signIn } = useAuthActions();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -15,7 +14,10 @@ export default function ForgotPasswordPage() {
     setError('');
     setLoading(true);
     try {
-      await signIn('password', { email, flow: 'reset' });
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (err) throw err;
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');

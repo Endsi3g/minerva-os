@@ -1,6 +1,5 @@
 import { FlatList, View, Text, TextInput, TouchableOpacity, RefreshControl, Linking } from 'react-native';
 import { router } from 'expo-router';
-import { useQuery } from 'convex/react';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/Header';
@@ -9,17 +8,15 @@ import { StatusPill } from '@/components/StatusPill';
 import { SwipeableRow } from '@/components/SwipeableRow';
 import { useMobileLang } from '@/lib/i18n';
 import { trackScreen } from '@/lib/analytics';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 type Client = {
-  _id: string;
+  id: string;
   company: string;
   contact: string;
   email: string;
   status: string;
-  monthlyValue?: number;
+  monthly_value?: number;
 };
 
 function fmt(n: number) {
@@ -40,13 +37,20 @@ export default function Clients() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
+  const [allClients, setAllClients] = useState<Client[]>([]);
   const debouncedSearch = useDebounce(search, 200);
 
   useEffect(() => { trackScreen('Clients'); }, []);
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-  const allClients = (useQuery(api.clients.list, workspaceId ? { workspaceId } : 'skip') ?? []) as Client[];
+  const loadData = useCallback(async () => {
+    const wsRes = await supabase.from('workspaces').select('id').limit(1);
+    const wid = wsRes.data?.[0]?.id;
+    if (!wid) return;
+    const { data } = await supabase.from('clients').select('*').eq('workspace_id', wid).order('company');
+    setAllClients(data ?? []);
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const clients = useMemo(() => {
     if (!debouncedSearch.trim()) return allClients;
@@ -58,10 +62,11 @@ export default function Clients() {
     );
   }, [allClients, debouncedSearch]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
   function ClientCard({ client }: { client: Client }) {
     return (
@@ -75,7 +80,7 @@ export default function Clients() {
         ]}
       >
         <TouchableOpacity
-          onPress={() => router.push({ pathname: '/(app)/clients/[id]', params: { id: client._id } })}
+          onPress={() => router.push({ pathname: '/(app)/clients/[id]', params: { id: client.id } })}
           style={{
             backgroundColor: '#111522',
             borderRadius: 16,
@@ -95,9 +100,9 @@ export default function Clients() {
             </View>
             <StatusPill status={client.status} />
           </View>
-          {client.monthlyValue !== undefined && client.monthlyValue > 0 ? (
+          {client.monthly_value !== undefined && client.monthly_value > 0 ? (
             <Text style={{ color: '#B8BDC7', fontSize: 12, marginTop: 8 }}>
-              {t.clients.monthlyValue}: {fmt(client.monthlyValue)}
+              {t.clients.monthlyValue}: {fmt(client.monthly_value)}
             </Text>
           ) : null}
         </TouchableOpacity>
@@ -128,7 +133,7 @@ export default function Clients() {
       </View>
       <FlatList
         data={clients}
-        keyExtractor={c => c._id}
+        keyExtractor={c => c.id}
         contentContainerStyle={{ paddingTop: 4, paddingBottom: 32 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7FA38A" />

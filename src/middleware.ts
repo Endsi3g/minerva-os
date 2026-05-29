@@ -1,17 +1,10 @@
-import {
-  convexAuthNextjsMiddleware,
-  createRouteMatcher,
-  nextjsMiddlewareRedirect,
-} from "@convex-dev/auth/nextjs/server";
+import { type NextRequest } from 'next/server';
+import { updateSession } from '@/lib/supabase/middleware';
 
-const isProtectedRoute = createRouteMatcher(["/app(.*)"]);
-
-export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+export async function middleware(request: NextRequest) {
   if (process.env.PLAYWRIGHT_TEST === '1') return;
-  if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
-    return nextjsMiddlewareRedirect(request, "/login");
-  }
-});
+  return await updateSession(request);
+}
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],

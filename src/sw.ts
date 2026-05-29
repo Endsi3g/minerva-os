@@ -37,11 +37,11 @@ const serwist = new Serwist({
         cacheName: 'images',
       }),
     },
-    // Convex API — network only (real-time, never cache)
+    // Supabase API — network only (never cache)
     {
-      matcher: ({ url }) => url.hostname.includes('convex.cloud'),
+      matcher: ({ url }) => url.hostname.includes('supabase.co'),
       handler: new NetworkFirst({
-        cacheName: 'convex-api',
+        cacheName: 'supabase-api',
         networkTimeoutSeconds: 5,
       }),
     },

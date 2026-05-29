@@ -1,4 +1,4 @@
-import { convexQuery, convexMutation } from '../convex-client.js';
+import { supabaseSelect, supabaseInsert, getWorkspaceId } from '../supabase-client.js';
 
 export const projectsTools = [
   {
@@ -7,18 +7,18 @@ export const projectsTools = [
     inputSchema: {
       type: 'object' as const,
       properties: {
-        status: { type: 'string', enum: ['active', 'completed', 'on_hold', 'cancelled'], description: 'Filter by status' },
+        status: { type: 'string', enum: ['active', 'completed', 'on_hold'], description: 'Filter by status' },
       },
       required: [],
     },
     async handler(args: Record<string, unknown>) {
-      const workspaces = await convexQuery('workspaces:list', {}) as any[];
-      const workspaceId = workspaces?.[0]?._id;
+      const workspaceId = await getWorkspaceId();
       if (!workspaceId) return { error: 'No workspace found.' };
 
-      const projects = await convexQuery('projects:list', { workspaceId }) as any[];
-      const filtered = args.status ? projects?.filter((p: any) => p.status === args.status) : projects;
-      return { projects: filtered ?? [], total: filtered?.length ?? 0 };
+      const params: Record<string, string> = { workspace_id: `eq.${workspaceId}`, order: 'due_date.asc' };
+      if (args.status) params.status = `eq.${args.status}`;
+      const projects = await supabaseSelect('projects', params) as any[];
+      return { projects: projects ?? [], total: projects?.length ?? 0 };
     },
   },
   {
@@ -28,7 +28,7 @@ export const projectsTools = [
       type: 'object' as const,
       properties: {
         name: { type: 'string', description: 'Project name (required)' },
-        clientId: { type: 'string', description: 'Client ID to associate the project with' },
+        clientName: { type: 'string', description: 'Client name for this project' },
         dueDate: { type: 'string', description: 'Due date in ISO format (YYYY-MM-DD)' },
         budget: { type: 'number', description: 'Project budget in USD' },
         description: { type: 'string', description: 'Project description' },
@@ -36,22 +36,21 @@ export const projectsTools = [
       required: ['name'],
     },
     async handler(args: Record<string, unknown>) {
-      const workspaces = await convexQuery('workspaces:list', {}) as any[];
-      const workspaceId = workspaces?.[0]?._id;
+      const workspaceId = await getWorkspaceId();
       if (!workspaceId) return { error: 'No workspace found.' };
 
       const now = new Date();
-      const dueDate = args.dueDate as string ?? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      const id = await convexMutation('projects:create', {
-        workspaceId,
+      const dueDate = args.dueDate as string ?? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const record = await supabaseInsert('projects', {
+        workspace_id: workspaceId,
         name: args.name,
-        ...(args.clientId ? { clientId: args.clientId } : {}),
-        dueDate,
-        ...(args.budget ? { budget: args.budget } : {}),
-        ...(args.description ? { description: args.description } : {}),
+        client_name: args.clientName ?? '',
+        due_date: dueDate,
+        budget: args.budget ?? 0,
+        description: args.description ?? '',
         status: 'active',
-      });
-      return { success: true, id, name: args.name };
+      }) as any;
+      return { success: true, id: record?.id, name: args.name };
     },
   },
 ];

@@ -16,7 +16,7 @@ export default function OfflinePage() {
       <div className="space-y-2">
         <h1 className="text-xl font-semibold" style={{ color: '#F5F1E8' }}>You're offline</h1>
         <p className="text-sm max-w-xs" style={{ color: '#8A9099' }}>
-          Minerva OS requires a connection to your Convex workspace. Check your network and try again.
+          Minerva OS requires a connection to your workspace. Check your network and try again.
         </p>
       </div>
 

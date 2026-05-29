@@ -1,12 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, Package, Tag, X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 type Tab = 'services' | 'packages';
 
@@ -26,8 +25,19 @@ function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 }
 
-function ServiceForm({ workspaceId, categories, onClose, t }: { workspaceId: any; categories: string[]; onClose: () => void; t: any }) {
-  const addService = useMutation(api.services.add);
+function ServiceForm({
+  workspaceId,
+  categories,
+  onClose,
+  t,
+  onAdd,
+}: {
+  workspaceId: string;
+  categories: string[];
+  onClose: () => void;
+  t: any;
+  onAdd: (s: any) => void;
+}) {
   const f = t.app.serviceCatalog.form;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -39,8 +49,27 @@ function ServiceForm({ workspaceId, categories, onClose, t }: { workspaceId: any
     e.preventDefault();
     if (!name || !basePrice) return;
     setSaving(true);
-    await addService({ workspaceId, name, description, basePrice: Number(basePrice), category });
-    onClose();
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .insert({
+          workspace_id: workspaceId,
+          name,
+          description,
+          base_price: Number(basePrice),
+          category,
+        })
+        .select()
+        .single();
+      if (!error && data) {
+        onAdd({ ...data, _id: data.id, basePrice: Number(data.base_price) });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+      onClose();
+    }
   }
 
   return (
@@ -86,16 +115,42 @@ export default function ServiceCatalog() {
   const { t } = useLang();
   const sc = t.app.serviceCatalog;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-
-  const services = useQuery(api.services.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const packages = useQuery(api.services.listPackages as any, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const removeService = useMutation(api.services.remove);
-
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
   const [tab, setTab] = useState<Tab>('services');
   const [query, setQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function fetchServicesAndPackages() {
+      const [{ data: sData }, { data: pData }] = await Promise.all([
+        supabase.from('services').select('*').eq('workspace_id', workspaceId),
+        supabase.from('packages').select('*').eq('workspace_id', workspaceId),
+      ]);
+      if (sData) {
+        setServices(sData.map(s => ({ ...s, _id: s.id, basePrice: Number(s.base_price) })));
+      }
+      if (pData) {
+        setPackages(pData.map(p => ({ ...p, _id: p.id, totalPrice: Number(p.total_price) })));
+      }
+    }
+    fetchServicesAndPackages();
+  }, [workspaceId]);
+
+  async function removeService(id: string) {
+    await supabase.from('services').delete().eq('id', id);
+    setServices(prev => prev.filter(s => s.id !== id));
+  }
 
   const filtered = services.filter((s: any) =>
     s.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -104,12 +159,13 @@ export default function ServiceCatalog() {
 
   return (
     <>
-      {showForm && (
+      {showForm && workspaceId && (
         <ServiceForm
           workspaceId={workspaceId}
           categories={sc.form.categories}
           onClose={() => setShowForm(false)}
           t={t}
+          onAdd={(newService) => setServices(prev => [...prev, newService])}
         />
       )}
 
@@ -169,7 +225,7 @@ export default function ServiceCatalog() {
                     className="rounded-xl p-4 border border-border bg-card hover:border-white/15 transition-colors group relative"
                   >
                     <button
-                      onClick={() => removeService({ id: service._id })}
+                      onClick={() => removeService(service._id)}
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-6 w-6 flex items-center justify-center rounded"
                     >
                       <X size={11} />

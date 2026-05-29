@@ -1,5 +1,6 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -26,12 +27,10 @@ import { useTheme } from '@/theme';
 import { cn } from '@/lib/utils';
 import { PresenceAvatars } from '../minerva/PresenceAvatars';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
-import { Id } from '../../../convex/_generated/dataModel';
 import { useCommandPalette } from './CommandPalette';
+import { supabase } from '@/lib/supabase';
 
 const PAGE_LABELS: Record<string, string> = {
   '/app/dashboard': 'Dashboard',
@@ -68,12 +67,51 @@ export function AppHeader() {
   const router = useRouter();
   const pageLabel = PAGE_LABELS[pathname ?? ''] ?? 'Minerva OS';
 
-  const notifications = useQuery(api.notifications.list, { userId: user?.email ?? 'anonymous' }) ?? [];
-  const markRead = useMutation(api.notifications.markAsRead);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    const email = user?.email;
+    if (!email) return;
+    async function loadNotifications() {
+      // 1. Get profile
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (!profile) return;
+
+      // 2. Get notifications
+      const { data: list } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('timestamp', { ascending: false });
+
+      if (list) {
+        setNotifications(list.map(n => ({
+          ...n,
+          _id: n.id,
+        })));
+      }
+    }
+    loadNotifications();
+  }, [user]);
+
   const unreadCount = notifications.filter((n: any) => !n.read).length;
 
-  async function handleMarkRead(id: Id<"notifications">) {
-    await markRead({ id });
+  async function handleMarkRead(id: string) {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id);
+
+    if (!error) {
+      setNotifications(prev =>
+        prev.map(n => n._id === id ? { ...n, read: true } : n)
+      );
+    }
   }
 
   return (

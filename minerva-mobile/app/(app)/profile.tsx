@@ -7,23 +7,14 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useQuery, useMutation } from 'convex/react';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Header } from '@/components/Header';
 import { useMobileLang } from '@/lib/i18n';
 import { useAppAuth } from '@/lib/auth';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
-interface UserProfile {
-  _id: string;
-  email: string;
-  name: string;
-  role: string;
-  avatar?: string;
-}
+
 
 const INPUT_STYLE = {
   backgroundColor: '#111522',
@@ -40,10 +31,7 @@ export default function Profile() {
   const { t, lang, setLang } = useMobileLang();
   const { user, signOut, changePassword } = useAppAuth();
 
-  const profile = useQuery(api.userProfiles.viewer) as UserProfile | null | undefined;
-  const updateProfile = useMutation(api.userProfiles.update);
-
-  const [name, setName] = useState(profile?.name ?? user?.name ?? '');
+  const [name, setName] = useState(user?.name ?? '');
   const [passwordExpanded, setPasswordExpanded] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -53,13 +41,9 @@ export default function Profile() {
   const [savingPassword, setSavingPassword] = useState(false);
 
   async function handleSaveProfile() {
-    if (!profile) return;
     setSavingProfile(true);
     try {
-      await updateProfile({
-        id: profile._id as Parameters<typeof updateProfile>[0]['id'],
-        name: name.trim() || undefined,
-      });
+      await supabase.auth.updateUser({ data: { name: name.trim() || undefined } });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -154,7 +138,7 @@ export default function Profile() {
               }}
             >
               <Text style={{ color: '#B89B6A', fontSize: 13 }}>
-                {profile?.role ?? user?.role ?? ''}
+                {user?.role ?? ''}
               </Text>
             </View>
           </View>

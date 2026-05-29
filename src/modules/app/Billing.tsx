@@ -4,8 +4,12 @@ import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
-import { useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useWorkspaces, useInvoices, useRetainers, useClients, useAddRetainer } from '@/lib/hooks/useSupabase';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 function printInvoice(invoice: any, client: any, lang: string) {
   const locale = lang === 'fr' ? 'fr-FR' : 'en-US';
@@ -238,15 +242,70 @@ export default function Billing() {
   const { t, lang } = useLang();
   const b = t.app.billing;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const workspaces = useWorkspaces();
+  const workspaceId = workspaces[0]?.id;
 
-  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : "skip") ?? [];
-  const retainers = useQuery(api.retainers.list, workspaceId ? { workspaceId } : "skip") ?? [];
-  const clients = useQuery(api.clients.list, workspaceId ? { workspaceId } : "skip") ?? [];
+  const invoices = useInvoices(workspaceId);
+  const retainers = useRetainers(workspaceId);
+  const clients = useClients(workspaceId);
 
   const [filter, setFilter] = useState<string | 'all'>('all');
   const [query, setQuery]   = useState('');
+  const [retainerSheetOpen, setRetainerSheetOpen] = useState(false);
+  const [newRetainerForm, setNewRetainerForm] = useState({
+    clientId: '',
+    amount: '',
+    cycle: 'monthly',
+    hoursIncluded: '',
+    startDate: new Date().toISOString().split('T')[0],
+    notes: '',
+  });
+
+  const addRetainer = useAddRetainer();
+
+  async function handleAddRetainer() {
+    if (!newRetainerForm.clientId || !newRetainerForm.amount || !newRetainerForm.hoursIncluded) {
+      toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill all required fields');
+      return;
+    }
+    try {
+      const start = new Date(newRetainerForm.startDate);
+      if (newRetainerForm.cycle === 'monthly') {
+        start.setMonth(start.getMonth() + 1);
+      } else if (newRetainerForm.cycle === 'quarterly') {
+        start.setMonth(start.getMonth() + 3);
+      } else if (newRetainerForm.cycle === 'annual') {
+        start.setFullYear(start.getFullYear() + 1);
+      }
+      const renewalDate = start.toISOString().split('T')[0];
+
+      await addRetainer({
+        workspaceId,
+        clientId: newRetainerForm.clientId,
+        amount: parseFloat(newRetainerForm.amount),
+        cycle: newRetainerForm.cycle,
+        status: 'active',
+        startDate: newRetainerForm.startDate,
+        renewalDate,
+        hoursIncluded: parseFloat(newRetainerForm.hoursIncluded),
+        hoursUsed: 0,
+        notes: newRetainerForm.notes || undefined,
+      });
+      toast.success(lang === 'fr' ? 'Forfait ajouté avec succès' : 'Retainer added successfully');
+      setRetainerSheetOpen(false);
+      setNewRetainerForm({
+        clientId: '',
+        amount: '',
+        cycle: 'monthly',
+        hoursIncluded: '',
+        startDate: new Date().toISOString().split('T')[0],
+        notes: '',
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error(lang === 'fr' ? "Erreur lors de la création du forfait" : "Failed to create retainer");
+    }
+  }
 
   const FILTER_TABS = useMemo(() => [
     { id: 'all' as const,     label: t.app.tasks.filters.all },
@@ -279,10 +338,16 @@ export default function Billing() {
               .replace('active retainers', String(retainers.filter((r: any) => r.status === 'active').length))}
           </p>
         </div>
-        <Button size="sm">
-          <Plus size={14} />
-          {b.newInvoice}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setRetainerSheetOpen(true)}>
+            <Plus size={14} />
+            {b.retainers.newRetainer}
+          </Button>
+          <Button size="sm">
+            <Plus size={14} />
+            {b.newInvoice}
+          </Button>
+        </div>
       </div>
 
       {/* Summary strip */}
@@ -387,6 +452,96 @@ export default function Billing() {
           {visible.map((inv: any) => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
         </div>
       </section>
+
+      {/* Add Retainer Sheet */}
+      <Sheet open={retainerSheetOpen} onOpenChange={setRetainerSheetOpen}>
+        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+          <SheetHeader>
+            <SheetTitle>{b.retainers.newRetainer}</SheetTitle>
+          </SheetHeader>
+
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="space-y-1.5">
+              <Label>Client</Label>
+              <Select
+                value={newRetainerForm.clientId}
+                onValueChange={v => setNewRetainerForm(f => ({ ...f, clientId: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={lang === 'fr' ? 'Sélectionner un client' : 'Select a client'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((c: any) => (
+                    <SelectItem key={c._id} value={c._id}>
+                      {c.company}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Montant (USD)' : 'Amount (USD)'}</Label>
+              <Input
+                type="number"
+                placeholder="3000"
+                value={newRetainerForm.amount}
+                onChange={e => setNewRetainerForm(f => ({ ...f, amount: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>{b.retainers.cycle}</Label>
+              <Select
+                value={newRetainerForm.cycle}
+                onValueChange={v => setNewRetainerForm(f => ({ ...f, cycle: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monthly">{lang === 'fr' ? 'Mensuel' : 'Monthly'}</SelectItem>
+                  <SelectItem value="quarterly">{lang === 'fr' ? 'Trimestriel' : 'Quarterly'}</SelectItem>
+                  <SelectItem value="annual">{lang === 'fr' ? 'Annuel' : 'Annual'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>{b.retainers.hoursIncluded}</Label>
+              <Input
+                type="number"
+                placeholder="20"
+                value={newRetainerForm.hoursIncluded}
+                onChange={e => setNewRetainerForm(f => ({ ...f, hoursIncluded: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Date de début' : 'Start Date'}</Label>
+              <Input
+                type="date"
+                value={newRetainerForm.startDate}
+                onChange={e => setNewRetainerForm(f => ({ ...f, startDate: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Notes (optionnel)' : 'Notes (optional)'}</Label>
+              <Input
+                placeholder="..."
+                value={newRetainerForm.notes}
+                onChange={e => setNewRetainerForm(f => ({ ...f, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <Button className="w-full" onClick={handleAddRetainer}>
+            {lang === 'fr' ? 'Créer le forfait' : 'Create Retainer'}
+          </Button>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
+

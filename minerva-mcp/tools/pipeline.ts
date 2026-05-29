@@ -1,4 +1,4 @@
-import { convexQuery, convexMutation } from '../convex-client.js';
+import { supabaseSelect, supabaseInsert, getWorkspaceId } from '../supabase-client.js';
 
 export const pipelineTools = [
   {
@@ -12,11 +12,10 @@ export const pipelineTools = [
       required: [],
     },
     async handler(args: Record<string, unknown>) {
-      const workspaces = await convexQuery('workspaces:list', {}) as any[];
-      const workspaceId = workspaces?.[0]?._id;
+      const workspaceId = await getWorkspaceId();
       if (!workspaceId) return { error: 'No workspace found.' };
 
-      const deals = await convexQuery('deals:list', { workspaceId }) as any[];
+      const deals = await supabaseSelect('deals', { workspace_id: `eq.${workspaceId}`, order: 'created_at.desc' }) as any[];
       const filtered = args.stage ? deals?.filter((d: any) => d.stage === args.stage) : deals;
 
       const byStage: Record<string, any[]> = {};
@@ -24,7 +23,7 @@ export const pipelineTools = [
         if (!byStage[deal.stage]) byStage[deal.stage] = [];
         byStage[deal.stage].push(deal);
       }
-      return { deals: filtered ?? [], byStage, totalValue: deals?.reduce((s: number, d: any) => s + d.value, 0) ?? 0 };
+      return { deals: filtered ?? [], byStage, totalValue: deals?.reduce((s: number, d: any) => s + Number(d.value), 0) ?? 0 };
     },
   },
   {
@@ -42,19 +41,19 @@ export const pipelineTools = [
       required: ['company'],
     },
     async handler(args: Record<string, unknown>) {
-      const workspaces = await convexQuery('workspaces:list', {}) as any[];
-      const workspaceId = workspaces?.[0]?._id;
+      const workspaceId = await getWorkspaceId();
       if (!workspaceId) return { error: 'No workspace found.' };
 
-      const id = await convexMutation('deals:add', {
-        workspaceId,
+      const record = await supabaseInsert('deals', {
+        workspace_id: workspaceId,
         company: args.company,
         contact: args.contact ?? '',
         email: args.email ?? '',
         value: (args.value as number) ?? 0,
         stage: args.stage ?? 'new_lead',
-      });
-      return { success: true, id, company: args.company };
+        last_contact: new Date().toISOString(),
+      }) as any;
+      return { success: true, id: record?.id, company: args.company };
     },
   },
 ];

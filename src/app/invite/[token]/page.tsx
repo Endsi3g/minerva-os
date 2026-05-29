@@ -1,13 +1,11 @@
 'use client';
 import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation } from 'convex/react';
-import { api } from '../../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 export default function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
   const router = useRouter();
-  const acceptInvitation = useMutation(api.invitations.accept);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [accepted, setAccepted] = useState(false);
@@ -16,7 +14,21 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
     setError('');
     setLoading(true);
     try {
-      await acceptInvitation({ token });
+      const { data: inv } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+
+      if (!inv) throw new Error('Invitation not found or expired');
+
+      const { error } = await supabase
+        .from('invitations')
+        .update({ accepted_at: new Date().toISOString() })
+        .eq('token', token);
+
+      if (error) throw error;
+
       setAccepted(true);
       setTimeout(() => router.push('/app/dashboard'), 2000);
     } catch (err) {

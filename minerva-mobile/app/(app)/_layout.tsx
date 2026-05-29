@@ -1,13 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Tabs, router } from 'expo-router';
 import { LayoutDashboard, FolderKanban, Clock, Bell, Grid3X3 } from 'lucide-react-native';
 import { View, Text, Platform } from 'react-native';
-import { useQuery } from 'convex/react';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
 import { useAppAuth } from '@/lib/auth';
 import { useMobileLang } from '@/lib/i18n';
+import { supabase } from '@/lib/supabase';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 function TabIcon({ Icon, focused, badge }: { Icon: typeof LayoutDashboard; focused: boolean; badge?: number }) {
@@ -40,20 +37,24 @@ function TabIcon({ Icon, focused, badge }: { Icon: typeof LayoutDashboard; focus
 export default function AppLayout() {
   const { t } = useMobileLang();
   const { isAuthenticated, isLoading, user } = useAppAuth();
+  const [inboxBadge, setInboxBadge] = useState(0);
 
-  const notifications = useQuery(
-    api.notifications.list,
-    user ? { userId: user.email } : 'skip'
-  ) as Array<{ read: boolean }> | undefined;
+  useEffect(() => {
+    if (!user) return;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-  const approvals = useQuery(api.approvals.list, workspaceId ? { workspaceId } : 'skip') as
-    Array<{ status: string }> | undefined;
+    async function fetchBadge() {
+      const workspacesRes = await supabase.from('workspaces').select('id').limit(1);
+      const workspaceId = workspacesRes.data?.[0]?.id;
+      if (!workspaceId) return;
 
-  const unreadNotifs = (notifications ?? []).filter(n => !n.read).length;
-  const pendingApprovals = (approvals ?? []).filter(a => a.status === 'pending').length;
-  const inboxBadge = unreadNotifs + pendingApprovals;
+      const [notifRes, approvalsRes] = await Promise.all([
+        supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user!.id).eq('read', false),
+        supabase.from('approvals').select('id', { count: 'exact', head: true }).eq('workspace_id', workspaceId).eq('status', 'pending'),
+      ]);
+      setInboxBadge((notifRes.count ?? 0) + (approvalsRes.count ?? 0));
+    }
+    fetchBadge();
+  }, [user]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

@@ -1,12 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, FileText, Send, Copy, Trash2, X, Check, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
   draft:    { label: 'Draft',    class: 'text-fog bg-fog/10 border-fog/20' },
@@ -28,11 +27,20 @@ const DEFAULT_SECTIONS: Section[] = [
   { type: 'terms', content: 'Payment is due within 30 days of invoice. All work remains property of the agency until payment is received in full.' },
 ];
 
-function ProposalForm({ workspaceId, onClose, t }: { workspaceId: any; onClose: () => void; t: any }) {
-  const createProposal = useMutation(api.proposals.create);
-  const clients = useQuery(api.clients.list, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const services = useQuery(api.services.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
+function ProposalForm({
+  workspaceId,
+  onClose,
+  t,
+  onAdd,
+}: {
+  workspaceId: string;
+  onClose: () => void;
+  t: any;
+  onAdd: (proposal: any) => void;
+}) {
   const f = t.app.proposals.form;
+  const [clients, setClients] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
 
   const [title, setTitle] = useState('');
   const [clientId, setClientId] = useState('');
@@ -41,6 +49,18 @@ function ProposalForm({ workspaceId, onClose, t }: { workspaceId: any; onClose: 
   const [totalAmount, setTotalAmount] = useState('');
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('intro');
+
+  useEffect(() => {
+    async function loadData() {
+      const [{ data: cData }, { data: sData }] = await Promise.all([
+        supabase.from('clients').select('*').eq('workspace_id', workspaceId),
+        supabase.from('services').select('*').eq('workspace_id', workspaceId),
+      ]);
+      if (cData) setClients(cData.map(c => ({ ...c, _id: c.id })));
+      if (sData) setServices(sData.map(s => ({ ...s, _id: s.id })));
+    }
+    loadData();
+  }, [workspaceId]);
 
   function toggleService(id: string) {
     setSelectedServices(prev =>
@@ -60,15 +80,36 @@ function ProposalForm({ workspaceId, onClose, t }: { workspaceId: any; onClose: 
     e.preventDefault();
     if (!title || !totalAmount) return;
     setSaving(true);
-    await createProposal({
-      workspaceId,
-      title,
-      clientId: clientId ? clientId as any : undefined,
-      sections,
-      serviceIds: selectedServices,
-      totalAmount: Number(totalAmount),
-    });
-    onClose();
+    try {
+      const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const { data, error } = await supabase
+        .from('proposals')
+        .insert({
+          workspace_id: workspaceId,
+          title,
+          client_id: clientId ? clientId : null,
+          sections,
+          service_ids: selectedServices,
+          total_amount: Number(totalAmount),
+          status: 'draft',
+          token,
+        })
+        .select()
+        .single();
+      if (!error && data) {
+        onAdd({
+          ...data,
+          _id: data.id,
+          clientId: data.client_id,
+          totalAmount: Number(data.total_amount),
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+      onClose();
+    }
   }
 
   return (
@@ -94,7 +135,7 @@ function ProposalForm({ workspaceId, onClose, t }: { workspaceId: any; onClose: 
               className="px-3 py-2 rounded-lg text-sm text-ivory outline-none"
               style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
               <option value="">{f.selectClient}</option>
-              {(clients as any[]).map(c => <option key={c._id} value={c._id}>{c.company}</option>)}
+              {clients.map(c => <option key={c._id} value={c._id}>{c.company}</option>)}
             </select>
             <input type="number" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder={f.totalAmount}
               className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
@@ -102,11 +143,11 @@ function ProposalForm({ workspaceId, onClose, t }: { workspaceId: any; onClose: 
           </div>
 
           {/* Services */}
-          {(services as any[]).length > 0 && (
+          {services.length > 0 && (
             <div>
               <p className="text-[10px] text-fog uppercase tracking-widest mb-2">{f.services}</p>
               <div className="flex flex-wrap gap-2">
-                {(services as any[]).map((s: any) => (
+                {services.map((s: any) => (
                   <button
                     key={s._id}
                     type="button"
@@ -172,19 +213,44 @@ export default function Proposals() {
   const { t } = useLang();
   const p = t.app.proposals;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-
-  const proposals = useQuery(api.proposals.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const clients = useQuery(api.clients.list, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const sendProposal = useMutation(api.proposals.send as any);
-  const removeProposal = useMutation(api.proposals.remove as any);
-
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [query, setQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const filtered = (proposals as any[]).filter(prop =>
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function loadData() {
+      const [{ data: prData }, { data: clData }] = await Promise.all([
+        supabase.from('proposals').select('*').eq('workspace_id', workspaceId).order('created_at', { ascending: false }),
+        supabase.from('clients').select('*').eq('workspace_id', workspaceId),
+      ]);
+      if (prData) {
+        setProposals(prData.map(pr => ({
+          ...pr,
+          _id: pr.id,
+          clientId: pr.client_id,
+          totalAmount: Number(pr.total_amount),
+        })));
+      }
+      if (clData) {
+        setClients(clData.map(c => ({ ...c, _id: c.id })));
+      }
+    }
+    loadData();
+  }, [workspaceId]);
+
+  const filtered = proposals.filter(prop =>
     prop.title.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -195,8 +261,30 @@ export default function Proposals() {
     setTimeout(() => setCopiedId(null), 2000);
   }
 
+  async function sendProposal(proposalId: string) {
+    const { error } = await supabase
+      .from('proposals')
+      .update({ status: 'sent', sent_at: new Date().toISOString() })
+      .eq('id', proposalId);
+    if (!error) {
+      setProposals(prev =>
+        prev.map(pr => pr._id === proposalId ? { ...pr, status: 'sent' } : pr)
+      );
+    }
+  }
+
+  async function removeProposal(proposalId: string) {
+    const { error } = await supabase
+      .from('proposals')
+      .delete()
+      .eq('id', proposalId);
+    if (!error) {
+      setProposals(prev => prev.filter(pr => pr._id !== proposalId));
+    }
+  }
+
   function printProposal(proposal: any) {
-    const client = (clients as any[]).find(c => c._id === proposal.clientId);
+    const client = clients.find(c => c._id === proposal.clientId);
     const sectionsHtml = (proposal.sections ?? [])
       .map((s: any) => `<section><h2>${s.type}</h2><p>${s.content}</p></section>`)
       .join('');
@@ -218,15 +306,20 @@ export default function Proposals() {
 
   return (
     <>
-      {showForm && (
-        <ProposalForm workspaceId={workspaceId} onClose={() => setShowForm(false)} t={t} />
+      {showForm && workspaceId && (
+        <ProposalForm
+          workspaceId={workspaceId}
+          onClose={() => setShowForm(false)}
+          t={t}
+          onAdd={(newProp) => setProposals(prev => [newProp, ...prev])}
+        />
       )}
 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-ivory">{p.title}</h1>
           <p className="text-sm text-fog mt-0.5">
-            {p.subtitle.replace('{{count}}', String((proposals as any[]).length))}
+            {p.subtitle.replace('{{count}}', String(proposals.length))}
           </p>
         </div>
         <Button size="sm" onClick={() => setShowForm(true)}>
@@ -253,7 +346,7 @@ export default function Proposals() {
       ) : (
         <div className="space-y-2">
           {filtered.map((proposal: any) => {
-            const client = (clients as any[]).find(c => c._id === proposal.clientId);
+            const client = clients.find(c => c._id === proposal.clientId);
             const sc = STATUS_CONFIG[proposal.status] ?? STATUS_CONFIG.draft;
             const isCopied = copiedId === proposal._id;
             return (
@@ -275,7 +368,7 @@ export default function Proposals() {
                 <div className="flex items-center gap-1 shrink-0">
                   {proposal.status === 'draft' && (
                     <button
-                      onClick={() => sendProposal({ id: proposal._id })}
+                      onClick={() => sendProposal(proposal._id)}
                       className="h-7 w-7 flex items-center justify-center rounded-md text-fog hover:text-sage hover:bg-sage/10 transition-colors"
                       title={p.actions.send}
                     >
@@ -300,7 +393,7 @@ export default function Proposals() {
                     <FileDown size={12} />
                   </button>
                   <button
-                    onClick={() => removeProposal({ id: proposal._id })}
+                    onClick={() => removeProposal(proposal._id)}
                     className="h-7 w-7 flex items-center justify-center rounded-md text-fog hover:text-ember hover:bg-ember/10 transition-colors"
                   >
                     <Trash2 size={12} />

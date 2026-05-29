@@ -11,7 +11,6 @@ import {
   FlatList,
 } from 'react-native';
 import { router } from 'expo-router';
-import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect } from 'react';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
@@ -22,9 +21,7 @@ import { useMobileLang } from '@/lib/i18n';
 import { useAppAuth } from '@/lib/auth';
 import { trackScreen } from '@/lib/analytics';
 import { captureException } from '@/lib/sentry';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 type CategoryKey = 'travel' | 'meals' | 'software' | 'hardware' | 'marketing' | 'office' | 'other';
 const CATEGORY_KEYS: CategoryKey[] = ['travel', 'meals', 'software', 'hardware', 'marketing', 'office', 'other'];
@@ -44,23 +41,19 @@ export default function NewExpense() {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [receiptStorageId, setReceiptStorageId] = useState<string | undefined>(undefined);
+  const [receiptUrl, setReceiptUrl] = useState<string | undefined>(undefined);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
   useEffect(() => { trackScreen('NewExpense'); }, []);
 
-  let workspaces: { _id: string }[] = [];
-  try {
-    workspaces = (useQuery(api.workspaces.list, {}) ?? []) as { _id: string }[];
-  } catch (err) {
-    captureException(err, { screen: 'NewExpense' });
-  }
-  const workspaceId = workspaces[0]?._id;
-
-  const createExpense = useMutation(api.expenses.create);
-  const generateUploadUrl = useMutation(api.assets.generateUploadUrl);
+  useEffect(() => {
+    supabase.from('workspaces').select('id').limit(1).then(({ data }) => {
+      if (data?.[0]) setWorkspaceId(data[0].id);
+    });
+  }, []);
 
   const categoryLabels: Record<CategoryKey, string> = {
     travel: t.expenses.categories.travel,
@@ -77,11 +70,7 @@ export default function NewExpense() {
       const options = [...CATEGORY_KEYS.map(k => categoryLabels[k]), t.common.cancel];
       ActionSheetIOS.showActionSheetWithOptions(
         { title: t.expenses.category, options, cancelButtonIndex: options.length - 1 },
-        (idx) => {
-          if (idx < CATEGORY_KEYS.length) {
-            setCategory(CATEGORY_KEYS[idx]);
-          }
-        },
+        (idx) => { if (idx < CATEGORY_KEYS.length) setCategory(CATEGORY_KEYS[idx]); },
       );
     } else {
       setShowCategoryModal(true);
@@ -89,26 +78,15 @@ export default function NewExpense() {
   }
 
   function handleDateChange(_event: DateTimePickerEvent, selected?: Date) {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-    if (selected) {
-      setDate(selected);
-    }
+    if (Platform.OS === 'android') setShowDatePicker(false);
+    if (selected) setDate(selected);
   }
 
   async function handlePickReceipt() {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: t.expenses.addReceipt,
-          options: [t.files.camera, t.files.photoLibrary, t.common.cancel],
-          cancelButtonIndex: 2,
-        },
-        async (idx) => {
-          if (idx === 0) await launchCamera();
-          else if (idx === 1) await launchLibrary();
-        },
+        { title: t.expenses.addReceipt, options: [t.files.camera, t.files.photoLibrary, t.common.cancel], cancelButtonIndex: 2 },
+        async (idx) => { if (idx === 0) await launchCamera(); else if (idx === 1) await launchLibrary(); },
       );
     } else {
       Alert.alert(t.expenses.addReceipt, undefined, [
@@ -121,42 +99,29 @@ export default function NewExpense() {
 
   async function launchCamera() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(t.errors.permissionDenied);
-      return;
-    }
+    if (status !== 'granted') { Alert.alert(t.errors.permissionDenied); return; }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
-    if (!result.canceled && result.assets[0]) {
-      await uploadReceipt(result.assets[0].uri, result.assets[0].mimeType ?? 'image/jpeg');
-    }
+    if (!result.canceled && result.assets[0]) await uploadReceipt(result.assets[0].uri, result.assets[0].mimeType ?? 'image/jpeg');
   }
 
   async function launchLibrary() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(t.errors.permissionDenied);
-      return;
-    }
+    if (status !== 'granted') { Alert.alert(t.errors.permissionDenied); return; }
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7, mediaTypes: ImagePicker.MediaTypeOptions.Images });
-    if (!result.canceled && result.assets[0]) {
-      await uploadReceipt(result.assets[0].uri, result.assets[0].mimeType ?? 'image/jpeg');
-    }
+    if (!result.canceled && result.assets[0]) await uploadReceipt(result.assets[0].uri, result.assets[0].mimeType ?? 'image/jpeg');
   }
 
   async function uploadReceipt(uri: string, mimeType: string) {
+    if (!workspaceId) return;
     setUploading(true);
     try {
-      const uploadUrl = await generateUploadUrl();
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': mimeType },
-        body: blob,
-      });
-      if (!uploadResponse.ok) throw new Error('Upload failed');
-      const { storageId } = await uploadResponse.json() as { storageId: string };
-      setReceiptStorageId(storageId);
+      const fileName = `receipts/${workspaceId}/${Date.now()}.jpg`;
+      const res = await fetch(uri);
+      const blob = await res.blob();
+      const { error: storageError } = await supabase.storage.from('assets').upload(fileName, blob, { contentType: mimeType });
+      if (storageError) throw storageError;
+      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(fileName);
+      setReceiptUrl(publicUrl);
     } catch (err) {
       captureException(err, { screen: 'NewExpense', action: 'uploadReceipt' });
       setError(t.errors.uploadFailed);
@@ -167,26 +132,21 @@ export default function NewExpense() {
 
   async function handleSubmit() {
     if (!workspaceId || !user) return;
-    if (!amount || isNaN(parseFloat(amount))) {
-      setError(t.expenses.amount);
-      return;
-    }
-    if (!description.trim()) {
-      setError(t.expenses.description);
-      return;
-    }
+    if (!amount || isNaN(parseFloat(amount))) { setError(t.expenses.amount); return; }
+    if (!description.trim()) { setError(t.expenses.description); return; }
     setSubmitting(true);
     setError('');
     try {
-      await createExpense({
-        workspaceId,
-        submittedBy: user._id,
+      await supabase.from('expenses').insert({
+        workspace_id: workspaceId,
+        submitted_by: user.id,
         amount: parseFloat(amount),
         currency: 'USD',
         category,
         description: description.trim(),
         date: date.toISOString().split('T')[0],
-        ...(receiptStorageId ? { receiptStorageId } : {}),
+        status: 'pending',
+        ...(receiptUrl ? { receipt_url: receiptUrl } : {}),
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
@@ -202,143 +162,55 @@ export default function NewExpense() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0A0D14' }}>
       <Header title={t.expenses.addExpense} showBack />
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 40 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Amount */}
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 40 }} keyboardShouldPersistTaps="handled">
         <Text style={labelStyle}>{t.expenses.amount}</Text>
         <View style={[inputRowStyle, { flexDirection: 'row', alignItems: 'center' }]}>
           <Text style={{ color: '#8A9099', fontSize: 16, marginRight: 6 }}>$</Text>
-          <TextInput
-            style={{ flex: 1, color: '#F5F1E8', fontSize: 16 }}
-            placeholder="0.00"
-            placeholderTextColor="#8A9099"
-            keyboardType="decimal-pad"
-            value={amount}
-            onChangeText={setAmount}
-          />
+          <TextInput style={{ flex: 1, color: '#F5F1E8', fontSize: 16 }} placeholder="0.00" placeholderTextColor="#8A9099" keyboardType="decimal-pad" value={amount} onChangeText={setAmount} />
         </View>
 
-        {/* Category */}
         <Text style={labelStyle}>{t.expenses.category}</Text>
         <TouchableOpacity style={inputRowStyle} onPress={handleCategorySelect}>
-          <Text style={{ color: '#F5F1E8', fontSize: 14 }}>
-            {categoryLabels[category]}
-          </Text>
+          <Text style={{ color: '#F5F1E8', fontSize: 14 }}>{categoryLabels[category]}</Text>
         </TouchableOpacity>
 
-        {/* Description */}
         <Text style={labelStyle}>{t.expenses.description}</Text>
-        <TextInput
-          style={[inputRowStyle, { minHeight: 80, textAlignVertical: 'top' }]}
-          placeholder={t.expenses.description}
-          placeholderTextColor="#8A9099"
-          multiline
-          value={description}
-          onChangeText={setDescription}
-        />
+        <TextInput style={[inputRowStyle, { minHeight: 80, textAlignVertical: 'top' }]} placeholder={t.expenses.description} placeholderTextColor="#8A9099" multiline value={description} onChangeText={setDescription} />
 
-        {/* Date */}
         <Text style={labelStyle}>{t.expenses.date}</Text>
-        <TouchableOpacity
-          style={inputRowStyle}
-          onPress={() => {
-            if (Platform.OS === 'android') {
-              setShowDatePicker(true);
-            } else {
-              setShowDatePicker(prev => !prev);
-            }
-          }}
-        >
+        <TouchableOpacity style={inputRowStyle} onPress={() => { if (Platform.OS === 'android') setShowDatePicker(true); else setShowDatePicker(prev => !prev); }}>
           <Text style={{ color: '#F5F1E8', fontSize: 14 }}>{fmtDate(date)}</Text>
         </TouchableOpacity>
 
         {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'inline' : 'default'}
-            onChange={handleDateChange}
-            maximumDate={new Date()}
-            themeVariant="dark"
-          />
+          <DateTimePicker value={date} mode="date" display={Platform.OS === 'ios' ? 'inline' : 'default'} onChange={handleDateChange} maximumDate={new Date()} themeVariant="dark" />
         )}
 
-        {/* Receipt */}
         <Text style={labelStyle}>{t.expenses.receipt}</Text>
         <TouchableOpacity style={inputRowStyle} onPress={handlePickReceipt} disabled={uploading}>
-          <Text style={{ color: receiptStorageId ? '#7FA38A' : '#8A9099', fontSize: 14 }}>
-            {uploading
-              ? t.common.uploading
-              : receiptStorageId
-              ? '✓ Receipt attached'
-              : t.expenses.addReceipt}
+          <Text style={{ color: receiptUrl ? '#7FA38A' : '#8A9099', fontSize: 14 }}>
+            {uploading ? t.common.uploading : receiptUrl ? '✓ Receipt attached' : t.expenses.addReceipt}
           </Text>
         </TouchableOpacity>
 
-        {/* Error */}
-        {error.length > 0 && (
-          <Text style={{ color: '#A86A6A', fontSize: 13, marginTop: 12, textAlign: 'center' }}>
-            {error}
-          </Text>
-        )}
+        {error.length > 0 && <Text style={{ color: '#A86A6A', fontSize: 13, marginTop: 12, textAlign: 'center' }}>{error}</Text>}
 
-        {/* Submit */}
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={submitting}
-          style={{
-            backgroundColor: '#F5F1E8',
-            borderRadius: 14,
-            padding: 16,
-            alignItems: 'center',
-            marginTop: 24,
-            opacity: submitting ? 0.6 : 1,
-          }}
-        >
-          <Text style={{ color: '#0A0D14', fontSize: 15, fontWeight: '700' }}>
-            {submitting ? t.common.loading : t.expenses.submitExpense}
-          </Text>
+        <TouchableOpacity onPress={handleSubmit} disabled={submitting} style={{ backgroundColor: '#F5F1E8', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 24, opacity: submitting ? 0.6 : 1 }}>
+          <Text style={{ color: '#0A0D14', fontSize: 15, fontWeight: '700' }}>{submitting ? t.common.loading : t.expenses.submitExpense}</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Android category modal */}
-      <Modal
-        visible={showCategoryModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowCategoryModal(false)}
-      >
+      <Modal visible={showCategoryModal} transparent animationType="slide" onRequestClose={() => setShowCategoryModal(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }}>
-          <View
-            style={{
-              backgroundColor: '#171C2A',
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              paddingBottom: insets.bottom + 16,
-            }}
-          >
+          <View style={{ backgroundColor: '#171C2A', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: insets.bottom + 16 }}>
             <View style={{ width: 36, height: 4, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2, alignSelf: 'center', marginVertical: 12 }} />
-            <Text style={{ color: '#F5F1E8', fontSize: 16, fontWeight: '600', paddingHorizontal: 16, marginBottom: 8 }}>
-              {t.expenses.category}
-            </Text>
+            <Text style={{ color: '#F5F1E8', fontSize: 16, fontWeight: '600', paddingHorizontal: 16, marginBottom: 8 }}>{t.expenses.category}</Text>
             <FlatList
               data={CATEGORY_KEYS}
               keyExtractor={k => k}
               renderItem={({ item: key }) => (
-                <TouchableOpacity
-                  onPress={() => { setCategory(key); setShowCategoryModal(false); }}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    borderBottomWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <Text style={{ color: key === category ? '#7FA38A' : '#F5F1E8', fontSize: 15 }}>
-                    {categoryLabels[key]}
-                  </Text>
+                <TouchableOpacity onPress={() => { setCategory(key); setShowCategoryModal(false); }} style={{ paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
+                  <Text style={{ color: key === category ? '#7FA38A' : '#F5F1E8', fontSize: 15 }}>{categoryLabels[key]}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -349,21 +221,5 @@ export default function NewExpense() {
   );
 }
 
-const labelStyle = {
-  color: '#8A9099',
-  fontSize: 11,
-  textTransform: 'uppercase' as const,
-  letterSpacing: 0.8,
-  marginTop: 20,
-  marginBottom: 6,
-};
-
-const inputRowStyle = {
-  backgroundColor: '#111522',
-  borderRadius: 12,
-  padding: 14,
-  borderWidth: 1,
-  borderColor: 'rgba(255,255,255,0.08)',
-  color: '#F5F1E8',
-  fontSize: 14,
-};
+const labelStyle = { color: '#8A9099', fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginTop: 20, marginBottom: 6 };
+const inputRowStyle = { backgroundColor: '#111522', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', color: '#F5F1E8', fontSize: 14 };

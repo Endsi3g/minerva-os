@@ -1,0 +1,924 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+
+// ── Mappings (snake_case -> camelCase & id -> _id compatibility) ─────────────
+
+export function mapClient(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    company: db.company,
+    contact: db.contact,
+    email: db.email,
+    monthlyValue: Number(db.monthly_value || 0),
+    status: db.status,
+    createdAt: db.created_at,
+  };
+}
+
+export function mapProject(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    clientId: db.client_id,
+    clientName: db.client_name,
+    name: db.name,
+    status: db.status,
+    dueDate: db.due_date,
+    budget: Number(db.budget || 0),
+    healthScore: db.health_score || 100,
+    activeRiskFlags: db.active_risk_flags || [],
+    createdAt: db.created_at,
+  };
+}
+
+export function mapTask(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    projectId: db.project_id,
+    title: db.title,
+    description: db.description,
+    status: db.status,
+    priority: db.priority,
+    assignee: db.assignee,
+    dueDate: db.due_date,
+    estimatedHours: db.estimated_hours,
+    createdAt: db.created_at,
+  };
+}
+
+export function mapDeal(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    company: db.company,
+    contact: db.contact,
+    email: db.email,
+    value: Number(db.value || 0),
+    stage: db.stage,
+    notes: db.notes,
+    lastContact: db.last_contact,
+    createdAt: db.created_at,
+  };
+}
+
+export function mapInvoice(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    clientId: db.client_id,
+    invoiceNumber: db.invoice_number,
+    amount: Number(db.amount || 0),
+    status: db.status,
+    date: db.date,
+    dueDate: db.due_date,
+    items: db.items || [],
+    paidDate: db.paid_date,
+    tps: Number(db.tps || 0),
+    tvq: Number(db.tvq || 0),
+    createdAt: db.created_at,
+  };
+}
+
+export function mapRetainer(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    clientId: db.client_id,
+    amount: Number(db.amount || 0),
+    cycle: db.cycle,
+    status: db.status,
+    startDate: db.start_date,
+    renewalDate: db.renewal_date,
+    hoursIncluded: Number(db.hours_included || 0),
+    hoursUsed: Number(db.hours_used || 0),
+    notes: db.notes,
+    createdAt: db.created_at,
+  };
+}
+
+export function mapFinance(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    type: db.type,
+    amount: Number(db.amount || 0),
+    category: db.category,
+    date: db.date,
+    description: db.description,
+    tps: Number(db.tps || 0),
+    tvq: Number(db.tvq || 0),
+    status: db.status,
+    createdAt: db.created_at,
+  };
+}
+
+export function mapApproval(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    projectId: db.project_id,
+    name: db.name,
+    type: db.type,
+    status: db.status,
+    submittedDate: db.submitted_date,
+    fileUrl: db.file_url,
+    createdAt: db.created_at,
+  };
+}
+
+export function mapActivity(db: any) {
+  if (!db) return null;
+  return {
+    _id: db.id,
+    id: db.id,
+    workspaceId: db.workspace_id,
+    user: db.username,
+    action: db.action_name,
+    targetName: db.target_name,
+    timestamp: db.created_at,
+  };
+}
+
+
+// ── Queries ──────────────────────────────────────────────────────────────────
+
+export function useWorkspaces() {
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchWorkspaces() {
+      const { data, error } = await supabase.from('workspaces').select('*');
+      if (!error && data) {
+        setWorkspaces(data.map(w => ({ _id: w.id, id: w.id, name: w.name, slug: w.slug })));
+      }
+    }
+    fetchWorkspaces();
+  }, []);
+
+  return workspaces;
+}
+
+export function useClients(workspaceId: string | undefined | null) {
+  const [clients, setClients] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setClients([]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchClients() {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('workspace_id', workspaceId);
+
+      if (active && !error && data) {
+        setClients(data.map(mapClient));
+      }
+    }
+
+    fetchClients();
+
+    const channel = supabase
+      .channel(`clients-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchClients();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId]);
+
+  return clients;
+}
+
+export function useProjects(workspaceId: string | undefined | null) {
+  const [projects, setProjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setProjects([]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchProjects() {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('due_date', { ascending: false });
+
+      if (active && !error && data) {
+        setProjects(data.map(mapProject));
+      }
+    }
+
+    fetchProjects();
+
+    const channel = supabase
+      .channel(`projects-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchProjects();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId]);
+
+  return projects;
+}
+
+export function useTasks(workspaceId: string | undefined | null, projectId?: string | null) {
+  const [tasks, setTasks] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setTasks([]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchTasks() {
+      let query = supabase.from('tasks').select('*').eq('workspace_id', workspaceId);
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query;
+      if (active && !error && data) {
+        setTasks(data.map(mapTask));
+      }
+    }
+
+    fetchTasks();
+
+    const channel = supabase
+      .channel(`tasks-realtime-${workspaceId}-${projectId || 'all'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchTasks();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId, projectId]);
+
+  return tasks;
+}
+
+export function useDeals(workspaceId: string | undefined | null) {
+  const [deals, setDeals] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setDeals([]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchDeals() {
+      const { data, error } = await supabase
+        .from('deals')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: false });
+
+      if (active && !error && data) {
+        setDeals(data.map(mapDeal));
+      }
+    }
+
+    fetchDeals();
+
+    const channel = supabase
+      .channel(`deals-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchDeals();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId]);
+
+  return deals;
+}
+
+export function useInvoices(workspaceId: string | undefined | null) {
+  const [invoices, setInvoices] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setInvoices([]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchInvoices() {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('date', { ascending: false });
+
+      if (active && !error && data) {
+        setInvoices(data.map(mapInvoice));
+      }
+    }
+
+    fetchInvoices();
+
+    const channel = supabase
+      .channel(`invoices-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchInvoices();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId]);
+
+  return invoices;
+}
+
+export function useRetainers(workspaceId: string | undefined | null) {
+  const [retainers, setRetainers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setRetainers([]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchRetainers() {
+      const { data, error } = await supabase
+        .from('retainers')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: false });
+
+      if (active && !error && data) {
+        setRetainers(data.map(mapRetainer));
+      }
+    }
+
+    fetchRetainers();
+
+    const channel = supabase
+      .channel(`retainers-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'retainers', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchRetainers();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId]);
+
+  return retainers;
+}
+
+export function useFinances(workspaceId: string | undefined | null) {
+  const [finances, setFinances] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setFinances([]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchFinances() {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('date', { ascending: false });
+
+      if (active && !error && data) {
+        setFinances(data.map(mapFinance));
+      }
+    }
+
+    fetchFinances();
+
+    const channel = supabase
+      .channel(`finances-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'finances', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchFinances();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId]);
+
+  return finances;
+}
+
+export function useApprovals(workspaceId?: string | undefined | null) {
+  const [approvals, setApprovals] = useState<any[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function fetchApprovals() {
+      let query = supabase.from('approvals').select('*');
+      if (workspaceId) {
+        query = query.eq('workspace_id', workspaceId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (active && !error && data) {
+        setApprovals(data.map(mapApproval));
+      }
+    }
+
+    fetchApprovals();
+
+    const channel = supabase
+      .channel(`approvals-realtime-${workspaceId || 'all'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'approvals' }, () => {
+        fetchApprovals();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId]);
+
+  return approvals;
+}
+
+export function useActivity(workspaceId: string | undefined | null) {
+  const [activity, setActivity] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setActivity([]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchActivity() {
+      const { data, error } = await supabase
+        .from('activity')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (active && !error && data) {
+        setActivity(data.map(mapActivity));
+      }
+    }
+
+    fetchActivity();
+
+    const channel = supabase
+      .channel(`activity-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'activity', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchActivity();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [workspaceId]);
+
+  return activity;
+}
+
+
+export function useUserProfileByEmail(email: string | undefined | null) {
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!email) {
+      setProfile(null);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchProfile() {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (active && !error && data) {
+        setProfile({
+          _id: data.id,
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          role: data.role,
+          avatar: data.avatar_url,
+          onboardingCompleted: data.onboarding_completed,
+        });
+      }
+    }
+
+    fetchProfile();
+
+    const channel = supabase
+      .channel(`user-profile-${email}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_profiles', filter: `email=eq.${email}` }, () => {
+        fetchProfile();
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      channel.unsubscribe();
+    };
+  }, [email]);
+
+  return profile;
+}
+
+// ── Mutations ────────────────────────────────────────────────────────────────
+
+export function useAddClient() {
+  return async (args: { workspaceId: string; company: string; contact: string; email: string; status: string; monthlyValue?: number }) => {
+    const { data, error } = await supabase
+      .from('clients')
+      .insert({
+        workspace_id: args.workspaceId,
+        company: args.company,
+        contact: args.contact,
+        email: args.email,
+        status: args.status,
+        monthly_value: args.monthlyValue || 0,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapClient(data);
+  };
+}
+
+export function useAddProject() {
+  return async (args: { workspaceId: string; clientName: string; name: string; status: string; dueDate: string; budget: number; description?: string }) => {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        workspace_id: args.workspaceId,
+        client_name: args.clientName,
+        name: args.name,
+        status: args.status,
+        due_date: args.dueDate,
+        budget: args.budget,
+        description: args.description || '',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapProject(data);
+  };
+}
+
+export function useUpdateProject() {
+  return async (args: { id: string; name?: string; status?: string; dueDate?: string; budget?: number }) => {
+    const updates: any = {};
+    if (args.name !== undefined) updates.name = args.name;
+    if (args.status !== undefined) updates.status = args.status;
+    if (args.dueDate !== undefined) updates.due_date = args.dueDate;
+    if (args.budget !== undefined) updates.budget = args.budget;
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', args.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapProject(data);
+  };
+}
+
+export function useAddTask() {
+  return async (args: { workspaceId: string; title: string; projectId: string; status: string; priority: string; assignee: string; dueDate: string }) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        workspace_id: args.workspaceId,
+        title: args.title,
+        project_id: args.projectId,
+        status: args.status,
+        priority: args.priority,
+        assignee: args.assignee,
+        due_date: args.dueDate,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Log Activity
+    await supabase.from('activity').insert({
+      workspace_id: args.workspaceId,
+      username: args.assignee,
+      action_name: 'created task',
+      target_name: args.title,
+      entity_type: 'task',
+    });
+
+    return mapTask(data);
+  };
+}
+
+export function useUpdateTask() {
+  return async (args: { id: string; status?: string; priority?: string; assignee?: string; dueDate?: string; title?: string }) => {
+    const updates: any = {};
+    if (args.status !== undefined) updates.status = args.status;
+    if (args.priority !== undefined) updates.priority = args.priority;
+    if (args.assignee !== undefined) updates.assignee = args.assignee;
+    if (args.dueDate !== undefined) updates.due_date = args.dueDate;
+    if (args.title !== undefined) updates.title = args.title;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', args.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapTask(data);
+  };
+}
+
+export function useDeleteTask() {
+  return async (args: { id: string }) => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', args.id);
+
+    if (error) throw error;
+  };
+}
+
+export function useAddDeal() {
+  return async (args: { workspaceId: string; company: string; contact: string; email: string; value: number; stage: string; notes?: string; lastContact: string }) => {
+    const { data, error } = await supabase
+      .from('deals')
+      .insert({
+        workspace_id: args.workspaceId,
+        company: args.company,
+        contact: args.contact,
+        email: args.email,
+        value: args.value,
+        stage: args.stage,
+        notes: args.notes || '',
+        last_contact: args.lastContact,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapDeal(data);
+  };
+}
+
+export function useUpdateDeal() {
+  return async (args: { id: string; company: string; contact: string; email: string; value: number; stage: string; notes?: string; lastContact: string }) => {
+    const { data, error } = await supabase
+      .from('deals')
+      .update({
+        company: args.company,
+        contact: args.contact,
+        email: args.email,
+        value: args.value,
+        stage: args.stage,
+        notes: args.notes || '',
+        last_contact: args.lastContact,
+      })
+      .eq('id', args.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapDeal(data);
+  };
+}
+
+export function useUpdateDealStage() {
+  return async (args: { id: string; stage: string }) => {
+    const { data, error } = await supabase
+      .from('deals')
+      .update({ stage: args.stage })
+      .eq('id', args.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapDeal(data);
+  };
+}
+
+export function useAddInvoice() {
+  return async (args: { workspaceId: string; clientId: string; invoiceNumber: string; amount: number; status: string; date: string; dueDate: string; items: any[]; tps: number; tvq: number }) => {
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert({
+        workspace_id: args.workspaceId,
+        client_id: args.clientId,
+        invoice_number: args.invoiceNumber,
+        amount: args.amount,
+        status: args.status,
+        date: args.date,
+        due_date: args.dueDate,
+        items: args.items,
+        tps: args.tps,
+        tvq: args.tvq,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapInvoice(data);
+  };
+}
+
+export function useUpdateInvoiceStatus() {
+  return async (args: { id: string; status: string }) => {
+    const { data, error } = await supabase
+      .from('invoices')
+      .update({ status: args.status })
+      .eq('id', args.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapInvoice(data);
+  };
+}
+
+export function useDeleteInvoice() {
+  return async (args: { id: string }) => {
+    const { error } = await supabase
+      .from('invoices')
+      .delete()
+      .eq('id', args.id);
+
+    if (error) throw error;
+  };
+}
+
+export function useAddRetainer() {
+  return async (args: { workspaceId: string; clientId: string; amount: number; cycle: string; status: string; startDate: string; renewalDate: string; hoursIncluded: number; hoursUsed: number; notes?: string }) => {
+    const { data, error } = await supabase
+      .from('retainers')
+      .insert({
+        workspace_id: args.workspaceId,
+        client_id: args.clientId,
+        amount: args.amount,
+        cycle: args.cycle,
+        status: args.status,
+        start_date: args.startDate,
+        renewal_date: args.renewalDate,
+        hours_included: args.hoursIncluded,
+        hours_used: args.hoursUsed,
+        notes: args.notes || '',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapRetainer(data);
+  };
+}
+
+export function useUpdateRetainer() {
+  return async (args: { id: string; amount?: number; cycle?: string; status?: string; hoursIncluded?: number; hoursUsed?: number; renewalDate?: string; notes?: string }) => {
+    const updates: any = {};
+    if (args.amount !== undefined) updates.amount = args.amount;
+    if (args.cycle !== undefined) updates.cycle = args.cycle;
+    if (args.status !== undefined) updates.status = args.status;
+    if (args.hoursIncluded !== undefined) updates.hours_included = args.hoursIncluded;
+    if (args.hoursUsed !== undefined) updates.hours_used = args.hoursUsed;
+    if (args.renewalDate !== undefined) updates.renewal_date = args.renewalDate;
+    if (args.notes !== undefined) updates.notes = args.notes;
+
+    const { data, error } = await supabase
+      .from('retainers')
+      .update(updates)
+      .eq('id', args.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapRetainer(data);
+  };
+}
+
+export function useDeleteRetainer() {
+  return async (args: { id: string }) => {
+    const { error } = await supabase
+      .from('retainers')
+      .delete()
+      .eq('id', args.id);
+
+    if (error) throw error;
+  };
+}
+
+export function useAddFinance() {
+  return async (args: { workspaceId: string; type: string; amount: number; category: string; date: string; description: string; tps: number; tvq: number; status: string }) => {
+    const { data, error } = await supabase
+      .from('finances')
+      .insert({
+        workspace_id: args.workspaceId,
+        type: args.type,
+        amount: args.amount,
+        category: args.category,
+        date: args.date,
+        description: args.description,
+        tps: args.tps,
+        tvq: args.tvq,
+        status: args.status,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapFinance(data);
+  };
+}
+
+export function useUpdateUserProfile() {
+  return async (args: { id: string; name?: string; role?: string; avatar?: string }) => {
+    const updates: any = {};
+    if (args.name !== undefined) updates.name = args.name;
+    if (args.role !== undefined) updates.role = args.role;
+    if (args.avatar !== undefined) updates.avatar_url = args.avatar;
+
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update(updates)
+      .eq('id', args.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  };
+}

@@ -1,7 +1,5 @@
-import { createContext, useContext, useMemo } from 'react';
-import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export type UserRole = 'owner' | 'strategist' | 'project_manager' | 'designer' | 'developer' | 'finance' | 'client_stakeholder' | 'client_reviewer';
 
@@ -23,43 +21,127 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
-  const { signIn, signOut } = useAuthActions();
-  
-  // Get full user profile from Convex
-  const viewer = useQuery(api.userProfiles.viewer);
-  
-  const user = useMemo(() => {
-    if (!isAuthenticated || !viewer) return null;
-    return {
-      id: viewer._id,
-      email: viewer.email,
-      name: viewer.name,
-      role: (viewer.role || 'project_manager') as UserRole,
-    };
-  }, [isAuthenticated, viewer]);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const isLoading = isAuthLoading || (isAuthenticated && viewer === undefined);
+  useEffect(() => {
+    let active = true;
+
+    async function checkSession() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!active) return;
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          if (!active) return;
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name,
+              role: (profile.role || 'project_manager') as UserRole,
+            });
+          } else {
+            // Fallback if profile not found yet
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.name || 'User',
+              role: 'project_manager',
+            });
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    }
+
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!active) return;
+      if (session?.user) {
+        setIsLoading(true);
+        try {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          if (!active) return;
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name,
+              role: (profile.role || 'project_manager') as UserRole,
+            });
+          } else {
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.name || 'User',
+              role: 'project_manager',
+            });
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          if (active) setIsLoading(false);
+        }
+      } else {
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   async function login(email: string, password: string) {
-    await signIn("password", { email, password, flow: "signIn" });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   }
 
   async function signup(firstName: string, lastName: string, email: string, password: string) {
-    await signIn("password", { 
-      email, 
-      password, 
-      name: `${firstName} ${lastName}`,
-      flow: "signUp" 
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: `${firstName} ${lastName}`,
+        }
+      }
     });
+    if (error) throw error;
   }
 
   async function logout() {
-    await signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   }
 
+  const value = useMemo(() => ({
+    user,
+    isLoading,
+    login,
+    signup,
+    logout
+  }), [user, isLoading]);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

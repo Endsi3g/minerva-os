@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-async function goTo(page: Parameters<typeof test>[1] extends (...args: infer A) => unknown ? A[0] : never, route: string) {
+async function goTo(page: Page, route: string) {
   await page.goto(route);
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(1500);
@@ -10,14 +10,6 @@ async function assertRendered(page: { locator: (sel: string) => { textContent: (
   const body = await page.locator('body').textContent();
   if (!body || body.trim().length < 30) console.log(`AUDIT BLANK PAGE: ${name}`);
   expect(body!.length).toBeGreaterThan(50);
-}
-
-async function tryOpenButton(page: { locator: (sel: string) => { filter: (opts: { hasText: RegExp }) => { first: () => { count: () => Promise<number>; click: () => Promise<void> } } } }, btnText: RegExp): Promise<boolean> {
-  const btn = page.locator('button').filter({ hasText: btnText }).first();
-  if (await btn.count() === 0) return false;
-  await btn.click();
-  await (page as unknown as { waitForTimeout: (ms: number) => Promise<void> }).waitForTimeout(800);
-  return true;
 }
 
 // ─── Service Catalog ──────────────────────────────────────────────────────────

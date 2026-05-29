@@ -1,15 +1,55 @@
 'use client';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Check, X, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 export function AgentSuggestions({ workspaceId }: { workspaceId: any }) {
-  const suggestions = useQuery(api.agents.getSuggestions, { workspaceId }) ?? [];
-  const approve = useMutation(api.agents.approveSuggestion);
-  const reject = useMutation(api.agents.rejectSuggestion);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function loadSuggestions() {
+      const { data } = await supabase
+        .from('agent_suggestions')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setSuggestions(data.map(s => ({
+          ...s,
+          _id: s.id,
+        })));
+      }
+    }
+    loadSuggestions();
+  }, [workspaceId]);
+
+  async function approve(suggestionId: string) {
+    const { error } = await supabase
+      .from('agent_suggestions')
+      .update({ status: 'approved' })
+      .eq('id', suggestionId);
+
+    if (!error) {
+      setSuggestions(prev => prev.filter(s => s._id !== suggestionId));
+    }
+  }
+
+  async function reject(suggestionId: string) {
+    const { error } = await supabase
+      .from('agent_suggestions')
+      .update({ status: 'rejected' })
+      .eq('id', suggestionId);
+
+    if (!error) {
+      setSuggestions(prev => prev.filter(s => s._id !== suggestionId));
+    }
+  }
 
   if (suggestions.length === 0) return null;
 
@@ -32,7 +72,7 @@ export function AgentSuggestions({ workspaceId }: { workspaceId: any }) {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="glass-card antigravity-float overflow-hidden border-terracotta/20">
+              <Card className="glass-card overflow-hidden border-terracotta/20">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
@@ -59,7 +99,7 @@ export function AgentSuggestions({ workspaceId }: { workspaceId: any }) {
                   <div className="flex items-center gap-2 mt-4">
                     <Button 
                       size="sm" 
-                      onClick={() => approve({ suggestionId: s._id })}
+                      onClick={() => approve(s._id)}
                       className="flex-1 bg-terracotta hover:bg-terracotta/90 text-white text-xs h-8"
                     >
                       <Check size={14} className="mr-1.5" />
@@ -68,7 +108,7 @@ export function AgentSuggestions({ workspaceId }: { workspaceId: any }) {
                     <Button 
                       size="sm" 
                       variant="ghost"
-                      onClick={() => reject({ suggestionId: s._id })}
+                      onClick={() => reject(s._id)}
                       className="text-muted-foreground hover:text-near-black text-xs h-8"
                     >
                       <X size={14} className="mr-1.5" />

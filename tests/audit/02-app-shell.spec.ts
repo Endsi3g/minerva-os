@@ -30,7 +30,7 @@ test.describe('App Shell', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/app/dashboard');
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500); // allow Convex loading state to settle
+    await page.waitForTimeout(1500); // allow Supabase loading state to settle
   });
 
   test('Sidebar renders with navigation', async ({ page }) => {

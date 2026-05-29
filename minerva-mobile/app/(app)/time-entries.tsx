@@ -6,7 +6,6 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { useQuery } from 'convex/react';
 import { useState, useCallback, useEffect } from 'react';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -18,21 +17,19 @@ import { useMobileLang } from '@/lib/i18n';
 import { useAppAuth } from '@/lib/auth';
 import { trackScreen } from '@/lib/analytics';
 import { captureException } from '@/lib/sentry';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 type TimeEntry = {
-  _id: string;
-  projectId?: string;
+  id: string;
+  project_id?: string;
   description?: string;
-  durationMs: number;
+  duration: number; // minutes
   billable: boolean;
-  startTime: number;
+  start_time: number; // ms timestamp
 };
 
 type Project = {
-  _id: string;
+  id: string;
   name: string;
 };
 
@@ -47,7 +44,6 @@ function getWeekKey(timestamp: number): string {
 
 function getWeekLabel(timestamp: number, t: Translations): string {
   const d = new Date(timestamp);
-  // get Monday of that week
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   const monday = new Date(d.setDate(diff));
@@ -55,15 +51,14 @@ function getWeekLabel(timestamp: number, t: Translations): string {
   return `${t.timeEntries.weekOf} ${label}`;
 }
 
-function fmtDuration(ms: number): string {
-  const totalMins = Math.floor(ms / 60000);
-  const h = Math.floor(totalMins / 60);
-  const m = totalMins % 60;
+function fmtDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
 type ListRow =
-  | { type: 'header'; weekKey: string; label: string; totalMs: number; billableMs: number }
+  | { type: 'header'; weekKey: string; label: string; totalMins: number; billableMins: number }
   | { type: 'entry'; entry: TimeEntry; projectName: string };
 
 export default function TimeEntries() {
@@ -72,33 +67,37 @@ export default function TimeEntries() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [allEntries, setAllEntries] = useState<TimeEntry[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => { trackScreen('TimeEntries'); }, []);
 
-  let workspaces: { _id: string }[] = [];
-  try {
-    workspaces = (useQuery(api.workspaces.list, {}) ?? []) as { _id: string }[];
-  } catch (err) {
-    captureException(err, { screen: 'TimeEntries' });
-  }
-  const workspaceId = workspaces[0]?._id;
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    try {
+      const wsRes = await supabase.from('workspaces').select('id').limit(1);
+      const workspaceId = wsRes.data?.[0]?.id;
+      if (!workspaceId) return;
 
-  const allEntries = (useQuery(
-    api.timeEntries.listByUser,
-    workspaceId && user ? { userId: user._id, workspaceId } : 'skip',
-  ) ?? []) as TimeEntry[];
+      const [entriesRes, projectsRes] = await Promise.all([
+        supabase.from('time_entries').select('*').eq('workspace_id', workspaceId).eq('user_id', user.id).order('start_time', { ascending: false }),
+        supabase.from('projects').select('id,name').eq('workspace_id', workspaceId),
+      ]);
+      setAllEntries(entriesRes.data ?? []);
+      setProjects(projectsRes.data ?? []);
+    } catch (err) {
+      captureException(err, { screen: 'TimeEntries' });
+    }
+  }, [user]);
 
-  const projects = (useQuery(
-    api.projects.list,
-    workspaceId ? { workspaceId } : 'skip',
-  ) ?? []) as Project[];
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const projectMap = new Map<string, string>(projects.map(p => [p._id, p.name]));
+  const projectMap = new Map<string, string>(projects.map(p => [p.id, p.name]));
 
   // Group by week
   const weekMap = new Map<string, TimeEntry[]>();
   for (const entry of allEntries) {
-    const key = getWeekKey(entry.startTime);
+    const key = getWeekKey(entry.start_time);
     const existing = weekMap.get(key) ?? [];
     existing.push(entry);
     weekMap.set(key, existing);
@@ -109,36 +108,36 @@ export default function TimeEntries() {
   const rows: ListRow[] = [];
   for (const weekKey of sortedWeeks) {
     const entries = weekMap.get(weekKey) ?? [];
-    const totalMs = entries.reduce((acc, e) => acc + e.durationMs, 0);
-    const billableMs = entries.filter(e => e.billable).reduce((acc, e) => acc + e.durationMs, 0);
+    const totalMins = entries.reduce((acc, e) => acc + e.duration, 0);
+    const billableMins = entries.filter(e => e.billable).reduce((acc, e) => acc + e.duration, 0);
     rows.push({
       type: 'header',
       weekKey,
-      label: getWeekLabel(entries[0].startTime, t),
-      totalMs,
-      billableMs,
+      label: getWeekLabel(entries[0].start_time, t),
+      totalMins,
+      billableMins,
     });
-    for (const entry of entries.sort((a, b) => b.startTime - a.startTime)) {
+    for (const entry of entries.sort((a, b) => b.start_time - a.start_time)) {
       rows.push({
         type: 'entry',
         entry,
-        projectName: entry.projectId ? (projectMap.get(entry.projectId) ?? '—') : '—',
+        projectName: entry.project_id ? (projectMap.get(entry.project_id) ?? '—') : '—',
       });
     }
   }
 
-  // This week summary
   const now = Date.now();
   const thisWeekKey = getWeekKey(now);
   const thisWeekEntries = weekMap.get(thisWeekKey) ?? [];
-  const thisWeekTotal = thisWeekEntries.reduce((acc, e) => acc + e.durationMs, 0);
-  const thisWeekBillable = thisWeekEntries.filter(e => e.billable).reduce((acc, e) => acc + e.durationMs, 0);
+  const thisWeekTotal = thisWeekEntries.reduce((acc, e) => acc + e.duration, 0);
+  const thisWeekBillable = thisWeekEntries.filter(e => e.billable).reduce((acc, e) => acc + e.duration, 0);
   const thisWeekBillablePct = thisWeekTotal > 0 ? Math.round((thisWeekBillable / thisWeekTotal) * 100) : 0;
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
   async function handleExportCsv() {
     if (exporting) return;
@@ -146,11 +145,10 @@ export default function TimeEntries() {
     try {
       const header = 'Date,Project,Description,Duration (min),Billable\n';
       const lines = allEntries.map(e => {
-        const date = new Date(e.startTime).toISOString().split('T')[0];
-        const project = e.projectId ? (projectMap.get(e.projectId) ?? '') : '';
+        const date = new Date(e.start_time).toISOString().split('T')[0];
+        const project = e.project_id ? (projectMap.get(e.project_id) ?? '') : '';
         const description = (e.description ?? '').replace(/,/g, ';');
-        const mins = Math.floor(e.durationMs / 60000);
-        return `${date},"${project}","${description}",${mins},${e.billable ? 'Yes' : 'No'}`;
+        return `${date},"${project}","${description}",${e.duration},${e.billable ? 'Yes' : 'No'}`;
       });
       const csv = header + lines.join('\n');
       const path = `${FileSystem.cacheDirectory}time-entries.csv`;
@@ -209,7 +207,7 @@ export default function TimeEntries() {
       <FlatList
         data={rows}
         keyExtractor={(row) =>
-          row.type === 'header' ? `header-${row.weekKey}` : `entry-${row.entry._id}`
+          row.type === 'header' ? `header-${row.weekKey}` : `entry-${row.entry.id}`
         }
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, paddingTop: 8 }}
         refreshControl={
@@ -218,7 +216,7 @@ export default function TimeEntries() {
         ListEmptyComponent={<EmptyState emoji="⏱" title={t.timeEntries.noEntries} />}
         renderItem={({ item: row }) => {
           if (row.type === 'header') {
-            const billablePct = row.totalMs > 0 ? Math.round((row.billableMs / row.totalMs) * 100) : 0;
+            const billablePct = row.totalMins > 0 ? Math.round((row.billableMins / row.totalMins) * 100) : 0;
             return (
               <View
                 style={{
@@ -233,7 +231,7 @@ export default function TimeEntries() {
                   {row.label}
                 </Text>
                 <Text style={{ color: '#8A9099', fontSize: 12 }}>
-                  {fmtDuration(row.totalMs)} · {billablePct}% {t.timeEntries.billablePercent}
+                  {fmtDuration(row.totalMins)} · {billablePct}% {t.timeEntries.billablePercent}
                 </Text>
               </View>
             );
@@ -265,7 +263,7 @@ export default function TimeEntries() {
                   {entry.description ?? '—'}
                 </Text>
                 <Text style={{ color: '#B8BDC7', fontSize: 12, fontWeight: '600' }}>
-                  {fmtDuration(entry.durationMs)}
+                  {fmtDuration(entry.duration)}
                 </Text>
               </View>
             </View>

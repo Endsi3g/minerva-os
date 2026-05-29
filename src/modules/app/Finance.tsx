@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useWorkspaces, useFinances, useAddFinance } from '@/lib/hooks/useSupabase';
 import { useLang } from '@/i18n';
 
 const TPS_RATE = 0.05;
@@ -17,11 +16,11 @@ export default function Finance() {
   const { t, lang } = useLang();
   const f = t.app.financeModule;
   
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const workspaces = useWorkspaces();
+  const workspaceId = workspaces[0]?.id;
 
-  const finances = useQuery(api.finances.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const addEntry = useMutation(api.finances.add);
+  const finances = useFinances(workspaceId);
+  const addEntry = useAddFinance();
 
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
@@ -74,7 +73,7 @@ export default function Finance() {
     if (!workspaceId) return;
     await addEntry({
       workspaceId,
-      type: form.type as any,
+      type: form.type,
       amount: baseAmount,
       description: form.description,
       category: form.category,
@@ -82,7 +81,7 @@ export default function Finance() {
       tps: baseAmount * TPS_RATE,
       tvq: baseAmount * TVQ_RATE,
       status: 'paid',
-    } as any);
+    });
 
     setShowAdd(false);
     setForm({ ...form, description: '', amount: '' });

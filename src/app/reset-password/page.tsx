@@ -1,15 +1,11 @@
 'use client';
-import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuthActions } from '@convex-dev/auth/react';
+import { supabase } from '@/lib/supabase';
 
-function ResetPasswordForm() {
-  const { signIn } = useAuthActions();
+export default function ResetPasswordPage() {
   const router = useRouter();
-  const params = useSearchParams();
-  const token = params.get('token') ?? '';
-
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
@@ -28,7 +24,8 @@ function ResetPasswordForm() {
     setError('');
     setLoading(true);
     try {
-      await signIn('password', { token, newPassword: password, flow: 'reset' });
+      const { error: err } = await supabase.auth.updateUser({ password });
+      if (err) throw err;
       router.push('/login');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid or expired reset link');
@@ -59,14 +56,6 @@ function ResetPasswordForm() {
           Pick a strong password you have not used before.
         </p>
 
-        {!token && (
-          <div style={{ backgroundColor: 'rgba(168,106,106,0.12)', border: '1px solid rgba(168,106,106,0.3)', borderRadius: 12, padding: 20, marginBottom: 24 }}>
-            <p style={{ color: '#A86A6A', fontSize: 14, margin: 0 }}>
-              Invalid reset link. Please request a new one.
-            </p>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>
             <label style={{ color: '#B8BDC7', fontSize: 13, display: 'block', marginBottom: 6 }}>New password</label>
@@ -81,7 +70,7 @@ function ResetPasswordForm() {
 
           <button
             type="submit"
-            disabled={loading || !token}
+            disabled={loading}
             style={{
               width: '100%',
               backgroundColor: '#F5F1E8',
@@ -91,8 +80,8 @@ function ResetPasswordForm() {
               padding: '13px 0',
               fontSize: 14,
               fontWeight: 600,
-              cursor: loading || !token ? 'not-allowed' : 'pointer',
-              opacity: loading || !token ? 0.7 : 1,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1,
             }}
           >
             {loading ? 'Updating...' : 'Update password'}
@@ -104,13 +93,5 @@ function ResetPasswordForm() {
         </p>
       </div>
     </div>
-  );
-}
-
-export default function ResetPasswordPage() {
-  return (
-    <Suspense>
-      <ResetPasswordForm />
-    </Suspense>
   );
 }

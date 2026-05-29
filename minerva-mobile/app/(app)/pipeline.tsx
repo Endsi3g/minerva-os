@@ -1,5 +1,4 @@
 import { FlatList, View, Text, RefreshControl } from 'react-native';
-import { useQuery } from 'convex/react';
 import { useState, useCallback, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/Header';
@@ -8,16 +7,13 @@ import { StatusPill } from '@/components/StatusPill';
 import { NativeSegmentedControl } from '@/components/NativeSegmentedControl';
 import { useMobileLang } from '@/lib/i18n';
 import { trackScreen } from '@/lib/analytics';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 type Deal = {
-  _id: string;
-  name: string;
+  id: string;
+  company: string;
   stage: string;
   value?: number;
-  company?: string;
   contact?: string;
 };
 
@@ -33,20 +29,28 @@ export default function Pipeline() {
   const insets = useSafeAreaInsets();
   const [stageIdx, setStageIdx] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [allDeals, setAllDeals] = useState<Deal[]>([]);
 
   useEffect(() => { trackScreen('Pipeline'); }, []);
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-  const allDeals = (useQuery(api.deals.list, workspaceId ? { workspaceId } : 'skip') ?? []) as Deal[];
+  const loadData = useCallback(async () => {
+    const wsRes = await supabase.from('workspaces').select('id').limit(1);
+    const wid = wsRes.data?.[0]?.id;
+    if (!wid) return;
+    const { data } = await supabase.from('deals').select('*').eq('workspace_id', wid);
+    setAllDeals(data ?? []);
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const selectedStage: Stage = STAGE_VALUES[stageIdx];
   const deals = allDeals.filter(d => d.stage === selectedStage);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
   const stageLabels: string[] = [
     t.pipeline.stages.new_lead,
@@ -73,7 +77,7 @@ export default function Pipeline() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
           <View style={{ flex: 1, marginRight: 8 }}>
             <Text style={{ color: '#F5F1E8', fontSize: 15, fontWeight: '600' }} numberOfLines={1}>
-              {deal.company ?? deal.name}
+              {deal.company}
             </Text>
             {deal.contact ? (
               <Text style={{ color: '#8A9099', fontSize: 12, marginTop: 2 }}>{deal.contact}</Text>
@@ -102,7 +106,7 @@ export default function Pipeline() {
       </View>
       <FlatList
         data={deals}
-        keyExtractor={d => d._id}
+        keyExtractor={d => d.id}
         contentContainerStyle={{ paddingTop: 4, paddingBottom: 32 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7FA38A" />

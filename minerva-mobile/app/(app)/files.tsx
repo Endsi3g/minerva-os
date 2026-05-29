@@ -1,14 +1,11 @@
 import { FlatList, View, Text, TouchableOpacity, Alert, RefreshControl, Platform, ActionSheetIOS } from 'react-native';
-import { useQuery, useMutation } from 'convex/react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { useMobileLang } from '@/lib/i18n';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 type FileAsset = {
-  _id: string;
+  id: string;
   name: string;
   type: string;
   size: number;
@@ -47,18 +44,25 @@ export default function Files() {
   const { t } = useMobileLang();
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [files, setFiles] = useState<FileAsset[]>([]);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-  const files = (useQuery(api.assets.list, workspaceId ? { workspaceId } : 'skip') ?? []) as FileAsset[];
-
-  const generateUploadUrl = useMutation(api.assets.generateUploadUrl);
-  const saveFile = useMutation(api.assets.add);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+  const loadData = useCallback(async () => {
+    const wsRes = await supabase.from('workspaces').select('id').limit(1);
+    const wid = wsRes.data?.[0]?.id;
+    if (!wid) return;
+    setWorkspaceId(wid);
+    const { data } = await supabase.from('assets').select('*').eq('workspace_id', wid).order('created_at', { ascending: false });
+    setFiles(data ?? []);
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
   async function pickAndUpload(fromCamera: boolean) {
     if (!workspaceId) { Alert.alert('No workspace found'); return; }
@@ -71,26 +75,32 @@ export default function Files() {
       if (result.canceled || !result.assets[0]) return;
 
       const asset = result.assets[0];
-      const uploadUrl = await generateUploadUrl();
-      const response = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': asset.mimeType ?? 'image/jpeg' },
-        body: { uri: asset.uri } as unknown as BodyInit,
-      });
-      if (!response.ok) throw new Error('Upload failed');
-
       const name = asset.fileName ?? asset.uri.split('/').pop() ?? 'upload';
       const type = (asset.mimeType ?? '').startsWith('image') ? 'image'
         : (asset.mimeType ?? '').startsWith('video') ? 'video' : 'document';
 
-      await saveFile({
-        workspaceId,
+      // Upload to Supabase Storage
+      const filePath = `${workspaceId}/${Date.now()}-${name}`;
+      const fileRes = await fetch(asset.uri);
+      const blob = await fileRes.blob();
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from('assets')
+        .upload(filePath, blob, { contentType: asset.mimeType ?? 'application/octet-stream' });
+
+      if (storageError) throw storageError;
+
+      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(filePath);
+
+      await supabase.from('assets').insert({
+        workspace_id: workspaceId,
         name,
         type,
         size: asset.fileSize ?? 0,
-        url: '',
-        uploadedAt: Date.now(),
+        url: publicUrl,
+        file_path: storageData.path,
       });
+
+      await loadData();
     } catch (err) {
       Alert.alert(t.errors.uploadFailed, String(err));
     } finally {
@@ -139,7 +149,7 @@ export default function Files() {
       ) : (
         <FlatList
           data={files}
-          keyExtractor={f => f._id}
+          keyExtractor={f => f.id}
           numColumns={3}
           contentContainerStyle={{ padding: 8 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7FA38A" />}

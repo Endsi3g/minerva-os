@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 async function goTo(page: any, route: string) {
   await page.goto(route);

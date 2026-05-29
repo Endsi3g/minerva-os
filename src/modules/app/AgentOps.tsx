@@ -1,18 +1,29 @@
 'use client';
-import { useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Sparkles, History, ShieldCheck, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AgentOps() {
-  // Get first workspace for now
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-  
-  const agents = useQuery(api.agents.list, workspaceId ? { workspaceId } : "skip") ?? [];
-  const audit = useQuery(api.agents.getAudit, workspaceId ? { workspaceId } : "skip") ?? [];
+  const [agents, setAgents] = useState<any[]>([]);
+  const [audit, setAudit] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      const wsRes = await supabase.from('workspaces').select('id').limit(1);
+      const wid = wsRes.data?.[0]?.id;
+      if (!wid) return;
+      const [agRes, auRes] = await Promise.all([
+        supabase.from('agents').select('*').eq('workspace_id', wid),
+        supabase.from('agent_audit').select('*').eq('workspace_id', wid).order('timestamp', { ascending: false }).limit(20),
+      ]);
+      setAgents(agRes.data ?? []);
+      setAudit(auRes.data ?? []);
+    }
+    load();
+  }, []);
 
   return (
     <div className="space-y-8 max-w-6xl">

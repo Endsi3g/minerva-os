@@ -1,28 +1,25 @@
 import { FlatList, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
-import { useQuery, useMutation } from 'convex/react';
-import { useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { router } from 'expo-router';
 import { Header } from '@/components/Header';
 import { EmptyState } from '@/components/EmptyState';
 import { SwipeableRow } from '@/components/SwipeableRow';
 import { useMobileLang } from '@/lib/i18n';
 import { useAppAuth } from '@/lib/auth';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 type Notification = {
-  _id: string;
+  id: string;
   title: string;
   message: string;
   type: string;
   read: boolean;
-  targetUrl?: string;
-  _creationTime: number;
+  target_url?: string;
+  created_at: string;
 };
 
-function relativeTime(ms: number): string {
-  const diff = Date.now() - ms;
+function relativeTime(isoString: string): string {
+  const diff = Date.now() - new Date(isoString).getTime();
   const minutes = Math.floor(diff / 60000);
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
@@ -31,16 +28,16 @@ function relativeTime(ms: number): string {
   return `${days}d ago`;
 }
 
-function isSameDay(ms: number): boolean {
-  const d = new Date(ms);
+function isSameDay(isoString: string): boolean {
+  const d = new Date(isoString);
   const now = new Date();
   return d.getFullYear() === now.getFullYear() &&
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate();
 }
 
-function isWithinWeek(ms: number): boolean {
-  return Date.now() - ms < 7 * 24 * 60 * 60 * 1000;
+function isWithinWeek(isoString: string): boolean {
+  return Date.now() - new Date(isoString).getTime() < 7 * 24 * 60 * 60 * 1000;
 }
 
 type SectionRow =
@@ -50,21 +47,31 @@ type SectionRow =
 export default function Notifications() {
   const { t } = useMobileLang();
   const { user } = useAppAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const notifications = (useQuery(
-    api.notifications.list,
-    user?.email ? { userId: user.email } : 'skip'
-  ) ?? []) as Notification[];
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setNotifications(data ?? []);
+  }, [user]);
 
-  const markAsRead = useMutation(api.notifications.markAsRead);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const onRefresh = useCallback(() => {
-    // Convex keeps data live; manual refresh is a no-op
-  }, []);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
-  const today = notifications.filter(n => isSameDay(n._creationTime));
-  const thisWeek = notifications.filter(n => !isSameDay(n._creationTime) && isWithinWeek(n._creationTime));
-  const earlier = notifications.filter(n => !isWithinWeek(n._creationTime));
+  const today = notifications.filter(n => isSameDay(n.created_at));
+  const thisWeek = notifications.filter(n => !isSameDay(n.created_at) && isWithinWeek(n.created_at));
+  const earlier = notifications.filter(n => !isWithinWeek(n.created_at));
 
   const sections: SectionRow[] = [
     ...(today.length > 0 ? [{ kind: 'header' as const, label: t.notifications.today, id: 'h-today' }] : []),
@@ -77,16 +84,18 @@ export default function Notifications() {
 
   async function handleTap(notification: Notification) {
     if (!notification.read) {
-      await markAsRead({ id: notification._id as Parameters<typeof markAsRead>[0]['id'] });
+      await supabase.from('notifications').update({ read: true }).eq('id', notification.id);
+      setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true } : n));
     }
-    if (notification.targetUrl) {
-      router.push(notification.targetUrl as Parameters<typeof router.push>[0]);
+    if (notification.target_url) {
+      router.push(notification.target_url as Parameters<typeof router.push>[0]);
     }
   }
 
   async function handleMarkRead(notification: Notification) {
     if (!notification.read) {
-      await markAsRead({ id: notification._id as Parameters<typeof markAsRead>[0]['id'] });
+      await supabase.from('notifications').update({ read: true }).eq('id', notification.id);
+      setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true } : n));
     }
   }
 
@@ -101,11 +110,11 @@ export default function Notifications() {
           data={sections}
           keyExtractor={item => {
             if (item.kind === 'header') return item.id;
-            return item.notification._id;
+            return item.notification.id;
           }}
           contentContainerStyle={{ padding: 16, paddingTop: 8 }}
           refreshControl={
-            <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor="#7FA38A" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7FA38A" />
           }
           renderItem={({ item }) => {
             if (item.kind === 'header') {
@@ -153,7 +162,7 @@ export default function Notifications() {
                       {notification.message}
                     </Text>
                     <Text style={{ color: 'rgba(138,144,153,0.5)', fontSize: 11, marginTop: 2 }}>
-                      {relativeTime(notification._creationTime)}
+                      {relativeTime(notification.created_at)}
                     </Text>
                   </View>
                 </TouchableOpacity>

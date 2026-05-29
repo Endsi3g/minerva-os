@@ -20,9 +20,7 @@ import {
 import { DealCard } from '@/components/minerva/DealCard';
 import type { DealStage } from '@/lib/types';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
-import { Id } from '../../../convex/_generated/dataModel';
+import { useWorkspaces, useDeals, useAddDeal, useUpdateDeal, useUpdateDealStage } from '@/lib/hooks/useSupabase';
 
 function fmt(n: number, lang: string) {
   return new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US', { 
@@ -58,13 +56,13 @@ export default function Pipeline() {
   const { t, lang } = useLang();
   const p = t.app.pipeline;
   
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const workspaces = useWorkspaces();
+  const workspaceId = workspaces[0]?.id;
 
-  const leads = useQuery(api.deals.list, workspaceId ? { workspaceId } : "skip") ?? [];
-  const addDeal = useMutation(api.deals.add);
-  const updateDeal = useMutation(api.deals.update);
-  const updateStage = useMutation(api.deals.updateStage);
+  const leads = useDeals(workspaceId);
+  const addDeal = useAddDeal();
+  const updateDeal = useUpdateDeal();
+  const updateStage = useUpdateDealStage();
   
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<any | null>(null);
@@ -108,7 +106,7 @@ export default function Pipeline() {
 
   const handleDrop = (e: React.DragEvent, stageId: DealStage) => {
     const leadId = e.dataTransfer.getData('leadId');
-    updateStage({ id: leadId as Id<"deals">, stage: stageId });
+    updateStage({ id: leadId, stage: stageId });
   };
 
   async function handleSaveDeal() {
@@ -116,7 +114,7 @@ export default function Pipeline() {
 
     if (editingLead) {
       await updateDeal({
-        id: editingLead._id as Id<"deals">,
+        id: editingLead._id,
         company: form.company.trim(),
         contact: form.contact.trim(),
         email: form.email.trim(),

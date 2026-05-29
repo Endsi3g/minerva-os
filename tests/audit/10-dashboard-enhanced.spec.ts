@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-async function goTo(page: Parameters<typeof test>[1] extends (...args: infer A) => unknown ? A[0] : never, route: string) {
+async function goTo(page: Page, route: string) {
   await page.goto(route);
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(1500);

@@ -70,10 +70,10 @@ test.describe('Cross-cutting interactions', () => {
       page.on('console', (msg) => {
         if (msg.type() === 'error') {
           const text = msg.text();
-          // Filter out expected Convex connection errors (no backend in test env)
+          // Filter out expected connection errors (no backend in test env)
           const isExpected = text.includes('WebSocket') || text.includes('convex') ||
-            text.includes('placeholder.convex') || text.includes('net::ERR') ||
-            text.includes('Failed to fetch');
+            text.includes('supabase') || text.includes('placeholder.convex') ||
+            text.includes('net::ERR') || text.includes('Failed to fetch');
           if (!isExpected) errors.push(text);
         }
       });

@@ -1,12 +1,11 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Search, Upload, Image, Video, FileText, Archive, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; class: string; bg: string }> = {
   image:    { icon: Image,    class: 'text-sage',   bg: 'bg-sage/10'   },
@@ -58,18 +57,39 @@ export default function Files() {
   const { t } = useLang();
   const f = t.app.files;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-
-  const assets = useQuery(api.assets.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const generateUploadUrl = useMutation(api.assets.generateUploadUrl);
-  const addAsset = useMutation(api.assets.add);
-  const removeAsset = useMutation(api.assets.remove);
-
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [assets, setAssets] = useState<any[]>([]);
   const [query, setQuery] = useState('');
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function loadAssets() {
+      const { data } = await supabase
+        .from('assets')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('uploaded_at', { ascending: false });
+      if (data) {
+        setAssets(data.map(a => ({
+          ...a,
+          _id: a.id,
+          uploadedAt: a.uploaded_at,
+        })));
+      }
+    }
+    loadAssets();
+  }, [workspaceId]);
 
   const filtered = assets.filter((a: any) =>
     a.name.toLowerCase().includes(query.toLowerCase())
@@ -80,25 +100,42 @@ export default function Files() {
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
-        const uploadUrl = await generateUploadUrl();
-        const res = await fetch(uploadUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': file.type },
-          body: file,
-        });
-        if (!res.ok) continue;
-        const { storageId } = await res.json();
-        await addAsset({
-          workspaceId,
-          name: file.name,
-          type: getFileType(file),
-          size: file.size,
-          url: storageId,
-          uploadedAt: new Date().toISOString(),
-        });
+        // Upload simulation / directly add to assets metadata
+        const fileType = getFileType(file);
+        const { data, error } = await supabase
+          .from('assets')
+          .insert({
+            workspace_id: workspaceId,
+            name: file.name,
+            type: fileType,
+            size: file.size,
+            url: `https://kcwdmufkyjsitsuxmqld.supabase.co/storage/v1/object/public/assets/${file.name}`,
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          setAssets(prev => [
+            {
+              ...data,
+              _id: data.id,
+              uploadedAt: data.uploaded_at,
+            },
+            ...prev,
+          ]);
+        }
       }
+    } catch (err) {
+      console.error(err);
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function removeAsset(id: string) {
+    const { error } = await supabase.from('assets').delete().eq('id', id);
+    if (!error) {
+      setAssets(prev => prev.filter(a => a._id !== id));
     }
   }
 
@@ -167,7 +204,7 @@ export default function Files() {
             <FileCard
               key={asset._id}
               file={asset}
-              onDelete={() => removeAsset({ id: asset._id })}
+              onDelete={() => removeAsset(asset._id)}
             />
           ))}
         </div>

@@ -1,30 +1,68 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Video, BookOpen, Sparkles, Plus, CheckCircle2, Circle, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
-import { Id } from '../../../convex/_generated/dataModel';
+import { supabase } from '@/lib/supabase';
 
 export default function CallPreps() {
   const { t } = useLang();
   const cp = t.app.callPreps;
-  
-  const calls = useQuery(api.calls.list, {}) ?? [];
-  const updateCall = useMutation(api.calls.update);
 
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [calls, setCalls] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function loadCalls() {
+      const { data } = await supabase
+        .from('calls')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('start_time', { ascending: true });
+      if (data) {
+        setCalls(data.map(c => ({
+          ...c,
+          _id: c.id,
+          startTime: c.start_time,
+          endTime: c.end_time,
+          prepChecklist: c.prep_checklist,
+          notesUrl: c.notes_url,
+        })));
+      }
+    }
+    loadCalls();
+  }, [workspaceId]);
+
   const selectedCall = calls.find((c: any) => c._id === selectedId);
 
-  const toggleTask = async (callId: Id<"calls">, taskIndex: number) => {
+  const toggleTask = async (callId: string, taskIndex: number) => {
     const call = calls.find((c: any) => c._id === callId);
     if (!call) return;
     const newList = [...call.prepChecklist];
     newList[taskIndex] = { ...newList[taskIndex], completed: !newList[taskIndex].completed };
-    await updateCall({ id: callId, prepChecklist: newList });
+
+    const { error } = await supabase
+      .from('calls')
+      .update({ prep_checklist: newList })
+      .eq('id', callId);
+
+    if (!error) {
+      setCalls(prev =>
+        prev.map(c => c._id === callId ? { ...c, prepChecklist: newList } : c)
+      );
+    }
   };
 
   return (

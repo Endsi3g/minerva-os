@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useWorkspaces, useProjects, useInvoices, useApprovals, useDeals, useTasks, useActivity } from '@/lib/hooks/useSupabase';
 import { AgentSuggestions } from '@/components/agents/AgentSuggestions';
 import { motion } from 'framer-motion';
 import type { Translations } from '@/i18n';
@@ -87,7 +86,7 @@ function computeRiskFlags(t: Translations, data: { projects: any[], invoices: an
 /* ── Activity Feed ────────────────────────────────────────────────────────── */
 
 function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspaceId: any }) {
-  const activity = useQuery(api.activity.list, workspaceId ? { workspaceId } : "skip") ?? [];
+  const activity = useActivity(workspaceId);
 
   if (activity.length === 0) {
     return (
@@ -288,14 +287,14 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('overview');
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const workspaces = useWorkspaces();
   const workspaceId = workspaces[0]?._id;
 
-  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : "skip") ?? [];
-  const approvals = useQuery(api.approvals.list as any) ?? [];
-  const deals = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  const projects = useProjects(workspaceId);
+  const invoices = useInvoices(workspaceId);
+  const approvals = useApprovals(workspaceId);
+  const deals = useDeals(workspaceId);
+  const tasks = useTasks(workspaceId);
 
   const d = t.app.dashboard;
   const hour = new Date().getHours();
@@ -339,10 +338,10 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-near-black dark:text-parchment font-serif italic">
+        <h1 className="text-3xl font-bold text-ivory font-serif italic">
           {greeting}, {displayName}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">{d.subtitle}</p>
+        <p className="text-sm text-silver mt-1">{d.subtitle}</p>
       </motion.div>
 
       {/* Tab bar */}
@@ -381,10 +380,10 @@ export default function Dashboard() {
             <DailyBriefing
               context={briefingContext}
               labels={{
-                title: d.briefingTitle,
-                loading: d.briefingLoading,
-                error: d.briefingError,
-                refresh: d.briefingRefresh,
+                 title: d.briefingTitle,
+                 loading: d.briefingLoading,
+                 error: d.briefingError,
+                 refresh: d.briefingRefresh,
               }}
             />
           )}
@@ -423,17 +422,17 @@ export default function Dashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1, duration: 0.4 }}
               >
-                <Card className="glass-card antigravity-float border-clay/10">
+                <Card className="glass-card border-white/10 bg-midnight">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{kpi.label}</CardTitle>
+                      <CardTitle className="text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</CardTitle>
                       <kpi.icon size={14} className={cn(kpi.color, "opacity-70")} />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-near-black dark:text-parchment">{kpi.value}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1 font-medium">
-                      <span className="text-terracotta">{kpi.delta.split(' ')[0]}</span>
+                    <p className="text-2xl font-bold text-ivory">{kpi.value}</p>
+                    <p className="text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
+                      <span className="text-sage">{kpi.delta.split(' ')[0]}</span>
                       {kpi.delta.split(' ').slice(1).join(' ')}
                     </p>
                   </CardContent>
@@ -444,25 +443,25 @@ export default function Dashboard() {
 
           {/* Activity feed + quick actions */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2 glass-card border-clay/10">
+            <Card className="lg:col-span-2 glass-card border-white/10 bg-midnight">
               <CardHeader>
-                <CardTitle className="text-sm font-bold text-near-black dark:text-parchment">{d.recentActivity}</CardTitle>
+                <CardTitle className="text-sm font-bold text-ivory">{d.recentActivity}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ActivityFeed emptyLabel={d.activityEmpty} workspaceId={workspaceId} />
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-clay/10">
+            <Card className="glass-card border-white/10 bg-midnight">
               <CardHeader>
-                <CardTitle className="text-sm font-bold text-near-black dark:text-parchment">{d.quickActions}</CardTitle>
+                <CardTitle className="text-sm font-bold text-ivory">{d.quickActions}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {quickActions.map(action => (
                   <button
                     key={action.label}
                     onClick={() => router.push(action.to)}
-                    className="w-full text-left text-sm px-3 py-2 rounded-lg text-muted-foreground hover:bg-terracotta/5 hover:text-terracotta transition-all duration-300 flex items-center justify-between group"
+                    className="w-full text-left text-sm px-3 py-2 rounded-lg text-silver hover:bg-white/5 hover:text-ivory transition-all duration-300 flex items-center justify-between group"
                   >
                     {action.label}
                     <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
@@ -473,6 +472,7 @@ export default function Dashboard() {
           </div>
         </>
       )}
+
 
       {tab === 'firefighter' && (
         <FirefighterView

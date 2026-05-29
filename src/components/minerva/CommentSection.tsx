@@ -1,7 +1,5 @@
 'use client';
-import { useState } from 'react';
-import { useMutation, useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLang } from '@/i18n';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -9,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/lib/supabase';
 
 interface CommentSectionProps {
   targetId: string;
@@ -19,22 +18,57 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
   const { user } = useAuth();
   const { t } = useLang();
   const c = t.comments;
-  const comments = useQuery(api.comments.list, { targetId, targetType }) ?? [];
-  const addComment = useMutation(api.comments.add);
+
+  const [comments, setComments] = useState<any[]>([]);
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!targetId || !targetType) return;
+    async function loadComments() {
+      const { data } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('target_id', targetId)
+        .eq('target_type', targetType)
+        .order('timestamp', { ascending: true });
+      if (data) {
+        setComments(data.map(comment => ({
+          ...comment,
+          _id: comment.id,
+        })));
+      }
+    }
+    loadComments();
+  }, [targetId, targetType]);
 
   async function handleSubmit() {
     if (!content.trim() || !user) return;
     setSubmitting(true);
     try {
-      await addComment({
-        targetId,
-        targetType,
-        author: user.name || user.email || 'Anonymous',
-        content: content.trim(),
-      });
-      setContent('');
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          target_id: targetId,
+          target_type: targetType,
+          author: user.name || user.email || 'Anonymous',
+          content: content.trim(),
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        setComments(prev => [
+          ...prev,
+          {
+            ...data,
+            _id: data.id,
+          },
+        ]);
+        setContent('');
+      }
+    } catch (err) {
+      console.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -49,22 +83,22 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
             <p>{c.startConversation}</p>
           </div>
         ) : (
-          comments.slice().reverse().map((c: any) => (
-            <div key={c._id} className="flex gap-3">
+          comments.slice().reverse().map((item: any) => (
+            <div key={item._id} className="flex gap-3">
               <Avatar className="h-6 w-6 shrink-0 mt-0.5">
                 <AvatarFallback className="text-[10px] bg-dusk text-silver">
-                  {c.author[0]}
+                  {item.author[0]}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-xs font-semibold text-ivory">{c.author}</span>
+                  <span className="text-xs font-semibold text-ivory">{item.author}</span>
                   <span className="text-[10px] text-fog">
-                    {new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 <p className="text-xs text-silver mt-1 leading-relaxed whitespace-pre-wrap">
-                  {c.content}
+                  {item.content}
                 </p>
               </div>
             </div>
@@ -89,7 +123,6 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
         />
         <Button
           size="icon"
-          variant="ghost"
           disabled={!content.trim() || submitting}
           onClick={handleSubmit}
           className="absolute bottom-2 right-2 h-7 w-7 text-sage hover:bg-sage/10"

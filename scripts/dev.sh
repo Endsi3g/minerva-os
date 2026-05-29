@@ -22,7 +22,7 @@ echo "  ██╔████╔██║██║██╔██╗ ██║�
 echo "  ██║╚██╔╝██║██║██║╚██╗██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══██║"
 echo "  ██║ ╚═╝ ██║██║██║ ╚████║███████╗██║  ██║ ╚████╔╝ ██║  ██║"
 echo "  ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝"
-echo "  OS v1.7.0 · Local Dev Setup · Uprising Studio"
+echo "  OS v1.7.0 · Local Dev Setup (Supabase) · Uprising Studio"
 echo ""
 
 # ── 1. Prerequisites ────────────────────────────────────────────────────────
@@ -49,8 +49,8 @@ if [[ ! -f ".env.local" ]]; then
   echo -e "${YELLOW}  │  ACTION REQUIRED: Edit .env.local before continuing │${NC}"
   echo -e "${YELLOW}  │                                                       │${NC}"
   echo -e "${YELLOW}  │  Required variables:                                  │${NC}"
-  echo -e "${YELLOW}  │    NEXT_PUBLIC_CONVEX_URL=https://xxx.convex.cloud   │${NC}"
-  echo -e "${YELLOW}  │    AUTH_SECRET=$(openssl rand -base64 32 2>/dev/null | head -c 32)  │${NC}"
+  echo -e "${YELLOW}  │    NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co  │${NC}"
+  echo -e "${YELLOW}  │    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_pub_...  │${NC}"
   echo -e "${YELLOW}  │    RESEND_API_KEY=re_xxxxxxxx                         │${NC}"
   echo -e "${YELLOW}  │    ANTHROPIC_API_KEY=sk-ant-xxxxxxxx                  │${NC}"
   echo -e "${YELLOW}  └─────────────────────────────────────────────────────┘${NC}"
@@ -61,9 +61,9 @@ else
 fi
 
 # Check required vars
-CONVEX_URL=$(grep NEXT_PUBLIC_CONVEX_URL .env.local | cut -d'=' -f2)
-if [[ -z "$CONVEX_URL" || "$CONVEX_URL" == *"xxx"* ]]; then
-  warn "NEXT_PUBLIC_CONVEX_URL not set in .env.local"
+SUPABASE_URL=$(grep NEXT_PUBLIC_SUPABASE_URL .env.local | cut -d'=' -f2)
+if [[ -z "$SUPABASE_URL" || "$SUPABASE_URL" == *"xxx"* ]]; then
+  warn "NEXT_PUBLIC_SUPABASE_URL not set in .env.local"
 fi
 
 # ── 3. Install dependencies ─────────────────────────────────────────────────
@@ -76,54 +76,29 @@ else
   success "node_modules exists (run with --reset to reinstall)"
 fi
 
-# ── 4. Convex setup ─────────────────────────────────────────────────────────
+# ── 4. Build check & Dev Server ─────────────────────────────────────────────
 
 echo ""
 echo -e "${BLUE}─────────────────────────────────────────────────${NC}"
-echo -e "${BLUE}  STEP 1/3 — Convex Backend${NC}"
-echo -e "${BLUE}─────────────────────────────────────────────────${NC}"
-echo ""
-
-if ! command -v convex >/dev/null 2>&1; then
-  info "Installing Convex CLI globally..."
-  npm install -g convex
-fi
-
-echo "  Run the Convex dev server in a SEPARATE terminal:"
-echo ""
-echo -e "${GREEN}    npx convex dev${NC}"
-echo ""
-echo "  This will:"
-echo "    • Create or link your Convex project"
-echo "    • Copy NEXT_PUBLIC_CONVEX_URL to .env.local"
-echo "    • Watch for schema/function changes"
-echo ""
-read -p "  Press Enter once Convex dev is running..."
-
-# ── 5. Build check ──────────────────────────────────────────────────────────
-
-echo ""
-echo -e "${BLUE}─────────────────────────────────────────────────${NC}"
-echo -e "${BLUE}  STEP 2/3 — Next.js Dev Server${NC}"
+echo -e "${BLUE}  STEP 1/2 — Next.js Dev Server${NC}"
 echo -e "${BLUE}─────────────────────────────────────────────────${NC}"
 echo ""
 
 info "Starting Next.js dev server..."
-echo ""
 echo "  The app will be available at: http://localhost:3000"
 echo "  Press Ctrl+C to stop."
 echo ""
 
-# ── 6. Optional Playwright tests ────────────────────────────────────────────
+# ── 5. Optional Playwright tests ────────────────────────────────────────────
 
 if [[ $RUN_TESTS == true ]]; then
   echo ""
   echo -e "${BLUE}─────────────────────────────────────────────────${NC}"
-  echo -e "${BLUE}  STEP 3/3 — Playwright Tests${NC}"
+  echo -e "${BLUE}  STEP 2/2 — Playwright Tests${NC}"
   echo -e "${BLUE}─────────────────────────────────────────────────${NC}"
   echo ""
   info "Building production bundle for tests..."
-  NEXT_PUBLIC_CONVEX_URL="$CONVEX_URL" npm run build
+  npm run build
   info "Running Playwright tests (146 tests)..."
   npx playwright test --reporter=list
   echo ""

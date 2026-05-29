@@ -16,6 +16,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
+import { supabase } from '@/lib/supabase';
 
 interface CommandPaletteContextType {
   open: boolean;
@@ -81,15 +82,66 @@ const quickActions = [
 function CommandPalette() {
   const { open, setOpen } = useCommandPalette();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId || searchQuery.trim().length < 2) {
+      setClients([]);
+      setProjects([]);
+      return;
+    }
+    const q = searchQuery.trim();
+    async function search() {
+      const [{ data: cData }, { data: pData }] = await Promise.all([
+        supabase
+          .from('clients')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .or(`company.ilike.%${q}%,contact.ilike.%${q}%`),
+        supabase
+          .from('projects')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .or(`name.ilike.%${q}%,client_name.ilike.%${q}%`),
+      ]);
+      if (cData) setClients(cData.map(c => ({ ...c, _id: c.id })));
+      if (pData) setProjects(pData.map(p => ({ ...p, _id: p.id, clientName: p.client_name })));
+    }
+    search();
+  }, [searchQuery, workspaceId]);
 
   function navigate(href: string) {
     router.push(href);
     setOpen(false);
+    setSearchQuery('');
   }
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setSearchQuery('');
+    }
+  };
+
   return (
-    <CommandDialog open={open} onOpenChange={setOpen} showCloseButton={false}>
-      <CommandInput placeholder="Search pages, actions..." />
+    <CommandDialog open={open} onOpenChange={handleOpenChange} showCloseButton={false}>
+      <CommandInput 
+        placeholder="Search pages, actions..." 
+        value={searchQuery}
+        onValueChange={setSearchQuery}
+      />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Quick actions">
@@ -105,6 +157,37 @@ function CommandPalette() {
             </CommandItem>
           ))}
         </CommandGroup>
+        
+        {searchQuery.trim().length >= 2 && (clients.length > 0 || projects.length > 0) && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Search results">
+              {clients.map(client => (
+                <CommandItem
+                  key={`client-${client._id}`}
+                  onSelect={() => navigate(`/app/clients`)}
+                  className="gap-3"
+                >
+                  <Users size={14} className="text-fog shrink-0" />
+                  <span>{client.company}</span>
+                  <span className="ml-auto text-[10px] text-fog">Client · {client.contact}</span>
+                </CommandItem>
+              ))}
+              {projects.map(project => (
+                <CommandItem
+                  key={`project-${project._id}`}
+                  onSelect={() => navigate(`/app/projects`)}
+                  className="gap-3"
+                >
+                  <FolderKanban size={14} className="text-fog shrink-0" />
+                  <span>{project.name}</span>
+                  <span className="ml-auto text-[10px] text-fog">Project · {project.clientName}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
         <CommandSeparator />
         <CommandGroup heading="Navigate">
           {navItems.map(item => (

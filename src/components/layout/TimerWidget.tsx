@@ -1,11 +1,10 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { Play, Square, Clock, X } from 'lucide-react';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 
 function formatElapsed(ms: number) {
   const s = Math.floor(ms / 1000);
@@ -23,18 +22,79 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
   const { user } = useAuth();
   const userId = user?.email ?? 'anonymous';
 
-  const activeTimer = useQuery(api.timers.getActive, { userId });
-  const startTimer = useMutation(api.timers.start);
-  const stopTimer = useMutation(api.timers.stop);
-  const cancelTimer = useMutation(api.timers.cancel);
+  const [activeTimer, setActiveTimer] = useState<any>(null);
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [projectTasks, setProjectTasks] = useState<any[]>([]);
 
   const [elapsed, setElapsed] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [description, setDescription] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [selectedTaskId, setSelectedTaskId] = useState<string>('');
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const workspaceList = useQuery(api.workspaces.list, {});
-  const workspaceId = workspaceList?.[0]?._id;
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id;
+
+  // Fetch active timer
+  useEffect(() => {
+    if (!userId) return;
+    async function loadActiveTimer() {
+      const { data } = await supabase
+        .from('active_timers')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (data) {
+        setActiveTimer({
+          ...data,
+          _id: data.id,
+          startTime: Number(data.start_time),
+        });
+      } else {
+        setActiveTimer(null);
+      }
+    }
+    loadActiveTimer();
+  }, [userId]);
+
+  // Fetch projects
+  useEffect(() => {
+    if (!workspaceId) return;
+    supabase
+      .from('projects')
+      .select('*')
+      .eq('workspace_id', workspaceId)
+      .then(({ data }) => {
+        if (data) {
+          setProjects(data.map(p => ({ ...p, _id: p.id })));
+        }
+      });
+  }, [workspaceId]);
+
+  // Fetch project tasks
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setProjectTasks([]);
+      return;
+    }
+    supabase
+      .from('tasks')
+      .select('*')
+      .eq('project_id', selectedProjectId)
+      .then(({ data }) => {
+        if (data) {
+          setProjectTasks(data.map(t => ({ ...t, _id: t.id })));
+        }
+      });
+  }, [selectedProjectId]);
 
   useEffect(() => {
     if (activeTimer) {
@@ -53,18 +113,60 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
 
   async function handleStart() {
     if (!workspaceId || !description.trim()) return;
-    await startTimer({ workspaceId, userId, description: description.trim() });
-    setDescription('');
-    setShowForm(false);
+    const startTime = Date.now();
+    const { data, error } = await supabase
+      .from('active_timers')
+      .insert({
+        workspace_id: workspaceId,
+        user_id: userId,
+        description: description.trim(),
+        project_id: selectedProjectId || null,
+        task_id: selectedTaskId || null,
+        start_time: startTime,
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setActiveTimer({
+        ...data,
+        _id: data.id,
+        startTime: Number(data.start_time),
+      });
+      setDescription('');
+      setSelectedProjectId('');
+      setSelectedTaskId('');
+      setShowForm(false);
+    }
   }
 
   async function handleStop() {
-    if (!workspaceId) return;
-    await stopTimer({ userId, workspaceId });
+    if (!workspaceId || !activeTimer) return;
+    const endTime = Date.now();
+    const duration = endTime - activeTimer.startTime;
+
+    // Create time entry
+    await supabase.from('time_entries').insert({
+      workspace_id: workspaceId,
+      user_id: userId,
+      project_id: activeTimer.project_id || null,
+      task_id: activeTimer.task_id || null,
+      description: activeTimer.description,
+      start_time: activeTimer.startTime,
+      end_time: endTime,
+      duration: duration,
+      billable: false,
+    });
+
+    // Delete active timer
+    await supabase.from('active_timers').delete().eq('id', activeTimer._id);
+    setActiveTimer(null);
   }
 
   async function handleCancel() {
-    await cancelTimer({ userId });
+    if (!activeTimer) return;
+    await supabase.from('active_timers').delete().eq('id', activeTimer._id);
+    setActiveTimer(null);
   }
 
   if (collapsed) {
@@ -121,6 +223,38 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
             placeholder="What are you working on?"
             className="w-full text-[11px] bg-transparent text-ivory placeholder:text-fog outline-none"
           />
+
+          <select
+            value={selectedProjectId}
+            onChange={e => {
+              setSelectedProjectId(e.target.value);
+              setSelectedTaskId('');
+            }}
+            className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
+          >
+            <option value="" className="bg-midnight text-fog">Select Project (optional)</option>
+            {projects.map((p: any) => (
+              <option key={p._id} value={p._id} className="bg-midnight text-silver">
+                {p.name}
+              </option>
+            ))}
+          </select>
+
+          {selectedProjectId && (
+            <select
+              value={selectedTaskId}
+              onChange={e => setSelectedTaskId(e.target.value)}
+              className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
+            >
+              <option value="" className="bg-midnight text-fog">Select Task (optional)</option>
+              {projectTasks.map((t: any) => (
+                <option key={t._id} value={t._id} className="bg-midnight text-silver">
+                  {t.title}
+                </option>
+              ))}
+            </select>
+          )}
+
           <div className="flex gap-1.5">
             <Button
               size="sm"
@@ -134,7 +268,11 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false);
+                setSelectedProjectId('');
+                setSelectedTaskId('');
+              }}
               className="h-6 px-2 text-[10px] text-fog"
             >
               <X size={9} />

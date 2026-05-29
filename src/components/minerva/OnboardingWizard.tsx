@@ -1,9 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
 import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const STEPS = [
   { id: 'workspace', label: 'Workspace', description: 'Set up your workspace identity' },
@@ -69,14 +68,13 @@ const labelStyle: React.CSSProperties = {
 };
 
 function WorkspaceStep({ onNext, workspaceId }: { onNext: () => void; workspaceId: string }) {
-  const updateWorkspace = useMutation(api.workspaces.update);
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleNext() {
     setLoading(true);
     if (name && workspaceId) {
-      await updateWorkspace({ id: workspaceId as Parameters<typeof updateWorkspace>[0]['id'], name });
+      await supabase.from('workspaces').update({ name }).eq('id', workspaceId);
     }
     setLoading(false);
     onNext();
@@ -96,7 +94,6 @@ function WorkspaceStep({ onNext, workspaceId }: { onNext: () => void; workspaceI
 }
 
 function TeamStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBack: () => void; workspaceId: string }) {
-  const createInvitation = useMutation(api.invitations.create);
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -105,10 +102,18 @@ function TeamStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBack:
     if (!email || !workspaceId) return;
     setLoading(true);
     try {
-      await createInvitation({ workspaceId: workspaceId as Parameters<typeof createInvitation>[0]['workspaceId'], email, role: 'member' });
+      await supabase.from('invitations').insert({
+        workspace_id: workspaceId,
+        email,
+        role: 'member',
+        token: Math.random().toString(36).substring(2, 15),
+        expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+      });
       setSent([...sent, email]);
       setEmail('');
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error(err);
+    }
     setLoading(false);
   }
 
@@ -141,7 +146,6 @@ function TeamStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBack:
 }
 
 function ClientStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBack: () => void; workspaceId: string }) {
-  const addClient = useMutation(api.clients.add);
   const [company, setCompany] = useState('');
   const [contact, setContact] = useState('');
   const [email, setEmail] = useState('');
@@ -150,7 +154,13 @@ function ClientStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBac
   async function handleNext() {
     if (company && workspaceId) {
       setLoading(true);
-      await addClient({ workspaceId: workspaceId as Parameters<typeof addClient>[0]['workspaceId'], company, contact, email, status: 'active' });
+      await supabase.from('clients').insert({
+        workspace_id: workspaceId,
+        company,
+        contact,
+        email,
+        status: 'active',
+      });
       setLoading(false);
     }
     onNext();
@@ -175,7 +185,6 @@ function ClientStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBac
 }
 
 function ProjectStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBack: () => void; workspaceId: string }) {
-  const addProject = useMutation(api.projects.add);
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -183,12 +192,12 @@ function ProjectStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBa
   async function handleNext() {
     if (name && workspaceId) {
       setLoading(true);
-      await addProject({
-        workspaceId: workspaceId as Parameters<typeof addProject>[0]['workspaceId'],
+      await supabase.from('projects').insert({
+        workspace_id: workspaceId,
         name,
-        clientName: clientName || 'TBD',
+        client_name: clientName || 'TBD',
         status: 'active',
-        dueDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+        due_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
         budget: 0,
       });
       setLoading(false);
@@ -243,8 +252,15 @@ const ghostBtn: React.CSSProperties = {
 export function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id ?? '';
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id ?? '';
 
   function handleComplete() {
     router.push('/app/dashboard');

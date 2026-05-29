@@ -1,19 +1,16 @@
 import { FlatList, View, Text, RefreshControl } from 'react-native';
-import { useQuery, useMutation } from 'convex/react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import { ApprovalCard } from '@/components/ApprovalCard';
 import { SwipeableRow } from '@/components/SwipeableRow';
 import { useMobileLang } from '@/lib/i18n';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 type Approval = {
-  _id: string;
+  id: string;
   name: string;
   type: string;
-  submittedDate?: string;
+  submitted_date?: string;
   status: 'pending' | 'approved' | 'revision';
 };
 
@@ -24,27 +21,36 @@ type SectionRow =
 export default function Approvals() {
   const { t } = useMobileLang();
   const [refreshing, setRefreshing] = useState(false);
+  const [approvals, setApprovals] = useState<Approval[]>([]);
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-  const approvals = (useQuery(api.approvals.list, workspaceId ? { workspaceId } : 'skip') ?? []) as Approval[];
-  const updateApproval = useMutation(api.approvals.update);
+  const loadData = useCallback(async () => {
+    const wsRes = await supabase.from('workspaces').select('id').limit(1);
+    const wid = wsRes.data?.[0]?.id;
+    if (!wid) return;
+    const { data } = await supabase.from('approvals').select('*').eq('workspace_id', wid).order('created_at', { ascending: false });
+    setApprovals(data ?? []);
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const pending = approvals.filter(a => a.status === 'pending');
   const resolved = approvals.filter(a => a.status !== 'pending');
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
   async function handleApprove(id: string) {
-    await updateApproval({ id: id as Parameters<typeof updateApproval>[0]['id'], status: 'approved' });
+    await supabase.from('approvals').update({ status: 'approved' }).eq('id', id);
+    setApprovals(prev => prev.map(a => a.id === id ? { ...a, status: 'approved' } : a));
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }
 
   async function handleRevise(id: string) {
-    await updateApproval({ id: id as Parameters<typeof updateApproval>[0]['id'], status: 'revision' });
+    await supabase.from('approvals').update({ status: 'revision' }).eq('id', id);
+    setApprovals(prev => prev.map(a => a.id === id ? { ...a, status: 'revision' } : a));
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }
 
@@ -77,7 +83,7 @@ export default function Approvals() {
           data={sections}
           keyExtractor={item => {
             if (item.kind === 'header') return item.id;
-            return item.approval._id;
+            return item.approval.id;
           }}
           contentContainerStyle={{ padding: 16, paddingTop: 0 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7FA38A" />}
@@ -94,17 +100,17 @@ export default function Approvals() {
                   {
                     label: t.approvals.approve,
                     color: '#7FA38A',
-                    onPress: () => handleApprove(approval._id),
+                    onPress: () => handleApprove(approval.id),
                   },
                 ]}
               >
                 <ApprovalCard
                   title={approval.name}
                   type={approval.type}
-                  submittedBy={approval.submittedDate ?? ''}
+                  submittedBy={approval.submitted_date ?? ''}
                   status={approval.status}
-                  onApprove={() => handleApprove(approval._id)}
-                  onRevise={() => handleRevise(approval._id)}
+                  onApprove={() => handleApprove(approval.id)}
+                  onRevise={() => handleRevise(approval.id)}
                 />
               </SwipeableRow>
             );

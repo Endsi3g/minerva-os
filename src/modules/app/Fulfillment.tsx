@@ -1,44 +1,79 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PackageCheck, ArrowRight, CheckCircle2, Circle, ListTodo, BarChart3, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
-import { Id } from '../../../convex/_generated/dataModel';
+import { supabase } from '@/lib/supabase';
 
 export default function Fulfillment() {
   const { t } = useLang();
   const fl = t.app.fulfillmentModule;
-  
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
 
-  const deliveries = useQuery(api.fulfillment.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const updateDelivery = useMutation(api.fulfillment.update);
-
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function loadDeliveries() {
+      const { data } = await supabase
+        .from('fulfillment')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: false });
+      if (data) {
+        setDeliveries(data.map(d => ({
+          ...d,
+          _id: d.id,
+          serviceType: d.service_type,
+          projectId: d.project_id,
+        })));
+      }
+    }
+    loadDeliveries();
+  }, [workspaceId]);
+
   const activeDelivery = deliveries.find((d: any) => d._id === activeId);
 
-  const toggleItem = async (deliveryId: Id<"fulfillment">, itemIndex: number) => {
+  const toggleItem = async (deliveryId: string, itemIndex: number) => {
     const delivery = deliveries.find((d: any) => d._id === deliveryId);
     if (!delivery) return;
-    
+
     const newChecklist = [...delivery.checklist];
     newChecklist[itemIndex] = { ...newChecklist[itemIndex], done: !newChecklist[itemIndex].done };
-    
+
     const doneCount = newChecklist.filter((i: any) => i.done).length;
     const progress = Math.round((doneCount / newChecklist.length) * 100);
-    
-    await updateDelivery({
-      id: deliveryId,
-      checklist: newChecklist,
-      progress,
-      status: progress === 100 ? 'completed' : 'in_progress',
-    });
+
+    const { error } = await supabase
+      .from('fulfillment')
+      .update({
+        checklist: newChecklist,
+        progress,
+        status: progress === 100 ? 'completed' : 'in_progress',
+      })
+      .eq('id', deliveryId);
+
+    if (!error) {
+      setDeliveries(prev =>
+        prev.map(d =>
+          d._id === deliveryId
+            ? { ...d, checklist: newChecklist, progress, status: progress === 100 ? 'completed' : 'in_progress' }
+            : d
+        )
+      );
+    }
   };
 
   return (

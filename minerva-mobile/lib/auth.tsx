@@ -1,13 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { useConvexAuth, useQuery } from 'convex/react';
-import { useAuthActions } from '@convex-dev/auth/react';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
+import type { Session, User } from '@supabase/supabase-js';
 
 interface UserProfile {
   _id: string;
+  id: string;
   email: string;
   name: string;
   role: string;
@@ -16,6 +14,7 @@ interface UserProfile {
 
 interface AuthContextValue {
   user: UserProfile | null;
+  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -25,6 +24,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
+  session: null,
   isLoading: true,
   isAuthenticated: false,
   signIn: async () => undefined,
@@ -32,72 +32,91 @@ const AuthContext = createContext<AuthContextValue>({
   changePassword: async () => undefined,
 });
 
-const TOKEN_KEY = 'minerva_auth_token';
-
-// SecureStore adapter for @convex-dev/auth storage persistence
+// SecureStore adapter (kept for compatibility)
 export const secureStoreAdapter = {
   getItem: (key: string) => SecureStore.getItemAsync(key),
   setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
   removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
+function mapProfile(authUser: User, dbProfile: any): UserProfile {
+  return {
+    _id: dbProfile?.id ?? authUser.id,
+    id: dbProfile?.id ?? authUser.id,
+    email: authUser.email ?? '',
+    name: dbProfile?.name ?? authUser.email?.split('@')[0] ?? '',
+    role: dbProfile?.role ?? 'member',
+    avatar: dbProfile?.avatar_url ?? undefined,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isLoading: convexAuthLoading, isAuthenticated: convexIsAuthenticated } = useConvexAuth();
-  const { signIn: convexSignIn, signOut: convexSignOut } = useAuthActions();
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const profile = useQuery(
-    api.userProfiles.viewer,
-    convexIsAuthenticated ? {} : 'skip'
-  ) as UserProfile | null | undefined;
+  useEffect(() => {
+    // Restore session on mount
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session ?? null);
+      if (data.session?.user) {
+        fetchProfile(data.session.user);
+      } else {
+        setIsLoading(false);
+      }
+    });
 
-  const [localLoading, setLocalLoading] = useState(false);
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession ?? null);
+      if (newSession?.user) {
+        fetchProfile(newSession.user);
+      } else {
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
 
-  const isLoading = convexAuthLoading || localLoading;
-  const isAuthenticated = convexIsAuthenticated;
-  const user = profile ?? null;
+    return () => { listener.subscription.unsubscribe(); };
+  }, []);
+
+  async function fetchProfile(authUser: User) {
+    try {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+      setUser(mapProfile(authUser, data));
+    } catch {
+      setUser(mapProfile(authUser, null));
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   async function signIn(email: string, password: string) {
-    setLocalLoading(true);
+    setIsLoading(true);
     try {
-      await convexSignIn('password', { email, password, flow: 'signIn' });
-      await SecureStore.setItemAsync(TOKEN_KEY, 'authenticated');
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } finally {
-      setLocalLoading(false);
+      setIsLoading(false);
     }
   }
 
   async function signOut() {
-    await convexSignOut();
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
   }
 
-  async function changePassword(currentPassword: string, newPassword: string) {
-    if (!user?.email) throw new Error('No user email');
-    // Re-authenticate then update — Convex Auth password flow
-    await convexSignIn('password', {
-      email: user.email,
-      password: currentPassword,
-      flow: 'signIn',
-    });
-    await convexSignIn('password', {
-      email: user.email,
-      password: newPassword,
-      flow: 'signUp', // update existing credential
-      name: user.name,
-    });
+  async function changePassword(_currentPassword: string, newPassword: string) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
   }
-
-  useEffect(() => {
-    // On mount, check if we have a persisted token hint
-    SecureStore.getItemAsync(TOKEN_KEY).then(token => {
-      if (!token && !convexIsAuthenticated && !convexAuthLoading) {
-        // No token — user needs to sign in
-      }
-    });
-  }, [convexIsAuthenticated, convexAuthLoading]);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated, signIn, signOut, changePassword }}>
+    <AuthContext.Provider value={{ user, session, isLoading, isAuthenticated: Boolean(session), signIn, signOut, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

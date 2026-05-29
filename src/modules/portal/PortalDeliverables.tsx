@@ -1,15 +1,13 @@
 'use client';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Palette, FileText, Video, File, Check, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import type { ApprovalStatus, DeliverableType } from '@/lib/types';
 import { useLang } from '@/i18n';
-import { useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 import { CommentSection } from '@/components/minerva/CommentSection';
-import { Id } from '../../../convex/_generated/dataModel';
 
 function DeliverableRow({
   approval,
@@ -18,7 +16,7 @@ function DeliverableRow({
   lang,
 }: {
   approval: any;
-  onAction: (id: Id<"approvals">, status: ApprovalStatus) => void;
+  onAction: (id: string, status: ApprovalStatus) => void;
   t: any;
   lang: string;
 }) {
@@ -45,7 +43,7 @@ function DeliverableRow({
     revision: 'text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20',
   };
 
-  const type = TYPE_CONFIG[approval.type as DeliverableType];
+  const type = TYPE_CONFIG[approval.type as DeliverableType] || TYPE_CONFIG.document;
   const TypeIcon = type.icon;
 
   return (
@@ -144,18 +142,32 @@ export default function PortalDeliverables() {
   const pd = t.portal.deliverables;
 
   const { isValid, approvals, projects } = usePortalData();
-  const updateApproval = useMutation(api.approvals.update);
+  const [localApprovals, setLocalApprovals] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (approvals) {
+      setLocalApprovals(approvals);
+    }
+  }, [approvals]);
 
   if (!isValid) return null;
 
   // Join project names
-  const deliverables = approvals.map((app: any) => {
+  const deliverables = localApprovals.map((app: any) => {
     const project = projects.find((p: any) => p._id === app.projectId);
     return { ...app, project: project?.name || '...' };
   });
 
-  async function handleAction(id: Id<"approvals">, status: ApprovalStatus) {
-    await updateApproval({ id, status });
+  async function handleAction(id: string, status: ApprovalStatus) {
+    const { error } = await supabase
+      .from('approvals')
+      .update({ status })
+      .eq('id', id);
+    if (!error) {
+      setLocalApprovals(prev =>
+        prev.map(a => a._id === id ? { ...a, status } : a)
+      );
+    }
   }
 
   const pending  = deliverables.filter((a: any) => a.status === 'pending');

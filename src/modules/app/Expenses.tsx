@@ -1,11 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Receipt, Check, X, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
 function fmt(n: number, currency = 'USD') {
@@ -18,15 +17,15 @@ const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
   rejected: { label: 'Rejected', class: 'text-ember bg-ember/10 border-ember/20' },
 };
 
-function ExpenseForm({ workspaceId, submittedBy, projects, categories, onClose, t }: {
-  workspaceId: any;
+function ExpenseForm({ workspaceId, submittedBy, projects, categories, onClose, t, onCreated }: {
+  workspaceId: string | null;
   submittedBy: string;
   projects: any[];
   categories: string[];
   onClose: () => void;
   t: any;
+  onCreated: (expense: any) => void;
 }) {
-  const createExpense = useMutation(api.expenses.create as any);
   const f = t.app.expenses.form;
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -39,16 +38,18 @@ function ExpenseForm({ workspaceId, submittedBy, projects, categories, onClose, 
     e.preventDefault();
     if (!description || !amount) return;
     setSaving(true);
-    await createExpense({
-      workspaceId,
-      submittedBy,
+    const { data } = await supabase.from('expenses').insert({
+      workspace_id: workspaceId,
+      submitted_by: submittedBy,
       amount: Number(amount),
       currency: 'USD',
       category,
       description,
-      date: new Date(date).getTime(),
-      projectId: projectId ? projectId as any : undefined,
-    });
+      date: new Date(date).toISOString(),
+      project_id: projectId || null,
+      status: 'pending',
+    }).select().single();
+    if (data) onCreated(data);
     onClose();
   }
 
@@ -104,14 +105,38 @@ export default function Expenses() {
   const { user } = useAuth();
   const ex = t.app.expenses;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
-  const expenses = useQuery(api.expenses.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const approveExpense = useMutation(api.expenses.approve as any);
-  const rejectExpense = useMutation(api.expenses.reject as any);
-  const removeExpense = useMutation(api.expenses.remove as any);
+  useEffect(() => {
+    async function load() {
+      const wsRes = await supabase.from('workspaces').select('id').limit(1);
+      const wid = wsRes.data?.[0]?.id;
+      if (!wid) return;
+      setWorkspaceId(wid);
+      const [expRes, projRes] = await Promise.all([
+        supabase.from('expenses').select('*').eq('workspace_id', wid).order('date', { ascending: false }),
+        supabase.from('projects').select('id,name').eq('workspace_id', wid),
+      ]);
+      setExpenses(expRes.data ?? []);
+      setProjects(projRes.data ?? []);
+    }
+    load();
+  }, []);
+
+  async function approveExpense(id: string) {
+    await supabase.from('expenses').update({ status: 'approved', approved_by: user?.name ?? 'Admin' }).eq('id', id);
+    setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'approved' } : e));
+  }
+  async function rejectExpense(id: string) {
+    await supabase.from('expenses').update({ status: 'rejected' }).eq('id', id);
+    setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'rejected' } : e));
+  }
+  async function removeExpense(id: string) {
+    await supabase.from('expenses').delete().eq('id', id);
+    setExpenses(prev => prev.filter(e => e.id !== id));
+  }
 
   const [showForm, setShowForm] = useState(false);
 
@@ -121,13 +146,14 @@ export default function Expenses() {
   return (
     <>
       {showForm && (
-        <ExpenseForm
+      <ExpenseForm
           workspaceId={workspaceId}
           submittedBy={user?.name ?? 'Unknown'}
-          projects={projects as any[]}
+          projects={projects}
           categories={ex.categories}
           onClose={() => setShowForm(false)}
           t={t}
+          onCreated={(e) => setExpenses(prev => [e, ...prev])}
         />
       )}
 
@@ -135,7 +161,7 @@ export default function Expenses() {
         <div>
           <h1 className="text-2xl font-semibold text-ivory">{ex.title}</h1>
           <p className="text-sm text-fog mt-0.5">
-            {ex.subtitle.replace('{{count}}', String((expenses as any[]).length))}
+            {ex.subtitle.replace('{{count}}', String(expenses.length))}
           </p>
         </div>
         <Button size="sm" onClick={() => setShowForm(true)}>
@@ -158,8 +184,7 @@ export default function Expenses() {
         ))}
       </div>
 
-      {/* List */}
-      {(expenses as any[]).length === 0 ? (
+          {expenses.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <Receipt size={36} className="text-fog/30" />
           <p className="text-sm text-fog">{ex.noExpenses}</p>
@@ -193,13 +218,13 @@ export default function Expenses() {
                 {expense.status === 'pending' && (
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => approveExpense({ id: expense._id, approvedBy: user?.name ?? 'Admin' })}
+                      onClick={() => approveExpense(expense.id)}
                       className="h-6 w-6 flex items-center justify-center rounded text-fog hover:text-sage hover:bg-sage/10 transition-colors"
                     >
                       <Check size={11} />
                     </button>
                     <button
-                      onClick={() => rejectExpense({ id: expense._id })}
+                      onClick={() => rejectExpense(expense.id)}
                       className="h-6 w-6 flex items-center justify-center rounded text-fog hover:text-ember hover:bg-ember/10 transition-colors"
                     >
                       <X size={11} />
@@ -207,7 +232,7 @@ export default function Expenses() {
                   </div>
                 )}
                 <button
-                  onClick={() => removeExpense({ id: expense._id })}
+                  onClick={() => removeExpense(expense.id)}
                   className="opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-6 w-6 flex items-center justify-center rounded"
                 >
                   <Trash2 size={11} />

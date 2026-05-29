@@ -1,14 +1,30 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Star, TrendingUp, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
-type NpsResponse = Record<string, unknown>;
-type Client = Record<string, unknown>;
+type NpsResponse = {
+  id: string;
+  _id: string;
+  client_id: string;
+  clientId: string;
+  score: number;
+  reason?: string;
+  suggestion?: string;
+  trigger_event: string;
+  triggerEvent: string;
+  responded_at: string;
+  respondedAt: string;
+};
+
+type Client = {
+  id: string;
+  _id: string;
+  company: string;
+};
 
 function scoreColor(score: number): string {
   if (score >= 9) return 'text-sage';
@@ -44,10 +60,19 @@ function NPSGauge({ score }: { score: number }) {
   );
 }
 
-function NPSForm({ workspaceId, clients, onClose }: { workspaceId: string | undefined; clients: Client[]; onClose: () => void }) {
+function NPSForm({
+  workspaceId,
+  clients,
+  onClose,
+  onAdd,
+}: {
+  workspaceId: string;
+  clients: Client[];
+  onClose: () => void;
+  onAdd: (r: NpsResponse) => void;
+}) {
   const { t } = useLang();
   const f = t.app.nps.form;
-  const submit = useMutation(api.nps.submit as Parameters<typeof useMutation>[0]);
   const [clientId, setClientId] = useState('');
   const [score, setScore] = useState<number | null>(null);
   const [reason, setReason] = useState('');
@@ -59,8 +84,40 @@ function NPSForm({ workspaceId, clients, onClose }: { workspaceId: string | unde
     e.preventDefault();
     if (!clientId || score === null) return;
     setSaving(true);
-    await submit({ workspaceId, clientId: clientId as Parameters<typeof submit>[0]['clientId'], score, reason: reason || undefined, suggestion: suggestion || undefined, trigger });
-    onClose();
+    try {
+      const { data, error } = await supabase
+        .from('nps_responses')
+        .insert({
+          workspace_id: workspaceId,
+          client_id: clientId,
+          score,
+          reason: reason || null,
+          suggestion: suggestion || null,
+          trigger_event: trigger,
+        })
+        .select()
+        .single();
+      if (!error && data) {
+        onAdd({
+          id: data.id,
+          _id: data.id,
+          client_id: data.client_id,
+          clientId: data.client_id,
+          score: data.score,
+          reason: data.reason || undefined,
+          suggestion: data.suggestion || undefined,
+          trigger_event: data.trigger_event,
+          triggerEvent: data.trigger_event,
+          responded_at: data.responded_at,
+          respondedAt: data.responded_at,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+      onClose();
+    }
   }
 
   return (
@@ -80,7 +137,7 @@ function NPSForm({ workspaceId, clients, onClose }: { workspaceId: string | unde
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none"
             style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
             <option value="">{f.clientPlaceholder}</option>
-            {clients.map((c) => <option key={c._id as string} value={c._id as string}>{c.company as string}</option>)}
+            {clients.map((c) => <option key={c._id} value={c._id}>{c.company}</option>)}
           </select>
 
           <div>
@@ -132,33 +189,71 @@ function NPSForm({ workspaceId, clients, onClose }: { workspaceId: string | unde
 export default function NPSPage() {
   const { t } = useLang();
   const nps = t.app.nps;
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
 
-  const responses = useQuery(api.nps.list as Parameters<typeof useQuery>[0], workspaceId ? { workspaceId } : 'skip') ?? [];
-  const clients = useQuery(api.clients.list, workspaceId ? { workspaceId } : 'skip') ?? [];
-
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [responses, setResponses] = useState<NpsResponse[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [showForm, setShowForm] = useState(false);
 
-  const typedResponses = responses as NpsResponse[];
-  const typedClients = clients as Client[];
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
 
-  const promoters = typedResponses.filter(r => (r.score as number) >= 9).length;
-  const passives = typedResponses.filter(r => (r.score as number) >= 7 && (r.score as number) <= 8).length;
-  const detractors = typedResponses.filter(r => (r.score as number) <= 6).length;
-  const total = typedResponses.length;
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function loadData() {
+      const [{ data: nData }, { data: cData }] = await Promise.all([
+        supabase.from('nps_responses').select('*').eq('workspace_id', workspaceId).order('responded_at', { ascending: false }),
+        supabase.from('clients').select('*').eq('workspace_id', workspaceId),
+      ]);
+      if (nData) {
+        setResponses(nData.map(r => ({
+          id: r.id,
+          _id: r.id,
+          client_id: r.client_id,
+          clientId: r.client_id,
+          score: r.score,
+          reason: r.reason || undefined,
+          suggestion: r.suggestion || undefined,
+          trigger_event: r.trigger_event,
+          triggerEvent: r.trigger_event,
+          responded_at: r.responded_at,
+          respondedAt: r.responded_at,
+        })));
+      }
+      if (cData) {
+        setClients(cData.map(c => ({ ...c, _id: c.id })));
+      }
+    }
+    loadData();
+  }, [workspaceId]);
+
+  const promoters = responses.filter(r => r.score >= 9).length;
+  const passives = responses.filter(r => r.score >= 7 && r.score <= 8).length;
+  const detractors = responses.filter(r => r.score <= 6).length;
+  const total = responses.length;
   const npsScore = total > 0
     ? Math.round(((promoters - detractors) / total) * 100)
     : 0;
-  const atRisk = typedResponses.filter(r => (r.score as number) < 7).map(r => {
-    const client = typedClients.find(c => c._id === r.clientId);
-    return { score: r.score as number, clientName: (client?.company as string) ?? nps.unknown };
+
+  const atRisk = responses.filter(r => r.score < 7).map(r => {
+    const client = clients.find(c => c._id === r.clientId);
+    return { score: r.score, clientName: client?.company ?? nps.unknown };
   });
 
   return (
     <>
-      {showForm && (
-        <NPSForm workspaceId={workspaceId} clients={typedClients} onClose={() => setShowForm(false)} />
+      {showForm && workspaceId && (
+        <NPSForm
+          workspaceId={workspaceId}
+          clients={clients}
+          onClose={() => setShowForm(false)}
+          onAdd={(newResponse) => setResponses(prev => [newResponse, ...prev])}
+        />
       )}
 
       <div className="flex items-center justify-between mb-6">
@@ -206,8 +301,8 @@ export default function NPSPage() {
           <div className="space-y-1">
             {atRisk.map((r, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
-                <span className="text-silver">{r.clientName as string}</span>
-                <span className={cn('font-mono font-bold', scoreColor(r.score as number))}>{r.score as number}/10</span>
+                <span className="text-silver">{r.clientName}</span>
+                <span className={cn('font-mono font-bold', scoreColor(r.score))}>{r.score}/10</span>
               </div>
             ))}
           </div>
@@ -215,7 +310,7 @@ export default function NPSPage() {
       )}
 
       {/* All responses */}
-      {typedResponses.length === 0 ? (
+      {responses.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <TrendingUp size={36} className="text-fog/30" />
           <p className="text-sm text-fog">{nps.noResponses}</p>
@@ -223,21 +318,21 @@ export default function NPSPage() {
       ) : (
         <div className="space-y-2">
           <p className="text-[10px] text-fog uppercase tracking-widest mb-3">{nps.allResponses}</p>
-          {typedResponses.map((r) => {
-            const client = typedClients.find(c => c._id === r.clientId);
+          {responses.map((r) => {
+            const client = clients.find(c => c._id === r.clientId);
             return (
               <div
-                key={r._id as string}
+                key={r._id}
                 className="flex items-center gap-4 px-4 py-3 rounded-xl border"
                 style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
               >
-                <div className={cn('text-2xl font-bold tabular-nums w-10 text-right', scoreColor(r.score as number))}>{r.score as number}</div>
+                <div className={cn('text-2xl font-bold tabular-nums w-10 text-right', scoreColor(r.score))}>{r.score}</div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-ivory">{(client?.company as string) ?? nps.unknown}</p>
-                  {Boolean(r.reason) && <p className="text-[11px] text-fog mt-0.5 truncate">{r.reason as string}</p>}
+                  <p className="text-sm text-ivory">{client?.company ?? nps.unknown}</p>
+                  {Boolean(r.reason) && <p className="text-[11px] text-fog mt-0.5 truncate">{r.reason}</p>}
                 </div>
-                <span className={cn('text-[10px] font-medium', scoreColor(r.score as number))}>{scoreLabel(r.score as number)}</span>
-                <span className="text-[10px] text-fog">{new Date(r.respondedAt as number).toLocaleDateString()}</span>
+                <span className={cn('text-[10px] font-medium', scoreColor(r.score))}>{scoreLabel(r.score)}</span>
+                <span className="text-[10px] text-fog">{new Date(r.respondedAt).toLocaleDateString()}</span>
               </div>
             );
           })}

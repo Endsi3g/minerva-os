@@ -1,5 +1,4 @@
 import { ScrollView, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
-import { useQuery } from 'convex/react';
 import { useState, useCallback, useEffect } from 'react';
 import { router } from 'expo-router';
 import { Bell } from 'lucide-react-native';
@@ -7,9 +6,7 @@ import { KPICard } from '@/components/KPICard';
 import { useMobileLang } from '@/lib/i18n';
 import { useAppAuth } from '@/lib/auth';
 import { trackScreen } from '@/lib/analytics';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — symlinked from parent repo
-import { api } from '../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
@@ -19,45 +16,62 @@ export default function Dashboard() {
   const { t } = useMobileLang();
   const { user } = useAppAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [activeProjects, setActiveProjects] = useState(0);
+  const [openTasks, setOpenTasks] = useState(0);
+  const [pendingApprovals, setPendingApprovals] = useState(0);
+  const [revenueMtd, setRevenueMtd] = useState(0);
+  const [activity, setActivity] = useState<{ id: string; user: string; action: string; targetName: string }[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => { trackScreen('Dashboard'); }, []);
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const loadData = useCallback(async () => {
+    const wsRes = await supabase.from('workspaces').select('id').limit(1);
+    const wid = wsRes.data?.[0]?.id;
+    if (!wid) return;
+    setWorkspaceId(wid);
 
-  const projects = useQuery(api.projects.list, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const tasks = useQuery(api.tasks.get, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const approvals = useQuery(api.approvals.list, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const activity = useQuery(api.activity.list, workspaceId ? { workspaceId } : 'skip') ?? [];
+    const [projectsRes, tasksRes, approvalsRes, invoicesRes, activityRes, notifRes] = await Promise.all([
+      supabase.from('projects').select('status').eq('workspace_id', wid),
+      supabase.from('tasks').select('status').eq('workspace_id', wid),
+      supabase.from('approvals').select('status').eq('workspace_id', wid),
+      supabase.from('invoices').select('status,amount,date').eq('workspace_id', wid),
+      supabase.from('activity').select('id,username,action_name,target_name').eq('workspace_id', wid).order('created_at', { ascending: false }).limit(5),
+      user ? supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false) : Promise.resolve({ count: 0 }),
+    ]);
 
-  const notifications = useQuery(
-    api.notifications.list,
-    user ? { userId: user.email } : 'skip'
-  ) as Array<{ read: boolean }> | undefined;
-  const unreadCount = (notifications ?? []).filter(n => !n.read).length;
+    setActiveProjects((projectsRes.data ?? []).filter((p: any) => p.status === 'active').length);
+    setOpenTasks((tasksRes.data ?? []).filter((t: any) => t.status !== 'done').length);
+    setPendingApprovals((approvalsRes.data ?? []).filter((a: any) => a.status === 'pending').length);
 
-  const activeProjects = (projects as { status: string }[]).filter(p => p.status === 'active').length;
-  const openTasks = (tasks as { status: string }[]).filter(t => t.status !== 'done').length;
-  const pendingApprovals = (approvals as { status: string }[]).filter(a => a.status === 'pending').length;
+    const now = new Date();
+    const mtd = (invoicesRes.data ?? [])
+      .filter((i: any) => i.status === 'paid' && new Date(i.date).getMonth() === now.getMonth())
+      .reduce((acc: number, i: any) => acc + Number(i.amount), 0);
+    setRevenueMtd(mtd);
 
-  // Schema uses paidDate (string) not paidAt (number)
-  const revenueMtd = (invoices as { status: string; amount: number; paidDate?: string }[])
-    .filter(i => {
-      if (i.status !== 'paid' || !i.paidDate) return false;
-      const paid = new Date(i.paidDate).getTime();
-      return paid > Date.now() - 30 * 24 * 60 * 60 * 1000;
-    })
-    .reduce((acc, i) => acc + (i.amount ?? 0), 0);
+    setActivity((activityRes.data ?? []).map((a: any) => ({
+      id: a.id,
+      user: a.username,
+      action: a.action_name,
+      targetName: a.target_name,
+    })));
+
+    setUnreadCount('count' in notifRes ? (notifRes.count ?? 0) : 0);
+  }, [user]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t.dashboard.greetingMorning
     : hour < 18 ? t.dashboard.greetingAfternoon : t.dashboard.greetingEvening;
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1200);
-  }, []);
 
   const quickActions = [
     { label: t.dashboard.timer, route: '/(app)/timer' as const },
@@ -128,11 +142,11 @@ export default function Dashboard() {
       </View>
 
       {/* Recent activity */}
-      {(activity as { user: string; action: string; targetName: string }[]).length > 0 && (
+      {activity.length > 0 && (
         <>
           <Text className="text-fog text-xs uppercase tracking-widest mb-3">{t.dashboard.recentActivity}</Text>
-          {(activity as { _id: string; user: string; action: string; targetName: string }[]).slice(0, 5).map(item => (
-            <View key={item._id} className="py-2 border-b border-white/5">
+          {activity.map(item => (
+            <View key={item.id} className="py-2 border-b border-white/5">
               <Text className="text-silver text-xs">
                 <Text className="text-ivory">{item.user}</Text> {item.action} {item.targetName}
               </Text>

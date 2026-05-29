@@ -20,10 +20,8 @@ import {
 } from '@/components/ui/select';
 import type { TaskStatus, TaskPriority } from '@/lib/types';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useWorkspaces, useTasks, useProjects, useAddTask, useUpdateTask } from '@/lib/hooks/useSupabase';
 import { CommentSection } from '@/components/minerva/CommentSection';
-import { Id } from '../../../convex/_generated/dataModel';
 
 type Filter = TaskStatus | 'all';
 
@@ -72,18 +70,18 @@ export default function Tasks() {
   const { t, lang } = useLang();
   const tk = t.app.tasks;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const workspaces = useWorkspaces();
+  const workspaceId = workspaces[0]?.id;
 
-  const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const createTask = useMutation(api.tasks.create);
+  const tasks = useTasks(workspaceId);
+  const projects = useProjects(workspaceId);
+  const createTask = useAddTask();
 
   const [filter, setFilter] = useState<Filter>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewTaskForm>(EMPTY_FORM);
   const [selectedTask, setSelectedTask] = useState<any>(null);
-  const updateTask = useMutation(api.tasks.update);
+  const updateTask = useUpdateTask();
 
   const FILTER_TABS = useMemo(() => [
     { id: 'all' as Filter,         label: tk.filters.all },
@@ -95,7 +93,7 @@ export default function Tasks() {
 
   const visible = filter === 'all' ? tasks : tasks.filter((t: any) => t.status === filter);
 
-  async function cycleStatus(id: Id<"tasks">, currentStatus: TaskStatus) {
+  async function cycleStatus(id: string, currentStatus: TaskStatus) {
     const nextStatus = STATUS_CYCLE[currentStatus];
     await updateTask({ id, status: nextStatus });
   }

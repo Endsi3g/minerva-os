@@ -19,8 +19,7 @@ import {
 import { ClientCard } from '@/components/minerva/ClientCard';
 import type { ClientStatus } from '@/lib/types';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useWorkspaces, useClients, useProjects, useAddClient } from '@/lib/hooks/useSupabase';
 
 interface NewClientForm {
   company: string;
@@ -39,11 +38,12 @@ export default function Clients() {
   const { t } = useLang();
   const cKeys = t.app.clients;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const workspaces = useWorkspaces();
+  const workspaceId = workspaces[0]?.id;
 
-  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const addClient = useMutation(api.clients.add);
+  const clients = useClients(workspaceId);
+  const projects = useProjects(workspaceId);
+  const addClient = useAddClient();
 
   const [query, setQuery] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -99,15 +99,20 @@ export default function Clients() {
       {/* Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((client: any) => (
-            <ClientCard key={client._id} client={{
-              ...client,
-              id: client._id,
-              activeProjects: 0,
-              industry: 'Services',
-              monthlyValue: 0
-            }} />
-          ))}
+          {filtered.map((client: any) => {
+            const activeProjectsCount = projects.filter((p: any) => 
+              (p.clientId === client._id || p.clientName === client.company) && p.status === 'active'
+            ).length;
+            return (
+              <ClientCard key={client._id} client={{
+                ...client,
+                id: client._id,
+                activeProjects: activeProjectsCount,
+                industry: client.industry || 'Services',
+                monthlyValue: client.monthlyValue || 0
+              }} />
+            );
+          })}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-24 text-center gap-3">

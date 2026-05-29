@@ -1,4 +1,4 @@
-import { convexQuery, convexMutation } from '../convex-client.js';
+import { supabaseSelect, supabaseInsert, getWorkspaceId } from '../supabase-client.js';
 
 export const clientsTools = [
   {
@@ -12,13 +12,13 @@ export const clientsTools = [
       required: [],
     },
     async handler(args: Record<string, unknown>) {
-      const workspaces = await convexQuery('workspaces:list', {}) as any[];
-      const workspaceId = workspaces?.[0]?._id;
+      const workspaceId = await getWorkspaceId();
       if (!workspaceId) return { error: 'No workspace found.' };
 
-      const clients = await convexQuery('clients:list', { workspaceId }) as any[];
-      const filtered = args.status ? clients?.filter((c: any) => c.status === args.status) : clients;
-      return { clients: filtered ?? [], total: filtered?.length ?? 0 };
+      const params: Record<string, string> = { workspace_id: `eq.${workspaceId}`, order: 'company.asc' };
+      if (args.status) params.status = `eq.${args.status}`;
+      const clients = await supabaseSelect('clients', params) as any[];
+      return { clients: clients ?? [], total: clients?.length ?? 0 };
     },
   },
   {
@@ -36,19 +36,18 @@ export const clientsTools = [
       required: ['company'],
     },
     async handler(args: Record<string, unknown>) {
-      const workspaces = await convexQuery('workspaces:list', {}) as any[];
-      const workspaceId = workspaces?.[0]?._id;
+      const workspaceId = await getWorkspaceId();
       if (!workspaceId) return { error: 'No workspace found.' };
 
-      const id = await convexMutation('clients:add', {
-        workspaceId,
+      const record = await supabaseInsert('clients', {
+        workspace_id: workspaceId,
         company: args.company,
         contact: args.contact ?? '',
         email: args.email ?? '',
         status: args.status ?? 'onboarding',
-        ...(args.monthlyValue ? { monthlyValue: args.monthlyValue } : {}),
-      });
-      return { success: true, id, company: args.company };
+        monthly_value: args.monthlyValue ?? 0,
+      }) as any;
+      return { success: true, id: record?.id, company: args.company };
     },
   },
 ];

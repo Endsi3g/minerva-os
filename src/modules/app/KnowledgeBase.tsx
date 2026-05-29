@@ -1,12 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, BookOpen, Tag, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 const CATEGORY_COLORS: Record<string, string> = {
   Process: 'text-sage bg-sage/10',
@@ -20,13 +19,22 @@ const CATEGORIES = ['Process', 'Client', 'Technical', 'Strategy', 'Finance', 'Ot
 
 type Article = {
   _id: string;
+  id: string;
   title: string;
   content: string;
   category: string;
   tags: string[];
 };
 
-function ArticleCard({ article, onEdit, onDelete }: { article: Article; onEdit: (a: Article) => void; onDelete: (id: string) => void }) {
+function ArticleCard({
+  article,
+  onEdit,
+  onDelete,
+}: {
+  article: Article;
+  onEdit: (a: Article) => void;
+  onDelete: (id: string) => void;
+}) {
   const color = CATEGORY_COLORS[article.category] ?? 'text-fog bg-fog/10';
   return (
     <div
@@ -34,7 +42,7 @@ function ArticleCard({ article, onEdit, onDelete }: { article: Article; onEdit: 
       onClick={() => onEdit(article)}
     >
       <button
-        onClick={e => { e.stopPropagation(); onDelete(article._id); }}
+        onClick={e => { e.stopPropagation(); onDelete(article.id); }}
         className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-5 w-5 flex items-center justify-center"
       >
         <X size={11} />
@@ -60,11 +68,19 @@ function ArticleCard({ article, onEdit, onDelete }: { article: Article; onEdit: 
 
 type ModalState = 'closed' | 'new' | Article;
 
-function ArticleModal({ article, workspaceId, onClose }: { article: Article | null; workspaceId: string | undefined; onClose: () => void }) {
+function ArticleModal({
+  article,
+  workspaceId,
+  onClose,
+  onSave,
+}: {
+  article: Article | null;
+  workspaceId: string;
+  onClose: () => void;
+  onSave: (a: Article) => void;
+}) {
   const { t } = useLang();
   const f = t.app.knowledgeBase.form;
-  const addArticle = useMutation(api.knowledgeBase.add);
-  const updateArticle = useMutation(api.knowledgeBase.update);
   const isEdit = Boolean(article);
 
   const [title, setTitle] = useState(article?.title ?? '');
@@ -84,12 +100,33 @@ function ArticleModal({ article, workspaceId, onClose }: { article: Article | nu
     e.preventDefault();
     if (!title || !content) return;
     setSaving(true);
-    if (isEdit && article) {
-      await updateArticle({ id: article._id as Parameters<typeof updateArticle>[0]['id'], title, content, category, tags });
-    } else {
-      await addArticle({ workspaceId: workspaceId as Parameters<typeof addArticle>[0]['workspaceId'], title, content, category, tags });
+    try {
+      if (isEdit && article) {
+        const { data, error } = await supabase
+          .from('knowledge_base')
+          .update({ title, content, category, tags })
+          .eq('id', article.id)
+          .select()
+          .single();
+        if (!error && data) {
+          onSave({ ...data, _id: data.id });
+        }
+      } else {
+        const { data, error } = await supabase
+          .from('knowledge_base')
+          .insert({ workspace_id: workspaceId, title, content, category, tags })
+          .select()
+          .single();
+        if (!error && data) {
+          onSave({ ...data, _id: data.id });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+      onClose();
     }
-    onClose();
   }
 
   return (
@@ -149,31 +186,70 @@ export default function KnowledgeBase() {
   const { t } = useLang();
   const kb = t.app.knowledgeBase;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-
-  const articles = (useQuery(api.knowledgeBase.list as Parameters<typeof useQuery>[0], workspaceId ? { workspaceId } : 'skip') ?? []) as Article[];
-  const removeArticle = useMutation(api.knowledgeBase.remove);
-
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>('closed');
+  const [isSearchingSemantically, setIsSearchingSemantically] = useState(false);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data) setWorkspaces(data);
+    });
+  }, []);
+
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function loadArticles() {
+      let req = supabase.from('knowledge_base').select('*').eq('workspace_id', workspaceId);
+      if (query.trim().length >= 3) {
+        setIsSearchingSemantically(true);
+        req = req.or(`title.ilike.%${query.trim()}%,content.ilike.%${query.trim()}%`);
+      }
+      const { data } = await req.order('created_at', { ascending: false });
+      if (data) {
+        setArticles(data.map(d => ({ ...d, _id: d.id })));
+      }
+      setIsSearchingSemantically(false);
+    }
+    const timer = setTimeout(loadArticles, query.trim().length >= 3 ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [workspaceId, query]);
+
+  async function removeArticle(id: string) {
+    const { error } = await supabase.from('knowledge_base').delete().eq('id', id);
+    if (!error) {
+      setArticles(prev => prev.filter(a => a.id !== id));
+    }
+  }
 
   const filtered = articles.filter(a => {
-    const matchQuery = !query || a.title.toLowerCase().includes(query.toLowerCase()) || a.content.toLowerCase().includes(query.toLowerCase()) || a.tags?.some(tag => tag.includes(query.toLowerCase()));
-    const matchCat = !activeCategory || a.category === activeCategory;
-    return matchQuery && matchCat;
+    return !activeCategory || a.category === activeCategory;
   });
 
   const categories = Array.from(new Set(articles.map(a => a.category)));
 
+  function handleSaveArticle(savedArticle: Article) {
+    setArticles(prev => {
+      const exists = prev.some(a => a.id === savedArticle.id);
+      if (exists) {
+        return prev.map(a => a.id === savedArticle.id ? savedArticle : a);
+      }
+      return [savedArticle, ...prev];
+    });
+  }
+
   return (
     <>
-      {modal !== 'closed' && (
+      {modal !== 'closed' && workspaceId && (
         <ArticleModal
           article={modal === 'new' ? null : modal}
           workspaceId={workspaceId}
           onClose={() => setModal('closed')}
+          onSave={handleSaveArticle}
         />
       )}
 
@@ -192,6 +268,11 @@ export default function KnowledgeBase() {
         <div className="relative max-w-sm flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-fog pointer-events-none" />
           <Input className="pl-8" placeholder={kb.searchPlaceholder} value={query} onChange={e => setQuery(e.target.value)} />
+          {isSearchingSemantically && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-sage font-medium uppercase tracking-wider animate-pulse">
+              AI Searching...
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -226,10 +307,10 @@ export default function KnowledgeBase() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map(article => (
             <ArticleCard
-              key={article._id}
+              key={article.id}
               article={article}
               onEdit={a => setModal(a)}
-              onDelete={id => removeArticle({ id: id as Parameters<typeof removeArticle>[0]['id'] })}
+              onDelete={removeArticle}
             />
           ))}
         </div>

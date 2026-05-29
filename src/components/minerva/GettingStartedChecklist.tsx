@@ -1,8 +1,8 @@
 'use client';
-import { useMutation, useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const CHECKLIST_STEPS = [
   { id: 'workspace', label: 'Set up your workspace' },
@@ -14,21 +14,37 @@ const CHECKLIST_STEPS = [
 
 export function GettingStartedChecklist() {
   const { user } = useAuth();
-  const profile = useQuery(
-    api.userProfiles.getByEmail,
-    user?.email ? { email: user.email } : 'skip'
-  );
+  const [profile, setProfile] = useState<any>(null);
 
-  const markItem = useMutation(api.userProfiles.markChecklistItem);
+  useEffect(() => {
+    if (!user?.email) return;
+    supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('email', user.email)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setProfile({ ...data, completedChecklist: data.completed_checklist || [] });
+        }
+      });
+  }, [user]);
 
-  const completed: string[] = (profile as { completedChecklist?: string[] } | null)?.completedChecklist ?? [];
+  const completed: string[] = profile?.completedChecklist ?? [];
   const progress = (completed.length / CHECKLIST_STEPS.length) * 100;
 
   if (!profile || completed.length >= CHECKLIST_STEPS.length) return null;
 
   async function handleMark(itemId: string) {
-    if (!user?.email) return;
-    await markItem({ email: user.email, itemId });
+    if (!user?.email || !profile) return;
+    const newChecklist = [...completed, itemId];
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ completed_checklist: newChecklist })
+      .eq('email', user.email);
+    if (!error) {
+      setProfile((prev: any) => ({ ...prev, completedChecklist: newChecklist }));
+    }
   }
 
   return (

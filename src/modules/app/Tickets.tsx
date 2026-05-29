@@ -1,12 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, LifeBuoy, Clock, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 
 const STATUS_CONFIG: Record<string, { label: string; class: string; icon: React.ElementType }> = {
   open:        { label: 'Open',        class: 'text-warm bg-warm/10 border-warm/20',   icon: AlertCircle },
@@ -28,10 +27,9 @@ const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
 type Ticket = Record<string, unknown>;
 type Client = Record<string, unknown>;
 
-function TicketForm({ workspaceId, clients, onClose }: { workspaceId: string | undefined; clients: Client[]; onClose: () => void }) {
+function TicketForm({ workspaceId, clients, onClose, onCreated }: { workspaceId: string | null; clients: Client[]; onClose: () => void; onCreated: (t: any) => void }) {
   const { t } = useLang();
   const f = t.app.tickets.form;
-  const addTicket = useMutation(api.tickets.add);
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [clientId, setClientId] = useState('');
@@ -43,14 +41,16 @@ function TicketForm({ workspaceId, clients, onClose }: { workspaceId: string | u
     e.preventDefault();
     if (!subject || !clientId) return;
     setSaving(true);
-    await addTicket({
-      workspaceId: workspaceId as Parameters<typeof addTicket>[0]['workspaceId'],
-      clientId: clientId as Parameters<typeof addTicket>[0]['clientId'],
+    const { data } = await supabase.from('tickets').insert({
+      workspace_id: workspaceId,
+      client_id: clientId || null,
       subject,
       description,
       priority,
       category,
-    });
+      status: 'open',
+    }).select().single();
+    if (data) onCreated(data);
     onClose();
   }
 
@@ -77,7 +77,7 @@ function TicketForm({ workspaceId, clients, onClose }: { workspaceId: string | u
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none"
             style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
             <option value="">{f.clientPlaceholder}</option>
-            {clients.map((c) => <option key={c._id as string} value={c._id as string}>{c.company as string}</option>)}
+             {clients.map((c) => <option key={c._id as string} value={c._id as string}>{c.company as string}</option>)}
           </select>
           <div className="grid grid-cols-2 gap-3">
             <select value={priority} onChange={e => setPriority(e.target.value)}
@@ -104,12 +104,30 @@ function TicketForm({ workspaceId, clients, onClose }: { workspaceId: string | u
 export default function Tickets() {
   const { t } = useLang();
   const tk = t.app.tickets;
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
-  const tickets = useQuery(api.tickets.list, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const clients = useQuery(api.clients.list, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const updateTicket = useMutation(api.tickets.update);
+  useEffect(() => {
+    async function load() {
+      const wsRes = await supabase.from('workspaces').select('id').limit(1);
+      const wid = wsRes.data?.[0]?.id;
+      if (!wid) return;
+      setWorkspaceId(wid);
+      const [tickRes, clientRes] = await Promise.all([
+        supabase.from('tickets').select('*').eq('workspace_id', wid).order('created_at', { ascending: false }),
+        supabase.from('clients').select('id,company').eq('workspace_id', wid),
+      ]);
+      setTickets((tickRes.data ?? []).map((t: any) => ({ ...t, _id: t.id, clientId: t.client_id })));
+      setClients((clientRes.data ?? []).map((c: any) => ({ ...c, _id: c.id })));
+    }
+    load();
+  }, []);
+
+  async function updateTicketStatus(id: string, status: string) {
+    await supabase.from('tickets').update({ status }).eq('id', id);
+    setTickets(prev => prev.map(t => t.id === id ? { ...t, status, _id: id } : t));
+  }
 
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState('');
@@ -129,7 +147,7 @@ export default function Tickets() {
   return (
     <>
       {showForm && (
-        <TicketForm workspaceId={workspaceId} clients={typedClients} onClose={() => setShowForm(false)} />
+        <TicketForm workspaceId={workspaceId} clients={typedClients} onClose={() => setShowForm(false)} onCreated={(nt) => setTickets(prev => [{ ...nt, _id: nt.id, clientId: nt.client_id }, ...prev])} />
       )}
 
       <div className="flex items-center justify-between mb-6">
@@ -199,7 +217,7 @@ export default function Tickets() {
                 </span>
                 {ticket.status === 'open' && (
                   <button
-                    onClick={() => updateTicket({ id: ticket._id as Parameters<typeof updateTicket>[0]['id'], status: 'in_progress' })}
+                    onClick={() => updateTicketStatus(ticket._id as string, 'in_progress')}
                     className="text-xs text-fog hover:text-sage transition-colors shrink-0"
                   >
                     {tk.start}
@@ -207,7 +225,7 @@ export default function Tickets() {
                 )}
                 {ticket.status === 'in_progress' && (
                   <button
-                    onClick={() => updateTicket({ id: ticket._id as Parameters<typeof updateTicket>[0]['id'], status: 'resolved' })}
+                    onClick={() => updateTicketStatus(ticket._id as string, 'resolved')}
                     className="text-xs text-fog hover:text-sage transition-colors shrink-0"
                   >
                     {tk.resolve}

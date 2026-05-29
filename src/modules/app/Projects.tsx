@@ -19,8 +19,7 @@ import {
 } from '@/components/ui/select';
 import { ProjectCard } from '@/components/minerva/ProjectCard';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { useWorkspaces, useProjects, useClients, useAddProject } from '@/lib/hooks/useSupabase';
 
 const STATUS_COLORS: Record<string, string> = {
   active:    '#7FA38A',
@@ -141,12 +140,12 @@ export default function Projects() {
   const { t } = useLang();
   const p = t.app.projects;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const workspaces = useWorkspaces();
+  const workspaceId = workspaces[0]?.id;
 
-  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const createProject = useMutation(api.projects.add);
+  const projects = useProjects(workspaceId);
+  const clients = useClients(workspaceId);
+  const createProject = useAddProject();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM);

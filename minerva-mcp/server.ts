@@ -3,11 +3,11 @@
  * Minerva OS MCP Server
  *
  * Exposes Minerva OS data and browser automation as MCP tools for Claude
- * and other AI agents. Connects to Convex backend for real-time data,
+ * and other AI agents. Connects to Supabase for real-time data,
  * and Playwright for browser-based interactions.
  *
  * Usage:
- *   CONVEX_URL=https://your.convex.cloud node dist/server.js
+ *   SUPABASE_URL=https://xxx.supabase.co SUPABASE_KEY=your_anon_key node dist/server.js
  *
  * Claude Desktop config (~/.claude/claude_desktop_config.json):
  *   {
@@ -15,11 +15,15 @@
  *       "minerva-os": {
  *         "command": "node",
  *         "args": ["/path/to/minerva-mcp/dist/server.js"],
- *         "env": { "CONVEX_URL": "https://your.convex.cloud" }
+ *         "env": {
+ *           "SUPABASE_URL": "https://xxx.supabase.co",
+ *           "SUPABASE_KEY": "your_anon_key"
+ *         }
  *       }
  *     }
  *   }
  */
+
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -64,7 +68,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   })),
 }));
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
   const { name, arguments: args = {} } = request.params;
   const tool = toolMap.get(name);
   if (!tool) {
@@ -92,7 +96,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error('[minerva-mcp] Server started — 21 tools available');
-  console.error('[minerva-mcp] CONVEX_URL:', process.env.CONVEX_URL ? 'set' : 'NOT SET (browser tools only)');
+  console.error('[minerva-mcp] SUPABASE_URL:', process.env.SUPABASE_URL ? 'set' : 'NOT SET (browser tools only)');
 
   process.on('SIGINT', async () => {
     await closeBrowser();

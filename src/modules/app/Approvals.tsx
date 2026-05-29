@@ -1,48 +1,59 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, RotateCcw, Palette, FileText, Video, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { ApprovalStatus, DeliverableType } from '@/lib/types';
 import { useLang } from '@/i18n';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CommentSection } from '@/components/minerva/CommentSection';
-import { Id } from '../../../convex/_generated/dataModel';
 
 export default function Approvals() {
   const { t, lang } = useLang();
   const a = t.app.approvals;
   const common = t.app.common;
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const [approvalsRaw, setApprovalsRaw] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Real data from Convex
-  const approvalsRaw = useQuery(api.approvals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  
-  const [selectedId, setSelectedId] = useState<any | null>(null);
+  useEffect(() => {
+    async function load() {
+      const wsRes = await supabase.from('workspaces').select('id').limit(1);
+      const wid = wsRes.data?.[0]?.id;
+      if (!wid) return;
+      const [apprRes, projRes, clientRes] = await Promise.all([
+        supabase.from('approvals').select('*').eq('workspace_id', wid),
+        supabase.from('projects').select('id,name').eq('workspace_id', wid),
+        supabase.from('clients').select('id,company').eq('workspace_id', wid),
+      ]);
+      setApprovalsRaw(apprRes.data ?? []);
+      setProjects(projRes.data ?? []);
+      setClients(clientRes.data ?? []);
+    }
+    load();
+  }, []);
 
-  // Cast Convex documents to local types with joins
-  const approvals = useMemo(() => approvalsRaw.map((app: any) => {
-    const project = projects.find((p: any) => p._id === app.projectId);
-    const client = clients.find((c: any) => c._id === app.clientId);
+  async function handleStatusChange(id: string, status: ApprovalStatus) {
+    await supabase.from('approvals').update({ status }).eq('id', id);
+    setApprovalsRaw(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+  }
+
+  const approvals = approvalsRaw.map((app: any) => {
+    const project = projects.find((p: any) => p.id === app.project_id);
+    const client = clients.find((c: any) => c.id === app.client_id);
     return {
-      id: app._id,
+      id: app.id,
       name: app.name,
       project: project?.name || '...',
       client: client?.company || '...',
       status: app.status as ApprovalStatus,
       type: app.type as DeliverableType,
       submittedBy: 'Studio',
-      submittedDate: app.submittedDate,
+      submittedDate: app.submitted_date ?? app.created_at,
     };
-  }), [approvalsRaw, projects, clients]);
-
-  // Comments are handled inside CommentSection component now, but we'll clean up the legacy ones here
-  const updateApproval = useMutation(api.approvals.update);
+  });
 
   const TYPE_CONFIG: Record<DeliverableType, { label: string; icon: React.ElementType; class: string }> = {
     design:   { label: common.types.design,   icon: Palette,  class: 'text-silver bg-silver/10' },
@@ -63,14 +74,13 @@ export default function Approvals() {
   const approved = approvals.filter((app: any) => app.status === 'approved').length;
   const revision = approvals.filter((app: any) => app.status === 'revision').length;
 
-  const grouped = useMemo(() => STATUS_ORDER.map(status => ({
+  const grouped = STATUS_ORDER.map(status => ({
     status,
     items: approvals.filter((app: any) => app.status === status),
-  })).filter(g => g.items.length > 0), [approvals]);
+  })).filter(g => g.items.length > 0);
 
-  async function handleStatusChange(id: Id<"approvals">, status: ApprovalStatus) {
-    await updateApproval({ id, status });
-  }
+
+
 
   return (
     <>

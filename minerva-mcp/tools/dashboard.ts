@@ -1,4 +1,4 @@
-import { convexQuery } from '../convex-client.js';
+import { supabaseSelect, supabaseInsert, getWorkspaceId } from '../supabase-client.js';
 
 export const dashboardTools = [
   {
@@ -10,16 +10,16 @@ export const dashboardTools = [
       required: [],
     },
     async handler(_args: Record<string, unknown>) {
-      const workspaces = await convexQuery('workspaces:list', {}) as any[];
-      const workspaceId = workspaces?.[0]?._id;
-      if (!workspaceId) return { error: 'No workspace found. Connect to a live Convex backend.' };
+      const workspaceId = await getWorkspaceId();
+      if (!workspaceId) return { error: 'No workspace found. Connect a live Supabase backend.' };
 
+      const wf = `workspace_id=eq.${workspaceId}`;
       const [projects, tasks, approvals, invoices, deals] = await Promise.all([
-        convexQuery('projects:list', { workspaceId }),
-        convexQuery('tasks:get', { workspaceId }),
-        convexQuery('approvals:list', {}),
-        convexQuery('invoices:list', { workspaceId }),
-        convexQuery('deals:list', { workspaceId }),
+        supabaseSelect('projects', { workspace_id: `eq.${workspaceId}` }),
+        supabaseSelect('tasks', { workspace_id: `eq.${workspaceId}` }),
+        supabaseSelect('approvals', { workspace_id: `eq.${workspaceId}` }),
+        supabaseSelect('invoices', { workspace_id: `eq.${workspaceId}` }),
+        supabaseSelect('deals', { workspace_id: `eq.${workspaceId}` }),
       ]) as [any[], any[], any[], any[], any[]];
 
       const now = new Date();
@@ -29,9 +29,10 @@ export const dashboardTools = [
         pendingApprovals: approvals?.filter((a: any) => a.status === 'pending').length ?? 0,
         revenueMtd: invoices
           ?.filter((i: any) => i.status === 'paid' && new Date(i.date).getMonth() === now.getMonth())
-          .reduce((sum: number, i: any) => sum + i.amount, 0) ?? 0,
-        pipelineValue: deals?.reduce((sum: number, d: any) => sum + d.value, 0) ?? 0,
+          .reduce((sum: number, i: any) => sum + Number(i.amount), 0) ?? 0,
+        pipelineValue: deals?.reduce((sum: number, d: any) => sum + Number(d.value), 0) ?? 0,
         overdueInvoices: invoices?.filter((i: any) => i.status === 'overdue').length ?? 0,
+        _workspaceId: wf,
       };
     },
   },

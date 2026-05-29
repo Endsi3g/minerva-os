@@ -1,12 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Building2, Users, Bell, Shield, Check, Lock, Download } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
-import { Id } from '../../../convex/_generated/dataModel';
+// Convex removed — Supabase is used instead.
+import { supabase } from '@/lib/supabase';
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -37,18 +36,74 @@ function ProfileTab() {
   const [name, setName] = useState(user?.name ?? 'Uprising Studio');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [saved, setSaved] = useState(false);
-  const updateProfile = useMutation(api.userProfiles.update);
+  const [uploading, setUploading] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('email', user.email)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setProfile({ ...data, _id: data.id, avatar: data.avatar_url });
+          if (data.name) setName(data.name);
+          if (data.avatar_url) setAvatarUrl(data.avatar_url);
+        }
+      });
+  }, [user]);
 
   async function handleSave() {
-    if (user?.id) {
-      await updateProfile({
-        id: user.id as Id<"userProfiles">,
-        name,
-        ...(avatarUrl.trim() ? { avatar: avatarUrl.trim() } : {}),
-      });
+    if (profile?._id) {
+      await supabase
+        .from('user_profiles')
+        .update({
+          name,
+          avatar_url: avatarUrl.trim() || null,
+        })
+        .eq('id', profile._id);
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile?._id || Math.random().toString(36).substring(2)}.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      setAvatarUrl(publicUrl);
+
+      // Save immediately to profile
+      if (profile?._id) {
+        await supabase
+          .from('user_profiles')
+          .update({ avatar_url: publicUrl })
+          .eq('id', profile._id);
+      }
+    } catch (err) {
+      console.error('Error uploading avatar:', err);
+    } finally {
+      setUploading(false);
+    }
   }
 
   const roleLabels = t.app.settings.team.roles as Record<string, string>;
@@ -93,14 +148,19 @@ function ProfileTab() {
         </SettingsField>
 
         <SettingsField label={s.avatarUrl}>
-          <input
-            type="url"
-            value={avatarUrl}
-            onChange={e => setAvatarUrl(e.target.value)}
-            placeholder="https://..."
-            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
-            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
-          />
+          <div className="flex flex-col gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              disabled={uploading}
+              className="text-xs text-silver file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ivory file:text-obsidian hover:file:opacity-90 file:cursor-pointer disabled:opacity-50"
+            />
+            {uploading && <p className="text-xs text-fog">Uploading...</p>}
+            {avatarUrl && (
+              <p className="text-[10px] text-fog truncate">URL: {avatarUrl}</p>
+            )}
+          </div>
         </SettingsField>
 
         <SettingsField label={s.email}>
@@ -144,25 +204,37 @@ function ProfileTab() {
 function WorkspaceTab() {
   const { t, setLang, lang } = useLang();
   const s = t.app.settings.workspace;
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [studioName, setStudioName] = useState('Uprising Studio');
+  const [timezone, setTimezone] = useState('America/Montreal');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('*').then(({ data }) => {
+      if (data && data.length > 0) {
+        setWorkspaces(data.map(w => ({ ...w, _id: w.id })));
+        setStudioName(data[0].name ?? 'Uprising Studio');
+        setTimezone(data[0].settings?.timezone ?? 'America/Montreal');
+      }
+    });
+  }, []);
+
   const workspaceId = workspaces[0]?._id;
   const currentWorkspace = workspaces[0];
-  const [studioName, setStudioName] = useState(currentWorkspace?.name ?? 'Uprising Studio');
-  const [timezone, setTimezone] = useState(currentWorkspace?.settings?.timezone ?? 'America/Montreal');
-  const [saved, setSaved] = useState(false);
-  const updateWorkspace = useMutation(api.workspaces.update);
 
   async function handleSave() {
     if (workspaceId && currentWorkspace) {
-      await updateWorkspace({
-        id: workspaceId,
-        name: studioName,
-        settings: {
-          ...currentWorkspace.settings,
-          timezone,
-          language: lang,
-        },
-      });
+      await supabase
+        .from('workspaces')
+        .update({
+          name: studioName,
+          settings: {
+            ...currentWorkspace.settings,
+            timezone,
+            language: lang,
+          },
+        })
+        .eq('id', workspaceId);
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -455,13 +527,34 @@ function Toggle({ on }: { on: boolean }) {
 /* ── Privacy / GDPR Tab ──────────────────────────────────────────────────── */
 
 function PrivacyTab() {
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
-  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const projects = useQuery(api.projects.list as any, workspaceId ? { workspaceId } : 'skip') ?? [];
-  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : 'skip') ?? [];
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [exporting, setExporting] = useState(false);
   const [exported, setExported] = useState(false);
+  const workspaceId = workspaces[0]?.id;
+
+  useEffect(() => {
+    async function loadData() {
+      const { data: ws } = await supabase.from('workspaces').select('*');
+      if (ws) {
+        setWorkspaces(ws);
+        const workspaceId = ws[0]?.id;
+        if (workspaceId) {
+          const { data: cl } = await supabase.from('clients').select('*').eq('workspace_id', workspaceId);
+          if (cl) setClients(cl);
+
+          const { data: pr } = await supabase.from('projects').select('*').eq('workspace_id', workspaceId);
+          if (pr) setProjects(pr);
+
+          const { data: inv } = await supabase.from('invoices').select('*').eq('workspace_id', workspaceId);
+          if (inv) setInvoices(inv);
+        }
+      }
+    }
+    loadData();
+  }, []);
 
   function handleExport() {
     setExporting(true);

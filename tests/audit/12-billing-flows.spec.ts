@@ -13,14 +13,6 @@ async function assertRendered(page: any, name: string) {
   expect(body!.length).toBeGreaterThan(50);
 }
 
-async function tryOpenButton(page: any, btnText: RegExp): Promise<boolean> {
-  const btn = page.locator('button').filter({ hasText: btnText }).first();
-  if (await btn.count() === 0) return false;
-  await btn.click();
-  await page.waitForTimeout(800);
-  return true;
-}
-
 // ─── Billing KPI Cards ────────────────────────────────────────────────────────
 
 test('Billing — KPI cards Outstanding, Overdue, Collected visible', async ({ page }) => {

@@ -3,9 +3,8 @@ import {
   ResponsiveContainer, Cell,
 } from 'recharts';
 import { useLang } from '@/i18n';
-import { useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
-import { useMemo, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useMemo, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Download } from 'lucide-react';
 
@@ -77,16 +76,38 @@ export default function Reports() {
   const r = t.app.reports;
   const [tab, setTab] = useState<ReportTab>('overview');
 
-  const workspaces = useQuery(api.workspaces.list, {}) ?? [];
-  const workspaceId = workspaces[0]?._id;
+  const [clients, setClients] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [approvals, setApprovals] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [timeEntries, setTimeEntries] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
 
-  const clients = useQuery(api.clients.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const deals = useQuery(api.deals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const tasks = useQuery(api.tasks.get as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const approvals = useQuery(api.approvals.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const invoices = useQuery(api.invoices.list, workspaceId ? { workspaceId } : "skip") ?? [];
-  const timeEntries = useQuery(api.timeEntries.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
-  const expenses = useQuery(api.expenses.list as any, workspaceId ? { workspaceId } : "skip") ?? [];
+  useEffect(() => {
+    async function load() {
+      const wsRes = await supabase.from('workspaces').select('id').limit(1);
+      const wid = wsRes.data?.[0]?.id;
+      if (!wid) return;
+      const [cRes, dRes, tRes, aRes, iRes, teRes, eRes] = await Promise.all([
+        supabase.from('clients').select('*').eq('workspace_id', wid),
+        supabase.from('deals').select('*').eq('workspace_id', wid),
+        supabase.from('tasks').select('*').eq('workspace_id', wid),
+        supabase.from('approvals').select('*').eq('workspace_id', wid),
+        supabase.from('invoices').select('*').eq('workspace_id', wid),
+        supabase.from('time_entries').select('*').eq('workspace_id', wid),
+        supabase.from('expenses').select('*').eq('workspace_id', wid),
+      ]);
+      setClients((cRes.data ?? []).map((c: any) => ({ ...c, _id: c.id })));
+      setDeals((dRes.data ?? []).map((d: any) => ({ ...d, _id: d.id })));
+      setTasks((tRes.data ?? []).map((t: any) => ({ ...t, _id: t.id })));
+      setApprovals((aRes.data ?? []).map((a: any) => ({ ...a, _id: a.id })));
+      setInvoices((iRes.data ?? []).map((i: any) => ({ ...i, _id: i.id, clientId: i.client_id, amount: Number(i.amount) })));
+      setTimeEntries((teRes.data ?? []).map((e: any) => ({ ...e, _id: e.id, startTime: new Date(e.start_time).getTime(), clientId: e.client_id })));
+      setExpenses((eRes.data ?? []).map((e: any) => ({ ...e, _id: e.id, clientId: e.client_id })));
+    }
+    load();
+  }, []);
 
   const STAGE_ORDER = ['new_lead', 'qualified', 'proposal', 'negotiation', 'won'] as const;
 

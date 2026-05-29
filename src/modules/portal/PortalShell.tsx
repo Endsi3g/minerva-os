@@ -2,15 +2,16 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { usePortalData } from './usePortalData';
 import { NavLink } from '@/components/ui/nav-link';
-import { useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
 
 const PORTAL_TABS = [
   { label: 'Overview',     path: '' },
   { label: 'Deliverables', path: 'deliverables' },
   { label: 'Files',        path: 'files' },
   { label: 'Invoices',     path: 'invoices' },
+  { label: 'Support',      path: 'tickets' },
+  { label: 'Satisfaction', path: 'nps' },
 ];
 
 function PortalLoadingSkeleton() {
@@ -66,17 +67,21 @@ function PortalLoadingSkeleton() {
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const token = params?.token as string | undefined;
-  const portalData = useQuery(api.portal.getByToken, token ? { token } : 'skip');
+  const { clientName, isValid, loading } = usePortalData();
   const router = useRouter();
 
   useEffect(() => {
-    if (portalData === null) router.replace('/');
-  }, [portalData, router]);
+    if (!loading && !isValid) router.replace('/');
+  }, [loading, isValid, router]);
 
-  if (portalData === undefined) return <PortalLoadingSkeleton />;
-  if (portalData === null) return null;      // invalid token, redirecting
-
-  const clientName = portalData.client?.company ?? 'Client';
+  if (loading) return <PortalLoadingSkeleton />;
+  if (!isValid) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-obsidian" style={{ backgroundColor: '#0A0D14' }}>
+        <p className="text-silver text-sm" style={{ color: '#B8BDC7' }}>Ce lien d'accès est invalide ou expiré.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif" }}>
