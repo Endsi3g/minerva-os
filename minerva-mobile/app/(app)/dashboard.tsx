@@ -16,7 +16,6 @@ export default function Dashboard() {
   const { t } = useMobileLang();
   const { user } = useAppAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [activeProjects, setActiveProjects] = useState(0);
   const [openTasks, setOpenTasks] = useState(0);
   const [pendingApprovals, setPendingApprovals] = useState(0);
@@ -30,7 +29,6 @@ export default function Dashboard() {
     const wsRes = await supabase.from('workspaces').select('id').limit(1);
     const wid = wsRes.data?.[0]?.id;
     if (!wid) return;
-    setWorkspaceId(wid);
 
     const [projectsRes, tasksRes, approvalsRes, invoicesRes, activityRes, notifRes] = await Promise.all([
       supabase.from('projects').select('status').eq('workspace_id', wid),

@@ -10,9 +10,10 @@ import {
 } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
-import { fileURLToPath } from 'url';
+// __dirname is globally available in CommonJS target
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 const PROD_URL = process.env.MINERVA_APP_URL ?? 'https://minerva-os.vercel.app';
