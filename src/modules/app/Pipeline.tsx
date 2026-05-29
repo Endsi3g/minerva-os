@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import { DealCard } from '@/components/minerva/DealCard';
 import type { DealStage } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { useWorkspaces, useDeals, useAddDeal, useUpdateDeal, useUpdateDealStage } from '@/lib/hooks/useSupabase';
+import { supabase } from '@/lib/supabase';
 
 function fmt(n: number, lang: string) {
   return new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US', { 
@@ -67,6 +68,8 @@ export default function Pipeline() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<any | null>(null);
   const [form, setForm] = useState<NewDealForm>(EMPTY_FORM);
+  const [emailDraft, setEmailDraft] = useState<{ id: string; subject: string; body: string } | null>(null);
+  const [savingDraft, setSavingDraft] = useState(false);
 
   const STAGES = useMemo(() => [
     { id: 'new_lead' as DealStage,    label: p.stages.new_lead },
@@ -80,6 +83,7 @@ export default function Pipeline() {
   function openSheet(stage: DealStage) {
     setEditingLead(null);
     setForm({ ...EMPTY_FORM, stage });
+    setEmailDraft(null);
     setSheetOpen(true);
   }
 
@@ -93,6 +97,23 @@ export default function Pipeline() {
       stage: lead.stage,
       notes: lead.notes || '',
     });
+    setEmailDraft(null);
+    if (lead.email) {
+      supabase.from('email_drafts')
+        .select('id, subject, body')
+        .eq('recipient_email', lead.email)
+        .eq('status', 'draft')
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setEmailDraft({
+              id: data.id,
+              subject: data.subject,
+              body: data.body,
+            });
+          }
+        });
+    }
     setSheetOpen(true);
   }
 
@@ -140,6 +161,13 @@ export default function Pipeline() {
     setForm(EMPTY_FORM);
     setEditingLead(null);
   }
+
+  const handleOpenChange = (open: boolean) => {
+    setSheetOpen(open);
+    if (!open) {
+      setEmailDraft(null);
+    }
+  };
 
   return (
     <>
@@ -215,8 +243,8 @@ export default function Pipeline() {
       </div>
 
       {/* Add/Edit deal sheet */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+      <Sheet open={sheetOpen} onOpenChange={handleOpenChange}>
+        <SheetContent side="right" className={cn("w-96 p-6 flex flex-col gap-6 transition-all duration-300 overflow-y-auto", emailDraft && "w-[480px] sm:w-[540px]")}>
           <SheetHeader>
             <SheetTitle>{editingLead ? p.editDeal : p.newDeal}</SheetTitle>
           </SheetHeader>
@@ -261,6 +289,70 @@ export default function Pipeline() {
                 className="flex w-full rounded-md border border-border bg-midnight px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
               />
             </div>
+
+            {emailDraft && (
+              <div className="border border-white/5 bg-obsidian/40 rounded-2xl p-4 mt-2 space-y-3 relative overflow-hidden transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs text-warm font-semibold">
+                    <Sparkles size={13} className="text-warm animate-pulse" />
+                    <span>Hermes AI Reply Draft</span>
+                  </div>
+                  <div className="text-[10px] text-fog font-mono">Source: AI CRM Agent</div>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-fog">Subject</Label>
+                    <Input
+                      className="h-8 text-xs bg-midnight border-white/5 text-ivory focus-visible:ring-1"
+                      value={emailDraft.subject}
+                      onChange={e => setEmailDraft(prev => prev ? { ...prev, subject: e.target.value } : null)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-fog">Body</Label>
+                    <textarea
+                      rows={5}
+                      className="w-full rounded-md border border-white/5 bg-midnight px-2 py-1.5 text-xs text-silver placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none font-sans"
+                      value={emailDraft.body}
+                      onChange={e => setEmailDraft(prev => prev ? { ...prev, body: e.target.value } : null)}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  size="sm"
+                  className="w-full h-8 text-xs bg-ivory text-obsidian rounded-xl flex items-center justify-center gap-1.5 hover:bg-ivory/90"
+                  disabled={savingDraft}
+                  onClick={async () => {
+                    setSavingDraft(true);
+                    try {
+                      const { error } = await supabase
+                        .from('email_drafts')
+                        .update({
+                          subject: emailDraft.subject,
+                          body: emailDraft.body,
+                          status: 'sent'
+                        })
+                        .eq('id', emailDraft.id);
+                      if (error) throw error;
+                      setEmailDraft(null);
+                    } catch (err) {
+                      console.error('Failed to send draft:', err);
+                    } finally {
+                      setSavingDraft(false);
+                    }
+                  }}
+                >
+                  {savingDraft ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <Send size={12} />
+                  )}
+                  Approve & Mark Sent
+                </Button>
+              </div>
+            )}
           </div>
 
           <Button className="w-full" onClick={handleSaveDeal}>

@@ -13,7 +13,7 @@ export interface Lead {
   notes?: string;
 }
 
-export type ClientStatus = 'active' | 'onboarding' | 'inactive';
+export type ClientStatus = 'active' | 'onboarding' | 'lead' | 'inactive';
 
 export interface Client {
   id: string;

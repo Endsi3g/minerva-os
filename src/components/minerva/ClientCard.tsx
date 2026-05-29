@@ -12,6 +12,7 @@ function fmt(n: number) {
 const STATUS_CONFIG: Record<ClientStatus, { label: string; class: string }> = {
   active:     { label: 'Active',     class: 'text-sage bg-sage/10' },
   onboarding: { label: 'Onboarding', class: 'text-warm bg-warm/10' },
+  lead:       { label: 'Lead',       class: 'text-silver bg-silver/10' },
   inactive:   { label: 'Inactive',   class: 'text-fog  bg-fog/10'  },
 };
 
