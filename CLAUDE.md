@@ -2,7 +2,7 @@
 
 ## What this is
 
-**Minerva OS** is the internal agency operating system for **Uprising Studio** — a premium platform that centralises CRM, client onboarding, project management, approvals, billing, file storage and reporting in a single cohesive experience. The full product requirements are in `minerva-os-prd.md`.
+**Minerva OS** is the internal agency operating system for **Uprising Studio** — a premium platform that centralises CRM, client onboarding, project management, approvals, billing, file storage and reporting in a single cohesive experience. The full product requirements are in [minerva-os-prd.md](./docs/minerva-os-prd.md).
 
 ---
 

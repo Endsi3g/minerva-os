@@ -1,6 +1,6 @@
 # GEMINI.md — Context for Gemini CLI
 
-This document provides context for working on the Minerva OS codebase using Gemini CLI or Google AI tools. For the full product requirements, see `minerva-os-prd.md`. For comprehensive project conventions, see `CLAUDE.md`. For development patterns, see `AGENTS.md`.
+This document provides context for working on the Minerva OS codebase using Gemini CLI or Google AI tools. For the full product requirements, see [minerva-os-prd.md](./minerva-os-prd.md). For comprehensive project conventions, see [CLAUDE.md](../CLAUDE.md). For development patterns, see [AGENTS.md](../AGENTS.md).
 
 ---
 

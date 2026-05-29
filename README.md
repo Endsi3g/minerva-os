@@ -4,7 +4,7 @@
 
 Minerva OS is the internal agency platform for [Uprising Studio](https://uprisingstudio.com) — a premium platform that centralises CRM, project management, approvals, billing, file storage, AI-powered risk monitoring, and reporting in one cohesive experience.
 
-**[Deployment guide →](./DEPLOYMENT.md)**
+**[Deployment guide →](./docs/DEPLOYMENT.md)**
 
 ---
 
@@ -105,7 +105,7 @@ npx expo start
 
 ## Deployment
 
-See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for full instructions covering:
+See **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions covering:
 - Convex backend deploy
 - Vercel web deployment + env vars
 - Electron desktop build (.dmg + .exe) + code signing
