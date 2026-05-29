@@ -83,44 +83,90 @@ export async function POST(req: NextRequest) {
     console.error('[Hermes RAG Failed]:', ragErr);
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    const lastMsg = messages[messages.length - 1].content.toLowerCase();
-    let mockReply = "I'm Hermes, your AI co-pilot. I'm currently running in demo mode — configure your ANTHROPIC_API_KEY to activate full intelligence.";
-    if (lastMsg.includes('project')) mockReply = "Your active projects are tracking well. No critical blockers detected this week.";
-    if (lastMsg.includes('client')) mockReply = "Your top clients are performing above MRR target. I recommend a check-in with any client silent for 14+ days.";
-    if (lastMsg.includes('invoice') || lastMsg.includes('billing')) mockReply = "2 invoices are currently overdue. I recommend sending a payment reminder to both contacts today.";
-    if (RAGContext) {
-      mockReply += `\n\n[Demo mode detected matches]: ${RAGContext}`;
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const openRouterModel = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free';
+
+  const finalContext = [context, RAGContext].filter(Boolean).join('\n\n');
+  const systemContent = finalContext
+    ? `${HERMES_SYSTEM}\n\n--- LIVE WORKSPACE CONTEXT ---\n${finalContext}`
+    : HERMES_SYSTEM;
+
+  // 1. Try Anthropic if key is present
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const client = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
+
+      const response = await client.messages.create({
+        model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        system: [
+          {
+            type: 'text',
+            text: systemContent,
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
+      });
+
+      const block = response.content[0];
+      const content = block.type === 'text' ? block.text : '';
+      if (content) {
+        return NextResponse.json({ content });
+      }
+    } catch (err) {
+      console.error('[Hermes Anthropic Failed, trying fallback]', err);
     }
-    return NextResponse.json({ content: mockReply });
   }
 
-  try {
-    const client = new Anthropic();
+  // 2. Try OpenRouter fallback
+  if (openRouterKey) {
+    try {
+      const openRouterMessages = [
+        { role: 'system', content: systemContent },
+        ...messages.map(m => ({ role: m.role, content: m.content }))
+      ];
 
-    const finalContext = [context, RAGContext].filter(Boolean).join('\n\n');
-    const systemContent = finalContext
-      ? `${HERMES_SYSTEM}\n\n--- LIVE WORKSPACE CONTEXT ---\n${finalContext}`
-      : HERMES_SYSTEM;
-
-    const response = await client.messages.create({
-      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: [
-        {
-          type: 'text',
-          text: systemContent,
-          cache_control: { type: 'ephemeral' },
+      const orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openRouterKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://minerva-os.com",
+          "X-Title": "Minerva OS",
         },
-      ],
-      messages: messages.map(m => ({ role: m.role, content: m.content })),
-    });
+        body: JSON.stringify({
+          model: openRouterModel,
+          messages: openRouterMessages,
+          max_tokens: 1024,
+        })
+      });
 
-    const block = response.content[0];
-    const content = block.type === 'text' ? block.text : '';
-    return NextResponse.json({ content });
-  } catch (err) {
-    console.error('[Hermes chat]', err);
-    return NextResponse.json({ error: 'AI chat failed.' }, { status: 500 });
+      if (orRes.ok) {
+        const data = await orRes.json();
+        const content = data.choices?.[0]?.message?.content || '';
+        if (content) {
+          return NextResponse.json({ content });
+        }
+      } else {
+        const errText = await orRes.text();
+        console.error('[Hermes OpenRouter Failed]:', errText);
+      }
+    } catch (orErr) {
+      console.error('[Hermes OpenRouter Exception]:', orErr);
+    }
   }
+
+  // 3. Demomode / Mock fallback if all fails
+  const lastMsg = messages[messages.length - 1].content.toLowerCase();
+  let mockReply = "I'm Hermes, your AI co-pilot. I'm currently running in demo mode — configure your ANTHROPIC_API_KEY or OPENROUTER_API_KEY to activate full intelligence.";
+  if (lastMsg.includes('project')) mockReply = "Your active projects are tracking well. No critical blockers detected this week.";
+  if (lastMsg.includes('client')) mockReply = "Your top clients are performing above MRR target. I recommend a check-in with any client silent for 14+ days.";
+  if (lastMsg.includes('invoice') || lastMsg.includes('billing')) mockReply = "2 invoices are currently overdue. I recommend sending a payment reminder to both contacts today.";
+  if (RAGContext) {
+    mockReply += `\n\n[Demo mode detected matches]: ${RAGContext}`;
+  }
+  return NextResponse.json({ content: mockReply });
 }
