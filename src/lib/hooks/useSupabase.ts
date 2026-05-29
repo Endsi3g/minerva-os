@@ -614,6 +614,22 @@ export function useAddClient() {
 
 export function useAddProject() {
   return async (args: { workspaceId: string; clientName: string; name: string; status: string; dueDate: string; budget: number; description?: string }) => {
+    let embedding: number[] | null = null;
+    try {
+      const textToEmbed = `${args.name} ${args.description || ''}`.trim();
+      const embedRes = await fetch('/api/ai/embed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textToEmbed }),
+      });
+      const embedData = await embedRes.json();
+      if (embedData.embedding) {
+        embedding = embedData.embedding;
+      }
+    } catch (err) {
+      console.error('Failed to generate project embedding:', err);
+    }
+
     const { data, error } = await supabase
       .from('projects')
       .insert({
@@ -624,6 +640,7 @@ export function useAddProject() {
         due_date: args.dueDate,
         budget: args.budget,
         description: args.description || '',
+        ...(embedding ? { embedding } : {}),
       })
       .select()
       .single();
@@ -634,12 +651,32 @@ export function useAddProject() {
 }
 
 export function useUpdateProject() {
-  return async (args: { id: string; name?: string; status?: string; dueDate?: string; budget?: number }) => {
+  return async (args: { id: string; name?: string; status?: string; dueDate?: string; budget?: number; description?: string }) => {
     const updates: any = {};
     if (args.name !== undefined) updates.name = args.name;
     if (args.status !== undefined) updates.status = args.status;
     if (args.dueDate !== undefined) updates.due_date = args.dueDate;
     if (args.budget !== undefined) updates.budget = args.budget;
+    if (args.description !== undefined) updates.description = args.description;
+
+    if (args.name !== undefined || args.description !== undefined) {
+      try {
+        const textToEmbed = `${args.name || ''} ${args.description || ''}`.trim();
+        if (textToEmbed) {
+          const embedRes = await fetch('/api/ai/embed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: textToEmbed }),
+          });
+          const embedData = await embedRes.json();
+          if (embedData.embedding) {
+            updates.embedding = embedData.embedding;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to generate project embedding:', err);
+      }
+    }
 
     const { data, error } = await supabase
       .from('projects')

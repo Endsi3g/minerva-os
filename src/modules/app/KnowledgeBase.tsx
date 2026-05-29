@@ -101,10 +101,25 @@ function ArticleModal({
     if (!title || !content) return;
     setSaving(true);
     try {
+      let embedding: number[] | null = null;
+      try {
+        const embedRes = await fetch('/api/ai/embed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: `${title} ${content}` }),
+        });
+        const embedData = await embedRes.json();
+        if (embedData.embedding) {
+          embedding = embedData.embedding;
+        }
+      } catch (err) {
+        console.error('Failed to generate embedding:', err);
+      }
+
       if (isEdit && article) {
         const { data, error } = await supabase
           .from('knowledge_base')
-          .update({ title, content, category, tags })
+          .update({ title, content, category, tags, ...(embedding ? { embedding } : {}) })
           .eq('id', article.id)
           .select()
           .single();
@@ -114,7 +129,7 @@ function ArticleModal({
       } else {
         const { data, error } = await supabase
           .from('knowledge_base')
-          .insert({ workspace_id: workspaceId, title, content, category, tags })
+          .insert({ workspace_id: workspaceId, title, content, category, tags, ...(embedding ? { embedding } : {}) })
           .select()
           .single();
         if (!error && data) {
@@ -204,18 +219,44 @@ export default function KnowledgeBase() {
   useEffect(() => {
     if (!workspaceId) return;
     async function loadArticles() {
-      let req = supabase.from('knowledge_base').select('*').eq('workspace_id', workspaceId);
       if (query.trim().length >= 3) {
         setIsSearchingSemantically(true);
-        req = req.or(`title.ilike.%${query.trim()}%,content.ilike.%${query.trim()}%`);
+        try {
+          const embedRes = await fetch('/api/ai/embed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: query.trim() }),
+          });
+          const embedData = await embedRes.json();
+          if (embedData.embedding) {
+            const { data, error } = await supabase.rpc('match_knowledge_base', {
+              query_embedding: embedData.embedding,
+              match_threshold: 0.1,
+              match_count: 9,
+              filter_workspace_id: workspaceId,
+            });
+            if (!error && data) {
+              setArticles(data.map((d: any) => ({ ...d, _id: d.id })));
+              setIsSearchingSemantically(false);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('RAG Search failed:', err);
+        }
       }
-      const { data } = await req.order('created_at', { ascending: false });
+
+      const { data } = await supabase
+        .from('knowledge_base')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: false });
       if (data) {
         setArticles(data.map(d => ({ ...d, _id: d.id })));
       }
       setIsSearchingSemantically(false);
     }
-    const timer = setTimeout(loadArticles, query.trim().length >= 3 ? 300 : 0);
+    const timer = setTimeout(loadArticles, query.trim().length >= 3 ? 400 : 0);
     return () => clearTimeout(timer);
   }, [workspaceId, query]);
 

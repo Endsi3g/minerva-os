@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@/lib/supabase/server';
+
+let pipelinePromise: any = null;
+
+async function getEmbedder() {
+  if (!pipelinePromise) {
+    const { pipeline, env } = await import('@xenova/transformers');
+    env.localModelPath = '';
+    env.allowLocalModels = false;
+    pipelinePromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
+  return pipelinePromise;
+}
 
 const HERMES_SYSTEM = `You are Hermes, the AI brain of Minerva OS — the operating system for elite creative agencies. You are sharp, professional, and knowledgeable about agency operations: CRM, project management, billing, approvals, and client relationships.
 
@@ -24,24 +37,74 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'messages required' }, { status: 400 });
   }
 
+  let RAGContext = '';
+  try {
+    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUserMessage?.content) {
+      const supabase = await createClient();
+      const { data: workspaces } = await supabase.from('workspaces').select('id').limit(1);
+      const workspaceId = workspaces?.[0]?.id;
+
+      if (workspaceId) {
+        const extractor = await getEmbedder();
+        const output = await extractor(lastUserMessage.content, { pooling: 'mean', normalize: true });
+        const queryEmbedding = Array.from(output.data) as number[];
+
+        const { data: kbArticles } = await supabase.rpc('match_knowledge_base', {
+          query_embedding: queryEmbedding,
+          match_threshold: 0.1,
+          match_count: 3,
+          filter_workspace_id: workspaceId,
+        });
+
+        const { data: projects } = await supabase.rpc('match_projects', {
+          query_embedding: queryEmbedding,
+          match_threshold: 0.1,
+          match_count: 3,
+          filter_workspace_id: workspaceId,
+        });
+
+        if (kbArticles && kbArticles.length > 0) {
+          RAGContext += '\n--- SEMANTIC KNOWLEDGE BASE MATCHES ---\n';
+          kbArticles.forEach((art: any) => {
+            RAGContext += `· Category: ${art.category} | Title: ${art.title}\n  Content: ${art.content}\n`;
+          });
+        }
+
+        if (projects && projects.length > 0) {
+          RAGContext += '\n--- SEMANTIC PROJECT MATCHES ---\n';
+          projects.forEach((p: any) => {
+            RAGContext += `· Project Name: ${p.name} | Client: ${p.client_name} | Status: ${p.status}\n`;
+          });
+        }
+      }
+    }
+  } catch (ragErr) {
+    console.error('[Hermes RAG Failed]:', ragErr);
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     const lastMsg = messages[messages.length - 1].content.toLowerCase();
     let mockReply = "I'm Hermes, your AI co-pilot. I'm currently running in demo mode — configure your ANTHROPIC_API_KEY to activate full intelligence.";
     if (lastMsg.includes('project')) mockReply = "Your active projects are tracking well. No critical blockers detected this week.";
     if (lastMsg.includes('client')) mockReply = "Your top clients are performing above MRR target. I recommend a check-in with any client silent for 14+ days.";
     if (lastMsg.includes('invoice') || lastMsg.includes('billing')) mockReply = "2 invoices are currently overdue. I recommend sending a payment reminder to both contacts today.";
+    if (RAGContext) {
+      mockReply += `\n\n[Demo mode detected matches]: ${RAGContext}`;
+    }
     return NextResponse.json({ content: mockReply });
   }
 
   try {
     const client = new Anthropic();
 
-    const systemContent = context
-      ? `${HERMES_SYSTEM}\n\n--- LIVE WORKSPACE CONTEXT ---\n${context}`
+    const finalContext = [context, RAGContext].filter(Boolean).join('\n\n');
+    const systemContent = finalContext
+      ? `${HERMES_SYSTEM}\n\n--- LIVE WORKSPACE CONTEXT ---\n${finalContext}`
       : HERMES_SYSTEM;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: [
         {
