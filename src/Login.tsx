@@ -58,7 +58,7 @@ export default function Login() {
     <main className="relative flex min-h-screen w-full bg-black selection:bg-white/30 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4 font-sans">
 
       {/* ── Left Column — Video ────────────────────────────────────────────── */}
-      <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
+      <div className="relative hidden w-[52%] flex-col items-center justify-center px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
           style={{ filter: 'saturate(0.08) contrast(1.05) brightness(0.88)' }}
