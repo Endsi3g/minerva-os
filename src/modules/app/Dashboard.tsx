@@ -11,8 +11,11 @@ import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspaces, useProjects, useInvoices, useApprovals, useDeals, useTasks, useActivity } from '@/lib/hooks/useSupabase';
 import { AgentSuggestions } from '@/components/agents/AgentSuggestions';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import type { Translations } from '@/i18n';
+import { ShiftCard } from '@/components/ui/shift-card';
+import { Expandable, ExpandableTrigger, ExpandableContent } from '@/components/ui/expandable';
+import { TextureOverlay } from '@/components/ui/texture-overlay';
 
 /* ── Risk flag computation ───────────────────────────────────────────────── */
 
@@ -136,6 +139,7 @@ function DailyBriefing({ context, labels }: {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -164,38 +168,66 @@ function DailyBriefing({ context, labels }: {
   }, [context, load]);
 
   return (
-    <div
-      className="rounded-xl p-4 border"
-      style={{ background: 'linear-gradient(135deg, #111522 0%, #141926 100%)', borderColor: 'rgba(127,163,138,0.15)' }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles size={13} className="text-sage" />
-          <span className="text-xs font-medium text-sage uppercase tracking-widest">{labels.title}</span>
+    <Expandable expanded={expanded} onToggle={() => setExpanded(!expanded)}>
+      <div
+        className="rounded-xl p-4 border relative group overflow-hidden transition-all duration-300"
+        style={{ background: 'linear-gradient(135deg, #111522 0%, #141926 100%)', borderColor: 'rgba(127,163,138,0.15)' }}
+      >
+        <TextureOverlay texture="dots" opacity={0.12} />
+        <div className="flex items-center justify-between mb-3 relative z-10">
+          <ExpandableTrigger className="flex items-center gap-2 flex-1 text-left focus:outline-none select-none">
+            <Sparkles size={13} className="text-sage" />
+            <span className="text-xs font-medium text-sage uppercase tracking-widest">{labels.title}</span>
+            <span className="text-[9px] text-fog lowercase bg-sage/5 border border-sage/10 px-1.5 py-0.5 rounded-full ml-2">
+              {expanded ? 'Click to collapse' : 'Click to expand'}
+            </span>
+          </ExpandableTrigger>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              load();
+            }}
+            disabled={loading}
+            className="text-fog hover:text-silver transition-colors relative z-20"
+          >
+            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+          </button>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="text-fog hover:text-silver transition-colors"
-        >
-          <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-        </button>
+        
+        <div className="relative z-10">
+          {loading && !content && (
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-4/5" />
+              <Skeleton className="h-3 w-3/5" />
+              <p className="text-[11px] text-fog mt-2">{labels.loading}</p>
+            </div>
+          )}
+          {err && !loading && (
+            <p className="text-[11px] text-fog">{labels.error}</p>
+          )}
+          {content && !loading && (
+            <>
+              {/* Collapsed view snippet */}
+              {!expanded && (
+                <ExpandableTrigger className="text-left w-full focus:outline-none">
+                  <p className="text-xs text-silver leading-relaxed line-clamp-2 cursor-pointer hover:text-ivory transition-colors">
+                    {content}
+                  </p>
+                </ExpandableTrigger>
+              )}
+
+              {/* Expanded full details */}
+              <ExpandableContent preset="fade">
+                <p className="text-xs text-silver leading-relaxed whitespace-pre-wrap mt-2 border-t border-white/5 pt-3">
+                  {content}
+                </p>
+              </ExpandableContent>
+            </>
+          )}
+        </div>
       </div>
-      {loading && !content && (
-        <div className="space-y-2">
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-4/5" />
-          <Skeleton className="h-3 w-3/5" />
-          <p className="text-[11px] text-fog mt-2">{labels.loading}</p>
-        </div>
-      )}
-      {err && !loading && (
-        <p className="text-[11px] text-fog">{labels.error}</p>
-      )}
-      {content && !loading && (
-        <p className="text-xs text-silver leading-relaxed whitespace-pre-wrap">{content}</p>
-      )}
-    </div>
+    </Expandable>
   );
 }
 
@@ -584,21 +616,24 @@ export default function Dashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1, duration: 0.4 }}
               >
-                <Card className="glass-card border-white/10 bg-midnight">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-[10px] sm:text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</CardTitle>
+                <ShiftCard
+                  className="glass-card border-white/10 bg-[#111522]"
+                  topContent={
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-[10px] sm:text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</span>
                       <kpi.icon size={14} className={cn(kpi.color, "opacity-70")} />
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-ivory tracking-tight truncate">{kpi.value}</p>
-                    <p className="text-[9px] sm:text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
-                      <span className="text-sage">{kpi.delta.split(' ')[0]}</span>
-                      <span className="truncate">{kpi.delta.split(' ').slice(1).join(' ')}</span>
-                    </p>
-                  </CardContent>
-                </Card>
+                  }
+                  middleContent={
+                    <div className="w-full text-left">
+                      <p className="text-lg sm:text-xl md:text-2xl font-bold text-ivory tracking-tight truncate">{kpi.value}</p>
+                      <p className="text-[9px] sm:text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
+                        <span className="text-sage">{kpi.delta.split(' ')[0]}</span>
+                        <span className="truncate">{kpi.delta.split(' ').slice(1).join(' ')}</span>
+                      </p>
+                    </div>
+                  }
+                />
               </motion.div>
             ))}
           </div>

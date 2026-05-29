@@ -6,6 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
+import { StripeBgGuides } from '@/components/ui/stripe-bg-guides';
+import { TextureOverlay } from '@/components/ui/texture-overlay';
+import { TextureButton } from '@/components/ui/texture-button';
 
 const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4';
 const POSTER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1600&q=60';
@@ -53,11 +56,13 @@ export default function Login() {
 
   return (
     <main
-      className="flex min-h-screen w-full selection:bg-white/20 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4"
+      className="relative flex min-h-screen w-full selection:bg-white/20 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4"
       style={{ backgroundColor: '#0A0D14' }}
     >
+      <TextureOverlay />
       {/* ── Left column — hero video ────────────────────────────────────────── */}
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
+        <StripeBgGuides contained={true} glowColor="#7FA38A" darkMode={true} />
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           style={{ filter: 'hue-rotate(-260deg) saturate(1.5) contrast(1.1)' }}
@@ -180,20 +185,19 @@ export default function Login() {
             </div>
 
             {/* Submit */}
-            <button
+            <TextureButton
               type="button"
               disabled={isLoading}
               onClick={handleSubmit}
-              className="w-full h-14 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 active:scale-[0.98] mt-2 disabled:opacity-50"
-              style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
+              className="w-full h-14 font-semibold mt-2 disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
                 <>
                   {l.submit}
-                  <ArrowRight size={16} />
+                  <ArrowRight size={16} className="ml-2" />
                 </>
               )}
-            </button>
+            </TextureButton>
 
             {error && (
               <p className="text-center text-xs text-ember mt-2" style={{ color: '#ef4d23' }}>{error}</p>
@@ -212,13 +216,13 @@ export default function Login() {
             </div>
 
             {/* Magic link */}
-            <button
+            <TextureButton
               type="button"
-              className="w-full h-11 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-white/5 active:scale-[0.98]"
-              style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.09)', color: '#B8BDC7' }}
+              variant="secondary"
+              className="w-full h-11 text-sm font-medium"
             >
               {l.magicLink}
-            </button>
+            </TextureButton>
 
             {/* Footer */}
             <p className="text-center text-sm" style={{ color: 'rgba(184,189,199,0.5)' }}>

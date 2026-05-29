@@ -7,6 +7,7 @@ import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CommentSection } from '@/components/minerva/CommentSection';
+import { ChoicePoll, VoteTally } from '@/components/ui/choice-poll';
 
 export default function Approvals() {
   const { t, lang } = useLang();
@@ -198,15 +199,41 @@ export default function Approvals() {
         })}
       </div>
 
-      {/* Threaded Comments Sheet */}
+      {/* Threaded Comments & Tally Sheet */}
       <Sheet open={!!selectedId} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <SheetContent side="right" className="w-[400px] bg-midnight border-white/5 flex flex-col p-0">
-          <SheetHeader className="p-6 border-b border-white/5">
-            <SheetTitle className="text-xl font-playfair text-ivory">Discussion Thread</SheetTitle>
+        <SheetContent side="right" className="w-[420px] sm:w-[480px] bg-midnight border-white/5 flex flex-col p-0 overflow-y-auto">
+          <SheetHeader className="p-6 border-b border-white/5 shrink-0">
+            <SheetTitle className="text-xl font-playfair text-ivory">Review & Discussion</SheetTitle>
           </SheetHeader>
           
-          <div className="flex-1 overflow-hidden p-6">
-            {selectedId && <CommentSection targetId={selectedId} targetType="approval" />}
+          <div className="flex-1 p-6 space-y-6">
+            {selectedId && (
+              <>
+                {/* Client Committee Votes & Design Option Poll */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#7FA38A]">
+                    {t.app.approvals.poll.committeeTally}
+                  </h4>
+                  <VoteTally approvalId={selectedId} isAdmin={true} />
+                  
+                  <div className="border-t border-white/5 pt-4">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#7FA38A] mb-3">
+                      Design Option Poll
+                    </h4>
+                    <ChoicePoll approvalId={selectedId} isAdmin={true} />
+                  </div>
+                </div>
+
+                <div className="border-t border-white/5 pt-4">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-fog mb-3">
+                    Discussion Thread
+                  </h4>
+                  <div className="overflow-hidden">
+                    <CommentSection targetId={selectedId} targetType="approval" />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </SheetContent>
       </Sheet>

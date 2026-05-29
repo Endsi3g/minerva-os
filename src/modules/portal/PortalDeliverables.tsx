@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Palette, FileText, Video, File, Check, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
@@ -8,6 +8,7 @@ import type { ApprovalStatus, DeliverableType } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { CommentSection } from '@/components/minerva/CommentSection';
+import { ChoicePoll } from '@/components/ui/choice-poll';
 
 function DeliverableRow({
   approval,
@@ -104,30 +105,39 @@ function DeliverableRow({
         </div>
       </div>
 
-      {/* Comment panel */}
+      {/* Comment & Poll panel */}
       <AnimatePresence>
         {expanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 400, opacity: 1 }}
+            animate={{ height: 500, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden border-t border-white/5"
           >
-            <div className="h-full p-5 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-medium uppercase tracking-widest text-fog">Feedback & Discussion</p>
-                {approval.status === 'pending' && (
-                  <button
-                    onClick={() => { onAction(approval._id, 'revision'); }}
-                    className="text-[10px] font-semibold text-ember hover:underline"
-                  >
-                    {pd.form.submitRequest}
-                  </button>
-                )}
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <CommentSection targetId={approval._id} targetType="approval" />
+            <div className="h-full p-5 flex flex-col overflow-y-auto md:overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 h-full">
+                {/* Poll Section */}
+                <div className="flex flex-col justify-start">
+                  <ChoicePoll approvalId={approval._id} isAdmin={false} />
+                </div>
+                {/* Discussion Section */}
+                <div className="flex flex-col h-full overflow-hidden">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium uppercase tracking-widest text-fog">Feedback & Discussion</p>
+                    {approval.status === 'pending' && (
+                      <button
+                        onClick={() => { onAction(approval._id, 'revision'); }}
+                        className="text-[10px] font-semibold text-ember hover:underline"
+                      >
+                        {pd.form.submitRequest}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <CommentSection targetId={approval._id} targetType="approval" />
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>

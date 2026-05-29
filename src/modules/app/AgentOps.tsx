@@ -1,12 +1,19 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import { Sparkles, History, ShieldCheck, Activity, Edit3, CheckCircle, HelpCircle } from 'lucide-react';
+import { motion } from 'motion/react';
+import {
+  TerminalAnimationRoot,
+  TerminalAnimationWindow,
+  TerminalAnimationContent,
+  TerminalAnimationCommandBar,
+  TerminalAnimationOutput,
+} from '@/components/ui/terminal-animation';
+import { Sparkles, History, Activity, Edit3, CheckCircle, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TEMPLATES = [
@@ -37,6 +44,18 @@ export default function AgentOps() {
   const [editingAgent, setEditingAgent] = useState<any | null>(null);
   const [editedInstructions, setEditedInstructions] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const terminalTabs = useMemo(() => [
+    {
+      label: "agent-ops.log",
+      command: "tail -n 20 agent-audit.log",
+      lines: audit.map((log: any) => ({
+        text: `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.action}: ${JSON.stringify(log.details)}`,
+        color: log.action.includes('error') ? 'text-[#ff5f56]' : 'text-[#7FA38A]',
+        delay: 200
+      }))
+    }
+  ], [audit]);
 
   async function loadData() {
     const wsRes = await supabase.from('workspaces').select('id').limit(1);
@@ -171,32 +190,26 @@ export default function AgentOps() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-              {audit.length === 0 ? (
-                <p className="text-xs text-silver italic">No recent agent activity.</p>
-              ) : (
-                audit.map((log: any) => (
-                  <div key={log.id} className="flex gap-4 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                    <div className="shrink-0 mt-1">
-                      <ShieldCheck size={14} className="text-sage" />
+            {audit.length === 0 ? (
+              <p className="text-xs text-silver italic">No recent agent activity.</p>
+            ) : (
+              <TerminalAnimationRoot tabs={terminalTabs} alwaysDark={true} className="w-full">
+                <TerminalAnimationWindow minHeight="320px" animateOnVisible={false} className="border border-white/5 bg-black/60 rounded-xl font-mono text-[10px]">
+                  <TerminalAnimationContent className="p-4 overflow-y-auto max-h-[300px] custom-scrollbar">
+                    <div className="flex items-center gap-1.5 text-fog mb-3 text-[9px] select-none">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                      <span className="ml-2">Hermes Terminal Logs</span>
                     </div>
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-ivory">
-                          {log.action}
-                        </p>
-                        <p className="text-[9px] text-fog font-mono">
-                          {new Date(log.timestamp).toLocaleTimeString()}
-                        </p>
-                      </div>
-                      <pre className="text-[10px] text-silver font-mono bg-black/20 p-1.5 rounded overflow-x-auto">
-                        {JSON.stringify(log.details)}
-                      </pre>
+                    <div className="text-silver select-none">
+                      <span className="text-[#32f3e9]">guest@minerva-os</span>:<span className="text-[#b39aff]">~</span>$ <TerminalAnimationCommandBar className="inline-block" />
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
+                    <TerminalAnimationOutput className="mt-2 space-y-1" />
+                  </TerminalAnimationContent>
+                </TerminalAnimationWindow>
+              </TerminalAnimationRoot>
+            )}
           </CardContent>
         </Card>
 

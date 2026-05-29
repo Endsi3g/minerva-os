@@ -23,6 +23,54 @@ const translations = {
         getAccess: 'Get early access',
         earlyAccess: 'Early access',
       },
+      vex: {
+        logo: 'VEX',
+        headline: 'Shaping tomorrow\nwith vision and action.',
+        subheading: 'We back visionaries and craft ventures that define what comes next.',
+        navLinks: ['Story', 'Investing', 'Building', 'Advisory'] as string[],
+        chatButton: 'Start a Chat',
+        exploreButton: 'Explore Now',
+        tag: 'Investing. Building. Advisory.',
+        changelogTitle: "What's new",
+        changelogSub: 'Latest releases and improvements to Minerva OS',
+        releases: [
+          {
+            version: 'v1.9.0',
+            date: 'May 2026',
+            tag: 'Major',
+            items: [
+              'VEX Ventures hero with cinematic video background and animated typography',
+              'Supabase live auth connected · real session management replaces placeholders',
+              'Multi-step onboarding wizard flows from sign-up into studio configuration',
+              'Cult UI integration · StripeBgGuides, TextureOverlay, TextureButton on Login',
+              'Aurora sign-up page with split-screen video hero and staggered entry form',
+            ] as string[],
+          },
+          {
+            version: 'v1.8.0',
+            date: 'Apr 2026',
+            tag: 'Feature',
+            items: [
+              'AI Strategic Audit with health gauge and findings cards on Dashboard',
+              'AI Proposal Writer co-pilot with brief parser and section draft generation',
+              'External lead webhook with Claude scoring and email draft reviewer',
+              'RAG search · local 384-d vector embeddings and Hermes context feed',
+              'Stripe checkout redirect and HMAC-SHA256 webhook signature verifier',
+            ] as string[],
+          },
+          {
+            version: 'v1.7.0',
+            date: 'Mar 2026',
+            tag: 'Foundation',
+            items: [
+              'RBAC, email, onboarding, PDF export, monitoring, and mobile app',
+              '146 / 146 Playwright audit tests passing at production readiness gate',
+              'Convex to Supabase full migration · tsc clean build',
+              'Hermes AI chat panel with real-time streaming and sidebar integration',
+            ] as string[],
+          },
+        ] as { version: string; date: string; tag: string; items: string[] }[],
+      },
       dashboard: {
         activeProjects: {
           title: 'Active Projects',
@@ -56,7 +104,7 @@ const translations = {
       }
     },
     signup: {
-      leftHeading: 'Join Minerva',
+      leftHeading: 'Join Aurora',
       leftDesc: 'Follow these 3 quick phases to activate your space.',
       steps: ['Register your identity', 'Configure your studio', 'Finalize your profile'] as string[],
       heading: 'Create New Profile',
@@ -382,6 +430,10 @@ const translations = {
         meta: {
           by: 'by',
           on: 'on',
+        },
+        poll: {
+          committeeTally: 'Client Committee Tally',
+          pendingReview: 'Awaiting client committee votes...',
         }
       },
       files: {
@@ -786,6 +838,20 @@ const translations = {
           desc: 'No deliverables pending review at this time.',
         },
         previouslyResolved: 'Previously resolved',
+        poll: {
+          title: 'Design Options Poll',
+          question: 'Which design concept do you prefer?',
+          voteCount: '{{count}} votes',
+          votedSuccessfully: 'Vote recorded!',
+          committeeTally: 'Client Committee Status',
+          committeeTallyDesc: 'Live votes from client committee members.',
+          voteApprove: 'Vote Approve',
+          voteRevision: 'Vote Revision',
+          voteReject: 'Vote Reject',
+          optionA: 'Option A: Minimal Dark Obsidian',
+          optionB: 'Option B: Editorial Serif & Warm Accents',
+          optionC: 'Option C: Classic Sage High-Contrast',
+        }
       },
     },
   },
@@ -808,6 +874,54 @@ const translations = {
         pages: 'Pages',
         getAccess: 'Acces anticipé',
         earlyAccess: 'Acces anticipé',
+      },
+      vex: {
+        logo: 'VEX',
+        headline: 'Façonner l\'avenir\navec vision et action.',
+        subheading: 'Nous soutenons les visionnaires et créons les entreprises qui définissent l\'avenir.',
+        navLinks: ['Histoire', 'Investissement', 'Construction', 'Conseil'] as string[],
+        chatButton: 'Lancer un Chat',
+        exploreButton: 'Explorer Maintenant',
+        tag: 'Investissement. Construction. Conseil.',
+        changelogTitle: 'Nouveautés',
+        changelogSub: 'Dernières versions et améliorations de Minerva OS',
+        releases: [
+          {
+            version: 'v1.9.0',
+            date: 'Mai 2026',
+            tag: 'Majeur',
+            items: [
+              'Héro VEX Ventures avec vidéo de fond cinématique et typographie animée',
+              'Auth Supabase connectée · gestion de session réelle en remplacement des espaces réservés',
+              'Flux d\'inscription multi-étapes avec configuration du studio intégrée',
+              'Intégration Cult UI · StripeBgGuides, TextureOverlay, TextureButton sur Login',
+              'Page d\'inscription Aurora avec héro vidéo splitté et formulaire animé',
+            ] as string[],
+          },
+          {
+            version: 'v1.8.0',
+            date: 'Avr 2026',
+            tag: 'Fonctionnalité',
+            items: [
+              'Audit Stratégique IA avec jauge de santé et cartes de résultats',
+              'Co-pilote Propositions IA avec analyseur de brief et génération de sections',
+              'Webhook leads externe avec scoring Claude et rédacteur d\'emails',
+              'Recherche RAG · embeddings vectoriels 384-d et flux contexte Hermes',
+              'Redirection Stripe et vérificateur de signature webhook HMAC-SHA256',
+            ] as string[],
+          },
+          {
+            version: 'v1.7.0',
+            date: 'Mar 2026',
+            tag: 'Fondations',
+            items: [
+              'RBAC, email, onboarding, export PDF, surveillance et application mobile',
+              '146 / 146 tests Playwright passés au niveau de préparation à la production',
+              'Migration complète Convex vers Supabase · build tsc sans erreur',
+              'Panneau chat Hermes IA avec diffusion en temps réel et intégration sidebar',
+            ] as string[],
+          },
+        ] as { version: string; date: string; tag: string; items: string[] }[],
       },
       dashboard: {
         activeProjects: {
@@ -842,7 +956,7 @@ const translations = {
       }
     },
     signup: {
-      leftHeading: 'Rejoindre Minerva',
+      leftHeading: 'Rejoindre Aurora',
       leftDesc: 'Suivez ces 3 etapes rapides pour activer votre espace.',
       steps: ['Enregistrez votre identité', 'Configurez votre studio', 'Finalisez votre profil'] as string[],
       heading: 'Créer un profil',
@@ -1168,6 +1282,10 @@ const translations = {
         meta: {
           by: 'par',
           on: 'le',
+        },
+        poll: {
+          committeeTally: 'Votes du comité client',
+          pendingReview: 'En attente des votes du comité client...',
         }
       },
       files: {
@@ -1572,6 +1690,20 @@ const translations = {
           desc: 'Aucun livrable en attente de revue pour le moment.',
         },
         previouslyResolved: 'Résolus précédemment',
+        poll: {
+          title: 'Sondage options de design',
+          question: 'Quel concept de design préférez-vous ?',
+          voteCount: '{{count}} votes',
+          votedSuccessfully: 'Vote enregistré !',
+          committeeTally: 'Statut du comité client',
+          committeeTallyDesc: 'Votes en temps réel des membres du comité client.',
+          voteApprove: 'Voter Approuver',
+          voteRevision: 'Voter Révisions',
+          voteReject: 'Voter Rejeter',
+          optionA: 'Option A : Minimaliste Obsidian Sombre',
+          optionB: 'Option B : Serif Éditorial & Accents Chauds',
+          optionC: 'Option C : Sauge Classique Contraste Élevé',
+        }
       },
     },
   },

@@ -15,10 +15,10 @@
     "test:audit:report": "playwright show-report tests/report",
     "pwa:icons": "node scripts/generate-icons.mjs",
     "electron:compile": "tsc --project electron/tsconfig.json",
-    "electron:dev": "npm run dev & npx wait-on http://localhost:3000 && electron electron/dist/main.js",
-    "electron:build": "npm run build && npm run electron:compile && electron-builder",
-    "electron:dist:mac": "npm run build && npm run electron:compile && electron-builder --mac",
-    "electron:dist:win": "npm run build && npm run electron:compile && electron-builder --win"
+    "electron:dev": "pnpm run dev & npx wait-on http://localhost:3000 && electron electron/dist/main.js",
+    "electron:build": "pnpm run build && pnpm run electron:compile && electron-builder",
+    "electron:dist:mac": "pnpm run build && pnpm run electron:compile && electron-builder --mac",
+    "electron:dist:win": "pnpm run build && pnpm run electron:compile && electron-builder --win"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.77",

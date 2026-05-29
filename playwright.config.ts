@@ -17,7 +17,7 @@ export default defineConfig({
     actionTimeout: 10_000,
   },
   webServer: {
-    command: 'PLAYWRIGHT_TEST=1 PORT=3001 npx next start',
+    command: 'pnpm start',
     url: 'http://localhost:3001',
     reuseExistingServer: true,
     timeout: 60_000,

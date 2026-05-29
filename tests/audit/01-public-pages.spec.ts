@@ -75,8 +75,7 @@ test('Login — has link to signup', async ({ page }) => {
 // ─── Signup page ─────────────────────────────────────────────────────────────
 
 test('Signup /signup — renders form', async ({ page }) => {
-  await page.goto('/signup');
-  await page.waitForLoadState('domcontentloaded');
+  await page.goto('/signup', { waitUntil: 'domcontentloaded' });
   await page.screenshot({ path: 'tests/screenshots/01-signup.png', fullPage: true });
 
   await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 8000 });
@@ -84,8 +83,7 @@ test('Signup /signup — renders form', async ({ page }) => {
 });
 
 test('Signup — submit empty form shows error', async ({ page }) => {
-  await page.goto('/signup');
-  await page.waitForLoadState('domcontentloaded');
+  await page.goto('/signup', { waitUntil: 'domcontentloaded' });
 
   const submitBtn = page.locator('button[type="submit"], button:has-text("Create Account"), button:has-text("Créer un compte")').first();
   await submitBtn.click();
@@ -99,8 +97,7 @@ test('Signup — submit empty form shows error', async ({ page }) => {
 });
 
 test('Signup — has link to login', async ({ page }) => {
-  await page.goto('/signup');
-  await page.waitForLoadState('domcontentloaded');
+  await page.goto('/signup', { waitUntil: 'domcontentloaded' });
   const loginLink = page.locator('a[href="/login"]');
   await expect(loginLink).toBeVisible({ timeout: 8000 });
 });
@@ -116,8 +113,8 @@ const MARKETING_PAGES = [
 
 for (const { route, name } of MARKETING_PAGES) {
   test(`${name} ${route} — renders content`, async ({ page }) => {
-    const response = await page.goto(route);
-    await page.waitForLoadState('networkidle');
+    const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(800);
     await page.screenshot({ path: `tests/screenshots/01-${name.toLowerCase()}.png`, fullPage: true });
 
     // Status code is the authoritative 404 check — not body text (Next.js injects
@@ -133,8 +130,7 @@ for (const { route, name } of MARKETING_PAGES) {
 // ─── Portal entry ────────────────────────────────────────────────────────────
 
 test('Portal /portal — renders', async ({ page }) => {
-  await page.goto('/portal');
-  await page.waitForLoadState('domcontentloaded');
+  await page.goto('/portal', { waitUntil: 'domcontentloaded' });
   await page.screenshot({ path: 'tests/screenshots/01-portal.png', fullPage: true });
 
   const body = await page.locator('body').textContent();

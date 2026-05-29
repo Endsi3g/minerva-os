@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, Circle, Loader2, Eye, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { TopBlur, BottomBlur } from '@/components/ui/edge-blur';
+import { Reorder } from 'motion/react';
 import {
   Sheet,
   SheetContent,
@@ -91,7 +93,13 @@ export default function Tasks() {
     { id: 'done' as Filter,        label: tk.filters.done },
   ], [tk]);
 
-  const visible = filter === 'all' ? tasks : tasks.filter((t: any) => t.status === filter);
+  const [orderedTasks, setOrderedTasks] = useState<any[]>([]);
+
+  useEffect(() => {
+    setOrderedTasks(tasks);
+  }, [tasks]);
+
+  const visible = filter === 'all' ? orderedTasks : orderedTasks.filter((t: any) => t.status === filter);
 
   async function cycleStatus(id: string, currentStatus: TaskStatus) {
     const nextStatus = STATUS_CYCLE[currentStatus];
@@ -157,58 +165,63 @@ export default function Tasks() {
       </div>
 
       {/* Task list */}
-      <div className="space-y-1">
+      <div className="relative max-h-[60vh] overflow-y-auto pr-1">
+        <TopBlur className="absolute top-0 z-20" height={24} />
         {visible.length === 0 && (
           <p className="text-sm text-fog py-8 text-center">{tk.empty}</p>
         )}
+        <Reorder.Group axis="y" values={orderedTasks} onReorder={setOrderedTasks} className="space-y-1 py-4">
           {visible.map((task: any) => {
             const StatusIcon = STATUS_ICON[task.status as TaskStatus] || Circle;
             const project = projects.find((p: any) => p._id === task.projectId);
-          return (
-            <div
-              key={task._id}
-              onClick={() => setSelectedTask(task)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-card/80 transition-colors group cursor-pointer"
-            >
-              {/* Status toggle */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  cycleStatus(task._id, task.status as TaskStatus);
-                }}
-                className="shrink-0 transition-opacity hover:opacity-80"
-                aria-label={lang === 'fr' ? 'Changer le statut' : 'Cycle status'}
+            return (
+              <Reorder.Item
+                key={task._id}
+                value={task}
+                onClick={() => setSelectedTask(task)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-card/80 transition-colors group cursor-grab active:cursor-grabbing bg-midnight border border-white/5 select-none"
               >
-                <StatusIcon size={16} className={STATUS_COLOR[task.status as TaskStatus]} />
-              </button>
+                {/* Status toggle */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    cycleStatus(task._id, task.status as TaskStatus);
+                  }}
+                  className="shrink-0 transition-opacity hover:opacity-80 cursor-pointer"
+                  aria-label={lang === 'fr' ? 'Changer le statut' : 'Cycle status'}
+                >
+                  <StatusIcon size={16} className={STATUS_COLOR[task.status as TaskStatus]} />
+                </button>
 
-              {/* Title */}
-              <p className={cn('flex-1 text-sm truncate', task.status === 'done' ? 'line-through text-fog' : 'text-ivory')}>
-                {task.title}
-              </p>
+                {/* Title */}
+                <p className={cn('flex-1 text-sm truncate', task.status === 'done' ? 'line-through text-fog' : 'text-ivory')}>
+                  {task.title}
+                </p>
 
-              {/* Project pill */}
-              <span className="hidden sm:block text-[10px] px-2 py-0.5 rounded-full bg-dusk text-fog border border-border shrink-0 max-w-[120px] truncate">
-                {project?.name || '...'}
-              </span>
+                {/* Project pill */}
+                <span className="hidden sm:block text-[10px] px-2 py-0.5 rounded-full bg-dusk text-fog border border-border shrink-0 max-w-[120px] truncate">
+                  {project?.name || '...'}
+                </span>
 
-              {/* Priority */}
-              <span className={cn('hidden md:block text-[10px] font-medium px-1.5 py-0.5 rounded-full capitalize shrink-0', PRIORITY_COLOR[task.priority as TaskPriority])}>
-                {tk.priorities[task.priority as TaskPriority]}
-              </span>
+                {/* Priority */}
+                <span className={cn('hidden md:block text-[10px] font-medium px-1.5 py-0.5 rounded-full capitalize shrink-0', PRIORITY_COLOR[task.priority as TaskPriority])}>
+                  {tk.priorities[task.priority as TaskPriority]}
+                </span>
 
-              {/* Due date */}
-              <span className="hidden lg:block text-[10px] text-fog shrink-0">
-                {new Date(task.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
-              </span>
+                {/* Due date */}
+                <span className="hidden lg:block text-[10px] text-fog shrink-0">
+                  {new Date(task.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
+                </span>
 
-              {/* Assignee */}
-              <Avatar className="h-5 w-5 shrink-0">
-                <AvatarFallback className="text-[8px]">{task.assignee}</AvatarFallback>
-              </Avatar>
-            </div>
-          );
-        })}
+                {/* Assignee */}
+                <Avatar className="h-5 w-5 shrink-0">
+                  <AvatarFallback className="text-[8px]">{task.assignee}</AvatarFallback>
+                </Avatar>
+              </Reorder.Item>
+            );
+          })}
+        </Reorder.Group>
+        <BottomBlur className="absolute bottom-0 z-20" height={24} />
       </div>
 
       {/* Task detail sheet */}

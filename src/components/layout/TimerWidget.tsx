@@ -3,9 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Square, Clock, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
+import { MorphSurface } from '@/components/ui/morph-surface';
+import { TextureButton } from '@/components/ui/texture-button';
 
 
 function formatElapsed(ms: number) {
@@ -236,8 +237,8 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
           <div className="relative flex items-center justify-center h-8 w-8 shrink-0">
             <motion.div
               className="absolute inset-0 rounded-full bg-sage/10"
-              animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.5, 0.2] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ scale: [1, 1.35, 1], opacity: [0.15, 0.4, 0.15] }}
+              transition={{ duration: 6, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
             />
             <div className="h-6 w-6 rounded-full bg-midnight border border-sage/30 flex items-center justify-center">
               <Clock size={11} className="text-sage animate-spin" style={{ animationDuration: '12s' }} />
@@ -254,83 +255,94 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
             <X size={10} />
           </button>
         </div>
-      ) : showForm ? (
-        <div
-          className="rounded-lg px-3 py-2 space-y-2"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <input
-            autoFocus
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleStart(); if (e.key === 'Escape') setShowForm(false); }}
-            placeholder="What are you working on?"
-            className="w-full text-[11px] bg-transparent text-ivory placeholder:text-fog outline-none"
-          />
-
-          <select
-            value={selectedProjectId}
-            onChange={e => {
-              setSelectedProjectId(e.target.value);
-              setSelectedTaskId('');
-            }}
-            className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
-          >
-            <option value="" className="bg-midnight text-fog">Select Project (optional)</option>
-            {projects.map((p: any) => (
-              <option key={p._id} value={p._id} className="bg-midnight text-silver">
-                {p.name}
-              </option>
-            ))}
-          </select>
-
-          {selectedProjectId && (
-            <select
-              value={selectedTaskId}
-              onChange={e => setSelectedTaskId(e.target.value)}
-              className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
-            >
-              <option value="" className="bg-midnight text-fog">Select Task (optional)</option>
-              {projectTasks.map((t: any) => (
-                <option key={t._id} value={t._id} className="bg-midnight text-silver">
-                  {t.title}
-                </option>
-              ))}
-            </select>
-          )}
-
-          <div className="flex gap-1.5">
-            <Button
-              size="sm"
-              onClick={handleStart}
-              disabled={!description.trim()}
-              className="h-6 px-2 text-[10px] flex-1 bg-sage/20 hover:bg-sage/30 text-sage border-0"
-            >
-              <Play size={9} />
-              Start
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                setShowForm(false);
-                setSelectedProjectId('');
-                setSelectedTaskId('');
-              }}
-              className="h-6 px-2 text-[10px] text-fog"
-            >
-              <X size={9} />
-            </Button>
-          </div>
-        </div>
       ) : (
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-fog hover:text-ivory hover:bg-white/5 transition-colors text-[11px]"
-        >
-          <Clock size={12} className="shrink-0" />
-          <span>Start timer</span>
-        </button>
+        <MorphSurface
+          isOpen={showForm}
+          onOpenChange={setShowForm}
+          collapsedWidth="auto"
+          collapsedHeight={32}
+          expandedWidth={220}
+          expandedHeight={180}
+          triggerLabel="Start timer"
+          className="w-full justify-start items-center"
+          renderTrigger={({ onClick }) => (
+            <button
+              type="button"
+              onClick={onClick}
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-fog hover:text-ivory hover:bg-white/5 transition-colors text-[11px]"
+            >
+              <Clock size={12} className="shrink-0" />
+              <span>Start timer</span>
+            </button>
+          )}
+          renderContent={({ onClose }) => (
+            <div className="flex flex-col gap-2 p-2 w-full h-full text-left bg-midnight rounded-xl">
+              <input
+                autoFocus
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleStart(); if (e.key === 'Escape') onClose(); }}
+                placeholder="What are you working on?"
+                className="w-full text-[11px] bg-transparent text-ivory placeholder:text-fog outline-none border-b border-white/5 pb-1"
+              />
+
+              <select
+                value={selectedProjectId}
+                onChange={e => {
+                  setSelectedProjectId(e.target.value);
+                  setSelectedTaskId('');
+                }}
+                className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
+              >
+                <option value="" className="bg-midnight text-fog">Select Project</option>
+                {projects.map((p: any) => (
+                  <option key={p._id} value={p._id} className="bg-midnight text-silver">
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+
+              {selectedProjectId && (
+                <select
+                  value={selectedTaskId}
+                  onChange={e => setSelectedTaskId(e.target.value)}
+                  className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
+                >
+                  <option value="" className="bg-midnight text-fog">Select Task</option>
+                  {projectTasks.map((t: any) => (
+                    <option key={t._id} value={t._id} className="bg-midnight text-silver">
+                      {t.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              <div className="flex gap-1.5 mt-auto pt-1">
+                <TextureButton
+                  type="button"
+                  onClick={handleStart}
+                  disabled={!description.trim()}
+                  className="h-7 text-[10px] flex-1 font-semibold"
+                >
+                  <Play size={9} className="mr-1 inline" />
+                  Start
+                </TextureButton>
+                <TextureButton
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    onClose();
+                    setSelectedProjectId('');
+                    setSelectedTaskId('');
+                  }}
+                  className="h-7 px-2 text-[10px] text-fog shrink-0 animate-none border-0"
+                >
+                  <X size={9} />
+                </TextureButton>
+              </div>
+            </div>
+          )}
+        />
       )}
     </div>
   );
