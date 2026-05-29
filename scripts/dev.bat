@@ -42,13 +42,27 @@ echo.
 
 :: Check .env.local
 if not exist "%~dp0..\.env.local" (
-  echo   ATTENTION: .env.local introuvable - copiez .env.example en .env.local
-  echo   WARNING: .env.local not found - copy .env.example to .env.local
-  pause
+  echo   ATTENTION: .env.local introuvable - creation a partir de .env.example
+  echo   WARNING: .env.local not found - copying .env.example
+  copy "%~dp0..\.env.example" "%~dp0..\.env.local" >nul
 )
 
 cd /d "%~dp0.."
-pnpm dev
+
+:: Auto install deps if missing
+if not exist "node_modules" (
+  echo   [WEB] Dossier node_modules absent. Installation des dependances...
+  echo   [WEB] node_modules folder missing. Installing dependencies...
+  echo.
+  call pnpm install
+)
+
+call pnpm dev
+if errorlevel 1 (
+  echo.
+  echo   [WEB] Le serveur de developpement Next.js a rencontre une erreur.
+  pause
+)
 goto :EOF
 
 :: ─────────────────────────────────────────────────────────────────────────────
@@ -56,10 +70,16 @@ goto :EOF
 cls
 echo.
 echo   [ELECTRON] Compilation TypeScript + lancement Electron...
-echo   Prerequis: npm install -g electron electron-builder
 echo.
 
 cd /d "%~dp0.."
+
+:: Auto install deps if missing
+if not exist "node_modules" (
+  echo   [ELECTRON] Dossier node_modules absent. Installation des dependances...
+  echo.
+  call pnpm install
+)
 
 :: Compile electron TypeScript
 echo   Compiling electron/main.ts...
@@ -75,7 +95,7 @@ echo   Compilation OK.
 :: Start Next.js in background then wait for it before launching Electron
 echo.
 echo   Demarrage Next.js en arriere-plan (port 3000)...
-start "Minerva Next.js" cmd /c "pnpm dev"
+start "Minerva Next.js" cmd /c "call pnpm dev"
 
 echo   Attente que Next.js soit pret...
 :WAIT_NEXT
@@ -85,7 +105,12 @@ if errorlevel 1 goto :WAIT_NEXT
 
 echo   Next.js pret. Lancement Electron...
 set NODE_ENV=development
-npx electron electron\dist\main.js
+call npx electron electron\dist\main.js
+if errorlevel 1 (
+  echo.
+  echo   [ELECTRON] Electron a rencontre une erreur.
+  pause
+)
 goto :EOF
 
 :: ─────────────────────────────────────────────────────────────────────────────
@@ -107,14 +132,26 @@ set /p "MOBILE_CHOICE=  > "
 
 cd /d "%~dp0..\minerva-mobile"
 
+:: Auto install deps if missing
+if not exist "node_modules" (
+  echo   [MOBILE] Dossier node_modules absent dans minerva-mobile. Installation...
+  echo.
+  call pnpm install
+)
+
 if /i "%MOBILE_CHOICE%"=="1" (
-  npx expo start
+  call npx expo start
 ) else if /i "%MOBILE_CHOICE%"=="2" (
-  npx expo start --android
+  call npx expo start --android
 ) else if /i "%MOBILE_CHOICE%"=="3" (
-  npx expo start --ios
+  call npx expo start --ios
 ) else (
   goto :EOF
+)
+if errorlevel 1 (
+  echo.
+  echo   [MOBILE] Expo a rencontre une erreur.
+  pause
 )
 goto :EOF
 
@@ -129,6 +166,13 @@ echo   Variables requises: SUPABASE_URL et SUPABASE_KEY
 echo.
 
 cd /d "%~dp0..\minerva-mcp"
+
+:: Auto install deps if missing
+if not exist "node_modules" (
+  echo   [MCP] Dossier node_modules absent dans minerva-mcp. Installation...
+  echo.
+  call pnpm install
+)
 
 :: Compile TypeScript first
 echo   Compilation...
@@ -159,6 +203,11 @@ echo   Lancement du serveur MCP en mode stdio...
 echo   (Configurez Claude Desktop pour pointer vers ce processus)
 echo.
 node dist\server.js
+if errorlevel 1 (
+  echo.
+  echo   [MCP] Le serveur MCP s'est arrete avec une erreur.
+  pause
+)
 goto :EOF
 
 :: ─────────────────────────────────────────────────────────────────────────────
