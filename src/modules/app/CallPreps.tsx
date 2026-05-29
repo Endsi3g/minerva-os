@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Video, BookOpen, Sparkles, Plus, CheckCircle2, Circle, ExternalLink } from 'lucide-react';
+import { Calendar, Video, BookOpen, Sparkles, Plus, CheckCircle2, Circle, ExternalLink, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,34 @@ export default function CallPreps() {
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [calls, setCalls] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
+
+  const generateBrief = async (callId: string) => {
+    if (generatingId) return;
+    setGeneratingId(callId);
+    try {
+      const res = await fetch('/api/ai/call-prep', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callId }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setCalls(prev =>
+        prev.map(c => c._id === callId ? {
+          ...c,
+          summary: data.summary,
+          prepChecklist: data.prepChecklist,
+          status: data.status,
+        } : c)
+      );
+    } catch (err) {
+      console.error('Failed to generate call brief:', err);
+    } finally {
+      setGeneratingId(null);
+    }
+  };
 
   useEffect(() => {
     supabase.from('workspaces').select('*').then(({ data }) => {
@@ -160,14 +188,25 @@ export default function CallPreps() {
                   <Sparkles size={16} className="text-warm" /> {cp.aiSummary}
                 </h3>
                 <div className="bg-obsidian/50 rounded-2xl p-5 border border-white/5 space-y-4">
-                  {selectedCall.summary ? (
+                  {generatingId === selectedCall._id ? (
+                    <div className="flex flex-col items-center justify-center py-8 gap-2">
+                      <Loader2 className="h-6 w-6 animate-spin text-sage" />
+                      <span className="text-xs text-fog italic animate-pulse">Hermes is compiling brief & checklist...</span>
+                    </div>
+                  ) : selectedCall.summary ? (
                     <p className="text-sm text-silver leading-relaxed italic">
                       "{selectedCall.summary}"
                     </p>
                   ) : (
                     <div className="text-center py-4">
                       <p className="text-xs text-fog italic">No summary generated yet.</p>
-                      <Button variant="outline" size="sm" className="mt-4 border-white/10 text-xs">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-4 border-white/10 text-xs"
+                        onClick={() => generateBrief(selectedCall._id)}
+                      >
+                        <Sparkles size={11} className="mr-1.5 text-warm" />
                         Generate AI Brief
                       </Button>
                     </div>
