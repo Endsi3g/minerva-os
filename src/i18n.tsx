@@ -51,10 +51,14 @@ const translations = {
             { value: '< 3 min', label: 'Avg. onboarding' },
           ] as { value: string; label: string }[],
           cta: {
+            badge: 'v2.0.0 — Now available',
             heading: 'Your agency, elevated.',
             sub: 'Join the agencies already running on Minerva OS.',
-            primary: 'Get Started',
+            primary: 'Get Started Free',
             secondary: 'Sign In',
+            downloadLabel: 'or download the desktop app',
+            downloadWindows: 'Windows .exe',
+            downloadMac: 'macOS .dmg',
           },
         },
         releases: [
@@ -927,10 +931,14 @@ const translations = {
             { value: '< 3 min', label: 'Onboarding moyen' },
           ] as { value: string; label: string }[],
           cta: {
+            badge: 'v2.0.0 — Disponible maintenant',
             heading: 'Votre agence, au sommet.',
             sub: 'Rejoignez les agences qui fonctionnent déjà sur Minerva OS.',
-            primary: 'Commencer',
+            primary: 'Commencer gratuitement',
             secondary: 'Se connecter',
+            downloadLabel: 'ou télécharger l\'application bureau',
+            downloadWindows: 'Windows .exe',
+            downloadMac: 'macOS .dmg',
           },
         },
         releases: [

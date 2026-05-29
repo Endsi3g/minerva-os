@@ -1,22 +1,22 @@
 'use client';
+
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Circle, Loader2 } from 'lucide-react';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
-import { StripeBgGuides } from '@/components/ui/stripe-bg-guides';
-import { TextureOverlay } from '@/components/ui/texture-overlay';
-import { TextureButton } from '@/components/ui/texture-button';
+import { cn } from '@/lib/utils';
 
-const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4';
-const POSTER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1600&q=60';
-const ACCENT = '#ef4d23';
+const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
 
 const containerVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+  },
 };
 
 const itemVariants = {
@@ -55,25 +55,21 @@ export default function Login() {
   }
 
   return (
-    <main
-      className="relative flex min-h-screen w-full selection:bg-white/20 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4"
-      style={{ backgroundColor: '#0A0D14' }}
-    >
-      <TextureOverlay />
-      {/* ── Left column — hero video ────────────────────────────────────────── */}
+    <main className="relative flex min-h-screen w-full bg-black selection:bg-white/30 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4 font-sans">
+
+      {/* ── Left Column — Video ────────────────────────────────────────────── */}
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
-        <StripeBgGuides contained={true} glowColor="#7FA38A" darkMode={true} />
         <video
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          style={{ filter: 'hue-rotate(-260deg) saturate(1.5) contrast(1.1)' }}
-          src={BG_VIDEO}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
+          style={{ filter: 'saturate(0.08) contrast(1.05) brightness(0.88)' }}
           autoPlay
-          loop
           muted
+          loop
           playsInline
-          poster={POSTER}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/20" />
+        >
+          <source src={BG_VIDEO} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20 z-0" />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
@@ -81,43 +77,31 @@ export default function Login() {
           initial="hidden"
           animate="show"
         >
-          {/* Brand */}
           <motion.div variants={itemVariants} className="flex items-center gap-2.5">
-            {/* Minerva 8-petal logo */}
-            <svg width="22" height="22" viewBox="0 0 32 32">
-              <circle cx="16" cy="16" r="3.5" fill={ACCENT} />
-              {Array.from({ length: 8 }).map((_, i) => {
-                const angle = (i * Math.PI * 2) / 8;
-                const x = 16 + 10 * Math.cos(angle);
-                const y = 16 + 10 * Math.sin(angle);
-                return <circle key={i} cx={x} cy={y} r="3.5" fill={ACCENT} />;
-              })}
-            </svg>
-            <span className="text-xl font-semibold tracking-tight" style={{ color: '#F5F1E8', fontFamily: 'Inter, sans-serif' }}>
+            <Circle className="fill-white text-white h-5 w-5" />
+            <span className="text-xl font-semibold tracking-tight text-white">
               Minerva OS
             </span>
           </motion.div>
 
-          {/* Heading */}
           <motion.div variants={itemVariants} className="space-y-3">
-            <h1 className="text-4xl font-medium tracking-tight" style={{ color: '#F5F1E8' }}>
+            <h1 className="text-4xl font-medium tracking-tight whitespace-nowrap text-white">
               {l.leftHeading}
             </h1>
-            <p className="text-sm leading-relaxed px-0" style={{ color: 'rgba(184,189,199,0.75)' }}>
+            <p className="text-sm leading-relaxed text-white/60">
               {l.leftDesc}
             </p>
           </motion.div>
 
-          {/* Features */}
-          <motion.div variants={itemVariants} className="space-y-2.5">
-            {l.features.map((f) => (
-              <FeatureItem key={f} text={f} />
+          <motion.div variants={itemVariants} className="space-y-2.5 w-full">
+            {l.features.map((feature) => (
+              <FeatureItem key={feature} text={feature} />
             ))}
           </motion.div>
         </motion.div>
       </div>
 
-      {/* ── Right column — login form ──────────────────────────────────────── */}
+      {/* ── Right Column — Login Form ──────────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center py-12 lg:py-6 px-4 sm:px-12 lg:px-16 xl:px-24 overflow-y-auto lg:overflow-hidden">
         <motion.div
           className="w-full max-w-xl space-y-8 lg:space-y-6 sm:space-y-10"
@@ -125,40 +109,34 @@ export default function Login() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
-          {/* Header */}
           <div className="space-y-2">
-            <h2 className="text-3xl font-medium tracking-tight" style={{ color: '#F5F1E8' }}>
+            <h2 className="text-3xl font-medium tracking-tight text-white">
               {l.heading}
             </h2>
-            <p className="text-sm" style={{ color: 'rgba(184,189,199,0.55)' }}>
+            <p className="text-sm text-white/40">
               {l.subheading}
             </p>
           </div>
 
-          {/* Form */}
-          <div className="space-y-4">
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium" style={{ color: '#F5F1E8' }}>
-                {l.email}
-              </label>
-              <input
-                type="email"
-                placeholder={l.emailPlaceholder}
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full rounded-xl h-11 px-4 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/15 transition-all"
-                style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
-              />
-            </div>
+          <form
+            onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+            className="space-y-4"
+          >
+            <InputGroup
+              label={l.email}
+              placeholder={l.emailPlaceholder}
+              type="email"
+              value={email}
+              onChange={setEmail}
+            />
 
-            {/* Password */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 text-left w-full">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium" style={{ color: '#F5F1E8' }}>
-                  {l.password}
-                </label>
-                <Link href="/forgot-password" className="text-xs hover:opacity-80 transition-opacity" style={{ color: '#B8BDC7' }}>
+                <label className="block text-sm font-medium text-white">{l.password}</label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                >
                   {l.forgot}
                 </Link>
               </div>
@@ -169,14 +147,12 @@ export default function Login() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  className="w-full rounded-xl h-11 px-4 pr-11 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/15 transition-all"
-                  style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+                  className="w-full bg-[#1A1A1A] border-none rounded-xl h-11 px-4 pr-11 text-white placeholder:text-white/20 focus:ring-2 focus:ring-white/20 focus:outline-none transition-all text-sm"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: 'rgba(184,189,199,0.35)' }}
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -184,70 +160,72 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Submit */}
-            <TextureButton
-              type="button"
+            {error && <p className="text-sm text-[#A86A6A] px-1">{error}</p>}
+
+            <button
+              type="submit"
               disabled={isLoading}
-              onClick={handleSubmit}
-              className="w-full h-14 font-semibold mt-2 disabled:opacity-50"
+              className="w-full h-14 bg-white text-black font-semibold rounded-xl hover:bg-white/90 active:scale-[0.98] mt-4 transition-all duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
-                <>
-                  {l.submit}
-                  <ArrowRight size={16} className="ml-2" />
-                </>
-              )}
-            </TextureButton>
+              {isLoading
+                ? <Loader2 size={18} className="animate-spin" />
+                : l.submit
+              }
+            </button>
 
-            {error && (
-              <p className="text-center text-xs text-ember mt-2" style={{ color: '#ef4d23' }}>{error}</p>
-            )}
-
-            {/* Divider */}
-            <div className="relative flex items-center">
-              <div className="flex-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.09)' }} />
-              <span
-                className="px-4 text-xs font-medium uppercase tracking-widest"
-                style={{ backgroundColor: '#0A0D14', color: 'rgba(184,189,199,0.4)' }}
-              >
-                {l.or}
-              </span>
-              <div className="flex-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.09)' }} />
-            </div>
-
-            {/* Magic link */}
-            <TextureButton
-              type="button"
-              variant="secondary"
-              className="w-full h-11 text-sm font-medium"
-            >
-              {l.magicLink}
-            </TextureButton>
-
-            {/* Footer */}
-            <p className="text-center text-sm" style={{ color: 'rgba(184,189,199,0.5)' }}>
+            <p className="text-center text-sm text-white/50">
               {l.footer}{' '}
-              <Link href="/signup" className="transition-colors underline underline-offset-2" style={{ color: '#F5F1E8' }}>
+              <Link
+                href="/signup"
+                className="text-white hover:text-white/80 transition-colors underline underline-offset-2"
+              >
                 {l.footerLink}
               </Link>
             </p>
-          </div>
+          </form>
         </motion.div>
       </div>
     </main>
   );
 }
 
+/* ── Helpers ────────────────────────────────────────────────────────────────── */
+
 function FeatureItem({ text }: { text: string }) {
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-      style={{ backgroundColor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)' }}
+      className={cn(
+        'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 w-full',
+        'bg-[#1A1A1A] text-white',
+      )}
     >
-      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}>
-        <ArrowRight size={12} strokeWidth={3} />
+      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 bg-white/10 text-white/40">
+        ·
       </span>
-      <span className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{text}</span>
+      <span className="text-sm font-medium">{text}</span>
+    </div>
+  );
+}
+
+interface InputGroupProps {
+  label: string;
+  placeholder: string;
+  type: string;
+  value: string;
+  onChange: (val: string) => void;
+}
+
+function InputGroup({ label, placeholder, type, value, onChange }: InputGroupProps) {
+  return (
+    <div className="space-y-1.5 text-left w-full">
+      <label className="block text-sm font-medium text-white">{label}</label>
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full bg-[#1A1A1A] border-none rounded-xl h-11 px-4 text-white placeholder:text-white/20 focus:ring-2 focus:ring-white/20 focus:outline-none transition-all text-sm"
+      />
     </div>
   );
 }

@@ -64,7 +64,7 @@ export default function SignUp() {
       <div className="relative hidden w-[52%] flex-col items-center justify-end pb-32 px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
-          style={{ filter: 'hue-rotate(-260deg) saturate(1.5) contrast(1.1)' }}
+          style={{ filter: 'saturate(0.08) contrast(1.05) brightness(0.88)' }}
           autoPlay
           muted
           loop

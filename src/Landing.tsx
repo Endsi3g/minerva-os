@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import {
   GitBranch, FolderKanban, CreditCard, Sparkles, Archive, Users,
-  Menu, X,
+  Menu, X, Monitor, Laptop2,
 } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { cn } from '@/lib/utils';
@@ -426,36 +426,88 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── CTA banner ────────────────────────────────────────────────────── */}
-      <section className="w-full px-6 md:px-12 lg:px-20 py-32">
+      {/* ── CTA ───────────────────────────────────────────────────────────── */}
+      <section className="w-full px-6 md:px-12 lg:px-20 py-28 relative overflow-hidden">
+        {/* Subtle radial glow */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] pointer-events-none rounded-full"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(245,241,232,0.03) 0%, transparent 70%)' }}
+        />
+
         <motion.div
-          initial={{ opacity: 0, y: 28 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
-          className="max-w-3xl mx-auto text-center"
+          transition={{ duration: 0.9, ease: [0.23, 1, 0.32, 1] }}
+          className="relative max-w-2xl mx-auto text-center"
         >
+          {/* Eyebrow badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-8"
+            style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: '#B8BDC7' }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7FA38A]" />
+            {vex.sections.cta.badge}
+          </div>
+
+          {/* Heading */}
           <h2
-            className="text-4xl md:text-6xl font-normal text-[#F5F1E8] mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-normal text-[#F5F1E8] mb-5 leading-tight"
             style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '-0.03em' }}
           >
             {vex.sections.cta.heading}
           </h2>
-          <p className="text-[#8A9099] text-base mb-10 max-w-lg mx-auto">{vex.sections.cta.sub}</p>
-          <div className="flex flex-wrap gap-4 justify-center">
+
+          {/* Sub */}
+          <p className="text-[#8A9099] text-base mb-10 max-w-md mx-auto leading-relaxed">
+            {vex.sections.cta.sub}
+          </p>
+
+          {/* Primary CTA buttons */}
+          <div className="flex flex-wrap gap-3 justify-center mb-10">
             <Link
               href="/welcome"
-              className="bg-[#F5F1E8] text-[#0A0D14] px-8 py-3.5 rounded-xl text-sm font-medium hover:bg-white transition-colors"
+              className="bg-[#F5F1E8] text-[#0A0D14] px-7 py-3 rounded-xl text-sm font-semibold hover:bg-white transition-colors"
             >
               {vex.sections.cta.primary}
             </Link>
             <Link
               href="/login"
-              className="text-[#B8BDC7] px-8 py-3.5 rounded-xl text-sm font-medium transition-colors hover:text-[#F5F1E8]"
+              className="text-[#B8BDC7] px-7 py-3 rounded-xl text-sm font-medium transition-colors hover:text-[#F5F1E8] hover:border-white/20"
               style={{ border: '1px solid rgba(255,255,255,0.12)' }}
             >
               {vex.sections.cta.secondary}
             </Link>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="w-16 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+            <span className="text-xs" style={{ color: '#8A9099' }}>{vex.sections.cta.downloadLabel}</span>
+            <div className="w-16 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          </div>
+
+          {/* Download buttons */}
+          <div className="flex flex-wrap gap-3 justify-center">
+            {[
+              { icon: Monitor, label: vex.sections.cta.downloadWindows, href: 'https://github.com/Endsi3g/minerva-os/releases/latest' },
+              { icon: Laptop2, label: vex.sections.cta.downloadMac, href: 'https://github.com/Endsi3g/minerva-os/releases/latest' },
+            ].map(({ icon: Icon, label, href }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:border-white/20 hover:text-[#F5F1E8]"
+                style={{
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  color: '#8A9099',
+                  backgroundColor: 'rgba(255,255,255,0.02)',
+                }}
+              >
+                <Icon size={14} strokeWidth={1.5} />
+                {label}
+              </a>
+            ))}
           </div>
         </motion.div>
       </section>
