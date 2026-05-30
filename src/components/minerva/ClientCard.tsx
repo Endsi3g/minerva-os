@@ -1,9 +1,10 @@
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { FolderKanban, Mail } from 'lucide-react';
+import { FolderKanban, Mail, Link } from 'lucide-react';
 import type { Client, ClientStatus } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
@@ -22,13 +23,14 @@ function initials(name: string) {
 
 interface ClientCardProps {
   client: Client;
+  onPortalLink?: (clientId: string) => void;
 }
 
-export function ClientCard({ client }: ClientCardProps) {
+export function ClientCard({ client, onPortalLink }: ClientCardProps) {
   const status = STATUS_CONFIG[client.status];
 
   return (
-    <Card className="bg-card border-border rounded-xl p-5 space-y-4 cursor-pointer hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none">
+    <Card className="bg-card border-border rounded-xl p-5 space-y-4 hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <Avatar className="h-10 w-10 shrink-0">
@@ -54,15 +56,28 @@ export function ClientCard({ client }: ClientCardProps) {
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats + portal link */}
       <div className="flex items-center justify-between border-t border-border pt-3">
         <div className="flex items-center gap-1.5 text-xs text-fog">
           <FolderKanban size={12} />
           <span>{client.activeProjects} project{client.activeProjects !== 1 ? 's' : ''}</span>
         </div>
-        <p className="text-xs font-medium text-ivory">
-          {client.monthlyValue > 0 ? `${fmt(client.monthlyValue)}/mo` : 'No retainer'}
-        </p>
+        <div className="flex items-center gap-2">
+          {onPortalLink && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-[10px] text-fog hover:text-ivory gap-1"
+              onClick={e => { e.stopPropagation(); onPortalLink(client.id); }}
+            >
+              <Link size={10} />
+              Portal
+            </Button>
+          )}
+          <p className="text-xs font-medium text-ivory">
+            {client.monthlyValue > 0 ? `${fmt(client.monthlyValue)}/mo` : 'No retainer'}
+          </p>
+        </div>
       </div>
     </Card>
   );

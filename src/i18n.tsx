@@ -405,7 +405,16 @@ const translations = {
           inactive: 'Inactive',
           add: 'Add Client',
           save: 'Save Changes',
-        }
+        },
+        portal: {
+          generateLink: 'Portal Link',
+          dialogTitle: 'Client Portal Link',
+          dialogDesc: 'Share this link with your client. It expires in 30 days.',
+          copyLink: 'Copy Link',
+          copied: 'Copied!',
+          generating: 'Generating...',
+          error: 'Failed to generate portal link.',
+        },
       },
       pipeline: {
         title: 'Pipeline',
@@ -1329,7 +1338,16 @@ const translations = {
           inactive: 'Inactif',
           add: 'Ajouter le Client',
           save: 'Sauvegarder les modifications',
-        }
+        },
+        portal: {
+          generateLink: 'Lien Portail',
+          dialogTitle: 'Lien du Portail Client',
+          dialogDesc: 'Partagez ce lien avec votre client. Il expire dans 30 jours.',
+          copyLink: 'Copier le Lien',
+          copied: 'Copié!',
+          generating: 'Génération...',
+          error: 'Échec de la génération du lien.',
+        },
       },
       pipeline: {
         title: 'Pipeline',
