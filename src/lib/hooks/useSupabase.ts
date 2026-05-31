@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import {
+  MOCK_LEADS, MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS,
+  MOCK_INVOICES, MOCK_APPROVALS,
+} from '@/lib/mock-data';
+
+const MOCK_WS_ID = 'mock-ws';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 // ── Mappings (snake_case -> camelCase & id -> _id compatibility) ─────────────
 
@@ -164,6 +171,10 @@ export function useWorkspaces() {
   const [workspaces, setWorkspaces] = useState<any[]>([]);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaces([{ _id: MOCK_WS_ID, id: MOCK_WS_ID, name: 'Uprising Studio', slug: 'uprising' }]);
+      return;
+    }
     async function fetchWorkspaces() {
       const { data, error } = await supabase.from('workspaces').select('*');
       if (!error && data) {
@@ -180,8 +191,16 @@ export function useClients(workspaceId: string | undefined | null) {
   const [clients, setClients] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setClients([]);
+    if (!workspaceId) { setClients([]); return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setClients(MOCK_CLIENTS.map(c => ({
+        _id: c.id, id: c.id, workspaceId,
+        company: c.company, contact: c.contact, email: c.email,
+        monthlyValue: c.monthlyValue, status: c.status,
+        industry: (c as any).industry ?? '',
+        activeProjects: c.activeProjects ?? 0,
+        createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -220,8 +239,18 @@ export function useProjects(workspaceId: string | undefined | null) {
   const [projects, setProjects] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setProjects([]);
+    if (!workspaceId) { setProjects([]); return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setProjects(MOCK_PROJECTS.map(p => ({
+        _id: p.id, id: p.id, workspaceId,
+        clientId: p.clientId, clientName: p.client,
+        name: p.name, status: p.status, dueDate: p.dueDate,
+        budget: p.budget, spent: p.spent,
+        totalTasks: p.totalTasks, doneTasks: p.doneTasks,
+        healthScore: p.spent / p.budget > 0.9 ? 62 : 90,
+        activeRiskFlags: p.spent / p.budget > 0.9 ? ['Over budget threshold'] : [],
+        createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -261,8 +290,18 @@ export function useTasks(workspaceId: string | undefined | null, projectId?: str
   const [tasks, setTasks] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setTasks([]);
+    if (!workspaceId) { setTasks([]); return; }
+    if (workspaceId === MOCK_WS_ID) {
+      const filtered = projectId
+        ? MOCK_TASKS.filter(t => t.projectId === projectId)
+        : MOCK_TASKS;
+      setTasks(filtered.map(t => ({
+        _id: t.id, id: t.id, workspaceId,
+        projectId: t.projectId, title: t.title, description: '',
+        status: t.status, priority: t.priority,
+        assignee: t.assignee, dueDate: t.dueDate,
+        estimatedHours: 0, createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -302,8 +341,15 @@ export function useDeals(workspaceId: string | undefined | null) {
   const [deals, setDeals] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setDeals([]);
+    if (!workspaceId) { setDeals([]); return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setDeals(MOCK_LEADS.map(l => ({
+        _id: l.id, id: l.id, workspaceId,
+        company: l.company, contact: l.contact, email: l.email,
+        value: l.value, stage: l.stage, notes: '',
+        lastContact: new Date(Date.now() - l.daysInStage * 86_400_000).toISOString(),
+        createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -343,8 +389,17 @@ export function useInvoices(workspaceId: string | undefined | null) {
   const [invoices, setInvoices] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setInvoices([]);
+    if (!workspaceId) { setInvoices([]); return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setInvoices(MOCK_INVOICES.map(i => ({
+        _id: i.id, id: i.id, workspaceId,
+        clientId: i.clientId, invoiceNumber: (i as any).number ?? i.id,
+        amount: i.amount, status: i.status,
+        date: (i as any).issuedDate ?? i.id, dueDate: i.dueDate,
+        items: (i as any).lineItems ?? [],
+        paidDate: (i as any).paidDate ?? null,
+        tps: 0, tvq: 0, createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -466,6 +521,16 @@ export function useApprovals(workspaceId?: string | undefined | null) {
   const [approvals, setApprovals] = useState<any[]>([]);
 
   useEffect(() => {
+    if (workspaceId === MOCK_WS_ID || (IS_TEST && !workspaceId)) {
+      setApprovals(MOCK_APPROVALS.map(a => ({
+        _id: a.id, id: a.id, workspaceId: workspaceId ?? MOCK_WS_ID,
+        projectId: (a as any).projectId ?? null,
+        name: a.name, type: a.type, status: a.status,
+        submittedDate: a.submittedDate, fileUrl: null, createdAt: '2026-01-01',
+      })));
+      return;
+    }
+
     let active = true;
 
     async function fetchApprovals() {

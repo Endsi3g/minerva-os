@@ -33,17 +33,16 @@ export function GettingStartedChecklist() {
   const completed: string[] = profile?.completedChecklist ?? [];
   const progress = (completed.length / CHECKLIST_STEPS.length) * 100;
 
-  if (!profile || completed.length >= CHECKLIST_STEPS.length) return null;
+  if (completed.length >= CHECKLIST_STEPS.length) return null;
 
   async function handleMark(itemId: string) {
-    if (!user?.email || !profile) return;
     const newChecklist = [...completed, itemId];
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ completed_checklist: newChecklist })
-      .eq('email', user.email);
-    if (!error) {
-      setProfile((prev: any) => ({ ...prev, completedChecklist: newChecklist }));
+    setProfile((prev: any) => ({ ...(prev ?? {}), completedChecklist: newChecklist }));
+    if (user?.email && profile) {
+      await supabase
+        .from('user_profiles')
+        .update({ completed_checklist: newChecklist })
+        .eq('email', user.email);
     }
   }
 
