@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import { Plus, Wallet, TrendingUp, TrendingDown, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -71,20 +72,26 @@ export default function Finance() {
     if (isNaN(baseAmount)) return;
 
     if (!workspaceId) return;
-    await addEntry({
-      workspaceId,
-      type: form.type,
-      amount: baseAmount,
-      description: form.description,
-      category: form.category,
-      date: form.date,
-      tps: baseAmount * TPS_RATE,
-      tvq: baseAmount * TVQ_RATE,
-      status: 'paid',
-    });
 
-    setShowAdd(false);
-    setForm({ ...form, description: '', amount: '' });
+    try {
+      await addEntry({
+        workspaceId,
+        type: form.type,
+        amount: baseAmount,
+        description: form.description,
+        category: form.category,
+        date: form.date,
+        tps: baseAmount * TPS_RATE,
+        tvq: baseAmount * TVQ_RATE,
+        status: 'paid',
+      });
+
+      setShowAdd(false);
+      setForm({ ...form, description: '', amount: '' });
+      toast.success('Transaction added');
+    } catch {
+      toast.error('Failed to add transaction');
+    }
   }
 
   return (

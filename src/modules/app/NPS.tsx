@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 type NpsResponse = {
   id: string;
@@ -111,9 +112,10 @@ function NPSForm({
           responded_at: data.responded_at,
           respondedAt: data.responded_at,
         });
+        toast.success('NPS response saved');
       }
     } catch (err) {
-      console.error(err);
+      toast.error('Failed to save response');
     } finally {
       setSaving(false);
       onClose();

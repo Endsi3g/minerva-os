@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Plus, Circle, Loader2, Eye, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -108,19 +109,24 @@ export default function Tasks() {
 
   async function handleAdd() {
     if (!form.title.trim() || !form.projectId || !workspaceId) return;
-    
-    await createTask({
-      workspaceId,
-      title: form.title.trim(),
-      projectId: form.projectId as any,
-      status: form.status,
-      priority: form.priority,
-      assignee: form.assignee.trim() || 'US',
-      dueDate: form.dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    });
-    
-    setSheetOpen(false);
-    setForm(EMPTY_FORM);
+
+    try {
+      await createTask({
+        workspaceId,
+        title: form.title.trim(),
+        projectId: form.projectId as any,
+        status: form.status,
+        priority: form.priority,
+        assignee: form.assignee.trim() || 'US',
+        dueDate: form.dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      });
+
+      setSheetOpen(false);
+      setForm(EMPTY_FORM);
+      toast.success('Task created');
+    } catch {
+      toast.error('Failed to create task');
+    }
   }
 
   return (

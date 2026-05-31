@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { PackageCheck, ArrowRight, CheckCircle2, Circle, ListTodo, BarChart3, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,8 @@ export default function Fulfillment() {
             : d
         )
       );
+    } else {
+      toast.error('Failed to update checklist');
     }
   };
 
@@ -85,7 +88,7 @@ export default function Fulfillment() {
           <p className="text-sm text-fog mt-1">{deliveries.length} {fl.stats}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="rounded-full border-white/5 bg-white/5 hover:bg-white/10">
+          <Button variant="outline" className="rounded-full border-white/5 bg-white/5 hover:bg-white/10" onClick={() => toast.info('Metrics coming soon')}>
             <BarChart3 size={16} className="mr-2" /> {fl.metrics}
           </Button>
         </div>

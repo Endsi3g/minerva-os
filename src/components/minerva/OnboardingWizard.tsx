@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Check, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { FlickeringGrid } from '@/components/ui/flickering-grid';
+import { toast } from 'sonner';
 
 const STEPS = [
   { id: 'workspace', label: 'Workspace', description: 'Set up your workspace identity' },
@@ -74,11 +75,16 @@ function WorkspaceStep({ onNext, workspaceId }: { onNext: () => void; workspaceI
 
   async function handleNext() {
     setLoading(true);
-    if (name && workspaceId) {
-      await supabase.from('workspaces').update({ name }).eq('id', workspaceId);
+    try {
+      if (name && workspaceId) {
+        await supabase.from('workspaces').update({ name }).eq('id', workspaceId);
+      }
+      onNext();
+    } catch {
+      toast.error('Failed to save workspace');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    onNext();
   }
 
   return (
@@ -114,6 +120,7 @@ function TeamStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBack:
       setEmail('');
     } catch (err) {
       console.error(err);
+      toast.error('Failed to send invitation');
     }
     setLoading(false);
   }
@@ -155,13 +162,19 @@ function ClientStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBac
   async function handleNext() {
     if (company && workspaceId) {
       setLoading(true);
-      await supabase.from('clients').insert({
-        workspace_id: workspaceId,
-        company,
-        contact,
-        email,
-        status: 'active',
-      });
+      try {
+        await supabase.from('clients').insert({
+          workspace_id: workspaceId,
+          company,
+          contact,
+          email,
+          status: 'active',
+        });
+      } catch {
+        toast.error('Failed to add client');
+        setLoading(false);
+        return;
+      }
       setLoading(false);
     }
     onNext();
@@ -193,14 +206,20 @@ function ProjectStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBa
   async function handleNext() {
     if (name && workspaceId) {
       setLoading(true);
-      await supabase.from('projects').insert({
-        workspace_id: workspaceId,
-        name,
-        client_name: clientName || 'TBD',
-        status: 'active',
-        due_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
-        budget: 0,
-      });
+      try {
+        await supabase.from('projects').insert({
+          workspace_id: workspaceId,
+          name,
+          client_name: clientName || 'TBD',
+          status: 'active',
+          due_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+          budget: 0,
+        });
+      } catch {
+        toast.error('Failed to create project');
+        setLoading(false);
+        return;
+      }
       setLoading(false);
     }
     onNext();

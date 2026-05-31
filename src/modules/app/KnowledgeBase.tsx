@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 const CATEGORY_COLORS: Record<string, string> = {
   Process: 'text-sage bg-sage/10',
@@ -243,6 +244,7 @@ export default function KnowledgeBase() {
           }
         } catch (err) {
           console.error('RAG Search failed:', err);
+          toast.error('Search failed');
         }
       }
 
@@ -264,6 +266,9 @@ export default function KnowledgeBase() {
     const { error } = await supabase.from('knowledge_base').delete().eq('id', id);
     if (!error) {
       setArticles(prev => prev.filter(a => a.id !== id));
+      toast.success('Article deleted');
+    } else {
+      toast.error('Failed to delete article');
     }
   }
 

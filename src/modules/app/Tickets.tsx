@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 const STATUS_CONFIG: Record<string, { label: string; class: string; icon: React.ElementType }> = {
   open:        { label: 'Open',        class: 'text-warm bg-warm/10 border-warm/20',   icon: AlertCircle },
@@ -42,17 +43,24 @@ function TicketForm({ workspaceId, clients, onClose, onCreated }: { workspaceId:
     e.preventDefault();
     if (!subject || !clientId) return;
     setSaving(true);
-    const { data } = await supabase.from('tickets').insert({
-      workspace_id: workspaceId,
-      client_id: clientId || null,
-      subject,
-      description,
-      priority,
-      category,
-      status: 'open',
-    }).select().single();
-    if (data) onCreated(data);
-    onClose();
+    try {
+      const { data } = await supabase.from('tickets').insert({
+        workspace_id: workspaceId,
+        client_id: clientId || null,
+        subject,
+        description,
+        priority,
+        category,
+        status: 'open',
+      }).select().single();
+      if (data) onCreated(data);
+      toast.success('Ticket created');
+      onClose();
+    } catch {
+      toast.error('Failed to create ticket');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -127,8 +135,13 @@ export default function Tickets() {
   }, []);
 
   async function updateTicketStatus(id: string, status: string) {
-    await supabase.from('tickets').update({ status }).eq('id', id);
-    setTickets(prev => prev.map(t => t.id === id ? { ...t, status, _id: id } : t));
+    try {
+      await supabase.from('tickets').update({ status }).eq('id', id);
+      setTickets(prev => prev.map(t => t.id === id ? { ...t, status, _id: id } : t));
+      toast.success('Status updated');
+    } catch {
+      toast.error('Failed to update status');
+    }
   }
 
   const [showForm, setShowForm] = useState(false);

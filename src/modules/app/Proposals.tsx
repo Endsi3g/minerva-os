@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
   draft:    { label: 'Draft',    class: 'text-fog bg-fog/10 border-fog/20' },
@@ -338,24 +339,34 @@ export default function Proposals() {
   }
 
   async function sendProposal(proposalId: string) {
-    const { error } = await supabase
-      .from('proposals')
-      .update({ status: 'sent', sent_at: new Date().toISOString() })
-      .eq('id', proposalId);
-    if (!error) {
-      setProposals(prev =>
-        prev.map(pr => pr._id === proposalId ? { ...pr, status: 'sent' } : pr)
-      );
+    try {
+      const { error } = await supabase
+        .from('proposals')
+        .update({ status: 'sent', sent_at: new Date().toISOString() })
+        .eq('id', proposalId);
+      if (!error) {
+        setProposals(prev =>
+          prev.map(pr => pr._id === proposalId ? { ...pr, status: 'sent' } : pr)
+        );
+        toast.success('Proposal sent');
+      }
+    } catch (err) {
+      toast.error('Failed to send proposal');
     }
   }
 
   async function removeProposal(proposalId: string) {
-    const { error } = await supabase
-      .from('proposals')
-      .delete()
-      .eq('id', proposalId);
-    if (!error) {
-      setProposals(prev => prev.filter(pr => pr._id !== proposalId));
+    try {
+      const { error } = await supabase
+        .from('proposals')
+        .delete()
+        .eq('id', proposalId);
+      if (!error) {
+        setProposals(prev => prev.filter(pr => pr._id !== proposalId));
+        toast.success('Proposal deleted');
+      }
+    } catch (err) {
+      toast.error('Failed to delete proposal');
     }
   }
 

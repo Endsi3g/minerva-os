@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Check, RotateCcw, Palette, FileText, Video, File } from 'lucide-react';
+import { toast } from 'sonner';
+import { Check, RotateCcw, Palette, FileText, Video, File, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { ApprovalStatus, DeliverableType } from '@/lib/types';
@@ -18,6 +19,7 @@ export default function Approvals() {
   const [projects, setProjects] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [actingId, setActingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -37,8 +39,17 @@ export default function Approvals() {
   }, []);
 
   async function handleStatusChange(id: string, status: ApprovalStatus) {
-    await supabase.from('approvals').update({ status }).eq('id', id);
-    setApprovalsRaw(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    setActingId(id);
+    try {
+      const { error } = await supabase.from('approvals').update({ status }).eq('id', id);
+      if (error) throw error;
+      setApprovalsRaw(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      toast.success('Status updated');
+    } catch {
+      toast.error('Failed to update status');
+    } finally {
+      setActingId(null);
+    }
   }
 
   const approvals = approvalsRaw.map((app: any) => {
@@ -153,24 +164,26 @@ export default function Approvals() {
                             size="sm"
                             variant="ghost"
                             className="h-7 px-2.5 text-xs text-sage hover:text-sage hover:bg-sage/10 border border-sage/20"
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
+                            disabled={actingId === approval.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleStatusChange(approval.id, 'approved');
                             }}
                           >
-                            <Check size={12} />
+                            {actingId === approval.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                             {a.actions.approve}
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             className="h-7 px-2.5 text-xs text-ember hover:text-ember hover:bg-ember/10 border border-ember/20"
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
+                            disabled={actingId === approval.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleStatusChange(approval.id, 'revision');
                             }}
                           >
-                            <RotateCcw size={12} />
+                            {actingId === approval.id ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
                             {a.actions.revise}
                           </Button>
                         </div>
@@ -182,11 +195,13 @@ export default function Approvals() {
                           size="sm"
                           variant="ghost"
                           className="h-7 px-2.5 text-xs text-fog hover:text-silver border border-border shrink-0"
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
+                          disabled={actingId === approval.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleStatusChange(approval.id, 'pending');
                           }}
                         >
+                          {actingId === approval.id ? <Loader2 size={12} className="animate-spin" /> : null}
                           {a.actions.reopen}
                         </Button>
                       )}

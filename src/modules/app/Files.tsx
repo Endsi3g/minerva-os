@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Search, Upload, Image, Video, FileText, Archive, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -125,17 +126,22 @@ export default function Files() {
           ]);
         }
       }
-    } catch (err) {
-      console.error(err);
+      toast.success(`${files.length} file(s) uploaded`);
+    } catch {
+      toast.error('Upload failed');
     } finally {
       setUploading(false);
     }
   }
 
   async function removeAsset(id: string) {
-    const { error } = await supabase.from('assets').delete().eq('id', id);
-    if (!error) {
+    try {
+      const { error } = await supabase.from('assets').delete().eq('id', id);
+      if (error) throw error;
       setAssets(prev => prev.filter(a => a._id !== id));
+      toast.success('File removed');
+    } catch {
+      toast.error('Failed to remove file');
     }
   }
 

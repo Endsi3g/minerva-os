@@ -21,6 +21,7 @@ import {
 import { ProjectCard } from '@/components/minerva/ProjectCard';
 import { useLang } from '@/i18n';
 import { useWorkspaces, useProjects, useClients, useAddProject } from '@/lib/hooks/useSupabase';
+import { toast } from 'sonner';
 
 const STATUS_COLORS: Record<string, string> = {
   active:    '#7FA38A',
@@ -158,18 +159,23 @@ export default function Projects() {
   async function handleAdd() {
     if (!form.name.trim() || !form.clientId) return;
     const client = clients.find((c: any) => c._id === form.clientId);
-    
-    await createProject({
-      workspaceId: workspaceId!,
-      name: form.name.trim(),
-      clientName: client?.company ?? '',
-      status: 'active',
-      dueDate: form.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      budget: parseFloat(form.budget) || 0,
-    });
-    
-    setSheetOpen(false);
-    setForm(EMPTY_FORM);
+
+    try {
+      await createProject({
+        workspaceId: workspaceId!,
+        name: form.name.trim(),
+        clientName: client?.company ?? '',
+        status: 'active',
+        dueDate: form.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        budget: parseFloat(form.budget) || 0,
+      });
+
+      setSheetOpen(false);
+      setForm(EMPTY_FORM);
+      toast.success('Project created');
+    } catch {
+      toast.error('Failed to create project');
+    }
   }
 
   return (

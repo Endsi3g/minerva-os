@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -133,33 +134,38 @@ export default function Pipeline() {
   async function handleSaveDeal() {
     if (!form.company.trim() || !workspaceId) return;
 
-    if (editingLead) {
-      await updateDeal({
-        id: editingLead._id,
-        company: form.company.trim(),
-        contact: form.contact.trim(),
-        email: form.email.trim(),
-        value: parseFloat(form.value) || 0,
-        stage: form.stage,
-        notes: form.notes.trim() || undefined,
-        lastContact: editingLead.lastContact,
-      });
-    } else {
-      await addDeal({
-        workspaceId,
-        company: form.company.trim(),
-        contact: form.contact.trim(),
-        email: form.email.trim(),
-        value: parseFloat(form.value) || 0,
-        stage: form.stage,
-        notes: form.notes.trim() || undefined,
-        lastContact: new Date().toISOString().split('T')[0],
-      });
+    try {
+      if (editingLead) {
+        await updateDeal({
+          id: editingLead._id,
+          company: form.company.trim(),
+          contact: form.contact.trim(),
+          email: form.email.trim(),
+          value: parseFloat(form.value) || 0,
+          stage: form.stage,
+          notes: form.notes.trim() || undefined,
+          lastContact: editingLead.lastContact,
+        });
+      } else {
+        await addDeal({
+          workspaceId,
+          company: form.company.trim(),
+          contact: form.contact.trim(),
+          email: form.email.trim(),
+          value: parseFloat(form.value) || 0,
+          stage: form.stage,
+          notes: form.notes.trim() || undefined,
+          lastContact: new Date().toISOString().split('T')[0],
+        });
+      }
+
+      setSheetOpen(false);
+      setForm(EMPTY_FORM);
+      setEditingLead(null);
+      toast.success(editingLead ? 'Deal updated' : 'Deal added');
+    } catch {
+      toast.error('Failed to save deal');
     }
-    
-    setSheetOpen(false);
-    setForm(EMPTY_FORM);
-    setEditingLead(null);
   }
 
   const handleOpenChange = (open: boolean) => {
@@ -337,8 +343,9 @@ export default function Pipeline() {
                         .eq('id', emailDraft.id);
                       if (error) throw error;
                       setEmailDraft(null);
-                    } catch (err) {
-                      console.error('Failed to send draft:', err);
+                      toast.success('Email marked as sent');
+                    } catch {
+                      toast.error('Failed to send email');
                     } finally {
                       setSavingDraft(false);
                     }

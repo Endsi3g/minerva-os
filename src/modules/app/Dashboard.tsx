@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspaces, useProjects, useInvoices, useApprovals, useDeals, useTasks, useActivity } from '@/lib/hooks/useSupabase';
 import { AgentSuggestions } from '@/components/agents/AgentSuggestions';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 import type { Translations } from '@/i18n';
 import { ShiftCard } from '@/components/ui/shift-card';
 import { Expandable, ExpandableTrigger, ExpandableContent } from '@/components/ui/expandable';
@@ -272,6 +273,7 @@ function FirefighterView({ flags, dismissed, onDismiss, onNavigate, labels, work
       setAuditResult(data);
     } catch (err) {
       console.error('Audit failed:', err);
+      toast.error('Audit failed. Please try again.');
     } finally {
       setAuditing(false);
     }

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 type Tab = 'services' | 'packages';
 
@@ -64,9 +65,12 @@ function ServiceForm({
         .single();
       if (!error && data) {
         onAdd({ ...data, _id: data.id, basePrice: Number(data.base_price) });
+        toast.success('Service added');
+      } else if (error) {
+        toast.error('Failed to add service');
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast.error('Failed to add service');
     } finally {
       setSaving(false);
       onClose();
@@ -150,8 +154,13 @@ export default function ServiceCatalog() {
   }, [workspaceId]);
 
   async function removeService(id: string) {
-    await supabase.from('services').delete().eq('id', id);
-    setServices(prev => prev.filter(s => s.id !== id));
+    try {
+      await supabase.from('services').delete().eq('id', id);
+      setServices(prev => prev.filter(s => s.id !== id));
+      toast.success('Service deleted');
+    } catch {
+      toast.error('Failed to delete service');
+    }
   }
 
   const filtered = services.filter((s: any) =>

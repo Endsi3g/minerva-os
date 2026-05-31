@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 type Member = {
   id: string;
@@ -107,10 +108,12 @@ function AddMemberForm({
             weeklyHours: Number(member.weekly_hours),
             role: member.role || undefined,
           });
+          toast.success('Member added');
         }
       }
     } catch (err) {
       console.error('Failed to add member:', err);
+      toast.error('Failed to add member');
     } finally {
       setSaving(false);
       onClose();
@@ -217,8 +220,13 @@ export default function ResourcePlanning() {
   }, [workspaceId]);
 
   async function removeMember(id: string) {
-    await supabase.from('member_availability').delete().eq('id', id);
-    setMembers(prev => prev.filter(m => m.id !== id));
+    try {
+      await supabase.from('member_availability').delete().eq('id', id);
+      setMembers(prev => prev.filter(m => m.id !== id));
+      toast.success('Member removed');
+    } catch (err) {
+      toast.error('Failed to remove member');
+    }
   }
 
   // Compute assigned hours per member (from tasks with assignee or assignedTo).

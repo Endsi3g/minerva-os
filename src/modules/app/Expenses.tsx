@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Receipt, Check, X, Trash2 } from 'lucide-react';
+import { Plus, Receipt, Check, X, Trash2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 function fmt(n: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
@@ -125,17 +126,40 @@ export default function Expenses() {
     load();
   }, []);
 
+  const [actingId, setActingId] = useState<string | null>(null);
+
   async function approveExpense(id: string) {
-    await supabase.from('expenses').update({ status: 'approved', approved_by: user?.name ?? 'Admin' }).eq('id', id);
-    setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'approved' } : e));
+    setActingId(id);
+    try {
+      await supabase.from('expenses').update({ status: 'approved', approved_by: user?.name ?? 'Admin' }).eq('id', id);
+      setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'approved' } : e));
+      toast.success('Expense approved');
+    } catch {
+      toast.error('Failed to approve');
+    } finally {
+      setActingId(null);
+    }
   }
   async function rejectExpense(id: string) {
-    await supabase.from('expenses').update({ status: 'rejected' }).eq('id', id);
-    setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'rejected' } : e));
+    setActingId(id);
+    try {
+      await supabase.from('expenses').update({ status: 'rejected' }).eq('id', id);
+      setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'rejected' } : e));
+      toast.success('Expense rejected');
+    } catch {
+      toast.error('Failed to reject');
+    } finally {
+      setActingId(null);
+    }
   }
   async function removeExpense(id: string) {
-    await supabase.from('expenses').delete().eq('id', id);
-    setExpenses(prev => prev.filter(e => e.id !== id));
+    try {
+      await supabase.from('expenses').delete().eq('id', id);
+      setExpenses(prev => prev.filter(e => e.id !== id));
+      toast.success('Expense deleted');
+    } catch {
+      toast.error('Failed to delete');
+    }
   }
 
   const [showForm, setShowForm] = useState(false);
@@ -219,15 +243,17 @@ export default function Expenses() {
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => approveExpense(expense.id)}
-                      className="h-6 w-6 flex items-center justify-center rounded text-fog hover:text-sage hover:bg-sage/10 transition-colors"
+                      disabled={actingId === expense.id}
+                      className="h-6 w-6 flex items-center justify-center rounded text-fog hover:text-sage hover:bg-sage/10 transition-colors disabled:opacity-50"
                     >
-                      <Check size={11} />
+                      {actingId === expense.id ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                     </button>
                     <button
                       onClick={() => rejectExpense(expense.id)}
-                      className="h-6 w-6 flex items-center justify-center rounded text-fog hover:text-ember hover:bg-ember/10 transition-colors"
+                      disabled={actingId === expense.id}
+                      className="h-6 w-6 flex items-center justify-center rounded text-fog hover:text-ember hover:bg-ember/10 transition-colors disabled:opacity-50"
                     >
-                      <X size={11} />
+                      {actingId === expense.id ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}
                     </button>
                   </div>
                 )}

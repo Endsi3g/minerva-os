@@ -74,17 +74,22 @@ export default function Clients() {
   async function handleAdd() {
     if (!form.company.trim() || !workspaceId) return;
 
-    await addClient({
-      workspaceId,
-      company: form.company.trim(),
-      contact: form.contact.trim(),
-      email: form.email.trim(),
-      status: form.status,
-      monthlyValue: parseFloat(form.monthlyValue) || undefined,
-    });
+    try {
+      await addClient({
+        workspaceId,
+        company: form.company.trim(),
+        contact: form.contact.trim(),
+        email: form.email.trim(),
+        status: form.status,
+        monthlyValue: parseFloat(form.monthlyValue) || undefined,
+      });
 
-    setSheetOpen(false);
-    setForm(EMPTY_FORM);
+      setSheetOpen(false);
+      setForm(EMPTY_FORM);
+      toast.success('Client added');
+    } catch {
+      toast.error('Failed to add client');
+    }
   }
 
   async function handleGeneratePortalLink(clientId: string) {

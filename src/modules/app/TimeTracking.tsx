@@ -259,7 +259,15 @@ export default function TimeTracking() {
                           {formatDuration(entry.duration)}
                         </span>
                         <button
-                          onClick={async () => { await supabase.from('time_entries').delete().eq('id', entry.id); setEntries(prev => prev.filter(e => e.id !== entry.id)); }}
+                          onClick={async () => {
+                            try {
+                              await supabase.from('time_entries').delete().eq('id', entry.id);
+                              setEntries(prev => prev.filter(e => e.id !== entry.id));
+                              toast.success('Entry deleted');
+                            } catch (err) {
+                              toast.error('Failed to delete entry');
+                            }
+                          }}
                           className="opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all"
                         >
                           <Trash2 size={12} />

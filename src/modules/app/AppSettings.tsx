@@ -102,6 +102,7 @@ function ProfileTab() {
       }
     } catch (err) {
       console.error('Error uploading avatar:', err);
+      toast.error('Failed to upload avatar');
     } finally {
       setUploading(false);
     }
@@ -511,8 +512,8 @@ function SecurityTab() {
           </div>
           <p className="text-xs text-fog">{s.twoFactorDesc}</p>
           <button
-            disabled
-            className="mt-2 h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed"
+            onClick={() => toast.info('Two-factor authentication coming soon')}
+            className="mt-2 h-9 px-4 rounded-xl text-sm font-medium transition-colors hover:opacity-80"
             style={{ backgroundColor: '#1A1F32', color: '#B8BDC7', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             {s.enable2fa}
@@ -671,8 +672,8 @@ function PrivacyTab() {
             Contact support to initiate account deletion.
           </p>
           <button
-            disabled
-            className="h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed"
+            onClick={() => toast.info('Please contact support to request data deletion')}
+            className="h-9 px-4 rounded-xl text-sm font-medium transition-colors hover:opacity-80"
             style={{ backgroundColor: 'rgba(168,106,106,0.15)', color: '#A86A6A', border: '1px solid rgba(168,106,106,0.2)' }}
           >
             Request deletion
