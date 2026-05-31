@@ -1,5 +1,6 @@
+'use client';
 import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -20,6 +28,8 @@ import { ClientCard } from '@/components/minerva/ClientCard';
 import type { ClientStatus } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { useWorkspaces, useClients, useProjects, useAddClient } from '@/lib/hooks/useSupabase';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface NewClientForm {
   company: string;
@@ -37,6 +47,7 @@ const EMPTY_FORM: NewClientForm = {
 export default function Clients() {
   const { t } = useLang();
   const cKeys = t.app.clients;
+  const pKeys = cKeys.portal;
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces[0]?.id;
@@ -49,13 +60,18 @@ export default function Clients() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewClientForm>(EMPTY_FORM);
 
+  const [portalDialogOpen, setPortalDialogOpen] = useState(false);
+  const [portalUrl, setPortalUrl] = useState('');
+  const [portalGenerating, setPortalGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const filtered = clients.filter((c: any) =>
     c.company.toLowerCase().includes(query.toLowerCase())
   );
 
   async function handleAdd() {
     if (!form.company.trim() || !workspaceId) return;
-    
+
     await addClient({
       workspaceId,
       company: form.company.trim(),
@@ -64,9 +80,45 @@ export default function Clients() {
       status: form.status,
       monthlyValue: parseFloat(form.monthlyValue) || undefined,
     });
-    
+
     setSheetOpen(false);
     setForm(EMPTY_FORM);
+  }
+
+  async function handleGeneratePortalLink(clientId: string) {
+    if (!workspaceId) return;
+    setPortalGenerating(true);
+    setPortalUrl('');
+    setPortalDialogOpen(true);
+    setCopied(false);
+
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const { error } = await supabase.from('portal_tokens').insert({
+      token,
+      client_id: clientId,
+      workspace_id: workspaceId,
+      expires_at: expiresAt,
+      scopes: ['approvals', 'files', 'invoices'],
+    });
+
+    setPortalGenerating(false);
+
+    if (error) {
+      toast.error(pKeys.error);
+      setPortalDialogOpen(false);
+      return;
+    }
+
+    const url = `${window.location.origin}/portal/${token}`;
+    setPortalUrl(url);
+  }
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(portalUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -100,17 +152,21 @@ export default function Clients() {
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((client: any) => {
-            const activeProjectsCount = projects.filter((p: any) => 
+            const activeProjectsCount = projects.filter((p: any) =>
               (p.clientId === client._id || p.clientName === client.company) && p.status === 'active'
             ).length;
             return (
-              <ClientCard key={client._id} client={{
-                ...client,
-                id: client._id,
-                activeProjects: activeProjectsCount,
-                industry: client.industry || 'Services',
-                monthlyValue: client.monthlyValue || 0
-              }} />
+              <ClientCard
+                key={client._id}
+                client={{
+                  ...client,
+                  id: client._id,
+                  activeProjects: activeProjectsCount,
+                  industry: client.industry || 'Services',
+                  monthlyValue: client.monthlyValue || 0,
+                }}
+                onPortalLink={handleGeneratePortalLink}
+              />
             );
           })}
         </div>
@@ -173,6 +229,39 @@ export default function Clients() {
           <Button className="w-full" onClick={handleAdd}>{cKeys.form.add}</Button>
         </SheetContent>
       </Sheet>
+
+      {/* Portal link dialog */}
+      <Dialog open={portalDialogOpen} onOpenChange={setPortalDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-midnight border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-ivory">{pKeys.dialogTitle}</DialogTitle>
+            <DialogDescription className="text-fog">{pKeys.dialogDesc}</DialogDescription>
+          </DialogHeader>
+
+          {portalGenerating ? (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-sm text-fog animate-pulse">{pKeys.generating}</p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mt-2">
+              <Input
+                readOnly
+                value={portalUrl}
+                className="text-xs text-silver bg-dusk border-white/08 flex-1"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 border-white/10 text-fog hover:text-ivory gap-1.5"
+                onClick={handleCopy}
+              >
+                {copied ? <Check size={14} className="text-sage" /> : <Copy size={14} />}
+                {copied ? pKeys.copied : pKeys.copyLink}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

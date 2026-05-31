@@ -27,23 +27,58 @@ Formatting Rules (CRITICAL):
 · Do not use markdown headers (##, ###) in your replies, to ensure seamless rendering within the compact chat sidebar.
 · Dynamic Language Matching: Respond in the exact language used by the user (English or French).`;
 
+async function persistMessages(
+  threadId: string | undefined,
+  userMessage: string,
+  assistantContent: string,
+  workspaceId: string,
+): Promise<string> {
+  try {
+    const supabase = await createClient();
+    let resolvedThreadId = threadId;
+
+    if (!resolvedThreadId) {
+      const { data: thread } = await supabase
+        .from('agent_threads')
+        .insert({ workspace_id: workspaceId, agent_id: 'hermes', title: userMessage.slice(0, 80) })
+        .select('id')
+        .single();
+      resolvedThreadId = thread?.id;
+    }
+
+    if (resolvedThreadId) {
+      await supabase.from('agent_messages').insert([
+        { thread_id: resolvedThreadId, role: 'user', content: userMessage },
+        { thread_id: resolvedThreadId, role: 'assistant', content: assistantContent },
+      ]);
+    }
+
+    return resolvedThreadId ?? '';
+  } catch {
+    return threadId ?? '';
+  }
+}
+
 export async function POST(req: NextRequest) {
-  const { messages, context } = await req.json() as {
+  const { messages, context, thread_id } = await req.json() as {
     messages: { role: 'user' | 'assistant'; content: string }[];
     context?: string;
+    thread_id?: string;
   };
 
   if (!messages?.length) {
     return NextResponse.json({ error: 'messages required' }, { status: 400 });
   }
 
+  const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+
   let RAGContext = '';
+  let workspaceId: string | undefined;
   try {
-    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
     if (lastUserMessage?.content) {
       const supabase = await createClient();
       const { data: workspaces } = await supabase.from('workspaces').select('id').limit(1);
-      const workspaceId = workspaces?.[0]?.id;
+      workspaceId = workspaces?.[0]?.id;
 
       if (workspaceId) {
         const extractor = await getEmbedder();
@@ -91,6 +126,14 @@ export async function POST(req: NextRequest) {
     ? `${HERMES_SYSTEM}\n\n--- LIVE WORKSPACE CONTEXT ---\n${finalContext}`
     : HERMES_SYSTEM;
 
+  async function respond(content: string) {
+    let newThreadId = thread_id;
+    if (lastUserMessage && workspaceId) {
+      newThreadId = await persistMessages(thread_id, lastUserMessage.content, content, workspaceId);
+    }
+    return NextResponse.json({ content, thread_id: newThreadId });
+  }
+
   // 1. Try Anthropic if key is present
   if (process.env.ANTHROPIC_API_KEY) {
     try {
@@ -114,7 +157,7 @@ export async function POST(req: NextRequest) {
       const block = response.content[0];
       const content = block.type === 'text' ? block.text : '';
       if (content) {
-        return NextResponse.json({ content });
+        return respond(content);
       }
     } catch (err) {
       console.error('[Hermes Anthropic Failed, trying fallback]', err);
@@ -148,7 +191,7 @@ export async function POST(req: NextRequest) {
         const data = await orRes.json();
         const content = data.choices?.[0]?.message?.content || '';
         if (content) {
-          return NextResponse.json({ content });
+          return respond(content);
         }
       } else {
         const errText = await orRes.text();
@@ -159,7 +202,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 3. Demomode / Mock fallback if all fails
+  // 3. Demo mode / mock fallback
   const lastMsg = messages[messages.length - 1].content.toLowerCase();
   let mockReply = "I'm Hermes, your AI co-pilot. I'm currently running in demo mode — configure your ANTHROPIC_API_KEY or OPENROUTER_API_KEY to activate full intelligence.";
   if (lastMsg.includes('project')) mockReply = "Your active projects are tracking well. No critical blockers detected this week.";
@@ -168,5 +211,5 @@ export async function POST(req: NextRequest) {
   if (RAGContext) {
     mockReply += `\n\n[Demo mode detected matches]: ${RAGContext}`;
   }
-  return NextResponse.json({ content: mockReply });
+  return respond(mockReply);
 }
