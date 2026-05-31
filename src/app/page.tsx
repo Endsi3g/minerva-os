@@ -1,3 +1,3 @@
-﻿'use client';
-import WelcomePage from '@/app/welcome/page';
-export default function RootPage() { return <WelcomePage />; }
+'use client';
+import Landing from '@/Landing';
+export default function RootPage() { return <Landing />; }

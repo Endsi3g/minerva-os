@@ -80,7 +80,7 @@ function SidebarNavItem({ item, collapsed, sidebar }: { item: NavItem; collapsed
       href={item.href}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors min-h-[44px]',
           collapsed && 'justify-center px-2',
           isActive
             ? 'bg-sidebar-accent text-ivory'
@@ -174,7 +174,7 @@ export function AppSidebar() {
           href="/app/settings"
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors min-h-[44px]',
               collapsed && 'justify-center px-2',
               isActive
                 ? 'bg-sidebar-accent text-ivory'
@@ -190,7 +190,7 @@ export function AppSidebar() {
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
-                'w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-ivory',
+                'w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-ivory min-h-[44px]',
                 collapsed && 'justify-center px-2'
               )}
             >
