@@ -57,8 +57,6 @@ test.describe('D1 — Première Impression', () => {
     await settle(page, 2000);
     await shot(page, 'd1-landing-desktop');
 
-    const body = await page.locator('body').textContent() ?? '';
-
     const h1 = page.locator('h1, h2').first();
     const h1Visible = await h1.isVisible().catch(() => false);
     if (h1Visible) {
