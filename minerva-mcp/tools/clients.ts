@@ -2,6 +2,32 @@ import { supabaseSelect, supabaseInsert, getWorkspaceId } from '../supabase-clie
 
 export const clientsTools = [
   {
+    name: 'get_client_detail',
+    description: 'Get full details for a single client including their projects and invoices.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        id: { type: 'string', description: 'Client UUID' },
+      },
+      required: ['id'],
+    },
+    async handler(args: Record<string, unknown>) {
+      const workspaceId = await getWorkspaceId();
+      if (!workspaceId) return { error: 'No workspace found.' };
+
+      const clients = await supabaseSelect('clients', { id: `eq.${args.id}`, workspace_id: `eq.${workspaceId}`, limit: '1' }) as any[];
+      const client = clients[0];
+      if (!client) return { error: 'Client not found.' };
+
+      const [projects, invoices] = await Promise.all([
+        supabaseSelect('projects', { workspace_id: `eq.${workspaceId}`, client_name: `eq.${client.company}` }),
+        supabaseSelect('invoices', { client_id: `eq.${args.id}`, order: 'due_date.desc' }),
+      ]);
+
+      return { client, projects, invoices };
+    },
+  },
+  {
     name: 'list_clients',
     description: 'List all clients in Minerva OS with their status, contact, and monthly value.',
     inputSchema: {

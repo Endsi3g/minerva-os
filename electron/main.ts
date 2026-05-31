@@ -44,7 +44,7 @@ function createWindow() {
     show: false,
   });
 
-  mainWindow.loadURL(`${APP_URL}/welcome`);
+  mainWindow.loadURL(`${APP_URL}/app/dashboard`);
 
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
@@ -71,6 +71,9 @@ function createTray() {
     { label: 'Dashboard', click: () => mainWindow?.loadURL(`${APP_URL}/app/dashboard`) },
     { label: 'Pipeline', click: () => mainWindow?.loadURL(`${APP_URL}/app/pipeline`) },
     { label: 'Clients', click: () => mainWindow?.loadURL(`${APP_URL}/app/clients`) },
+    { label: 'Projects', click: () => mainWindow?.loadURL(`${APP_URL}/app/projects`) },
+    { label: 'Billing', click: () => mainWindow?.loadURL(`${APP_URL}/app/billing`) },
+    { label: 'Tickets', click: () => mainWindow?.loadURL(`${APP_URL}/app/tickets`) },
     { type: 'separator' },
     { label: `Version ${app.getVersion()}`, enabled: false },
     { label: 'Quit', click: () => app.quit() },
@@ -104,10 +107,19 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
-// Handle deep links on macOS
+// Handle deep links on macOS (e.g. minerva://app/clients/UUID)
 app.on('open-url', (_event, url) => {
-  const path = url.replace('minerva://', '/');
-  mainWindow?.loadURL(`${APP_URL}${path}`);
+  const parsed = url.replace('minerva://', '/');
+  // Validate path to prevent open-redirect: must start with /app or /portal
+  const safePath = (parsed.startsWith('/app/') || parsed.startsWith('/portal/')) ? parsed : '/app/dashboard';
+  if (mainWindow) {
+    mainWindow.loadURL(`${APP_URL}${safePath}`);
+    mainWindow.focus();
+  } else {
+    createWindow();
+    // mainWindow is assigned by createWindow(); load URL once it's ready
+    setTimeout(() => mainWindow?.loadURL(`${APP_URL}${safePath}`), 100);
+  }
 });
 
 // ── IPC Handlers ──────────────────────────────────────────────────────────────

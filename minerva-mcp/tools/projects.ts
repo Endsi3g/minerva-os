@@ -2,6 +2,32 @@ import { supabaseSelect, supabaseInsert, getWorkspaceId } from '../supabase-clie
 
 export const projectsTools = [
   {
+    name: 'get_project_detail',
+    description: 'Get full details for a single project including its tasks and milestones.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        id: { type: 'string', description: 'Project UUID' },
+      },
+      required: ['id'],
+    },
+    async handler(args: Record<string, unknown>) {
+      const workspaceId = await getWorkspaceId();
+      if (!workspaceId) return { error: 'No workspace found.' };
+
+      const projects = await supabaseSelect('projects', { id: `eq.${args.id}`, workspace_id: `eq.${workspaceId}`, limit: '1' }) as any[];
+      const project = projects[0];
+      if (!project) return { error: 'Project not found.' };
+
+      const [tasks, milestones] = await Promise.all([
+        supabaseSelect('tasks', { project_id: `eq.${args.id}`, order: 'created_at.asc' }),
+        supabaseSelect('milestones', { project_id: `eq.${args.id}`, order: 'due_date.asc' }),
+      ]);
+
+      return { project, tasks, milestones };
+    },
+  },
+  {
     name: 'list_projects',
     description: 'List all projects with health score, status, and due dates.',
     inputSchema: {

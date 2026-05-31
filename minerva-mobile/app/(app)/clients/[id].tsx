@@ -1,4 +1,5 @@
 import { ScrollView, View, Text, TouchableOpacity, Linking } from 'react-native';
+import { router } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
@@ -130,10 +131,14 @@ export default function ClientDetail() {
         ) : (
           <View style={{ marginBottom: 20 }}>
             {projects.map(project => (
-              <View key={project.id} style={{ backgroundColor: '#111522', borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <TouchableOpacity
+                key={project.id}
+                onPress={() => router.push(`/(app)/projects/${project.id}`)}
+                style={{ backgroundColor: '#111522', borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <Text style={{ color: '#F5F1E8', fontSize: 14, flex: 1, marginRight: 8 }} numberOfLines={1}>{project.name}</Text>
                 <StatusPill status={project.status} />
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}

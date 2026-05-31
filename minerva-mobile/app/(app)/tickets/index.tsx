@@ -71,7 +71,10 @@ export default function TicketsIndex() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7FA38A" />}
         ListEmptyComponent={<EmptyState emoji="🎫" title={t.tickets.noTickets} />}
         renderItem={({ item: ticket }) => (
-          <View style={{ backgroundColor: '#111522', borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
+          <TouchableOpacity
+            onPress={() => router.push(`/(app)/tickets/${ticket.id}`)}
+            style={{ backgroundColor: '#111522', borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}
+          >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <Text style={{ color: '#F5F1E8', fontSize: 14, fontWeight: '600', flex: 1, marginRight: 8 }} numberOfLines={2}>{ticket.subject}</Text>
               <StatusPill status={ticket.priority} label={ticket.priority} />
@@ -80,7 +83,7 @@ export default function TicketsIndex() {
               <StatusPill status={ticket.status} />
               <Text style={{ color: '#8A9099', fontSize: 12 }}>{fmtDate(ticket.created_at)}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
 

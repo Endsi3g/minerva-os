@@ -1,6 +1,22 @@
-import { supabaseSelect, supabaseInsert, getWorkspaceId } from '../supabase-client.js';
+import { supabaseSelect, supabaseInsert, supabasePatch, getWorkspaceId } from '../supabase-client.js';
 
 export const pipelineTools = [
+  {
+    name: 'update_deal_stage',
+    description: 'Move a pipeline deal to a new stage.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        id: { type: 'string', description: 'Deal UUID' },
+        stage: { type: 'string', enum: ['new_lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost'], description: 'New stage' },
+      },
+      required: ['id', 'stage'],
+    },
+    async handler(args: Record<string, unknown>) {
+      const updated = await supabasePatch('deals', { id: args.id as string }, { stage: args.stage });
+      return { success: true, deal: updated };
+    },
+  },
   {
     name: 'list_deals',
     description: 'List all pipeline deals grouped by stage (new_lead, qualified, proposal, negotiation, won, lost).',

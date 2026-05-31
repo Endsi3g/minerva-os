@@ -40,6 +40,9 @@ import { pipelineTools } from './tools/pipeline.js';
 import { billingTools } from './tools/billing.js';
 import { reportsTools } from './tools/reports.js';
 import { browserTools } from './tools/browser.js';
+import { ticketsTools } from './tools/tickets.js';
+import { approvalsTools } from './tools/approvals.js';
+import { expensesTools } from './tools/expenses.js';
 import { closeBrowser } from './browser-session.js';
 
 const ALL_TOOLS = [
@@ -51,6 +54,9 @@ const ALL_TOOLS = [
   ...billingTools,
   ...reportsTools,
   ...browserTools,
+  ...ticketsTools,
+  ...approvalsTools,
+  ...expensesTools,
 ];
 
 const toolMap = new Map(ALL_TOOLS.map(t => [t.name, t]));
@@ -95,7 +101,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('[minerva-mcp] Server started — 21 tools available');
+  console.error(`[minerva-mcp] Server started — ${ALL_TOOLS.length} tools available`);
   console.error('[minerva-mcp] SUPABASE_URL:', process.env.SUPABASE_URL ? 'set' : 'NOT SET (browser tools only)');
 
   process.on('SIGINT', async () => {
