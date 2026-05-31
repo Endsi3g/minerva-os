@@ -526,18 +526,37 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      {/* Greeting */}
+      {/* Hero Banner */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
+        className="relative w-full h-40 rounded-2xl overflow-hidden"
+        style={{ border: '1px solid rgba(255,255,255,0.07)' }}
       >
-        <h1 className="text-3xl font-bold text-ivory font-serif italic">
-          {greeting}, {displayName}
-        </h1>
-        <p className="text-sm text-silver mt-1">{d.subtitle}</p>
+        <img
+          src="/brand/dashboard-banner.jpg"
+          alt="Uprising Studio workspace"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: 'saturate(0.75) brightness(0.55)' }}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to right, rgba(10,13,20,0.85) 0%, rgba(10,13,20,0.3) 60%, rgba(10,13,20,0.1) 100%)' }}
+        />
+        <div className="relative z-10 h-full flex flex-col justify-end p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sage/80 mb-1">
+            Uprising Studio
+          </p>
+          <h1 className="text-2xl font-bold text-ivory font-serif italic leading-tight">
+            {greeting}, {displayName}
+          </h1>
+          <p className="text-xs text-silver/80 mt-1">{d.subtitle}</p>
+        </div>
       </motion.div>
 
+      {/* Greeting - now in banner above */}
       {/* Tab bar */}
       <div className="flex items-center gap-1 border-b border-white/5 pb-0">
         {([['overview', d.tabOverview], ['firefighter', d.tabFirefighter]] as [Tab, string][]).map(([key, label]) => (

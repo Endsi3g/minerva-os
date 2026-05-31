@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Palette, FileText, Video, File, Check, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { Palette, FileText, Video, File, Check, MessageSquare, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import type { ApprovalStatus, DeliverableType } from '@/lib/types';
@@ -9,6 +9,7 @@ import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { CommentSection } from '@/components/minerva/CommentSection';
 import { ChoicePoll } from '@/components/ui/choice-poll';
+import { toast } from 'sonner';
 
 function DeliverableRow({
   approval,
@@ -17,11 +18,21 @@ function DeliverableRow({
   lang,
 }: {
   approval: any;
-  onAction: (id: string, status: ApprovalStatus) => void;
+  onAction: (id: string, status: ApprovalStatus) => Promise<void>;
   t: any;
   lang: string;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [acting, setActing] = useState(false);
+
+  async function handleAction(id: string, status: ApprovalStatus) {
+    setActing(true);
+    try {
+      await onAction(id, status);
+    } finally {
+      setActing(false);
+    }
+  }
   const pd = t.portal.deliverables;
   const common = t.app.common;
 
@@ -77,16 +88,17 @@ function DeliverableRow({
         <div className="flex items-center gap-2 shrink-0">
           {approval.status === 'pending' && (
             <button
-              onClick={() => onAction(approval._id, 'approved')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
+              onClick={() => handleAction(approval._id, 'approved')}
+              disabled={acting}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-wait"
               style={{
                 backgroundColor: 'rgba(127,163,138,0.12)',
                 border: '1px solid rgba(127,163,138,0.25)',
                 color: '#7FA38A',
               }}
             >
-              <Check size={12} />
-              {pd.actions.approve}
+              {acting ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+              {acting ? (lang === 'fr' ? 'En cours...' : 'Saving...') : pd.actions.approve}
             </button>
           )}
           <button
@@ -127,8 +139,9 @@ function DeliverableRow({
                     <p className="text-xs font-medium uppercase tracking-widest text-fog">Feedback & Discussion</p>
                     {approval.status === 'pending' && (
                       <button
-                        onClick={() => { onAction(approval._id, 'revision'); }}
-                        className="text-[10px] font-semibold text-ember hover:underline"
+                        onClick={() => handleAction(approval._id, 'revision')}
+                        disabled={acting}
+                        className="text-[10px] font-semibold text-ember hover:underline disabled:opacity-50"
                       >
                         {pd.form.submitRequest}
                       </button>
@@ -173,10 +186,17 @@ export default function PortalDeliverables() {
       .from('approvals')
       .update({ status })
       .eq('id', id);
-    if (!error) {
-      setLocalApprovals(prev =>
-        prev.map(a => a._id === id ? { ...a, status } : a)
-      );
+    if (error) {
+      toast.error(lang === 'fr' ? 'Erreur lors de la mise à jour' : 'Failed to update approval');
+      throw error;
+    }
+    setLocalApprovals(prev =>
+      prev.map(a => a._id === id ? { ...a, status } : a)
+    );
+    if (status === 'approved') {
+      toast.success(lang === 'fr' ? 'Livrable approuvé' : 'Deliverable approved');
+    } else if (status === 'revision') {
+      toast.success(lang === 'fr' ? 'Révision demandée' : 'Revision requested');
     }
   }
 

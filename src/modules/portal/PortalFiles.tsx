@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { Search, Image, Video, FileText, Archive, Download } from 'lucide-react';
+import { Search, Image, Video, FileText, Archive, Download, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import type { FileType } from '@/lib/types';
+import { toast } from 'sonner';
 
 const TYPE_CONFIG: Record<FileType, { icon: React.ElementType; class: string; bg: string }> = {
   image:    { icon: Image,    class: 'text-[#7FA38A]',   bg: 'bg-[#7FA38A]/10'   },
@@ -15,6 +16,33 @@ const TYPE_CONFIG: Record<FileType, { icon: React.ElementType; class: string; bg
 export default function PortalFiles() {
   const { isValid, files } = usePortalData();
   const [query, setQuery] = useState('');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  async function handleDownload(file: any) {
+    if (!file.url) {
+      toast.error('File URL not available.');
+      return;
+    }
+    setDownloadingId(file.id || file._id);
+    try {
+      const res = await fetch(file.url);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success(`${file.name} downloaded`);
+    } catch {
+      toast.error('Download failed. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   if (!isValid) return null;
 
@@ -94,11 +122,15 @@ export default function PortalFiles() {
                 >
                   <span className="text-[10px]" style={{ color: '#8A9099' }}>{file.size}</span>
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-lg hover:bg-white/5"
+                    onClick={() => handleDownload(file)}
+                    disabled={downloadingId === (file.id || file._id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-lg hover:bg-white/5 disabled:cursor-wait"
                     title="Download"
                     aria-label="Download file"
                   >
-                    <Download size={12} style={{ color: '#B8BDC7' }} />
+                    {downloadingId === (file.id || file._id)
+                      ? <Loader2 size={12} className="animate-spin" style={{ color: '#B8BDC7' }} />
+                      : <Download size={12} style={{ color: '#B8BDC7' }} />}
                   </button>
                 </div>
               </div>

@@ -4,17 +4,28 @@ import { Calendar, Video, BookOpen, Sparkles, Plus, CheckCircle2, Circle, Extern
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { toast } from 'sonner';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 
 export default function CallPreps() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const cp = t.app.callPreps;
 
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [calls, setCalls] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [addCallOpen, setAddCallOpen] = useState(false);
+  const [addingCall, setAddingCall] = useState(false);
+  const [newCallForm, setNewCallForm] = useState({
+    title: '',
+    startTime: '',
+    notes: '',
+  });
 
   const generateBrief = async (callId: string) => {
     if (generatingId) return;
@@ -73,6 +84,43 @@ export default function CallPreps() {
     loadCalls();
   }, [workspaceId]);
 
+  async function handleAddCall() {
+    if (!newCallForm.title || !newCallForm.startTime || !workspaceId) {
+      toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs' : 'Please fill all required fields');
+      return;
+    }
+    setAddingCall(true);
+    try {
+      const { data, error } = await supabase
+        .from('calls')
+        .insert({
+          workspace_id: workspaceId,
+          title: newCallForm.title,
+          start_time: new Date(newCallForm.startTime).toISOString(),
+          end_time: new Date(new Date(newCallForm.startTime).getTime() + 60 * 60 * 1000).toISOString(),
+          attendees: [],
+          status: 'upcoming',
+          prep_checklist: newCallForm.notes ? [{ task: newCallForm.notes, completed: false }] : [],
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      if (data) {
+        const mapped = { ...data, _id: data.id, startTime: data.start_time, endTime: data.end_time, prepChecklist: data.prep_checklist, notesUrl: data.notes_url };
+        setCalls(prev => [mapped, ...prev]);
+        setSelectedId(mapped._id);
+        toast.success(lang === 'fr' ? 'Appel ajouté' : 'Call added');
+        setAddCallOpen(false);
+        setNewCallForm({ title: '', startTime: '', notes: '' });
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error(lang === 'fr' ? "Erreur lors de l'ajout" : "Failed to add call");
+    } finally {
+      setAddingCall(false);
+    }
+  }
+
   const selectedCall = calls.find((c: any) => c._id === selectedId);
 
   const toggleTask = async (callId: string, taskIndex: number) => {
@@ -94,12 +142,13 @@ export default function CallPreps() {
   };
 
   return (
+    <>
     <div className="flex h-full gap-8 max-w-7xl mx-auto">
       {/* Sidebar: Upcoming Calls */}
       <div className="w-80 shrink-0 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-serif text-ivory">{cp.title}</h2>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-fog hover:text-ivory">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-fog hover:text-ivory" onClick={() => setAddCallOpen(true)}>
             <Plus size={16} />
           </Button>
         </div>
@@ -243,5 +292,42 @@ export default function CallPreps() {
         )}
       </div>
     </div>
+    <Sheet open={addCallOpen} onOpenChange={setAddCallOpen}>
+        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+          <SheetHeader>
+            <SheetTitle>{lang === 'fr' ? 'Nouvel appel' : 'New Call'}</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Titre' : 'Title'}</Label>
+              <Input
+                placeholder={lang === 'fr' ? 'Ex: Appel stratégique avec Acme' : 'e.g. Strategy call with Acme'}
+                value={newCallForm.title}
+                onChange={e => setNewCallForm(f => ({ ...f, title: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Date et heure' : 'Date & time'}</Label>
+              <Input
+                type="datetime-local"
+                value={newCallForm.startTime}
+                onChange={e => setNewCallForm(f => ({ ...f, startTime: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Notes initiales (optionnel)' : 'Initial notes (optional)'}</Label>
+              <Input
+                placeholder={lang === 'fr' ? 'Points à couvrir...' : 'Topics to cover...'}
+                value={newCallForm.notes}
+                onChange={e => setNewCallForm(f => ({ ...f, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+          <Button className="w-full" onClick={handleAddCall} disabled={addingCall}>
+            {addingCall ? <><Loader2 size={14} className="animate-spin mr-2" />{lang === 'fr' ? 'Ajout...' : 'Adding...'}</> : lang === 'fr' ? 'Ajouter l\'appel' : 'Add Call'}
+          </Button>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

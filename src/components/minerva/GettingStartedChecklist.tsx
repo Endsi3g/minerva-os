@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 const CHECKLIST_STEPS = [
   { id: 'workspace', label: 'Set up your workspace' },
@@ -30,10 +31,34 @@ export function GettingStartedChecklist() {
       });
   }, [user]);
 
+  const [justCompleted, setJustCompleted] = useState(false);
   const completed: string[] = profile?.completedChecklist ?? [];
   const progress = (completed.length / CHECKLIST_STEPS.length) * 100;
 
-  if (!profile || completed.length >= CHECKLIST_STEPS.length) return null;
+  if (!profile) return null;
+
+  if (justCompleted || completed.length >= CHECKLIST_STEPS.length) {
+    return (
+      <div style={{
+        backgroundColor: 'rgba(127,163,138,0.08)',
+        border: '1px solid rgba(127,163,138,0.2)',
+        borderRadius: 16,
+        padding: '20px 24px',
+        marginBottom: 20,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+      }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(127,163,138,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Sparkles size={16} color="#7FA38A" />
+        </div>
+        <div>
+          <p style={{ color: '#F5F1E8', fontSize: 13, fontWeight: 600, margin: 0 }}>Setup complete</p>
+          <p style={{ color: '#8A9099', fontSize: 11, margin: '2px 0 0' }}>Your workspace is ready. You're all set.</p>
+        </div>
+      </div>
+    );
+  }
 
   async function handleMark(itemId: string) {
     if (!user?.email || !profile) return;
@@ -43,7 +68,14 @@ export function GettingStartedChecklist() {
       .update({ completed_checklist: newChecklist })
       .eq('email', user.email);
     if (!error) {
+      const step = CHECKLIST_STEPS.find(s => s.id === itemId);
+      toast.success(step ? `"${step.label}" completed` : 'Step completed');
       setProfile((prev: any) => ({ ...prev, completedChecklist: newChecklist }));
+      if (newChecklist.length >= CHECKLIST_STEPS.length) {
+        setTimeout(() => setJustCompleted(true), 400);
+      }
+    } else {
+      toast.error('Could not save progress. Please try again.');
     }
   }
 

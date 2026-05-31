@@ -20,6 +20,37 @@ function fmt(amount: number, currency: string) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
 }
 
+function printPortalInvoice(invoice: any) {
+  const fmtCurrency = (n: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: invoice.currency || 'USD', maximumFractionDigits: 0 }).format(n);
+
+  const html = `<!DOCTYPE html><html><head><title>${invoice.number}</title>
+  <style>
+    body{font-family:Inter,system-ui,sans-serif;color:#111;padding:48px;max-width:780px;margin:0 auto}
+    h1{font-size:28px;margin-bottom:4px} .meta{color:#555;font-size:13px;margin-bottom:32px}
+    .status{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;background:#f3f4f6;color:#374151;margin-bottom:8px}
+    .total{font-size:22px;font-weight:700;margin-top:24px;color:#111}
+    .footer{margin-top:48px;font-size:12px;color:#777}
+    @media print{body{padding:0}}
+  </style></head><body>
+  <h1>${invoice.number}</h1>
+  <div class="meta">
+    <div><strong>${invoice.project}</strong></div>
+    <div>Issued: ${new Date(invoice.issuedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+    <div>Due: ${new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+  </div>
+  <div class="status">${invoice.status}</div>
+  <div class="total">${fmtCurrency(invoice.amount)}</div>
+  <div class="footer">Issued by Uprising Studio · Minerva OS</div>
+  <script>window.onload=()=>{window.print();}</script>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+}
+
 export default function PortalInvoices() {
   const { isValid, invoices: rawInvoices, projects, token } = usePortalData();
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -168,6 +199,7 @@ export default function PortalInvoices() {
                   </button>
                 )}
                 <button
+                  onClick={() => printPortalInvoice(invoice)}
                   className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-white/5"
                   title="Download PDF"
                   aria-label="Download invoice"

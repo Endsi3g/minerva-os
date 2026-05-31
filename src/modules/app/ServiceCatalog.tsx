@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 type Tab = 'services' | 'packages';
 
@@ -114,6 +115,7 @@ function ServiceForm({
 export default function ServiceCatalog() {
   const { t } = useLang();
   const sc = t.app.serviceCatalog;
+  const router = useRouter();
 
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
@@ -275,7 +277,10 @@ export default function ServiceCatalog() {
                   <p className="text-[10px] text-fog mb-3">
                     {pkg.services?.length ?? 0} services included
                   </p>
-                  <button className="flex items-center gap-1 text-xs text-sage hover:text-ivory transition-colors">
+                  <button
+                    onClick={() => router.push(`/app/proposals?package=${pkg._id}&name=${encodeURIComponent(pkg.name)}&amount=${pkg.totalPrice}`)}
+                    className="flex items-center gap-1 text-xs text-sage hover:text-ivory transition-colors"
+                  >
                     <ChevronRight size={12} />
                     {sc.createProposal}
                   </button>

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 function printInvoice(invoice: any, client: any, lang: string) {
   const locale = lang === 'fr' ? 'fr-FR' : 'en-US';
@@ -252,6 +253,15 @@ export default function Billing() {
   const [filter, setFilter] = useState<string | 'all'>('all');
   const [query, setQuery]   = useState('');
   const [retainerSheetOpen, setRetainerSheetOpen] = useState(false);
+  const [invoiceSheetOpen, setInvoiceSheetOpen] = useState(false);
+  const [newInvoiceForm, setNewInvoiceForm] = useState({
+    clientId: '',
+    amount: '',
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+    description: '',
+  });
+  const [addingInvoice, setAddingInvoice] = useState(false);
   const [newRetainerForm, setNewRetainerForm] = useState({
     clientId: '',
     amount: '',
@@ -262,6 +272,43 @@ export default function Billing() {
   });
 
   const addRetainer = useAddRetainer();
+
+  async function handleAddInvoice() {
+    if (!newInvoiceForm.clientId || !newInvoiceForm.amount) {
+      toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill all required fields');
+      return;
+    }
+    setAddingInvoice(true);
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .insert({
+          workspace_id: workspaceId,
+          client_id: newInvoiceForm.clientId,
+          invoice_number: newInvoiceForm.invoiceNumber,
+          amount: parseFloat(newInvoiceForm.amount),
+          status: 'draft',
+          date: new Date().toISOString().split('T')[0],
+          due_date: newInvoiceForm.dueDate,
+          items: newInvoiceForm.description ? [{ description: newInvoiceForm.description, quantity: 1, price: parseFloat(newInvoiceForm.amount) }] : [],
+        });
+      if (error) throw error;
+      toast.success(lang === 'fr' ? 'Facture créée avec succès' : 'Invoice created successfully');
+      setInvoiceSheetOpen(false);
+      setNewInvoiceForm({
+        clientId: '',
+        amount: '',
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+        description: '',
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error(lang === 'fr' ? "Erreur lors de la création de la facture" : "Failed to create invoice");
+    } finally {
+      setAddingInvoice(false);
+    }
+  }
 
   async function handleAddRetainer() {
     if (!newRetainerForm.clientId || !newRetainerForm.amount || !newRetainerForm.hoursIncluded) {
@@ -343,7 +390,7 @@ export default function Billing() {
             <Plus size={14} />
             {b.retainers.newRetainer}
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setInvoiceSheetOpen(true)}>
             <Plus size={14} />
             {b.newInvoice}
           </Button>
@@ -452,6 +499,68 @@ export default function Billing() {
           {visible.map((inv: any) => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
         </div>
       </section>
+
+      {/* Add Invoice Sheet */}
+      <Sheet open={invoiceSheetOpen} onOpenChange={setInvoiceSheetOpen}>
+        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+          <SheetHeader>
+            <SheetTitle>{b.newInvoice}</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Numéro de facture' : 'Invoice number'}</Label>
+              <Input
+                value={newInvoiceForm.invoiceNumber}
+                onChange={e => setNewInvoiceForm(f => ({ ...f, invoiceNumber: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Client</Label>
+              <Select
+                value={newInvoiceForm.clientId}
+                onValueChange={v => setNewInvoiceForm(f => ({ ...f, clientId: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={lang === 'fr' ? 'Sélectionner un client' : 'Select a client'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((c: any) => (
+                    <SelectItem key={c._id} value={c._id}>{c.company}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Montant (USD)' : 'Amount (USD)'}</Label>
+              <Input
+                type="number"
+                placeholder="5000"
+                value={newInvoiceForm.amount}
+                onChange={e => setNewInvoiceForm(f => ({ ...f, amount: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? 'Description (optionnel)' : 'Description (optional)'}</Label>
+              <Input
+                placeholder={lang === 'fr' ? 'Services de design web...' : 'Web design services...'}
+                value={newInvoiceForm.description}
+                onChange={e => setNewInvoiceForm(f => ({ ...f, description: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{lang === 'fr' ? "Date d'échéance" : 'Due date'}</Label>
+              <Input
+                type="date"
+                value={newInvoiceForm.dueDate}
+                onChange={e => setNewInvoiceForm(f => ({ ...f, dueDate: e.target.value }))}
+              />
+            </div>
+          </div>
+          <Button className="w-full" onClick={handleAddInvoice} disabled={addingInvoice}>
+            {addingInvoice ? <><Loader2 size={14} className="animate-spin mr-2" />{lang === 'fr' ? 'Création...' : 'Creating...'}</> : lang === 'fr' ? 'Créer la facture' : 'Create Invoice'}
+          </Button>
+        </SheetContent>
+      </Sheet>
 
       {/* Add Retainer Sheet */}
       <Sheet open={retainerSheetOpen} onOpenChange={setRetainerSheetOpen}>

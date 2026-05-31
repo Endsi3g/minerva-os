@@ -5,7 +5,7 @@ import { usePortalData } from './usePortalData';
 import { useLang } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PortalNPS() {
@@ -159,7 +159,10 @@ export default function PortalNPS() {
               onClick={handleSubmit}
               disabled={submitting}
             >
-              {lang === 'fr' ? 'Soumettre' : 'Submit Feedback'}
+              {submitting && <Loader2 size={14} className="animate-spin mr-2" />}
+              {submitting
+                ? (lang === 'fr' ? 'Envoi...' : 'Submitting...')
+                : (lang === 'fr' ? 'Soumettre' : 'Submit Feedback')}
             </Button>
           </div>
         )}

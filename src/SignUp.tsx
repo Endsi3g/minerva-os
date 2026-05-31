@@ -238,6 +238,7 @@ function SocialButton({ icon, label }: { icon: React.ReactNode; label: string })
   return (
     <button
       type="button"
+      onClick={() => toast.info('OAuth coming soon. Please use email & password for now.')}
       className="flex items-center justify-center gap-2.5 rounded-xl h-11 text-sm font-medium bg-black border border-white/10 hover:bg-white/5 transition-colors cursor-pointer text-white w-full"
     >
       {icon}

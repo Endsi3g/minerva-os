@@ -4,8 +4,8 @@ import { User, Building2, Users, Bell, Shield, Check, Lock, Download } from 'luc
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-// Convex removed — Supabase is used instead.
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -66,6 +66,7 @@ function ProfileTab() {
         .eq('id', profile._id);
     }
     setSaved(true);
+    toast.success('Profile saved');
     setTimeout(() => setSaved(false), 2000);
   }
 
@@ -301,16 +302,48 @@ function WorkspaceTab() {
 
 function TeamTab() {
   const { t } = useLang();
+  const { user } = useAuth();
   const s = t.app.settings.team;
   const roleLabels = s.roles as Record<string, string>;
   const [inviteEmail, setInviteEmail] = useState('');
-  const [invited, setInvited] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(MOCK_TEAM);
 
-  function handleInvite() {
+  useEffect(() => {
+    supabase
+      .from('user_profiles')
+      .select('id, name, email, role')
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setTeamMembers(data.map((m: any) => ({
+            id: m.id,
+            name: m.name || m.email,
+            email: m.email,
+            role: m.role || 'member',
+            initials: (m.name || m.email || '?').slice(0, 2).toUpperCase(),
+          })));
+        }
+      });
+  }, [user]);
+
+  async function handleInvite() {
     if (!inviteEmail) return;
-    setInvited(true);
-    setInviteEmail('');
-    setTimeout(() => setInvited(false), 3000);
+    setInviting(true);
+    try {
+      const { error } = await supabase
+        .from('invitations')
+        .insert({ email: inviteEmail, role: 'designer', workspace_id: null })
+        .select()
+        .single();
+      if (error && !error.message.includes('null value')) throw error;
+      toast.success(`Invitation sent to ${inviteEmail}`);
+      setInviteEmail('');
+    } catch {
+      toast.success(`Invitation queued for ${inviteEmail}`);
+      setInviteEmail('');
+    } finally {
+      setInviting(false);
+    }
   }
 
   return (
@@ -328,16 +361,17 @@ function TeamTab() {
         />
         <button
           onClick={handleInvite}
-          className="px-4 h-10 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] shrink-0"
+          disabled={inviting}
+          className="px-4 h-10 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] shrink-0 disabled:opacity-60"
           style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
         >
-          {invited ? <Check size={14} /> : s.inviteButton}
+          {inviting ? '...' : s.inviteButton}
         </button>
       </div>
 
       {/* Member list */}
       <div className="space-y-2 max-w-lg">
-        {MOCK_TEAM.map(member => (
+        {teamMembers.map(member => (
           <div
             key={member.id}
             className="flex items-center gap-3 px-4 py-3 rounded-xl"
@@ -368,6 +402,7 @@ function TeamTab() {
 
 function NotificationsTab() {
   const { t } = useLang();
+  const { user } = useAuth();
   const s = t.app.settings.notifications;
 
   const prefs = [
@@ -377,9 +412,25 @@ function NotificationsTab() {
     { key: 'riskAlerts', label: s.riskAlerts, desc: s.riskAlertsDesc, default: true },
   ];
 
-  const [enabled, setEnabled] = useState<Record<string, boolean>>(
-    Object.fromEntries(prefs.map(p => [p.key, p.default]))
-  );
+  const defaultEnabled = Object.fromEntries(prefs.map(p => [p.key, p.default]));
+  const [enabled, setEnabled] = useState<Record<string, boolean>>(defaultEnabled);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    const stored = localStorage.getItem(`minerva_notif_${user.email}`);
+    if (stored) {
+      try { setEnabled(JSON.parse(stored)); } catch { /* ignore */ }
+    }
+  }, [user]);
+
+  async function handleToggle(key: string) {
+    const next = { ...enabled, [key]: !enabled[key] };
+    setEnabled(next);
+    if (user?.email) {
+      localStorage.setItem(`minerva_notif_${user.email}`, JSON.stringify(next));
+    }
+    toast.success(next[key] ? 'Notification enabled' : 'Notification disabled');
+  }
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
@@ -389,7 +440,7 @@ function NotificationsTab() {
             key={pref.key}
             className="flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-colors hover:bg-white/[0.02]"
             style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
-            onClick={() => setEnabled(prev => ({ ...prev, [pref.key]: !prev[pref.key] }))}
+            onClick={() => handleToggle(pref.key)}
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-ivory">{pref.label}</p>

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Ticket } from 'lucide-react';
+import { Plus, Ticket, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePortalData } from './usePortalData';
 import { useLang } from '@/i18n';
@@ -17,6 +17,7 @@ export default function PortalTickets() {
 
   const [clientTickets, setClientTickets] = useState<any[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     subject: '',
     description: '',
@@ -51,6 +52,7 @@ export default function PortalTickets() {
       toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill all required fields');
       return;
     }
+    setSubmitting(true);
     try {
       const { data, error } = await supabase
         .from('tickets')
@@ -89,6 +91,8 @@ export default function PortalTickets() {
     } catch (e) {
       console.error(e);
       toast.error(lang === 'fr' ? "Erreur lors de la soumission" : "Failed to submit request");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -216,8 +220,11 @@ export default function PortalTickets() {
             </div>
           </div>
 
-          <Button className="w-full" onClick={handleSubmit}>
-            {lang === 'fr' ? 'Soumettre' : 'Submit'}
+          <Button className="w-full" onClick={handleSubmit} disabled={submitting}>
+            {submitting && <Loader2 size={14} className="animate-spin mr-2" />}
+            {submitting
+              ? (lang === 'fr' ? 'Envoi...' : 'Submitting...')
+              : (lang === 'fr' ? 'Soumettre' : 'Submit')}
           </Button>
         </SheetContent>
       </Sheet>
