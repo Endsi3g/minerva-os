@@ -18,9 +18,10 @@ const STATUS_CONFIG: Record<ProjectStatus, { label: string; class: string }> = {
 
 interface ProjectCardProps {
   project: Project;
+  onClick?: () => void;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, onClick }: ProjectCardProps) {
   const pct = project.totalTasks > 0
     ? Math.round((project.doneTasks / project.totalTasks) * 100)
     : 0;
@@ -31,7 +32,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const budgetColor = budgetPct >= 90 ? 'bg-ember' : budgetPct >= 70 ? 'bg-warm' : 'bg-sage';
 
   return (
-    <Card className="bg-card border-border rounded-xl p-5 space-y-4 cursor-pointer hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none">
+    <Card
+      className="bg-card border-border rounded-xl p-5 space-y-4 cursor-pointer hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none"
+      onClick={onClick}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

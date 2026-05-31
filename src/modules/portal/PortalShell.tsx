@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { usePortalData } from './usePortalData';
 import { NavLink } from '@/components/ui/nav-link';
+import { useLang } from '@/i18n';
 
 const PORTAL_TABS = [
   { label: 'Overview',     path: '' },
@@ -69,6 +70,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const token = params?.token as string | undefined;
   const { clientName, isValid, loading } = usePortalData();
   const router = useRouter();
+  const { lang } = useLang();
 
   useEffect(() => {
     if (!loading && !isValid) router.replace('/');
@@ -78,7 +80,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   if (!isValid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-obsidian" style={{ backgroundColor: '#0A0D14' }}>
-        <p className="text-silver text-sm" style={{ color: '#B8BDC7' }}>Ce lien d'accès est invalide ou expiré.</p>
+        <p className="text-silver text-sm" style={{ color: '#B8BDC7' }}>{lang === 'fr' ? "Ce lien d'accès est invalide ou expiré." : 'This access link is invalid or has expired.'}</p>
       </div>
     );
   }

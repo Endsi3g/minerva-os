@@ -45,7 +45,8 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(email, password);
-      const next = searchParams?.get('next') ?? '/app/dashboard';
+      const nextParam = searchParams?.get('next') ?? '';
+      const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/app/dashboard';
       router.push(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : l.errorFailed);

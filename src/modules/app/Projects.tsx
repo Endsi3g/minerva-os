@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, LayoutGrid, GanttChartSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -139,6 +140,7 @@ const EMPTY_FORM: NewProjectForm = { name: '', clientId: '', dueDate: '', budget
 export default function Projects() {
   const { t } = useLang();
   const p = t.app.projects;
+  const router = useRouter();
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces[0]?.id;
@@ -213,15 +215,19 @@ export default function Projects() {
       {viewTab === 'grid' && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {projects.map((proj: any) => (
-          <ProjectCard key={proj._id} project={{
-            ...proj,
-            id: proj._id,
-            client: proj.clientName,
-            spent: 0,
-            totalTasks: 0,
-            doneTasks: 0,
-            team: ['US']
-          }} />
+          <ProjectCard
+            key={proj._id}
+            project={{
+              ...proj,
+              id: proj._id,
+              client: proj.clientName,
+              spent: 0,
+              totalTasks: 0,
+              doneTasks: 0,
+              team: ['US'],
+            }}
+            onClick={() => router.push(`/app/projects/${proj._id}`)}
+          />
         ))}
       </div>
       )}

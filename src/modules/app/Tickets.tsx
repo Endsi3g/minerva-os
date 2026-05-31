@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, LifeBuoy, Clock, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,7 @@ function TicketForm({ workspaceId, clients, onClose, onCreated }: { workspaceId:
 export default function Tickets() {
   const { t } = useLang();
   const tk = t.app.tickets;
+  const router = useRouter();
   const [tickets, setTickets] = useState<any[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
@@ -196,8 +198,9 @@ export default function Tickets() {
             return (
               <div
                 key={ticket._id as string}
-                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-white/15"
+                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-white/15 cursor-pointer"
                 style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                onClick={() => router.push(`/app/tickets/${ticket._id as string}`)}
               >
                 <StatusIcon size={14} className={sc.class.split(' ')[0]} />
                 <div className="flex-1 min-w-0">
@@ -217,7 +220,7 @@ export default function Tickets() {
                 </span>
                 {ticket.status === 'open' && (
                   <button
-                    onClick={() => updateTicketStatus(ticket._id as string, 'in_progress')}
+                    onClick={(e) => { e.stopPropagation(); updateTicketStatus(ticket._id as string, 'in_progress'); }}
                     className="text-xs text-fog hover:text-sage transition-colors shrink-0"
                   >
                     {tk.start}
@@ -225,7 +228,7 @@ export default function Tickets() {
                 )}
                 {ticket.status === 'in_progress' && (
                   <button
-                    onClick={() => updateTicketStatus(ticket._id as string, 'resolved')}
+                    onClick={(e) => { e.stopPropagation(); updateTicketStatus(ticket._id as string, 'resolved'); }}
                     className="text-xs text-fog hover:text-sage transition-colors shrink-0"
                   >
                     {tk.resolve}

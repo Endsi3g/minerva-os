@@ -24,13 +24,17 @@ function initials(name: string) {
 interface ClientCardProps {
   client: Client;
   onPortalLink?: (clientId: string) => void;
+  onClick?: () => void;
 }
 
-export function ClientCard({ client, onPortalLink }: ClientCardProps) {
+export function ClientCard({ client, onPortalLink, onClick }: ClientCardProps) {
   const status = STATUS_CONFIG[client.status];
 
   return (
-    <Card className="bg-card border-border rounded-xl p-5 space-y-4 hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none">
+    <Card
+      className={cn('bg-card border-border rounded-xl p-5 space-y-4 hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none', onClick && 'cursor-pointer')}
+      onClick={onClick}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <Avatar className="h-10 w-10 shrink-0">

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { FlickeringGrid } from '@/components/ui/flickering-grid';
 
@@ -88,7 +88,7 @@ function WorkspaceStep({ onNext, workspaceId }: { onNext: () => void; workspaceI
       <label style={labelStyle}>Workspace name</label>
       <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Uprising Studio" />
       <button onClick={handleNext} disabled={loading} style={primaryBtn}>
-        {loading ? 'Saving...' : 'Continue'} <ArrowRight size={16} />
+        {loading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <>Continue <ArrowRight size={16} /></>}
       </button>
     </div>
   );
@@ -179,7 +179,7 @@ function ClientStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBac
       <input style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@acme.com" type="email" />
       <div style={{ display: 'flex', gap: 12 }}>
         <button onClick={onBack} style={ghostBtn}><ArrowLeft size={16} /> Back</button>
-        <button onClick={handleNext} disabled={loading} style={primaryBtn}>{loading ? 'Saving...' : 'Continue'} <ArrowRight size={16} /></button>
+        <button onClick={handleNext} disabled={loading} style={primaryBtn}>{loading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <>Continue <ArrowRight size={16} /></>}</button>
       </div>
     </div>
   );
@@ -216,7 +216,7 @@ function ProjectStep({ onNext, onBack, workspaceId }: { onNext: () => void; onBa
       <input style={inputStyle} value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Acme Corp" />
       <div style={{ display: 'flex', gap: 12 }}>
         <button onClick={onBack} style={ghostBtn}><ArrowLeft size={16} /> Back</button>
-        <button onClick={handleNext} disabled={loading} style={primaryBtn}>{loading ? 'Saving...' : 'Finish setup'} <Check size={16} /></button>
+        <button onClick={handleNext} disabled={loading} style={primaryBtn}>{loading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <>Finish setup <Check size={16} /></>}</button>
       </div>
     </div>
   );

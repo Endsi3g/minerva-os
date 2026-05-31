@@ -165,7 +165,7 @@ function CommandPalette() {
               {clients.map(client => (
                 <CommandItem
                   key={`client-${client._id}`}
-                  onSelect={() => navigate(`/app/clients`)}
+                  onSelect={() => navigate(`/app/clients/${client._id}`)}
                   className="gap-3"
                 >
                   <Users size={14} className="text-fog shrink-0" />
@@ -176,7 +176,7 @@ function CommandPalette() {
               {projects.map(project => (
                 <CommandItem
                   key={`project-${project._id}`}
-                  onSelect={() => navigate(`/app/projects`)}
+                  onSelect={() => navigate(`/app/projects/${project._id}`)}
                   className="gap-3"
                 >
                   <FolderKanban size={14} className="text-fog shrink-0" />

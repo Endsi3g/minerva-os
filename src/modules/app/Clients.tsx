@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, Search, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +49,7 @@ export default function Clients() {
   const { t } = useLang();
   const cKeys = t.app.clients;
   const pKeys = cKeys.portal;
+  const router = useRouter();
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces[0]?.id;
@@ -166,6 +168,7 @@ export default function Clients() {
                   monthlyValue: client.monthlyValue || 0,
                 }}
                 onPortalLink={handleGeneratePortalLink}
+                onClick={() => router.push(`/app/clients/${client._id}`)}
               />
             );
           })}
