@@ -42,12 +42,8 @@ minerva-os/
 │   ├── contexts/           AuthContext, ThemeProvider
 │   ├── i18n.tsx            EN/FR translations (useLang() hook)
 │   └── lib/                utils, analytics (PostHog), sentry helpers
-├── convex/                 Convex backend (DB + serverless functions)
-│   ├── schema.ts           49-table schema
-│   ├── auth.ts             RBAC helpers (requireWorkspaceMember, requireOwner)
-│   ├── email.ts            Resend transactional emails (6 actions)
-│   ├── invitations.ts      Team invitations with 7-day expiry
-│   └── *.ts                47 modules (projects, clients, invoices, …)
+├── supabase/               Supabase backend (SQL migrations)
+│   └── migrations/         SQL migrations (schema, tables, triggers, and functions)
 ├── electron/               Desktop shell (Electron 42)
 │   ├── main.ts             Main process (tray, deep links, auto-updater)
 │   └── tsconfig.json       Electron-specific TypeScript config
@@ -68,7 +64,7 @@ minerva-os/
 | Node.js | 20+ | https://nodejs.org |
 | npm | 10+ | bundled with Node |
 | Git | any | https://git-scm.com |
-| Convex CLI | latest | `npm i -g convex` |
+| Supabase CLI | latest | npm i -g supabase (optional) |
 | EAS CLI | latest | `npm i -g eas-cli` (mobile only) |
 
 ---
@@ -80,9 +76,10 @@ Copy `.env.example` → `.env.local` and fill in:
 ### Required for dev
 
 ```env
-# Convex — get these from `npx convex dev`
-CONVEX_DEPLOYMENT=dev:your-project-name
-NEXT_PUBLIC_CONVEX_URL=https://xxx.convex.cloud
+# Supabase - get these from your Supabase Project dashboard
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxx
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # Auth — generate with: openssl rand -base64 32
 AUTH_SECRET=your-random-32-char-secret
@@ -118,16 +115,9 @@ NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 
 ## Local development workflow
 
-### 1. Start Convex backend
+### 1. Apply Supabase Database Schema
 
-```bash
-npx convex dev
-```
-
-- Opens a browser to authenticate with Convex (first time)
-- Creates a dev deployment automatically
-- Watches `convex/*.ts` for changes and pushes instantly
-- Outputs `NEXT_PUBLIC_CONVEX_URL` — paste it in `.env.local`
+Run the SQL migration scripts located in `/supabase/migrations` inside your Supabase project's SQL Editor to set up tables, RLS policies, triggers, and functions.
 
 ### 2. Start Next.js
 
@@ -195,49 +185,29 @@ App available at http://localhost:3000
 
 ---
 
-## Auth & RBAC
+### Row Level Security (RLS)
 
-### Roles
+Every table has Row Level Security enabled. Security policies match rows against the authenticated user's workspace ID to ensure complete isolation between tenants.
 
-| Role | Capabilities |
-|---|---|
-| `owner` | Full access, can invite/remove members |
-| `member` | Read/write all workspace data |
-
-### How it works
-
-Every Convex mutation calls one of these before writing:
-
+For example, query filters:
 ```typescript
-// Any authenticated workspace member
-await requireWorkspaceMember(ctx, args.workspaceId);
-
-// Owner only (e.g., inviting team members, changing billing)
-await requireOwner(ctx, args.workspaceId);
+supabase.from('tasks').select('*').eq('workspace_id', workspaceId)
 ```
 
-Both helpers live in `convex/auth.ts`. They use `identity.tokenIdentifier` (not `identity.subject`) as the user ID, per Convex auth guidelines.
-
-### Backward compatibility
-
-If `workspace.memberIds` is empty (legacy workspaces), all authenticated users pass through. Only enforced when `memberIds` has at least one entry.
+RLS on the backend rejects any requests for workspace IDs not associated with the user profile of `auth.uid()`.
 
 ---
 
 ## Email (Resend)
 
-Triggered automatically from Convex mutations:
+Transactional emails are triggered automatically from database insert/update actions via triggers and functions sending webhook requests using the `pg_net` extension:
 
-| Trigger | Template | File |
-|---|---|---|
-| Invoice status → `sent` | Invoice with amount + due date | `convex/invoices.ts` |
-| Proposal sent | Proposal link + signing URL | `convex/proposals.ts` |
-| Team invitation created | Invite link (7-day expiry) | `convex/invitations.ts` |
-| Workspace created | Welcome email | `convex/workspaces.ts` |
-| Risk flag escalated | Risk summary | `convex/riskWorkflow.ts` |
-| Password reset | Reset link | Convex Auth built-in |
+- Team invitations insert triggers an invitation email.
+- Complete onboarding updates profile, sending a welcome email.
+- Invoice status transition to `sent` triggers invoice emails.
+- High severity risk flags send alert emails.
 
-All email logic is in `convex/email.ts` via `internalAction`. Uses `ctx.scheduler.runAfter(0, ...)` to call from mutations.
+All webhooks POST to the `send-email` Supabase Edge Function which integrates with the Resend client.
 
 ---
 
@@ -284,38 +254,9 @@ npm run test:audit:report
 
 ---
 
-## Convex schema
+## Supabase Schema
 
-Key tables added in Sprint 11:
-
-```typescript
-// workspaces — RBAC fields
-memberIds: v.optional(v.array(v.string())),
-ownerUserId: v.optional(v.string()),
-
-// userProfiles — onboarding state
-onboardingCompleted: v.optional(v.boolean()),
-onboardingTourCompleted: v.optional(v.boolean()),
-completedChecklist: v.optional(v.array(v.string())),
-
-// invitations — team invite tokens
-invitations: defineTable({
-  token: v.string(),
-  email: v.string(),
-  workspaceId: v.id("workspaces"),
-  role: v.union(v.literal("owner"), v.literal("member")),
-  expiresAt: v.number(),
-  acceptedAt: v.optional(v.number()),
-}).index("by_token", ["token"]).index("by_workspace", ["workspaceId"]),
-```
-
-To update the schema in dev: edit `convex/schema.ts` → `npx convex dev` applies changes automatically.
-
-To update generated types after adding new Convex functions:
-
-```bash
-npx convex dev   # auto-regenerates convex/_generated/
-```
+The schema resides in the PostgreSQL instance of your project. Database structures are version-controlled via SQL files in the `supabase/migrations` directory. RLS policies, constraints, indexes, and triggers are all fully documented inside these migrations.
 
 ---
 
@@ -387,7 +328,7 @@ eas submit --platform ios --latest
 ### Environment
 
 ```env
-EXPO_PUBLIC_CONVEX_URL=https://xxx.convex.cloud
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SENTRY_DSN=https://xxx@sentry.io/xxx
 ```
 
@@ -431,7 +372,6 @@ Requires GitHub Secrets:
 ```bash
 # Development
 npm run dev                    # Next.js dev server
-npx convex dev                 # Convex backend watcher
 npm run electron:dev           # Electron shell (requires npm run dev)
 
 # Building
@@ -445,11 +385,6 @@ npx playwright test            # All 146 Playwright tests
 npx playwright test --ui       # Visual Playwright UI
 npm run test:audit:report      # Open HTML test report
 
-# Convex
-npx convex dev                 # Dev mode (auto-sync)
-npx convex deploy              # Deploy to production
-npx convex run init:seed       # Seed demo data
-
 # Mobile
 npx expo start                 # Mobile dev server
 eas build --profile preview --platform ios      # iOS TestFlight build
@@ -461,16 +396,9 @@ eas submit --platform ios --latest              # Submit to TestFlight
 
 ## Troubleshooting
 
-### "Module not found: convex/_generated/api"
+### "NEXT_PUBLIC_SUPABASE_URL is not set"
 
-The Convex generated files are stale. Run:
-```bash
-npx convex dev
-```
-
-### "NEXT_PUBLIC_CONVEX_URL is not set"
-
-Copy it from the `npx convex dev` output into `.env.local`. Restart `npm run dev`.
+Ensure you have created a `.env.local` file copy from `.env.example` and set all necessary Supabase parameters. Restart the Next.js dev server.
 
 ### Playwright tests fail with timeout
 

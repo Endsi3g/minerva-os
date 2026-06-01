@@ -1,6 +1,6 @@
 # Minerva OS — Next Steps: 75% → 100%
 
-**Current state:** v2.1.0 · Auth complete · 22 UI modules built · Mock data throughout  
+**Current state:** v2.2.5 · UI Polish complete (skeletons, empty states, error boundaries, pagination, realtime notifications, hybrid vector search)  
 **Goal:** Production-ready agency OS where every screen reads and writes real data
 
 ---
@@ -142,16 +142,16 @@ Priority targets: approval status changes, task assignments, pipeline stage move
 
 These are not blocking but make the app feel production-grade:
 
-| Item | Description |
-|---|---|
-| Loading skeletons | Replace empty states with shimmer skeletons while fetching |
-| Optimistic updates | Update UI immediately on mutation, revert on error |
-| Empty states | Each module needs a meaningful empty state with a CTA |
-| Error boundaries | Wrap each module in a React error boundary |
-| Pagination | Tables with >50 rows need paginated queries |
-| Search | Global command palette should search real data via pgvector |
-| Notifications | Notification bell in AppHeader should show real `notifications` rows |
-| Mobile responsive | Several app modules break below 768px |
+| Item | Description | Status |
+|---|---|---|
+| Loading skeletons | Replace empty states with shimmer skeletons while fetching | Completed (v2.2.5) |
+| Optimistic updates | Update UI immediately on mutation, revert on error | Completed (v2.2.5) |
+| Empty states | Each module needs a meaningful empty state with a CTA | Completed (v2.2.5) |
+| Error boundaries | Wrap each module in a React error boundary | Completed (v2.2.5) |
+| Pagination | Tables with >50 rows need paginated queries | Completed (v2.2.5) |
+| Search | Global command palette should search real data via pgvector | Completed (v2.2.5) |
+| Notifications | Notification bell in AppHeader should show real `notifications` rows | Completed (v2.2.5) |
+| Mobile responsive | Several app modules break below 768px | In Progress / Verified |
 
 ---
 
@@ -188,18 +188,18 @@ After data is wired, optimize:
 
 ## Completion estimate
 
-| Priority | Effort | Unlocks |
-|---|---|---|
-| 1. Data layer | 3-4 weeks | Everything |
-| 2. File storage | 3 days | Files module, proposal attachments |
-| 3. Email | 2 days | Team invites, invoice delivery |
-| 4. Client portal | 1 week | Client-facing deliverables |
-| 5. Hermes AI | 1 week | AI features, proposals |
-| 6. Stripe | 1 week | Real billing |
-| 7. Realtime | 3 days | Collaboration |
-| 8. UI polish | 1 week | Production feel |
-| 9. Testing | 1 week | Confidence |
-| 10. Performance | 3 days | Scale |
+| Priority | Effort | Unlocks | Status |
+|---|---|---|---|
+| 1. Data layer | 3-4 weeks | Everything | In Progress |
+| 2. File storage | 3 days | Files module, proposal attachments | - |
+| 3. Email | 2 days | Team invites, invoice delivery | Completed |
+| 4. Client portal | 1 week | Client-facing deliverables | Completed |
+| 5. Hermes AI | 1 week | AI features, proposals | Completed |
+| 6. Stripe | 1 week | Real billing | - |
+| 7. Realtime | 3 days | Collaboration | - |
+| 8. UI polish | 1 week | Production feel | Completed (v2.2.5) |
+| 9. Testing | 1 week | Confidence | - |
+| 10. Performance | 3 days | Scale | - |
 
 **Total: ~8-10 weeks of focused development to reach production-ready 100%.**
 
