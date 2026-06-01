@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 let pipelinePromise: any = null;
 
@@ -16,6 +17,10 @@ async function getEmbedder() {
 
 export async function POST(req: NextRequest) {
   try {
+    const { user, error: authError } = await requireAuth();
+    if (authError) return authError;
+    void user;
+
     const { text } = (await req.json()) as { text: string };
     if (!text) {
       return NextResponse.json({ error: 'Text parameter is required' }, { status: 400 });
@@ -26,8 +31,8 @@ export async function POST(req: NextRequest) {
     const embedding = Array.from(output.data) as number[];
 
     return NextResponse.json({ embedding });
-  } catch (err: any) {
+  } catch (err) {
     console.error('[Embed API Error]:', err);
-    return NextResponse.json({ error: 'Failed to generate embedding: ' + err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate embedding.' }, { status: 500 });
   }
 }

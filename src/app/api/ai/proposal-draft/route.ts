@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 export async function POST(req: NextRequest) {
   try {
+    const { user, error: authError } = await requireAuth();
+    if (authError) return authError;
+    void user;
+
     const { brief, clientCompany } = (await req.json()) as { brief: string; clientCompany?: string };
     if (!brief) {
       return NextResponse.json({ error: 'brief is required' }, { status: 400 });
@@ -76,8 +81,8 @@ Client Company Name: ${company}`;
       timeline: parsed.timeline || '',
       pricing: parsed.pricing || ''
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('[AI Proposal Draft API Error]:', err);
-    return NextResponse.json({ error: 'Failed to draft proposal: ' + err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to draft proposal.' }, { status: 500 });
   }
 }

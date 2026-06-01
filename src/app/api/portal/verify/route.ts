@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { setPortalEmailCookie, logPortalActivity } from '@/lib/portal-auth';
 import { MOCK_PORTAL_TOKENS, MOCK_CLIENTS } from '@/lib/mock-data';
+import { isDemoMode } from '@/lib/demo';
 
 export async function POST(request: Request) {
   try {
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!tokenRow) {
+    if (!tokenRow && (isDemoMode() || process.env.NODE_ENV !== 'production')) {
       const mockToken = MOCK_PORTAL_TOKENS.find(t => t.token === token);
       if (mockToken) {
         tokenRow = {
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!client) {
+    if (!client && (isDemoMode() || process.env.NODE_ENV !== 'production')) {
       const mockClient = MOCK_CLIENTS.find(c => c.id === tokenRow.client_id);
       if (mockClient) {
         client = {

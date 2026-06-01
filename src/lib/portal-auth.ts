@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { MOCK_PORTAL_TOKENS, MOCK_CLIENTS } from '@/lib/mock-data';
+import { isDemoMode } from '@/lib/demo';
 
 const PORTAL_COOKIE = 'minerva_portal_email';
 
@@ -51,7 +52,7 @@ export async function validatePortalToken(token: string): Promise<PortalAuthResu
   }
 
   // Fallback to mock data if DB failed or credentials are missing
-  if (!tokenRow) {
+  if (!tokenRow && (isDemoMode() || process.env.NODE_ENV !== 'production')) {
     const mockToken = MOCK_PORTAL_TOKENS.find(t => t.token === token);
     if (mockToken) {
       tokenRow = {
@@ -90,7 +91,7 @@ export async function validatePortalToken(token: string): Promise<PortalAuthResu
     }
   }
 
-  if (!clientEmail) {
+  if (!clientEmail && (isDemoMode() || process.env.NODE_ENV !== 'production')) {
     const mockClient = MOCK_CLIENTS.find(c => c.id === tokenRow.client_id);
     clientEmail = mockClient?.email || '';
   }
@@ -119,7 +120,7 @@ export async function setPortalEmailCookie(email: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 8, // 8 hours
     path: '/portal',
   });
 }

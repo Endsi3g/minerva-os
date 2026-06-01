@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth/requireAuth';
+import { isDemoMode, DEMO_WORKSPACE_ID } from '@/lib/demo';
 
 let pipelinePromise: any = null;
 
@@ -60,6 +62,9 @@ async function persistMessages(
 }
 
 export async function POST(req: NextRequest) {
+  const { user, error: authError } = await requireAuth();
+  if (authError) return authError;
+
   const { messages, context, thread_id } = await req.json() as {
     messages: { role: 'user' | 'assistant'; content: string }[];
     context?: string;
@@ -76,41 +81,50 @@ export async function POST(req: NextRequest) {
   let workspaceId: string | undefined;
   try {
     if (lastUserMessage?.content) {
-      const supabase = await createClient();
-      const { data: workspaces } = await supabase.from('workspaces').select('id').limit(1);
-      workspaceId = workspaces?.[0]?.id;
+      if (isDemoMode()) {
+        workspaceId = DEMO_WORKSPACE_ID;
+        // RAG skipped in demo mode — mock workspace has no real embeddings
+      } else {
+        const supabase = await createClient();
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('workspace_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        workspaceId = profile?.workspace_id;
 
-      if (workspaceId) {
-        const extractor = await getEmbedder();
-        const output = await extractor(lastUserMessage.content, { pooling: 'mean', normalize: true });
-        const queryEmbedding = Array.from(output.data) as number[];
+        if (workspaceId) {
+          const extractor = await getEmbedder();
+          const output = await extractor(lastUserMessage.content, { pooling: 'mean', normalize: true });
+          const queryEmbedding = Array.from(output.data) as number[];
 
-        const { data: kbArticles } = await supabase.rpc('match_knowledge_base', {
-          query_embedding: queryEmbedding,
-          match_threshold: 0.1,
-          match_count: 3,
-          filter_workspace_id: workspaceId,
-        });
-
-        const { data: projects } = await supabase.rpc('match_projects', {
-          query_embedding: queryEmbedding,
-          match_threshold: 0.1,
-          match_count: 3,
-          filter_workspace_id: workspaceId,
-        });
-
-        if (kbArticles && kbArticles.length > 0) {
-          RAGContext += '\n--- SEMANTIC KNOWLEDGE BASE MATCHES ---\n';
-          kbArticles.forEach((art: any) => {
-            RAGContext += `· Category: ${art.category} | Title: ${art.title}\n  Content: ${art.content}\n`;
+          const { data: kbArticles } = await supabase.rpc('match_knowledge_base', {
+            query_embedding: queryEmbedding,
+            match_threshold: 0.1,
+            match_count: 3,
+            filter_workspace_id: workspaceId,
           });
-        }
 
-        if (projects && projects.length > 0) {
-          RAGContext += '\n--- SEMANTIC PROJECT MATCHES ---\n';
-          projects.forEach((p: any) => {
-            RAGContext += `· Project Name: ${p.name} | Client: ${p.client_name} | Status: ${p.status}\n`;
+          const { data: projects } = await supabase.rpc('match_projects', {
+            query_embedding: queryEmbedding,
+            match_threshold: 0.1,
+            match_count: 3,
+            filter_workspace_id: workspaceId,
           });
+
+          if (kbArticles && kbArticles.length > 0) {
+            RAGContext += '\n--- SEMANTIC KNOWLEDGE BASE MATCHES ---\n';
+            kbArticles.forEach((art: any) => {
+              RAGContext += `· Category: ${art.category} | Title: ${art.title}\n  Content: ${art.content}\n`;
+            });
+          }
+
+          if (projects && projects.length > 0) {
+            RAGContext += '\n--- SEMANTIC PROJECT MATCHES ---\n';
+            projects.forEach((p: any) => {
+              RAGContext += `· Project Name: ${p.name} | Client: ${p.client_name} | Status: ${p.status}\n`;
+            });
+          }
         }
       }
     }
