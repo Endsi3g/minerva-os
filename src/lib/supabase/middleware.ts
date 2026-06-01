@@ -8,6 +8,19 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
+  const isDemo = process.env.DEMO_MODE === 'true';
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/app');
+
+  if (isDemo) {
+    const hasMockUser = request.cookies.has('minerva_mock_logged_in');
+    if (isProtectedRoute && !hasMockUser) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? 'placeholder',
@@ -28,8 +41,6 @@ export async function updateSession(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/app');
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
