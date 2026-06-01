@@ -502,11 +502,10 @@ export function useInvoices(
 }
 
 export function useRetainers(workspaceId: string | undefined | null) {
-  const [retainers, setRetainers] = useState<any[]>([]);
+  const [retainers, setRetainers] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (!workspaceId) {
-      setRetainers([]);
       return;
     }
 
@@ -519,8 +518,12 @@ export function useRetainers(workspaceId: string | undefined | null) {
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: false });
 
-      if (active && !error && data) {
-        setRetainers(data.map(mapRetainer));
+      if (active) {
+        if (!error && data) {
+          setRetainers(data.map(mapRetainer));
+        } else if (error) {
+          setRetainers([]);
+        }
       }
     }
 
@@ -543,11 +546,10 @@ export function useRetainers(workspaceId: string | undefined | null) {
 }
 
 export function useFinances(workspaceId: string | undefined | null) {
-  const [finances, setFinances] = useState<any[]>([]);
+  const [finances, setFinances] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (!workspaceId) {
-      setFinances([]);
       return;
     }
 
@@ -560,8 +562,12 @@ export function useFinances(workspaceId: string | undefined | null) {
         .eq('workspace_id', workspaceId)
         .order('date', { ascending: false });
 
-      if (active && !error && data) {
-        setFinances(data.map(mapFinance));
+      if (active) {
+        if (!error && data) {
+          setFinances(data.map(mapFinance));
+        } else if (error) {
+          setFinances([]);
+        }
       }
     }
 
@@ -584,7 +590,7 @@ export function useFinances(workspaceId: string | undefined | null) {
 }
 
 export function useApprovals(workspaceId?: string | undefined | null) {
-  const [approvals, setApprovals] = useState<any[]>([]);
+  const [approvals, setApprovals] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (workspaceId === MOCK_WS_ID || (IS_TEST && !workspaceId)) {
@@ -606,8 +612,12 @@ export function useApprovals(workspaceId?: string | undefined | null) {
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
-      if (active && !error && data) {
-        setApprovals(data.map(mapApproval));
+      if (active) {
+        if (!error && data) {
+          setApprovals(data.map(mapApproval));
+        } else if (error) {
+          setApprovals([]);
+        }
       }
     }
 
@@ -630,11 +640,10 @@ export function useApprovals(workspaceId?: string | undefined | null) {
 }
 
 export function useActivity(workspaceId: string | undefined | null) {
-  const [activity, setActivity] = useState<any[]>([]);
+  const [activity, setActivity] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (!workspaceId) {
-      setActivity([]);
       return;
     }
 
@@ -648,8 +657,12 @@ export function useActivity(workspaceId: string | undefined | null) {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (active && !error && data) {
-        setActivity(data.map(mapActivity));
+      if (active) {
+        if (!error && data) {
+          setActivity(data.map(mapActivity));
+        } else if (error) {
+          setActivity([]);
+        }
       }
     }
 

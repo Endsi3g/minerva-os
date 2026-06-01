@@ -83,10 +83,22 @@ function CommandPalette() {
   const { open, setOpen } = useCommandPalette();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [kbArticles, setKbArticles] = useState<any[]>([]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
 
   useEffect(() => {
     supabase.from('workspaces').select('*').then(({ data }) => {
@@ -97,30 +109,136 @@ function CommandPalette() {
   const workspaceId = workspaces[0]?.id;
 
   useEffect(() => {
-    if (!workspaceId || searchQuery.trim().length < 2) {
+    if (!workspaceId || debouncedQuery.trim().length < 2) {
       setClients([]);
       setProjects([]);
+      setKbArticles([]);
       return;
     }
-    const q = searchQuery.trim();
-    async function search() {
-      const [{ data: cData }, { data: pData }] = await Promise.all([
+    const q = debouncedQuery.trim();
+
+    async function fallbackProjectsSearch(queryStr: string) {
+      const { data: pData } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .or(`name.ilike.%${queryStr}%,client_name.ilike.%${queryStr}%`);
+      if (pData) {
+        setProjects(pData.map((p: any) => ({ ...p, _id: p.id, clientName: p.client_name })));
+      } else {
+        setProjects([]);
+      }
+    }
+
+    async function fallbackKbSearch(queryStr: string) {
+      const { data: kbData } = await supabase
+        .from('knowledge_base')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .or(`title.ilike.%${queryStr}%,content.ilike.%${queryStr}%`);
+      if (kbData) {
+        setKbArticles(kbData.map((a: any) => ({ ...a, _id: a.id })));
+      } else {
+        setKbArticles([]);
+      }
+    }
+
+    async function runTextFallback(queryStr: string) {
+      const [{ data: cData }, { data: pData }, { data: kbData }] = await Promise.all([
         supabase
           .from('clients')
           .select('*')
           .eq('workspace_id', workspaceId)
-          .or(`company.ilike.%${q}%,contact.ilike.%${q}%`),
+          .or(`company.ilike.%${queryStr}%,contact.ilike.%${queryStr}%`),
         supabase
           .from('projects')
           .select('*')
           .eq('workspace_id', workspaceId)
-          .or(`name.ilike.%${q}%,client_name.ilike.%${q}%`),
+          .or(`name.ilike.%${queryStr}%,client_name.ilike.%${queryStr}%`),
+        supabase
+          .from('knowledge_base')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .or(`title.ilike.%${queryStr}%,content.ilike.%${queryStr}%`),
       ]);
       if (cData) setClients(cData.map(c => ({ ...c, _id: c.id })));
+      else setClients([]);
+
       if (pData) setProjects(pData.map(p => ({ ...p, _id: p.id, clientName: p.client_name })));
+      else setProjects([]);
+
+      if (kbData) setKbArticles(kbData.map(a => ({ ...a, _id: a.id })));
+      else setKbArticles([]);
+    }
+
+    async function search() {
+      let embedData: any = null;
+      try {
+        const embedRes = await fetch('/api/ai/embed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: q }),
+        });
+        if (embedRes.ok) {
+          embedData = await embedRes.json();
+        }
+      } catch (e) {
+        console.error('Failed to fetch embedding', e);
+      }
+
+      if (embedData?.embedding) {
+        try {
+          const [
+            { data: pData, error: pErr },
+            { data: kbData, error: kbErr },
+            { data: cData, error: cErr }
+          ] = await Promise.all([
+            supabase.rpc('match_projects', {
+              query_embedding: embedData.embedding,
+              match_threshold: 0.1,
+              match_count: 5,
+              filter_workspace_id: workspaceId,
+            }),
+            supabase.rpc('match_knowledge_base', {
+              query_embedding: embedData.embedding,
+              match_threshold: 0.1,
+              match_count: 5,
+              filter_workspace_id: workspaceId,
+            }),
+            supabase
+              .from('clients')
+              .select('*')
+              .eq('workspace_id', workspaceId)
+              .or(`company.ilike.%${q}%,contact.ilike.%${q}%`)
+          ]);
+
+          if (!pErr && pData) {
+            setProjects(pData.map((p: any) => ({ ...p, _id: p.id, clientName: p.client_name || 'Client' })));
+          } else {
+            await fallbackProjectsSearch(q);
+          }
+
+          if (!kbErr && kbData) {
+            setKbArticles(kbData.map((a: any) => ({ ...a, _id: a.id })));
+          } else {
+            await fallbackKbSearch(q);
+          }
+
+          if (!cErr && cData) {
+            setClients(cData.map((c: any) => ({ ...c, _id: c.id })));
+          } else {
+            setClients([]);
+          }
+        } catch (err) {
+          console.error('Vector search failed, falling back to text search', err);
+          await runTextFallback(q);
+        }
+      } else {
+        await runTextFallback(q);
+      }
     }
     search();
-  }, [searchQuery, workspaceId]);
+  }, [debouncedQuery, workspaceId]);
 
   function navigate(href: string) {
     router.push(href);
@@ -182,6 +300,25 @@ function CommandPalette() {
                   <FolderKanban size={14} className="text-fog shrink-0" />
                   <span>{project.name}</span>
                   <span className="ml-auto text-[10px] text-fog">Project · {project.clientName}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {searchQuery.trim().length >= 2 && kbArticles.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Knowledge Base">
+              {kbArticles.map(article => (
+                <CommandItem
+                  key={`kb-${article._id}`}
+                  onSelect={() => navigate(`/app/knowledge`)}
+                  className="gap-3"
+                >
+                  <BookOpen size={14} className="text-fog shrink-0" />
+                  <span>{article.title}</span>
+                  <span className="ml-auto text-[10px] text-fog">Article · {article.category}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

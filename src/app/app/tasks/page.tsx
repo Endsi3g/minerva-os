@@ -1,3 +1,10 @@
-﻿'use client';
+'use client';
 import Tasks from '@/modules/app/Tasks';
-export default function TasksPage() { return <Tasks />; }
+import { ErrorBoundary } from '@/components/minerva/ErrorBoundary';
+export default function TasksPage() {
+  return (
+    <ErrorBoundary>
+      <Tasks />
+    </ErrorBoundary>
+  );
+}

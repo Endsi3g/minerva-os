@@ -238,14 +238,58 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
   );
 }
 
+import { Skeleton } from '@/components/ui/skeleton';
+
+function KpiSkeleton() {
+  return (
+    <div className="bg-card border border-border rounded-xl p-4 animate-pulse space-y-2">
+      <Skeleton className="h-6 w-24 bg-white/5" />
+      <Skeleton className="h-4 w-16 bg-white/5" />
+      <Skeleton className="h-3 w-32 bg-white/5" />
+    </div>
+  );
+}
+
+function RetainerCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 animate-pulse space-y-4">
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28 bg-white/5" />
+          <Skeleton className="h-3 w-20 bg-white/5" />
+        </div>
+        <Skeleton className="h-4 w-16 bg-white/5" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-2 w-full bg-white/5" />
+      </div>
+    </div>
+  );
+}
+
+function InvoiceRowSkeleton() {
+  return (
+    <div className="rounded-xl border border-white/5 bg-white/[0.01] px-4 py-3 flex items-center gap-4 animate-pulse">
+      <Skeleton className="h-4 w-24 bg-white/5 shrink-0" />
+      <Skeleton className="h-4 w-32 bg-white/5 flex-1" />
+      <Skeleton className="h-5 w-16 bg-white/5 rounded-full shrink-0" />
+      <Skeleton className="h-4 w-24 bg-white/5 shrink-0 hidden md:block" />
+      <Skeleton className="h-4 w-16 bg-white/5 shrink-0" />
+    </div>
+  );
+}
+
 export default function Billing() {
   const { t, lang } = useLang();
   const b = t.app.billing;
 
   const workspaces = useWorkspaces();
-  const workspaceId = workspaces[0]?.id;
+  const workspaceId = workspaces?.[0]?.id;
 
-  const invoices = useInvoices(workspaceId);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+
+  const { data: invoices, count: totalInvoicesCount } = useInvoices(workspaceId, page, pageSize) || { data: null, count: 0 };
   const retainers = useRetainers(workspaceId);
   const clients = useClients(workspaceId);
 
@@ -315,16 +359,19 @@ export default function Billing() {
     { id: 'paid' as const,    label: t.app.common.status.paid },
   ], [t]);
 
-  const outstanding = invoices.filter((i: any) => i.status === 'sent' || i.status === 'overdue').reduce((s: any, i: any) => s + i.amount, 0);
-  const paidMTD     = invoices.filter((i: any) => i.status === 'paid').reduce((s: any, i: any) => s + i.amount, 0);
-  const overdueCount = invoices.filter((i: any) => i.status === 'overdue').length;
+  const isLoading = invoices === null || retainers === null || clients === null;
+  const outstanding = invoices ? invoices.filter((i: any) => i.status === 'sent' || i.status === 'overdue').reduce((s: any, i: any) => s + i.amount, 0) : 0;
+  const paidMTD     = invoices ? invoices.filter((i: any) => i.status === 'paid').reduce((s: any, i: any) => s + i.amount, 0) : 0;
+  const overdueCount = invoices ? invoices.filter((i: any) => i.status === 'overdue').length : 0;
+  const activeRetainersCount = retainers ? retainers.filter((r: any) => r.status === 'active').length : 0;
+  const totalPages = Math.ceil(totalInvoicesCount / pageSize);
 
-  const visible = invoices.filter((i: any) => {
+  const visible = invoices ? invoices.filter((i: any) => {
     const matchFilter = filter === 'all' || i.status === filter;
     const matchQuery  = query === '' ||
       i.invoiceNumber.toLowerCase().includes(query.toLowerCase());
     return matchFilter && matchQuery;
-  });
+  }) : [];
 
   return (
     <>
@@ -334,16 +381,16 @@ export default function Billing() {
           <h1 className="text-2xl font-semibold text-ivory">{b.title}</h1>
           <p className="text-sm text-fog mt-0.5">
             {b.stats
-              .replace('invoices', String(invoices.length))
-              .replace('active retainers', String(retainers.filter((r: any) => r.status === 'active').length))}
+              .replace('invoices', String(totalInvoicesCount))
+              .replace('active retainers', String(activeRetainersCount))}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => setRetainerSheetOpen(true)}>
+          <Button size="sm" variant="outline" onClick={() => setRetainerSheetOpen(true)} id="btn-new-retainer">
             <Plus size={14} />
             {b.retainers.newRetainer}
           </Button>
-          <Button size="sm">
+          <Button size="sm" id="btn-new-invoice">
             <Plus size={14} />
             {b.newInvoice}
           </Button>
@@ -352,28 +399,43 @@ export default function Billing() {
 
       {/* Summary strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {[
-          { label: b.summary.outstanding,   value: fmt(outstanding, lang), color: outstanding > 0 ? 'text-warm'  : 'text-sage', sub: b.summary.outstandingSub },
-          { label: b.summary.overdue,       value: String(overdueCount),  color: overdueCount > 0      ? 'text-ember' : 'text-sage', sub: overdueCount > 0 ? b.summary.overdueSub : b.summary.overdueNone },
-          { label: b.summary.collected,     value: fmt(paidMTD, lang),     color: 'text-sage',   sub: b.summary.collectedSub },
-        ].map((s: any) => (
-          <div key={s.label} className="bg-card border border-border rounded-xl p-4">
-            <p className={cn('text-2xl font-semibold tabular-nums', s.color)}>{s.value}</p>
-            <p className="text-xs text-fog mt-1">{s.label}</p>
-            <p className="text-[10px] text-fog/60 mt-0.5">{s.sub}</p>
-          </div>
-        ))}
+        {isLoading ? (
+          [1, 2, 3].map(i => <KpiSkeleton key={i} />)
+        ) : (
+          [
+            { label: b.summary.outstanding,   value: fmt(outstanding, lang), color: outstanding > 0 ? 'text-warm'  : 'text-sage', sub: b.summary.outstandingSub },
+            { label: b.summary.overdue,       value: String(overdueCount),  color: overdueCount > 0      ? 'text-ember' : 'text-sage', sub: overdueCount > 0 ? b.summary.overdueSub : b.summary.overdueNone },
+            { label: b.summary.collected,     value: fmt(paidMTD, lang),     color: 'text-sage',   sub: b.summary.collectedSub },
+          ].map((s: any) => (
+            <div key={s.label} className="bg-card border border-border rounded-xl p-4">
+              <p className={cn('text-2xl font-semibold tabular-nums', s.color)}>{s.value}</p>
+              <p className="text-xs text-fog mt-1">{s.label}</p>
+              <p className="text-[10px] text-fog/60 mt-0.5">{s.sub}</p>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Retainers */}
       <section className="mb-8">
         <h2 className="text-sm font-semibold text-ivory mb-3">{b.retainers.title}</h2>
-        {retainers.filter((r: any) => r.status === 'active').length === 0 ? (
-          <p className="text-sm text-fog py-4">{b.retainers.empty}</p>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[1, 2, 3].map(i => <RetainerCardSkeleton key={i} />)}
+          </div>
+        ) : activeRetainersCount === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center gap-3 bg-midnight/20 rounded-xl border border-white/5 p-6">
+            <p className="text-sm text-silver font-medium">{lang === 'fr' ? 'Aucun contrat de forfait' : 'No retainer agreements'}</p>
+            <p className="text-xs text-fog max-w-xs">{b.retainers.empty}</p>
+            <Button size="sm" variant="outline" onClick={() => setRetainerSheetOpen(true)} className="rounded-full">
+              <Plus size={14} className="mr-1.5" />
+              {b.retainers.newRetainer}
+            </Button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {retainers.filter((r: any) => r.status === 'active').map((ret: any) => {
-              const client = clients.find((c: any) => c._id === ret.clientId);
+            {retainers?.filter((r: any) => r.status === 'active').map((ret: any) => {
+              const client = clients?.find((c: any) => c._id === ret.clientId);
               const pct = ret.hoursIncluded > 0 ? Math.round((ret.hoursUsed / ret.hoursIncluded) * 100) : 0;
               const barColor = pct >= 100 ? '#A86A6A' : pct >= 80 ? '#B89B6A' : '#7FA38A';
               return (
@@ -446,10 +508,49 @@ export default function Billing() {
         </div>
 
         <div className="space-y-2">
-          {visible.length === 0 && (
-            <p className="text-sm text-fog text-center py-10">{b.invoices.empty}</p>
+          {isLoading ? (
+            <div className="space-y-2 py-4">
+              {[1, 2, 3].map(i => <InvoiceRowSkeleton key={i} />)}
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center gap-3 bg-midnight/20 rounded-xl border border-white/5 p-6">
+              <p className="text-sm text-silver font-medium">{lang === 'fr' ? 'Aucune facture' : 'No invoices'}</p>
+              <p className="text-xs text-fog max-w-xs">{b.invoices.empty}</p>
+            </div>
+          ) : (
+            <>
+              {visible.map((inv: any) => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
+              
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 px-1 py-2 border-t border-white/5">
+                  <span className="text-xs text-fog">
+                    Showing {Math.min((page - 1) * pageSize + 1, totalInvoicesCount)}-{Math.min(page * pageSize, totalInvoicesCount)} of {totalInvoicesCount} invoices
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPage(p => Math.max(p - 1, 1))}
+                      disabled={page === 1}
+                      className="border-white/10 text-fog hover:text-ivory"
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-xs text-silver font-medium font-mono px-2">{page} / {totalPages}</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                      disabled={page === totalPages}
+                      className="border-white/10 text-fog hover:text-ivory"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
-          {visible.map((inv: any) => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
         </div>
       </section>
 
@@ -471,7 +572,7 @@ export default function Billing() {
                   <SelectValue placeholder={lang === 'fr' ? 'Sélectionner un client' : 'Select a client'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map((c: any) => (
+                  {clients?.map((c: any) => (
                     <SelectItem key={c._id} value={c._id}>
                       {c.company}
                     </SelectItem>

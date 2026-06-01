@@ -198,6 +198,8 @@ class MockQueryBuilder {
   private isMaybeSingle = false;
   private action: 'select' | 'insert' | 'update' | 'delete' = 'select';
   private actionData: any = null;
+  private rangeFrom?: number;
+  private rangeTo?: number;
 
   constructor(table: string) {
     this.table = table;
@@ -268,12 +270,40 @@ class MockQueryBuilder {
     return this;
   }
 
+  or(expression: string) {
+    this.filters.push((item: any) => {
+      const parts = expression.split(',');
+      for (const part of parts) {
+        const match = part.match(/([^.]+)\.(ilike|eq)\.(.+)/);
+        if (match) {
+          const [, field, op, val] = match;
+          const cleanVal = val.replace(/%/g, '').toLowerCase();
+          const itemVal = String(item[field] || '').toLowerCase();
+          if (op === 'ilike' && itemVal.includes(cleanVal)) {
+            return true;
+          }
+          if (op === 'eq' && itemVal === cleanVal) {
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+    return this;
+  }
+
+  range(from: number, to: number) {
+    this.rangeFrom = from;
+    this.rangeTo = to;
+    return this;
+  }
+
   delete() {
     this.action = 'delete';
     return this;
   }
 
-  async then(onfulfilled: (res: { data: any; error: any }) => void) {
+  async then(onfulfilled: (res: any) => void) {
     const list = mockDb[this.table] || [];
     let result: any = null;
 
@@ -291,7 +321,10 @@ class MockQueryBuilder {
           return 0;
         });
       }
-      if (this.limitCount !== null) {
+      const totalCount = filtered.length;
+      if (this.rangeFrom !== undefined && this.rangeTo !== undefined) {
+        filtered = filtered.slice(this.rangeFrom, this.rangeTo + 1);
+      } else if (this.limitCount !== null) {
         filtered = filtered.slice(0, this.limitCount);
       }
       if (this.isSingle || this.isMaybeSingle) {
@@ -299,6 +332,8 @@ class MockQueryBuilder {
       } else {
         result = filtered;
       }
+      onfulfilled({ data: result, error: null, count: totalCount });
+      return;
     } else if (this.action === 'insert') {
       const records = Array.isArray(this.actionData) ? this.actionData : [this.actionData];
       const newRecords = records.map(r => ({
