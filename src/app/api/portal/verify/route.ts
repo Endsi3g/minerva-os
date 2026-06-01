@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!tokenRow) {
+    if (!tokenRow && process.env.NODE_ENV !== 'production') {
       const mockToken = MOCK_PORTAL_TOKENS.find(t => t.token === token);
       if (mockToken) {
         tokenRow = {
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!client) {
+    if (!client && process.env.NODE_ENV !== 'production') {
       const mockClient = MOCK_CLIENTS.find(c => c.id === tokenRow.client_id);
       if (mockClient) {
         client = {

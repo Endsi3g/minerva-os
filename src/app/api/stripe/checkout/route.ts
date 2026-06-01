@@ -61,13 +61,13 @@ export async function POST(req: NextRequest) {
         sessionId = stripeSession.id;
       } else {
         console.error('[Stripe API Error]:', stripeSession);
-        return NextResponse.json({ error: stripeSession.error?.message || 'Stripe API Session creation failed.' }, { status: 500 });
+        return NextResponse.json({ error: 'Payment session creation failed.' }, { status: 500 });
       }
     }
 
     return NextResponse.json({ url: sessionUrl, sessionId });
-  } catch (err: any) {
+  } catch (err) {
     console.error('[Stripe Checkout Handler Error]:', err);
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

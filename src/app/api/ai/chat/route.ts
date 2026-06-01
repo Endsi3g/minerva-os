@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 let pipelinePromise: any = null;
 
@@ -60,6 +61,9 @@ async function persistMessages(
 }
 
 export async function POST(req: NextRequest) {
+  const { user, error: authError } = await requireAuth();
+  if (authError) return authError;
+
   const { messages, context, thread_id } = await req.json() as {
     messages: { role: 'user' | 'assistant'; content: string }[];
     context?: string;
@@ -77,8 +81,13 @@ export async function POST(req: NextRequest) {
   try {
     if (lastUserMessage?.content) {
       const supabase = await createClient();
-      const { data: workspaces } = await supabase.from('workspaces').select('id').limit(1);
-      workspaceId = workspaces?.[0]?.id;
+      // Resolve workspace from the authenticated user's profile, not from arbitrary data
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('workspace_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      workspaceId = profile?.workspace_id;
 
       if (workspaceId) {
         const extractor = await getEmbedder();

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 let pipelinePromise: any = null;
 
@@ -16,14 +17,25 @@ async function getEmbedder() {
 
 export async function POST(req: NextRequest) {
   try {
+    const { user, error: authError } = await requireAuth();
+    if (authError) return authError;
+
     const { callId } = (await req.json()) as { callId: string };
     if (!callId) {
       return NextResponse.json({ error: 'callId is required' }, { status: 400 });
     }
 
     const supabase = await createClient();
-    
-    // 1. Fetch Call details
+
+    // Fetch user's workspace to validate ownership
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('workspace_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    // 1. Fetch Call details — RLS on the server client enforces access,
+    //    but we also verify the call belongs to the user's workspace.
     const { data: call, error: callError } = await supabase
       .from('calls')
       .select('*')
@@ -32,6 +44,10 @@ export async function POST(req: NextRequest) {
 
     if (callError || !call) {
       return NextResponse.json({ error: 'Call not found' }, { status: 404 });
+    }
+
+    if (profile && profile.workspace_id && call.workspace_id !== profile.workspace_id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const workspaceId = call.workspace_id;
@@ -170,8 +186,8 @@ Live Workspace Context: ${ragContext || 'None'}`;
       prepChecklist: checklistObj,
       status: 'prepped'
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('[Call Prep API Error]:', err);
-    return NextResponse.json({ error: 'Failed to generate prep briefing: ' + err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate prep briefing.' }, { status: 500 });
   }
 }
