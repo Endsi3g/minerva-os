@@ -11,20 +11,7 @@ import { supabase } from '@/lib/supabase';
 
 type Tab = 'profile' | 'workspace' | 'team' | 'notifications' | 'security' | 'privacy';
 
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  initials: string;
-}
 
-const MOCK_TEAM: TeamMember[] = [
-  { id: '1', name: 'Uprising Studio', email: 'studio@uprising.co', role: 'owner', initials: 'US' },
-  { id: '2', name: 'Camille Dufresne', email: 'camille@uprising.co', role: 'project_manager', initials: 'CD' },
-  { id: '3', name: 'Jordan Belfort', email: 'jordan@uprising.co', role: 'designer', initials: 'JB' },
-  { id: '4', name: 'Priya Sharma', email: 'priya@uprising.co', role: 'developer', initials: 'PS' },
-];
 
 /* ── Sub-sections ────────────────────────────────────────────────────────── */
 
@@ -306,11 +293,48 @@ function TeamTab() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [invited, setInvited] = useState(false);
 
-  function handleInvite() {
-    if (!inviteEmail) return;
-    setInvited(true);
-    setInviteEmail('');
-    setTimeout(() => setInvited(false), 3000);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [members, setMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from('workspaces').select('id').limit(1).then(({ data }) => {
+      if (data && data.length > 0) {
+        setWorkspaceId(data[0].id);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    async function fetchMembers() {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('workspace_id', workspaceId);
+      if (data) {
+        setMembers(data);
+      }
+    }
+    fetchMembers();
+  }, [workspaceId]);
+
+  async function handleInvite() {
+    if (!inviteEmail || !workspaceId) return;
+    try {
+      const { error } = await supabase.from('invitations').insert({
+        workspace_id: workspaceId,
+        email: inviteEmail,
+        role: 'member',
+        token: Math.random().toString(36).substring(2, 15),
+        expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+      });
+      if (error) throw error;
+      setInvited(true);
+      setInviteEmail('');
+      setTimeout(() => setInvited(false), 3000);
+    } catch (err) {
+      console.error('Failed to send invite:', err);
+    }
   }
 
   return (
@@ -337,30 +361,38 @@ function TeamTab() {
 
       {/* Member list */}
       <div className="space-y-2 max-w-lg">
-        {MOCK_TEAM.map(member => (
-          <div
-            key={member.id}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl"
-            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
-          >
+        {members.map(member => {
+          const initials = (member.name || '')
+            .split(' ')
+            .map((w: string) => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase() || 'U';
+          return (
             <div
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0"
-              style={{ backgroundColor: '#1A1F32', color: '#B8BDC7' }}
+              key={member.id}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
             >
-              {member.initials}
+              <div
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0"
+                style={{ backgroundColor: '#1A1F32', color: '#B8BDC7' }}
+              >
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-ivory truncate">{member.name}</p>
+                <p className="text-xs text-fog truncate">{member.email}</p>
+              </div>
+              <span
+                className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
+                style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#8A9099' }}
+              >
+                {roleLabels[member.role] ?? member.role}
+              </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-ivory truncate">{member.name}</p>
-              <p className="text-xs text-fog truncate">{member.email}</p>
-            </div>
-            <span
-              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
-              style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#8A9099' }}
-            >
-              {roleLabels[member.role] ?? member.role}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Section>
   );
