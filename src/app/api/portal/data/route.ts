@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validatePortalToken, logPortalActivity } from '@/lib/portal-auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS, MOCK_APPROVALS, MOCK_FILES, MOCK_INVOICES, MOCK_MILESTONES } from '@/lib/mock-data';
 
 export async function GET(request: Request) {
   try {
@@ -30,38 +31,9 @@ export async function GET(request: Request) {
 
     const { client_id: clientId, workspace_id: workspaceId, scopes, id: tokenId } = authResult.tokenData!;
 
-    // 2. Fetch client details
-    const { data: client, error: clientErr } = await supabaseAdmin
-      .from('clients')
-      .select('*')
-      .eq('id', clientId)
-      .maybeSingle();
-
-    if (clientErr || !client) {
-      return NextResponse.json({ error: 'client_not_found' }, { status: 404 });
-    }
-
-    // 3. Fetch projects (always needed for overview)
-    const { data: dbProjects } = await supabaseAdmin
-      .from('projects')
-      .select('*')
-      .eq('client_id', clientId);
-
-    const projects = (dbProjects ?? []).map(p => ({
-      ...p,
-      _id: p.id,
-      workspaceId: p.workspace_id,
-      clientId: p.client_id,
-      clientName: p.client_name,
-      dueDate: p.due_date,
-      budget: Number(p.budget),
-      healthScore: p.health_score,
-      activeRiskFlags: p.active_risk_flags,
-    }));
-
-    const projectIds = projects.map(p => p.id);
-
-    // 4. Parallel fetch of scoped tables
+    const hasCredentials = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+    let client: any = null;
+    let projects: any[] = [];
     let dbTasks: any[] = [];
     let dbApprovals: any[] = [];
     let dbAssets: any[] = [];
@@ -69,67 +41,192 @@ export async function GET(request: Request) {
     let dbMilestones: any[] = [];
     let dbTickets: any[] = [];
 
-    const fetches: PromiseLike<any>[] = [];
+    let isMock = true;
 
-    if (projectIds.length > 0) {
-      fetches.push(
-        supabaseAdmin
-          .from('milestones')
+    if (hasCredentials) {
+      try {
+        const { data: dbClient, error: clientErr } = await supabaseAdmin
+          .from('clients')
           .select('*')
-          .in('project_id', projectIds)
-          .then(({ data }) => { dbMilestones = data || []; })
-      );
-    }
+          .eq('id', clientId)
+          .maybeSingle();
 
-    if (scopes.includes('approvals')) {
-      if (projectIds.length > 0) {
-        fetches.push(
-          supabaseAdmin
-            .from('tasks')
+        if (!clientErr && dbClient) {
+          client = dbClient;
+          isMock = false;
+
+          const { data: dbProjects } = await supabaseAdmin
+            .from('projects')
             .select('*')
-            .in('project_id', projectIds)
-            .then(({ data }) => { dbTasks = data || []; }),
-          supabaseAdmin
-            .from('approvals')
-            .select('*')
-            .in('project_id', projectIds)
-            .then(({ data }) => { dbApprovals = data || []; })
-        );
+            .eq('client_id', clientId);
+
+          projects = (dbProjects ?? []).map(p => ({
+            ...p,
+            _id: p.id,
+            workspaceId: p.workspace_id,
+            clientId: p.client_id,
+            clientName: p.client_name,
+            dueDate: p.due_date,
+            budget: Number(p.budget),
+            healthScore: p.health_score,
+            activeRiskFlags: p.active_risk_flags,
+          }));
+        }
+      } catch (e) {
+        console.warn('Failed to query client details from Supabase, falling back to mock:', e);
       }
     }
 
-    if (scopes.includes('files')) {
-      fetches.push(
-        supabaseAdmin
-          .from('assets')
-          .select('*')
-          .eq('client_id', clientId)
-          .then(({ data }) => { dbAssets = data || []; })
-      );
+    if (isMock) {
+      const mockClient = MOCK_CLIENTS.find(c => c.id === clientId);
+      if (!mockClient) {
+        return NextResponse.json({ error: 'client_not_found' }, { status: 404 });
+      }
+      client = {
+        id: mockClient.id,
+        _id: mockClient.id,
+        company: mockClient.company,
+        workspace_id: 'mock-workspace-123',
+      };
+
+      const mockProjectsFiltered = MOCK_PROJECTS.filter(p => p.clientId === clientId);
+      projects = mockProjectsFiltered.map(p => ({
+        ...p,
+        _id: p.id,
+        workspaceId: 'mock-workspace-123',
+        clientId: p.clientId,
+        clientName: p.client,
+        dueDate: p.dueDate,
+        budget: p.budget,
+        healthScore: 95,
+        activeRiskFlags: [],
+      }));
     }
 
-    if (scopes.includes('invoices')) {
-      fetches.push(
-        supabaseAdmin
-          .from('invoices')
-          .select('*')
-          .eq('client_id', clientId)
-          .then(({ data }) => { dbInvoices = data || []; })
-      );
+    const projectIds = projects.map(p => p.id);
+
+    if (!isMock && hasCredentials) {
+      try {
+        const fetches: PromiseLike<any>[] = [];
+
+        if (projectIds.length > 0) {
+          fetches.push(
+            supabaseAdmin
+              .from('milestones')
+              .select('*')
+              .in('project_id', projectIds)
+              .then(({ data }) => { dbMilestones = data || []; })
+          );
+        }
+
+        if (scopes.includes('approvals')) {
+          if (projectIds.length > 0) {
+            fetches.push(
+              supabaseAdmin
+                .from('tasks')
+                .select('*')
+                .in('project_id', projectIds)
+                .then(({ data }) => { dbTasks = data || []; }),
+              supabaseAdmin
+                .from('approvals')
+                .select('*')
+                .in('project_id', projectIds)
+                .then(({ data }) => { dbApprovals = data || []; })
+            );
+          }
+        }
+
+        if (scopes.includes('files')) {
+          fetches.push(
+            supabaseAdmin
+              .from('assets')
+              .select('*')
+              .eq('client_id', clientId)
+              .then(({ data }) => { dbAssets = data || []; })
+          );
+        }
+
+        if (scopes.includes('invoices')) {
+          fetches.push(
+            supabaseAdmin
+              .from('invoices')
+              .select('*')
+              .eq('client_id', clientId)
+              .then(({ data }) => { dbInvoices = data || []; })
+          );
+        }
+
+        if (scopes.includes('tickets')) {
+          fetches.push(
+            supabaseAdmin
+              .from('tickets')
+              .select('*')
+              .eq('client_id', clientId)
+              .order('created_at', { ascending: false })
+              .then(({ data }) => { dbTickets = data || []; })
+          );
+        }
+
+        await Promise.all(fetches);
+      } catch (e) {
+        console.warn('Failed to query scoped tables from Supabase, falling back to mock:', e);
+        isMock = true;
+      }
     }
 
-    if (scopes.includes('tickets')) {
-      fetches.push(
-        supabaseAdmin
-          .from('tickets')
-          .select('*')
-          .eq('client_id', clientId)
-          .order('created_at', { ascending: false })
-          .then(({ data }) => { dbTickets = data || []; })
-      );
-    }
+    if (isMock) {
+      const allowedProjects = MOCK_PROJECTS.filter(p => projectIds.includes(p.id));
+      const allowedProjectNames = allowedProjects.map(p => p.name);
 
-    await Promise.all(fetches);
+      dbMilestones = MOCK_MILESTONES.filter(m => projectIds.includes(m.projectId)).map(m => ({
+        ...m,
+        id: m.id,
+        project_id: m.projectId,
+        due_date: m.dueDate,
+      }));
+
+      if (scopes.includes('approvals')) {
+        dbTasks = MOCK_TASKS.filter(t => projectIds.includes(t.projectId)).map(t => ({
+          ...t,
+          id: t.id,
+          project_id: t.projectId,
+        }));
+        dbApprovals = MOCK_APPROVALS.filter(a => allowedProjectNames.includes(a.project)).map(a => {
+          const associatedProj = allowedProjects.find(p => p.name === a.project);
+          return {
+            ...a,
+            id: a.id,
+            project_id: associatedProj?.id || '',
+            submitted_date: a.submittedDate,
+            file_url: '',
+          };
+        });
+      }
+
+      if (scopes.includes('files')) {
+        dbAssets = MOCK_FILES.filter(f => allowedProjectNames.includes(f.project)).map(f => {
+          const associatedProj = allowedProjects.find(p => p.name === f.project);
+          return {
+            ...f,
+            id: f.id,
+            project_id: associatedProj?.id || '',
+            uploaded_at: f.uploadedDate,
+          };
+        });
+      }
+
+      if (scopes.includes('invoices')) {
+        dbInvoices = MOCK_INVOICES.filter(i => i.clientId === clientId).map(i => ({
+          ...i,
+          id: i.id,
+          invoice_number: i.number,
+          due_date: i.dueDate,
+          paid_date: i.paidDate || null,
+        }));
+      }
+
+      dbTickets = [];
+    }
 
     // 5. Map data to the format used in frontend
     const mappedTasks = dbTasks.map(t => ({

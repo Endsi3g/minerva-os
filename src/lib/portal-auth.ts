@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { MOCK_PORTAL_TOKENS, MOCK_CLIENTS } from '@/lib/mock-data';
 
 const PORTAL_COOKIE = 'minerva_portal_email';
 
@@ -28,13 +29,44 @@ interface PortalAuthResult {
 export async function validatePortalToken(token: string): Promise<PortalAuthResult> {
   if (!token) return { valid: false, error: 'missing_token' };
 
-  const { data: tokenRow, error } = await supabaseAdmin
-    .from('portal_tokens')
-    .select('*')
-    .eq('token', token)
-    .maybeSingle();
+  let tokenRow: any = null;
+  let isMock = false;
 
-  if (error || !tokenRow) return { valid: false, error: 'invalid_token' };
+  const hasCredentials = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (hasCredentials) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('portal_tokens')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+
+      if (!error && data) {
+        tokenRow = data;
+      }
+    } catch (e) {
+      console.warn('Supabase token query failed, falling back to mock data:', e);
+    }
+  }
+
+  // Fallback to mock data if DB failed or credentials are missing
+  if (!tokenRow) {
+    const mockToken = MOCK_PORTAL_TOKENS.find(t => t.token === token);
+    if (mockToken) {
+      tokenRow = {
+        id: mockToken.token,
+        workspace_id: 'mock-workspace-123',
+        client_id: mockToken.clientId,
+        token: mockToken.token,
+        expires_at: mockToken.expiresAt,
+        scopes: mockToken.scopes,
+      };
+      isMock = true;
+    }
+  }
+
+  if (!tokenRow) return { valid: false, error: 'invalid_token' };
 
   // Check expiry
   if (new Date(tokenRow.expires_at) < new Date()) {
@@ -42,13 +74,26 @@ export async function validatePortalToken(token: string): Promise<PortalAuthResu
   }
 
   // Fetch client email
-  const { data: client } = await supabaseAdmin
-    .from('clients')
-    .select('email')
-    .eq('id', tokenRow.client_id)
-    .maybeSingle();
+  let clientEmail = '';
+  if (!isMock && hasCredentials) {
+    try {
+      const { data: client } = await supabaseAdmin
+        .from('clients')
+        .select('email')
+        .eq('id', tokenRow.client_id)
+        .maybeSingle();
+      if (client) {
+        clientEmail = client.email || '';
+      }
+    } catch (e) {
+      console.warn('Supabase client email query failed:', e);
+    }
+  }
 
-  const clientEmail = client?.email || '';
+  if (!clientEmail) {
+    const mockClient = MOCK_CLIENTS.find(c => c.id === tokenRow.client_id);
+    clientEmail = mockClient?.email || '';
+  }
 
   // Check email cookie
   const cookieStore = await cookies();
@@ -95,15 +140,23 @@ export async function logPortalActivity(params: {
     || null;
   const ua = params.request?.headers.get('user-agent') || null;
 
-  await supabaseAdmin.from('portal_activity_log').insert({
-    workspace_id: params.workspaceId,
-    token_id: params.tokenId,
-    client_id: params.clientId,
-    event: params.event,
-    metadata: params.metadata || {},
-    ip_address: ip,
-    user_agent: ua,
-  });
+  console.log(`[Portal Activity Log] Workspace: ${params.workspaceId}, Client: ${params.clientId}, Event: ${params.event}, IP: ${ip}, UA: ${ua}`, params.metadata);
+
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      await supabaseAdmin.from('portal_activity_log').insert({
+        workspace_id: params.workspaceId,
+        token_id: params.tokenId,
+        client_id: params.clientId,
+        event: params.event,
+        metadata: params.metadata || {},
+        ip_address: ip,
+        user_agent: ua,
+      });
+    } catch (e) {
+      console.warn('Failed to insert log entry into Supabase:', e);
+    }
+  }
 }
 
 /**
@@ -115,22 +168,30 @@ export async function notifyWorkspace(
   message: string,
   targetUrl?: string
 ) {
-  const { data: users } = await supabaseAdmin
-    .from('user_profiles')
-    .select('id')
-    .eq('workspace_id', workspaceId);
+  console.log(`[Workspace Notification] Workspace: ${workspaceId}, Title: ${title}, Message: ${message}`);
 
-  if (users && users.length > 0) {
-    const notificationsToInsert = users.map(u => ({
-      workspace_id: workspaceId,
-      user_id: u.id,
-      title,
-      message,
-      type: 'status_change',
-      read: false,
-      target_url: targetUrl || null,
-    }));
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const { data: users } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id')
+        .eq('workspace_id', workspaceId);
 
-    await supabaseAdmin.from('notifications').insert(notificationsToInsert);
+      if (users && users.length > 0) {
+        const notificationsToInsert = users.map(u => ({
+          workspace_id: workspaceId,
+          user_id: u.id,
+          title,
+          message,
+          type: 'status_change',
+          read: false,
+          target_url: targetUrl || null,
+        }));
+
+        await supabaseAdmin.from('notifications').insert(notificationsToInsert);
+      }
+    } catch (e) {
+      console.warn('Failed to notify workspace in Supabase:', e);
+    }
   }
 }

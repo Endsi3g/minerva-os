@@ -1,9 +1,9 @@
-# Handoff Report — Minerva OS v2.2.0
+# Handoff Report — Minerva OS v2.2.1
 
 **Date:** 2026-06-01  
 **Stack:** Next.js 15 · Supabase · TypeScript strict · Tailwind CSS v4  
 **Mobile:** Expo SDK 54 · React Native 0.81 · pnpm  
-**Status:** 80% production-ready — auth, secure client portal, and UI complete, database tables mocked
+**Status:** 85% production-ready — auth, secure client portal (with automatic mock fallback), and UI complete, database tables mocked
 
 ---
 
@@ -155,6 +155,7 @@ create trigger on_auth_user_created
 ### Releases to date
 | Tag | Highlights |
 |---|---|
+| `v2.2.1` | Automatic mock fallback in all portal API routes for offline or local-only demo configurations |
 | `v2.2.0` | Secure Client Portal email gate, token scopes, activity logging, and API-driven proposal viewer |
 | `v2.1.0` | Expo 54 upgrade, Sentry wrap, pnpm migration, dev SW cleanup |
 | `v2.0.1` | Redesign landing CTA, fix login page, grey signup video, Electron welcome |

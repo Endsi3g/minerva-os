@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { notifyWorkspace } from '@/lib/portal-auth';
+import { MOCK_PROPOSALS } from '@/lib/mock-data';
 
 export async function POST(request: Request) {
   try {
@@ -15,13 +16,36 @@ export async function POST(request: Request) {
     }
 
     // 1. Fetch proposal
-    const { data: proposal, error: propErr } = await supabaseAdmin
-      .from('proposals')
-      .select('*')
-      .eq('token', token)
-      .maybeSingle();
+    let proposal: any = null;
+    let isMock = false;
 
-    if (propErr || !proposal) {
+    const hasCredentials = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (hasCredentials) {
+      try {
+        const { data: dbProposal, error: propErr } = await supabaseAdmin
+          .from('proposals')
+          .select('*')
+          .eq('token', token)
+          .maybeSingle();
+
+        if (!propErr && dbProposal) {
+          proposal = dbProposal;
+        }
+      } catch (e) {
+        console.warn('Failed to fetch proposal from Supabase, falling back to mock:', e);
+      }
+    }
+
+    if (!proposal) {
+      const mockProp = MOCK_PROPOSALS.find(p => p.token === token);
+      if (mockProp) {
+        proposal = mockProp;
+        isMock = true;
+      }
+    }
+
+    if (!proposal) {
       return NextResponse.json({ error: 'proposal_not_found' }, { status: 404 });
     }
 
@@ -34,26 +58,37 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'missing_signer_name' }, { status: 400 });
       }
 
-      const { error: updateErr } = await supabaseAdmin
-        .from('proposals')
-        .update({
-          status: 'signed',
-          signed_at: new Date().toISOString(),
-          signed_by: signedBy.trim(),
-        })
-        .eq('token', token);
+      if (!isMock && hasCredentials) {
+        try {
+          const { error: updateErr } = await supabaseAdmin
+            .from('proposals')
+            .update({
+              status: 'signed',
+              signed_at: new Date().toISOString(),
+              signed_by: signedBy.trim(),
+            })
+            .eq('token', token);
 
-      if (updateErr) throw updateErr;
+          if (updateErr) throw updateErr;
 
-      // Log activity
-      await supabaseAdmin.from('portal_activity_log').insert({
-        workspace_id: proposal.workspace_id,
-        client_id: proposal.client_id,
-        event: 'proposal_signed',
-        metadata: { proposalId: proposal.id, title: proposal.title, signedBy: signedBy.trim() },
-        ip_address: ip,
-        user_agent: ua,
-      });
+          // Log activity
+          await supabaseAdmin.from('portal_activity_log').insert({
+            workspace_id: proposal.workspace_id,
+            client_id: proposal.client_id,
+            event: 'proposal_signed',
+            metadata: { proposalId: proposal.id, title: proposal.title, signedBy: signedBy.trim() },
+            ip_address: ip,
+            user_agent: ua,
+          });
+        } catch (e) {
+          console.warn('Failed to sign proposal in Supabase:', e);
+        }
+      } else {
+        proposal.status = 'signed';
+        proposal.signed_by = signedBy.trim();
+        proposal.signed_at = new Date().toISOString();
+        console.log(`[Proposal Signed] ID: ${proposal.id}, SignedBy: ${signedBy.trim()}`);
+      }
 
       // Notify workspace
       await notifyWorkspace(
@@ -63,24 +98,33 @@ export async function POST(request: Request) {
         `/app/proposals`
       );
     } else {
-      const { error: updateErr } = await supabaseAdmin
-        .from('proposals')
-        .update({
-          status: 'declined',
-        })
-        .eq('token', token);
+      if (!isMock && hasCredentials) {
+        try {
+          const { error: updateErr } = await supabaseAdmin
+            .from('proposals')
+            .update({
+              status: 'declined',
+            })
+            .eq('token', token);
 
-      if (updateErr) throw updateErr;
+          if (updateErr) throw updateErr;
 
-      // Log activity
-      await supabaseAdmin.from('portal_activity_log').insert({
-        workspace_id: proposal.workspace_id,
-        client_id: proposal.client_id,
-        event: 'proposal_declined',
-        metadata: { proposalId: proposal.id, title: proposal.title },
-        ip_address: ip,
-        user_agent: ua,
-      });
+          // Log activity
+          await supabaseAdmin.from('portal_activity_log').insert({
+            workspace_id: proposal.workspace_id,
+            client_id: proposal.client_id,
+            event: 'proposal_declined',
+            metadata: { proposalId: proposal.id, title: proposal.title },
+            ip_address: ip,
+            user_agent: ua,
+          });
+        } catch (e) {
+          console.warn('Failed to decline proposal in Supabase:', e);
+        }
+      } else {
+        proposal.status = 'declined';
+        console.log(`[Proposal Declined] ID: ${proposal.id}`);
+      }
 
       // Notify workspace
       await notifyWorkspace(

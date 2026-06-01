@@ -323,3 +323,42 @@ export const MOCK_PORTAL_TOKENS: ClientPortalToken[] = [
   { token: 'demo-solara',  clientId: 'c8', clientName: 'Solara Health',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices'] },
 ];
 
+export const MOCK_PROPOSALS = [
+  {
+    id: 'prop-demo-stratum',
+    title: 'Brand Identity Design Package',
+    client_id: 'c1',
+    workspace_id: 'mock-workspace-123',
+    total_amount: 15000,
+    status: 'sent',
+    token: 'demo-proposal-stratum',
+    valid_until: '2026-12-31T23:59:59Z',
+    sections: [
+      { type: 'intro', content: 'We are excited to propose a brand identity refresh for Stratum Labs. Our goal is to craft a premium, cohesive editorial noir identity.' },
+      { type: 'scope', content: '- Logo design, guidelines, typography selection, assets export, and stationary kits.' },
+      { type: 'timeline', content: '4 weeks from kickoff to delivery.' },
+      { type: 'pricing', content: '$15,000 flat rate paid 50% upfront, 50% upon delivery.' },
+      { type: 'terms', content: 'All files provided upon full payment. 30 days support included.' }
+    ]
+  },
+  {
+    id: 'prop-demo-volta',
+    title: 'Q4 Campaign Production & Ads',
+    client_id: 'c2',
+    workspace_id: 'mock-workspace-123',
+    total_amount: 25000,
+    status: 'signed',
+    token: 'demo-proposal-volta',
+    valid_until: '2026-12-31T23:59:59Z',
+    signed_by: 'Camille Laurent',
+    signed_at: '2026-05-15T10:00:00Z',
+    sections: [
+      { type: 'intro', content: "Campaign launch for Volta's upcoming interactive releases." },
+      { type: 'scope', content: '- Video ads, banners, social assets, copy drafts.' },
+      { type: 'timeline', content: 'Delivered by late June.' },
+      { type: 'pricing', content: '$25,000 total investment.' },
+      { type: 'terms', content: 'Payment Net 15.' }
+    ]
+  }
+];
+

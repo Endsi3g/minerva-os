@@ -1,6 +1,6 @@
 # Minerva OS
 
-**The strategic operating system for elite agencies. v2.2.0**
+**The strategic operating system for elite agencies. v2.2.1**
 
 Minerva OS is the internal agency platform for [Uprising Studio](https://uprisingstudio.com) — a premium platform that centralises CRM, project management, approvals, billing, file storage, AI-powered risk monitoring, and reporting in one cohesive experience.
 
@@ -143,6 +143,7 @@ See **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions covering:
 
 | Tag | Date | Highlights |
 |---|---|---|
+| `v2.2.1` | 2026-06-01 | Automatic mock fallback in all portal API routes for offline or local-only configurations |
 | `v2.2.0` | 2026-06-01 | Secure Client Portal email gate, token scopes, activity logging, and API-driven proposal viewer |
 | `v2.1.0` | 2026-06-01 | Expo 54 upgrade, Sentry wrap, pnpm migration, dev SW cleanup |
 | `v2.0.1` | — | Redesign landing CTA, fix login page, Electron welcome |

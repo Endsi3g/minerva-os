@@ -35,20 +35,34 @@ export async function POST(request: Request) {
     }
 
     // 2. Insert NPS response
-    const { data: nps, error } = await supabaseAdmin
-      .from('nps_responses')
-      .insert({
-        workspace_id: workspaceId,
-        client_id: clientId,
-        score: numericScore,
-        reason: reason || null,
-        suggestion: suggestion || null,
-        trigger_event: 'manual',
-      })
-      .select()
-      .single();
+    let npsId = 'mock-nps-' + Date.now();
+    const hasCredentials = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (error) throw error;
+    if (hasCredentials) {
+      try {
+        const { data: nps, error } = await supabaseAdmin
+          .from('nps_responses')
+          .insert({
+            workspace_id: workspaceId,
+            client_id: clientId,
+            score: numericScore,
+            reason: reason || null,
+            suggestion: suggestion || null,
+            trigger_event: 'manual',
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (nps) {
+          npsId = nps.id;
+        }
+      } catch (e) {
+        console.warn('Failed to save NPS response in Supabase, using mock fallback:', e);
+      }
+    } else {
+      console.log(`[NPS Response Submitted] Score: ${numericScore}, Reason: ${reason}`);
+    }
 
     // 3. Log activity
     await logPortalActivity({
@@ -56,7 +70,7 @@ export async function POST(request: Request) {
       tokenId,
       clientId,
       event: 'nps_submitted',
-      metadata: { npsId: nps.id, score: numericScore },
+      metadata: { npsId: npsId, score: numericScore },
       request,
     });
 

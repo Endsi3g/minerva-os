@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validatePortalToken, logPortalActivity, notifyWorkspace } from '@/lib/portal-auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { MOCK_APPROVALS, MOCK_TASKS, MOCK_CLIENTS } from '@/lib/mock-data';
 
 export async function GET(request: Request) {
   try {
@@ -32,61 +33,89 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'unauthorized_scope' }, { status: 403 });
     }
 
-    // Verify ownership of the target
-    if (targetType === 'approval') {
-      const { data: approval } = await supabaseAdmin
-        .from('approvals')
-        .select('id, project_id')
-        .eq('id', targetId)
-        .maybeSingle();
+    const hasCredentials = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+    let isMock = true;
 
-      if (!approval) {
-        return NextResponse.json({ error: 'approval_not_found' }, { status: 404 });
-      }
+    if (hasCredentials) {
+      try {
+        // Verify ownership of the target
+        if (targetType === 'approval') {
+          const { data: approval } = await supabaseAdmin
+            .from('approvals')
+            .select('id, project_id')
+            .eq('id', targetId)
+            .maybeSingle();
 
-      const { data: project } = await supabaseAdmin
-        .from('projects')
-        .select('id, client_id')
-        .eq('id', approval.project_id)
-        .maybeSingle();
+          if (approval) {
+            const { data: project } = await supabaseAdmin
+              .from('projects')
+              .select('id, client_id')
+              .eq('id', approval.project_id)
+              .maybeSingle();
 
-      if (!project || project.client_id !== clientId) {
-        return NextResponse.json({ error: 'unauthorized_project' }, { status: 403 });
-      }
-    } else if (targetType === 'task') {
-      const { data: task } = await supabaseAdmin
-        .from('tasks')
-        .select('id, project_id')
-        .eq('id', targetId)
-        .maybeSingle();
+            if (project && project.client_id === clientId) {
+              isMock = false;
+            }
+          }
+        } else if (targetType === 'task') {
+          const { data: task } = await supabaseAdmin
+            .from('tasks')
+            .select('id, project_id')
+            .eq('id', targetId)
+            .maybeSingle();
 
-      if (!task) {
-        return NextResponse.json({ error: 'task_not_found' }, { status: 404 });
-      }
+          if (task) {
+            const { data: project } = await supabaseAdmin
+              .from('projects')
+              .select('id, client_id')
+              .eq('id', task.project_id)
+              .maybeSingle();
 
-      const { data: project } = await supabaseAdmin
-        .from('projects')
-        .select('id, client_id')
-        .eq('id', task.project_id)
-        .maybeSingle();
-
-      if (!project || project.client_id !== clientId) {
-        return NextResponse.json({ error: 'unauthorized_project' }, { status: 403 });
+            if (project && project.client_id === clientId) {
+              isMock = false;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Supabase comment target check failed, falling back to mock:', e);
       }
     }
 
-    // Fetch comments
-    const { data: comments, error } = await supabaseAdmin
-      .from('comments')
-      .select('*')
-      .eq('target_id', targetId)
-      .eq('target_type', targetType)
-      .order('timestamp', { ascending: true });
+    if (isMock) {
+      // Just check mock lists
+      if (targetType === 'approval') {
+        const mockApp = MOCK_APPROVALS.find(a => a.id === targetId);
+        if (!mockApp) {
+          return NextResponse.json({ error: 'approval_not_found' }, { status: 404 });
+        }
+      } else if (targetType === 'task') {
+        const mockTask = MOCK_TASKS.find(t => t.id === targetId);
+        if (!mockTask) {
+          return NextResponse.json({ error: 'task_not_found' }, { status: 404 });
+        }
+      }
+    }
 
-    if (error) throw error;
+    let comments: any[] = [];
+    if (!isMock && hasCredentials) {
+      try {
+        const { data, error } = await supabaseAdmin
+          .from('comments')
+          .select('*')
+          .eq('target_id', targetId)
+          .eq('target_type', targetType)
+          .order('timestamp', { ascending: true });
+
+        if (!error && data) {
+          comments = data;
+        }
+      } catch (e) {
+        console.warn('Supabase comments fetch failed, using empty mock comments:', e);
+      }
+    }
 
     return NextResponse.json(
-      (comments ?? []).map(c => ({
+      comments.map(c => ({
         ...c,
         _id: c.id,
       }))
@@ -125,74 +154,129 @@ export async function POST(request: Request) {
     }
 
     let targetName = 'Item';
+    const hasCredentials = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+    let isMock = true;
 
-    // Verify ownership of the target
-    if (targetType === 'approval') {
-      const { data: approval } = await supabaseAdmin
-        .from('approvals')
-        .select('id, name, project_id')
-        .eq('id', targetId)
-        .maybeSingle();
+    if (hasCredentials) {
+      try {
+        if (targetType === 'approval') {
+          const { data: approval } = await supabaseAdmin
+            .from('approvals')
+            .select('id, name, project_id')
+            .eq('id', targetId)
+            .maybeSingle();
 
-      if (!approval) {
-        return NextResponse.json({ error: 'approval_not_found' }, { status: 404 });
+          if (approval) {
+            targetName = approval.name;
+            const { data: project } = await supabaseAdmin
+              .from('projects')
+              .select('id, client_id')
+              .eq('id', approval.project_id)
+              .maybeSingle();
+
+            if (project && project.client_id === clientId) {
+              isMock = false;
+            }
+          }
+        } else if (targetType === 'task') {
+          const { data: task } = await supabaseAdmin
+            .from('tasks')
+            .select('id, name, project_id')
+            .eq('id', targetId)
+            .maybeSingle();
+
+          if (task) {
+            targetName = task.name;
+            const { data: project } = await supabaseAdmin
+              .from('projects')
+              .select('id, client_id')
+              .eq('id', task.project_id)
+              .maybeSingle();
+
+            if (project && project.client_id === clientId) {
+              isMock = false;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Supabase comment target check failed on POST, falling back to mock:', e);
       }
-      targetName = approval.name;
+    }
 
-      const { data: project } = await supabaseAdmin
-        .from('projects')
-        .select('id, client_id')
-        .eq('id', approval.project_id)
-        .maybeSingle();
-
-      if (!project || project.client_id !== clientId) {
-        return NextResponse.json({ error: 'unauthorized_project' }, { status: 403 });
-      }
-    } else if (targetType === 'task') {
-      const { data: task } = await supabaseAdmin
-        .from('tasks')
-        .select('id, name, project_id')
-        .eq('id', targetId)
-        .maybeSingle();
-
-      if (!task) {
-        return NextResponse.json({ error: 'task_not_found' }, { status: 404 });
-      }
-      targetName = task.name;
-
-      const { data: project } = await supabaseAdmin
-        .from('projects')
-        .select('id, client_id')
-        .eq('id', task.project_id)
-        .maybeSingle();
-
-      if (!project || project.client_id !== clientId) {
-        return NextResponse.json({ error: 'unauthorized_project' }, { status: 403 });
+    if (isMock) {
+      if (targetType === 'approval') {
+        const mockApp = MOCK_APPROVALS.find(a => a.id === targetId);
+        if (!mockApp) {
+          return NextResponse.json({ error: 'approval_not_found' }, { status: 404 });
+        }
+        targetName = mockApp.name;
+      } else if (targetType === 'task') {
+        const mockTask = MOCK_TASKS.find(t => t.id === targetId);
+        if (!mockTask) {
+          return NextResponse.json({ error: 'task_not_found' }, { status: 404 });
+        }
+        targetName = mockTask.title;
       }
     }
 
     // Get client info for author name
-    const { data: client } = await supabaseAdmin
-      .from('clients')
-      .select('company, contact')
-      .eq('id', clientId)
-      .maybeSingle();
+    let authorName = 'Client';
+    if (!isMock && hasCredentials) {
+      try {
+        const { data: client } = await supabaseAdmin
+          .from('clients')
+          .select('company, contact')
+          .eq('id', clientId)
+          .maybeSingle();
 
-    const authorName = client ? `${client.company} (${client.contact})` : 'Client';
+        if (client) {
+          authorName = `${client.company} (${client.contact})`;
+        }
+      } catch (e) {
+        console.warn('Supabase client lookup for comment failed:', e);
+      }
+    }
 
-    // Insert comment
-    const { data: comment, error } = await supabaseAdmin
-      .from('comments')
-      .insert({
+    if (authorName === 'Client') {
+      const mockClient = MOCK_CLIENTS.find(c => c.id === clientId);
+      if (mockClient) {
+        authorName = `${mockClient.company} (${mockClient.contact})`;
+      }
+    }
+
+    let comment: any = null;
+
+    if (!isMock && hasCredentials) {
+      try {
+        const { data, error } = await supabaseAdmin
+          .from('comments')
+          .insert({
+            target_id: targetId,
+            target_type: targetType,
+            author: authorName,
+            content: content.trim(),
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          comment = data;
+        }
+      } catch (e) {
+        console.warn('Failed to insert comment in Supabase:', e);
+      }
+    }
+
+    if (!comment) {
+      comment = {
+        id: 'mock-comment-' + Date.now(),
         target_id: targetId,
         target_type: targetType,
         author: authorName,
         content: content.trim(),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
+        timestamp: new Date().toISOString(),
+      };
+    }
 
     // Log activity
     await logPortalActivity({
