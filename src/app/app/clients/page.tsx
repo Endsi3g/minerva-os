@@ -1,3 +1,10 @@
-﻿'use client';
+'use client';
 import Clients from '@/modules/app/Clients';
-export default function ClientsPage() { return <Clients />; }
+import { ErrorBoundary } from '@/components/minerva/ErrorBoundary';
+export default function ClientsPage() {
+  return (
+    <ErrorBoundary>
+      <Clients />
+    </ErrorBoundary>
+  );
+}

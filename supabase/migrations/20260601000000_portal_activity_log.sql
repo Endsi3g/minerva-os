@@ -22,3 +22,11 @@ create table public.portal_activity_log (
 create index idx_portal_activity_workspace on public.portal_activity_log(workspace_id);
 create index idx_portal_activity_client on public.portal_activity_log(client_id);
 create index idx_portal_activity_token on public.portal_activity_log(token_id);
+
+-- Enable Row Level Security (RLS)
+alter table public.portal_activity_log enable row level security;
+
+-- Workspace isolation policy
+create policy "workspace isolation" on public.portal_activity_log
+  for all using (workspace_id = public.my_workspace_id());
+

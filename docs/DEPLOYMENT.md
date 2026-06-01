@@ -14,7 +14,7 @@ Minerva OS ships on three surfaces from a single codebase:
 | Desktop | Electron 42 wrapping the web app | macOS `.dmg`, Windows `.exe` |
 | Mobile | Expo SDK 52 (React Native 0.76) | iOS TestFlight, Android APK |
 
-All three surfaces share the same Convex backend.
+All three surfaces share the same Supabase backend.
 
 ---
 
@@ -36,31 +36,24 @@ All three surfaces share the same Convex backend.
 
 ---
 
-## Part 1 — Convex backend
+## Part 1 — Supabase backend
 
-### 1.1 Create a Convex project
+### 1.1 Create a Supabase project
 
-```bash
-npx convex dev   # Follow prompts to create a new project
-```
+1. Go to [database.new](https://database.new) to create a new project in Supabase.
+2. Retrieve your database connection string and API keys under Project Settings > API:
+   - `NEXT_PUBLIC_SUPABASE_URL` — e.g. `https://your-project.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — Publishable anonymous key
+   - `SUPABASE_SERVICE_ROLE_KEY` — Service role secret key (keep secure)
 
-Copy the two values shown at the end:
-- `CONVEX_DEPLOYMENT` — e.g. `prod:your-project-name-abc123`
-- `NEXT_PUBLIC_CONVEX_URL` — e.g. `https://abc123.convex.cloud`
+### 1.2 Deploy schema migrations
 
-### 1.2 Deploy to production
+1. Run the SQL schema files located in the `supabase/migrations/` directory in the SQL Editor of your Supabase project dashboard.
+2. Enable Row Level Security (RLS) policies to isolate data by `workspace_id`.
 
-```bash
-npx convex deploy
-```
+### 1.3 Seed initial database data
 
-This pushes all schema changes, functions, and crons to production. Run this every time you change Convex code.
-
-### 1.3 Seed initial data (optional)
-
-```bash
-npx convex run init:seed   # Creates demo workspace + sample data
-```
+- Use the seed queries provided in the migrations or administrative CLI to populate initial profiles, workspaces, and demo records.
 
 ---
 
@@ -79,16 +72,17 @@ npx convex run init:seed   # Creates demo workspace + sample data
 In your Vercel project settings (Settings > Environment Variables), add:
 
 ```
-CONVEX_DEPLOYMENT         prod:your-project-name-abc123
-NEXT_PUBLIC_CONVEX_URL    https://abc123.convex.cloud
-AUTH_SECRET               <openssl rand -base64 32>
-RESEND_API_KEY            re_xxxxxxxxxxxx
-NEXT_PUBLIC_APP_URL       https://your-app.vercel.app
-NEXT_PUBLIC_SENTRY_DSN    https://xxx@sentry.io/xxx       (optional)
-SENTRY_AUTH_TOKEN         sntrys_xxxxxxxxxxxx              (optional)
-NEXT_PUBLIC_POSTHOG_KEY   phc_xxxxxxxxxxxx                 (optional)
-NEXT_PUBLIC_POSTHOG_HOST  https://app.posthog.com          (optional)
-ANTHROPIC_API_KEY         sk-ant-xxxxxxxxxxxx
+NEXT_PUBLIC_SUPABASE_URL               https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY   sb_publishable_xxxxxxxxxxxx
+SUPABASE_SERVICE_ROLE_KEY              eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+AUTH_SECRET                            <openssl rand -base64 32>
+RESEND_API_KEY                         re_xxxxxxxxxxxx
+NEXT_PUBLIC_APP_URL                    https://your-app.vercel.app
+NEXT_PUBLIC_SENTRY_DSN                 https://xxx@sentry.io/xxx       (optional)
+SENTRY_AUTH_TOKEN                      sntrys_xxxxxxxxxxxx              (optional)
+NEXT_PUBLIC_POSTHOG_KEY                phc_xxxxxxxxxxxx                 (optional)
+NEXT_PUBLIC_POSTHOG_HOST               https://app.posthog.com          (optional)
+ANTHROPIC_API_KEY                      sk-ant-xxxxxxxxxxxx
 ```
 
 ### 2.3 Redeploy
@@ -186,7 +180,7 @@ GitHub Actions (`.github/workflows/desktop-release.yml`) will:
 | Secret | Description |
 |---|---|
 | `MINERVA_APP_URL` | Your Vercel deployment URL |
-| `NEXT_PUBLIC_CONVEX_URL` | Convex cloud URL |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase endpoint URL |
 | `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN (optional) |
 | `NEXT_PUBLIC_POSTHOG_KEY` | PostHog key (optional) |
 | `MAC_CERTIFICATE_P12` | Base64-encoded macOS .p12 cert |
@@ -220,18 +214,13 @@ The desktop app uses `electron-updater` to check for new releases on GitHub. Whe
 Create `minerva-mobile/.env` (not committed — see `.env.example`):
 
 ```
-EXPO_PUBLIC_CONVEX_URL=https://abc123.convex.cloud
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SENTRY_DSN=https://xxx@sentry.io/xxx
 ```
 
-### 4.3 Create the Convex symlink (one-time setup)
+### 4.3 Configure Supabase Clients
 
-The mobile app shares the Convex backend with the web app:
-
-```bash
-cd minerva-mobile
-ln -s ../convex convex   # Already done in this repo
-```
+The mobile app accesses the same Supabase database backend via environment variables. Ensure the client libraries are initialized with your Supabase URL and anonymous key.
 
 ### 4.4 iOS — Submit to TestFlight
 
@@ -311,7 +300,7 @@ Generate your Expo token: `expo.dev` > Account > Access Tokens > Create
 
 Before submitting to TestFlight, verify:
 
-- [ ] `EXPO_PUBLIC_CONVEX_URL` is set to the **production** Convex URL
+- [ ] `EXPO_PUBLIC_SUPABASE_URL` is set to the **production** Supabase URL
 - [ ] App icon and splash screen are present in `minerva-mobile/assets/`
 - [ ] `app.json` has correct `bundleIdentifier` (iOS) and `package` (Android)
 - [ ] `eas.json` is configured (present in this repo)
@@ -329,8 +318,9 @@ Before submitting to TestFlight, verify:
 
 | Variable | Required | Description |
 |---|---|---|
-| `CONVEX_DEPLOYMENT` | Yes | Convex deployment ID (`prod:xxx`) |
-| `NEXT_PUBLIC_CONVEX_URL` | Yes | Convex HTTPS endpoint |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase endpoint URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role secret |
 | `AUTH_SECRET` | Yes | Random 32-byte secret for Convex Auth |
 | `RESEND_API_KEY` | Yes | Resend API key for transactional email |
 | `NEXT_PUBLIC_APP_URL` | Yes | Your Vercel deployment URL |
@@ -345,7 +335,7 @@ Before submitting to TestFlight, verify:
 | Secret | Description |
 |---|---|
 | `MINERVA_APP_URL` | Vercel deployment URL loaded by Electron |
-| `NEXT_PUBLIC_CONVEX_URL` | Convex endpoint (used during Next.js build) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase endpoint (used during Next.js build) |
 | `MAC_CERTIFICATE_P12` | Base64 macOS Developer ID cert |
 | `MAC_CERTIFICATE_PASSWORD` | Cert password |
 | `APPLE_ID` / `APPLE_TEAM_ID` | For notarization |
@@ -357,7 +347,7 @@ Before submitting to TestFlight, verify:
 
 | Variable | Description |
 |---|---|
-| `EXPO_PUBLIC_CONVEX_URL` | Convex endpoint (baked in at build time) |
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase endpoint (baked in at build time) |
 | `EXPO_PUBLIC_SENTRY_DSN` | Sentry DSN for mobile crash reporting |
 | `EXPO_TOKEN` | Expo access token (GitHub Secret for CI) |
 

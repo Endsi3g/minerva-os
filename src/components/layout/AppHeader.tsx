@@ -72,6 +72,8 @@ export function AppHeader() {
   useEffect(() => {
     const email = user?.email;
     if (!email) return;
+    let channel: any = null;
+
     async function loadNotifications() {
       // 1. Get profile
       const { data: profile } = await supabase
@@ -95,8 +97,42 @@ export function AppHeader() {
           _id: n.id,
         })));
       }
+
+      // 3. Subscribe to realtime changes
+      channel = supabase
+        .channel(`realtime-notifications-${profile.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${profile.id}`,
+          },
+          (payload: any) => {
+            if (payload.eventType === 'INSERT') {
+              setNotifications(prev => [
+                { ...payload.new, _id: payload.new.id },
+                ...prev,
+              ]);
+            } else if (payload.eventType === 'UPDATE') {
+              setNotifications(prev =>
+                prev.map(n => n.id === payload.new.id ? { ...payload.new, _id: payload.new.id } : n)
+              );
+            } else if (payload.eventType === 'DELETE') {
+              setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+            }
+          }
+        )
+        .subscribe();
     }
     loadNotifications();
+
+    return () => {
+      if (channel && typeof supabase.removeChannel === 'function') {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [user]);
 
   const unreadCount = notifications.filter((n: any) => !n.read).length;

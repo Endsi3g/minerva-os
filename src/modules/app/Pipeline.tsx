@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,36 @@ const STAGE_STYLE: Partial<Record<DealStage, string>> = {
   lost: 'border-ember/25 bg-ember/5',
 };
 
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+
+function KanbanSkeleton() {
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6">
+      {[1, 2, 3, 4].map(i => (
+        <div key={i} className="flex flex-col shrink-0 w-64 rounded-xl border border-white/5 bg-card/20 p-3 gap-3">
+          <div className="flex items-center justify-between px-1">
+            <Skeleton className="h-4 w-24 bg-white/5" />
+            <Skeleton className="h-4 w-8 rounded-full bg-white/5" />
+          </div>
+          <div className="flex flex-col gap-2 flex-1">
+            {[1, 2].map(j => (
+              <div key={j} className="bg-midnight border border-white/5 rounded-xl p-4 space-y-3 animate-pulse">
+                <Skeleton className="h-4 w-3/4 bg-white/5" />
+                <Skeleton className="h-3 w-1/2 bg-white/5" />
+                <div className="flex justify-between pt-1">
+                  <Skeleton className="h-3 w-12 bg-white/5" />
+                  <Skeleton className="h-3 w-16 bg-white/5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface NewDealForm {
   company: string;
   contact: string;
@@ -58,7 +88,7 @@ export default function Pipeline() {
   const p = t.app.pipeline;
   
   const workspaces = useWorkspaces();
-  const workspaceId = workspaces[0]?.id;
+  const workspaceId = workspaces?.[0]?.id;
 
   const leads = useDeals(workspaceId);
   const addDeal = useAddDeal();
@@ -70,6 +100,16 @@ export default function Pipeline() {
   const [form, setForm] = useState<NewDealForm>(EMPTY_FORM);
   const [emailDraft, setEmailDraft] = useState<{ id: string; subject: string; body: string } | null>(null);
   const [savingDraft, setSavingDraft] = useState(false);
+
+  const [localLeads, setLocalLeads] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (leads) {
+      setLocalLeads(leads);
+    }
+  }, [leads]);
+
+  const isLoading = leads === null;
 
   const STAGES = useMemo(() => [
     { id: 'new_lead' as DealStage,    label: p.stages.new_lead },
@@ -125,9 +165,19 @@ export default function Pipeline() {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent, stageId: DealStage) => {
+  const handleDrop = async (e: React.DragEvent, stageId: DealStage) => {
     const leadId = e.dataTransfer.getData('leadId');
-    updateStage({ id: leadId, stage: stageId });
+    const originalLeads = [...localLeads];
+
+    // Optimistic Update
+    setLocalLeads(prev => prev.map(l => l._id === leadId ? { ...l, stage: stageId } : l));
+
+    try {
+      await updateStage({ id: leadId, stage: stageId });
+    } catch (err) {
+      setLocalLeads(originalLeads);
+      toast.error(lang === 'fr' ? "Échec du déplacement de l'opportunité" : "Failed to move deal");
+    }
   };
 
   async function handleSaveDeal() {
@@ -177,57 +227,60 @@ export default function Pipeline() {
           <h1 className="text-2xl font-semibold text-ivory">{p.title}</h1>
           <p className="text-sm text-fog mt-0.5">
             {p.stats
-              .replace('{{count}}', String(leads.length))
-              .replace('{{total}}', fmt(leads.reduce((s: number, l: any) => s + l.value, 0), lang))}
+              .replace('{{count}}', String(localLeads ? localLeads.length : 0))
+              .replace('{{total}}', fmt(localLeads ? localLeads.reduce((s: number, l: any) => s + l.value, 0) : 0, lang))}
           </p>
         </div>
-        <Button size="sm" onClick={() => openSheet('new_lead')}>
+        <Button size="sm" onClick={() => openSheet('new_lead')} id="btn-new-deal">
           <Plus size={14} />
           {p.addDeal}
         </Button>
       </div>
 
-      {/* Kanban board */}
-      <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6" style={{ minHeight: 'calc(100vh - 200px)' }}>
-        {STAGES.map((stage: any) => {
-          const stageLeads = leads.filter((l: any) => l.stage === stage.id);
-          const total = totalValue(leads, stage.id);
-          return (
-            <div
-              key={stage.id}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, stage.id)}
-              className={cn(
-                'flex flex-col shrink-0 w-64 rounded-xl border p-3 gap-2 transition-colors',
-                (STAGE_STYLE as any)[stage.id] ?? 'border-border bg-card/50'
-              )}
-            >
-              {/* Column header */}
-              <div className="flex items-center justify-between mb-1 px-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-fog">
-                    {stage.label}
-                  </span>
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-dusk text-fog">
-                    {stageLeads.length}
-                  </span>
-                </div>
-                {total > 0 && (
-                  <span className="text-[10px] text-fog">{fmt(total, lang)}</span>
+      {isLoading ? (
+        <KanbanSkeleton />
+      ) : (
+        /* Kanban board */
+        <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          {STAGES.map((stage: any) => {
+            const stageLeads = localLeads.filter((l: any) => l.stage === stage.id);
+            const total = totalValue(localLeads, stage.id);
+            return (
+              <div
+                key={stage.id}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, stage.id)}
+                className={cn(
+                  'flex flex-col shrink-0 w-64 rounded-xl border p-3 gap-2 transition-colors',
+                  (STAGE_STYLE as any)[stage.id] ?? 'border-border bg-card/50'
                 )}
-              </div>
+              >
+                {/* Column header */}
+                <div className="flex items-center justify-between mb-1 px-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-fog">
+                      {stage.label}
+                    </span>
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-dusk text-fog">
+                      {stageLeads.length}
+                    </span>
+                  </div>
+                  {total > 0 && (
+                    <span className="text-[10px] text-fog">{fmt(total, lang)}</span>
+                  )}
+                </div>
 
-              {/* Deal cards */}
-              <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
-                {stageLeads.map((lead: any) => (
-                  <DealCard 
-                    key={lead._id} 
-                    lead={lead} 
-                    onEdit={() => openEditSheet(lead)}
-                    onDragStart={(e) => handleDragStart(e, lead._id)}
-                  />
-                ))}
-              </div>
+                {/* Deal cards */}
+                <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
+                  {stageLeads.map((lead: any) => (
+                    <DealCard 
+                      key={lead._id} 
+                      lead={lead} 
+                      onEdit={() => openEditSheet(lead)}
+                      onDragStart={(e) => handleDragStart(e, lead._id)}
+                    />
+                  ))}
+                </div>
 
               {/* Add deal */}
               <button
@@ -241,6 +294,7 @@ export default function Pipeline() {
           );
         })}
       </div>
+      )}
 
       {/* Add/Edit deal sheet */}
       <Sheet open={sheetOpen} onOpenChange={handleOpenChange}>

@@ -1,3 +1,10 @@
-﻿'use client';
+'use client';
 import Pipeline from '@/modules/app/Pipeline';
-export default function PipelinePage() { return <Pipeline />; }
+import { ErrorBoundary } from '@/components/minerva/ErrorBoundary';
+export default function PipelinePage() {
+  return (
+    <ErrorBoundary>
+      <Pipeline />
+    </ErrorBoundary>
+  );
+}

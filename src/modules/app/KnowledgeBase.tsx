@@ -197,12 +197,27 @@ function ArticleModal({
   );
 }
 
+import { Skeleton } from '@/components/ui/skeleton';
+
+function ArticleCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 animate-pulse space-y-3">
+      <Skeleton className="h-4 w-16 bg-white/5 rounded-full" />
+      <Skeleton className="h-4 w-3/4 bg-white/5" />
+      <div className="space-y-2">
+        <Skeleton className="h-3 w-full bg-white/5" />
+        <Skeleton className="h-3 w-5/6 bg-white/5" />
+      </div>
+    </div>
+  );
+}
+
 export default function KnowledgeBase() {
   const { t } = useLang();
   const kb = t.app.knowledgeBase;
 
-  const [workspaces, setWorkspaces] = useState<any[]>([]);
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [workspaces, setWorkspaces] = useState<any[] | null>(null);
+  const [articles, setArticles] = useState<Article[] | null>(null);
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>('closed');
@@ -211,13 +226,15 @@ export default function KnowledgeBase() {
   useEffect(() => {
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
+      else setWorkspaces([]);
     });
   }, []);
 
-  const workspaceId = workspaces[0]?.id;
+  const workspaceId = workspaces?.[0]?.id;
 
   useEffect(() => {
     if (!workspaceId) return;
+    let active = true;
     async function loadArticles() {
       if (query.trim().length >= 3) {
         setIsSearchingSemantically(true);
@@ -228,14 +245,14 @@ export default function KnowledgeBase() {
             body: JSON.stringify({ text: query.trim() }),
           });
           const embedData = await embedRes.json();
-          if (embedData.embedding) {
+          if (embedData.embedding && active) {
             const { data, error } = await supabase.rpc('match_knowledge_base', {
               query_embedding: embedData.embedding,
               match_threshold: 0.1,
               match_count: 9,
               filter_workspace_id: workspaceId,
             });
-            if (!error && data) {
+            if (!error && data && active) {
               setArticles(data.map((d: any) => ({ ...d, _id: d.id })));
               setIsSearchingSemantically(false);
               return;
@@ -251,30 +268,42 @@ export default function KnowledgeBase() {
         .select('*')
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: false });
-      if (data) {
+      if (data && active) {
         setArticles(data.map(d => ({ ...d, _id: d.id })));
+      } else if (active) {
+        setArticles([]);
       }
-      setIsSearchingSemantically(false);
+      if (active) {
+        setIsSearchingSemantically(false);
+      }
     }
     const timer = setTimeout(loadArticles, query.trim().length >= 3 ? 400 : 0);
-    return () => clearTimeout(timer);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [workspaceId, query]);
 
   async function removeArticle(id: string) {
     const { error } = await supabase.from('knowledge_base').delete().eq('id', id);
     if (!error) {
-      setArticles(prev => prev.filter(a => a.id !== id));
+      setArticles(prev => prev ? prev.filter(a => a.id !== id) : null);
     }
   }
 
-  const filtered = articles.filter(a => {
-    return !activeCategory || a.category === activeCategory;
-  });
+  const filtered = articles
+    ? articles.filter(a => {
+        return !activeCategory || a.category === activeCategory;
+      })
+    : [];
 
-  const categories = Array.from(new Set(articles.map(a => a.category)));
+  const categories = articles
+    ? Array.from(new Set(articles.map(a => a.category)))
+    : [];
 
-  function handleSaveArticle(savedArticle: Article) {
+  async function handleSaveArticle(savedArticle: Article) {
     setArticles(prev => {
+      if (!prev) return [savedArticle];
       const exists = prev.some(a => a.id === savedArticle.id);
       if (exists) {
         return prev.map(a => a.id === savedArticle.id ? savedArticle : a);
@@ -297,7 +326,9 @@ export default function KnowledgeBase() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-ivory">{kb.title}</h1>
-          <p className="text-sm text-fog mt-0.5">{kb.articleCount.replace('{{count}}', String(articles.length))}</p>
+          <p className="text-sm text-fog mt-0.5">
+            {articles ? kb.articleCount.replace('{{count}}', String(articles.length)) : '...'}
+          </p>
         </div>
         <Button size="sm" onClick={() => setModal('new')}>
           <Plus size={14} />
@@ -334,7 +365,13 @@ export default function KnowledgeBase() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {articles === null ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ArticleCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <BookOpen size={36} className="text-fog/30" />
           <p className="text-sm text-fog">{query ? kb.noMatch.replace('{{query}}', query) : kb.noArticles}</p>
