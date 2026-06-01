@@ -5,6 +5,7 @@ export type UserRole = 'owner' | 'strategist' | 'project_manager' | 'designer' |
 
 export interface AuthUser {
   id: string;
+  profileId?: string;
   email: string;
   name: string;
   role: UserRole;
@@ -40,7 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!active) return;
           if (profile) {
             setUser({
-              id: profile.id,
+              id: session.user.id,
+              profileId: profile.id,
               email: profile.email,
               name: profile.name,
               role: (profile.role || 'project_manager') as UserRole,
@@ -79,7 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!active) return;
           if (profile) {
             setUser({
-              id: profile.id,
+              id: session.user.id,
+              profileId: profile.id,
               email: profile.email,
               name: profile.name,
               role: (profile.role || 'project_manager') as UserRole,

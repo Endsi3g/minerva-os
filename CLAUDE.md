@@ -10,18 +10,15 @@
 
 | Layer | Choice |
 |---|---|
-| Framework | Vite + React 18 + TypeScript (strict) |
-| Routing | react-router-dom v7 |
-| Styling | Tailwind CSS v4 via `@tailwindcss/vite` — no PostCSS config |
+| Framework | Next.js 15 (App Router) + React 18 + TypeScript (strict) |
+| Styling | Tailwind CSS v4 via `@tailwindcss/postcss` |
 | Animation | `motion/react` (Framer Motion v11+) |
 | Icons | `lucide-react` |
 | i18n | Custom context in `src/i18n.tsx` (EN / FR) |
-| Auth (planned) | Email + password, magic link, role-based |
-| DB (planned) | PostgreSQL + Prisma or Drizzle |
+| Auth | Supabase Auth (Email + password, magic link) |
+| DB | PostgreSQL via Supabase |
 | Payments (planned) | Stripe |
-| Files (planned) | Cloud object storage |
-
-> Next.js migration is planned for Phase 1+ once the marketing shell is done. Until then, Vite.
+| Files | Supabase Storage (`assets` / `avatars` buckets) |
 
 ---
 
@@ -71,42 +68,17 @@ All tokens are defined in `src/index.css` under `@theme` and generate Tailwind u
 
 ---
 
-## File structure (current)
+## File structure
 
 ```
 src/
-  index.css        Tailwind v4 + @theme tokens + Google Fonts
-  main.tsx         BrowserRouter + LangProvider + App
-  App.tsx          Route table: / → Landing, /signup → SignUp, /login → Login
-  i18n.tsx         LangProvider, useLang(), full EN/FR translations
-  Landing.tsx      Marketing hero page (video bg, nav pill, CTAs)
-  SignUp.tsx       Two-column sign-up (video left, form right)
-  Login.tsx        Two-column login (video left, form right)
-  vite-env.d.ts
-```
-
-### Planned structure (build phases)
-
-```
-src/
-  pages/
-    dashboard/     Agency dashboard (owner / PM view)
-    crm/           Pipeline, leads, accounts
-    projects/      Project hub, tasks, kanban
-    approvals/     Approval queue, deliverables
-    files/         Asset vault
-    billing/       Invoices, retainers
-    reports/       Analytics, KPIs
-    portal/        Client-facing portal (separate shell)
-    settings/      Team, roles, workspace
-  components/
-    ui/            Base shadcn/ui components, reskinned to Minerva tokens
-    layout/        AppShell, Sidebar, Header, CommandPalette
-    minerva/       Business-specific composites (AccountCard, ProjectHealthCard, etc.)
-  lib/
-    motion.ts      Shared animation variants
-    utils.ts       cn(), formatters, helpers
-  hooks/           useDebounce, usePermission, etc.
+  app/             Next.js App Router (layout.tsx, page.tsx, portal/, app/)
+  components/      UI components (ui/, layout/, minerva/)
+  contexts/        AuthContext, etc.
+  i18n.tsx         Bilingual context & hook (EN / FR)
+  index.css        Tailwind CSS v4 base & brand variables
+  lib/             Mock data, types, hooks, and helpers
+  utils/           Supabase SSR helper clients (client.ts, server.ts, middleware.ts)
 ```
 
 ---
@@ -160,16 +132,12 @@ Auth · Roles · CRM lite · Brief intake · Project creation · Project dashboa
 
 SSO · Advanced visual automations · Conversational AI · Multi-workspace · Advanced financial reporting
 
-<!-- convex-ai-start -->
+<!-- supabase-ai-start -->
 
-This project uses [Convex](https://convex.dev) as its backend.
+This project uses [Supabase](https://supabase.com) as its backend database and authentication service.
 
-When working on Convex code, **always read
-`convex/_generated/ai/guidelines.md` first** for important guidelines on
-how to correctly use Convex APIs and patterns. The file contains rules that
-override what you may have learned about Convex from training data.
+When writing backend queries or modifying schema:
+- Refer to DDL scripts and Row Level Security guidelines inside the `docs/` folder.
+- Ensure all queries safely enforce isolation criteria (e.g. workspace filters).
 
-Convex agent skills for common tasks can be installed by running
-`npx convex ai-files install`.
-
-<!-- convex-ai-end -->
+<!-- supabase-ai-end -->

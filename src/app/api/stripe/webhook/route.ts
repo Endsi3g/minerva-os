@@ -37,14 +37,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing stripe-signature header.' }, { status: 400 });
     }
 
-    // Verify webhook signature in production if secret is set
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      const isValid = verifyStripeSignature(bodyText, sig, webhookSecret);
-      if (!isValid) {
-        console.warn('[webhook] Stripe signature verification failed.');
-        return NextResponse.json({ error: 'Invalid stripe-signature.' }, { status: 400 });
-      }
+    if (!webhookSecret) {
+      console.error('[webhook] STRIPE_WEBHOOK_SECRET is not set. Rejecting unsigned request.');
+      return NextResponse.json({ error: 'Webhook not configured.' }, { status: 403 });
+    }
+
+    const isValid = verifyStripeSignature(bodyText, sig, webhookSecret);
+    if (!isValid) {
+      console.warn('[webhook] Stripe signature verification failed.');
+      return NextResponse.json({ error: 'Invalid stripe-signature.' }, { status: 400 });
     }
 
     const payload = JSON.parse(bodyText);
@@ -76,8 +78,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (err: any) {
+  } catch (err) {
     console.error('[webhook] Process error:', err);
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

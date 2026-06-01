@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 type SummaryType = 'project_status' | 'client_brief' | 'risk_report';
 
@@ -16,6 +17,10 @@ const MOCK_SUMMARIES: Record<SummaryType, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  const { user, error: authError } = await requireAuth();
+  if (authError) return authError;
+  void user;
+
   const { type, context } = await req.json() as { type: SummaryType; context: string };
 
   if (!type || !context) {

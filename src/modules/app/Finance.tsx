@@ -8,16 +8,72 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useWorkspaces, useFinances, useAddFinance } from '@/lib/hooks/useSupabase';
 import { useLang } from '@/i18n';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const TPS_RATE = 0.05;
 const TVQ_RATE = 0.09975;
+
+function FinanceSkeleton() {
+  return (
+    <div className="space-y-8 max-w-6xl mx-auto animate-pulse">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48 bg-white/5" />
+          <Skeleton className="h-4 w-32 bg-white/5" />
+        </div>
+        <Skeleton className="h-9 w-28 bg-white/5 rounded-full" />
+      </div>
+
+      {/* Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-white/5 bg-midnight p-6 space-y-3">
+            <Skeleton className="h-3 w-20 bg-white/5" />
+            <Skeleton className="h-8 w-28 bg-white/5" />
+          </div>
+        ))}
+      </div>
+
+      {/* Tax box */}
+      <div className="bg-dusk/30 rounded-2xl p-6 border border-white/5 space-y-4">
+        <Skeleton className="h-5 w-48 bg-white/5" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-3/4 bg-white/5" />
+            <Skeleton className="h-2 w-full bg-white/5 rounded-full" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-3/4 bg-white/5" />
+            <Skeleton className="h-2 w-full bg-white/5 rounded-full" />
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-midnight rounded-2xl border border-white/5 overflow-hidden">
+        <div className="h-10 bg-white/[0.02] border-b border-white/5" />
+        <div className="divide-y divide-white/5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="p-6 flex justify-between gap-4">
+              <Skeleton className="h-4 w-20 bg-white/5" />
+              <Skeleton className="h-4 w-40 bg-white/5" />
+              <Skeleton className="h-4 w-16 bg-white/5" />
+              <Skeleton className="h-4 w-12 bg-white/5" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Finance() {
   const { t, lang } = useLang();
   const f = t.app.financeModule;
   
   const workspaces = useWorkspaces();
-  const workspaceId = workspaces[0]?.id;
+  const workspaceId = workspaces?.[0]?.id;
 
   const finances = useFinances(workspaceId);
   const addEntry = useAddFinance();
@@ -31,6 +87,8 @@ export default function Finance() {
     date: new Date().toISOString().split('T')[0],
   });
 
+  const isLoading = workspaces === null || finances === null;
+
   const totals = useMemo(() => {
     let income = 0;
     let expenses = 0;
@@ -39,17 +97,19 @@ export default function Finance() {
     let tpsPaid = 0;
     let tvqPaid = 0;
 
-    finances.forEach((entry: any) => {
-      if (entry.type === 'income') {
-        income += entry.amount;
-        tpsCollected += entry.tps;
-        tvqCollected += entry.tvq;
-      } else {
-        expenses += entry.amount;
-        tpsPaid += entry.tps;
-        tvqPaid += entry.tvq;
-      }
-    });
+    if (finances) {
+      finances.forEach((entry: any) => {
+        if (entry.type === 'income') {
+          income += entry.amount;
+          tpsCollected += entry.tps;
+          tvqCollected += entry.tvq;
+        } else {
+          expenses += entry.amount;
+          tpsPaid += entry.tps;
+          tvqPaid += entry.tvq;
+        }
+      });
+    }
 
     return {
       income,
@@ -85,6 +145,10 @@ export default function Finance() {
 
     setShowAdd(false);
     setForm({ ...form, description: '', amount: '' });
+  }
+
+  if (isLoading) {
+    return <FinanceSkeleton />;
   }
 
   return (
@@ -182,22 +246,30 @@ export default function Finance() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {finances.map((entry: any) => (
-              <tr key={entry._id} className="hover:bg-white/[0.01] transition-colors">
-                <td className="px-6 py-4 text-sm text-silver">{entry.date}</td>
-                <td className="px-6 py-4 text-sm text-ivory font-medium">{entry.description}</td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-dusk text-fog border border-white/5">
-                    {entry.category}
-                  </span>
+            {finances?.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-10 text-xs text-fog">
+                  No transactions found.
                 </td>
-                <td className={cn("px-6 py-4 text-sm font-semibold text-right", entry.type === 'income' ? 'text-sage' : 'text-ember')}>
-                  {entry.type === 'income' ? '+' : '-'}{fmt(entry.amount)}
-                </td>
-                <td className="px-6 py-4 text-sm text-fog text-right">{fmt(entry.tps)}</td>
-                <td className="px-6 py-4 text-sm text-fog text-right">{fmt(entry.tvq)}</td>
               </tr>
-            ))}
+            ) : (
+              finances?.map((entry: any) => (
+                <tr key={entry._id} className="hover:bg-white/[0.01] transition-colors">
+                  <td className="px-6 py-4 text-sm text-silver">{entry.date}</td>
+                  <td className="px-6 py-4 text-sm text-ivory font-medium">{entry.description}</td>
+                  <td className="px-6 py-4">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-dusk text-fog border border-white/5">
+                      {entry.category}
+                    </span>
+                  </td>
+                  <td className={cn("px-6 py-4 text-sm font-semibold text-right", entry.type === 'income' ? 'text-sage' : 'text-ember')}>
+                    {entry.type === 'income' ? '+' : '-'}{fmt(entry.amount)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-fog text-right">{fmt(entry.tps)}</td>
+                  <td className="px-6 py-4 text-sm text-fog text-right">{fmt(entry.tvq)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

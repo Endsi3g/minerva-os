@@ -10,7 +10,7 @@ import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
-const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4';
+const BG_VIDEO = process.env.NEXT_PUBLIC_BG_VIDEO_URL ?? '';
 
 const containerVariants = {
   hidden: { opacity: 0 },

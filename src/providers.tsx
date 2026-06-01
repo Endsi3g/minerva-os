@@ -1,29 +1,36 @@
 'use client';
+import { useEffect } from 'react';
 import { ThemeProvider } from '@/theme';
 import { LangProvider } from '@/i18n';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      typeof window !== 'undefined' &&
+      'serviceWorker' in navigator
+    ) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().then((success) => {
+            if (success) {
+              console.log('Unregistered service worker in dev mode');
+              window.location.reload();
+            }
+          });
+        }
+      });
+    }
+  }, []);
+
   return (
     <ThemeProvider>
       <LangProvider>
         <AuthProvider>
           {children}
-          <Toaster
-            position="bottom-right"
-            theme="dark"
-            toastOptions={{
-              style: {
-                background: '#111522',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: '#F5F1E8',
-                borderRadius: '12px',
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '13px',
-              },
-            }}
-          />
+          <Toaster theme="dark" position="bottom-right" richColors />
         </AuthProvider>
       </LangProvider>
     </ThemeProvider>

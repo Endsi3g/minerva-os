@@ -32,12 +32,11 @@
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "POST_NOTIFICATIONS"
-      ],
-      "googleServicesFile": "./google-services.json",
-      "notification": {
-        "icon": "./assets/notification-icon.png",
-        "color": "#7FA38A"
-      }
+      ]
+    },
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#7FA38A"
     },
     "plugins": [
       "expo-router",
@@ -52,11 +51,15 @@
       ],
       [
         "expo-camera",
-        { "cameraPermission": "Allow Minerva to access your camera." }
+        {
+          "cameraPermission": "Allow Minerva to access your camera."
+        }
       ],
       [
         "expo-image-picker",
-        { "photosPermission": "Allow Minerva to access your photos." }
+        {
+          "photosPermission": "Allow Minerva to access your photos."
+        }
       ],
       [
         "expo-build-properties",
@@ -65,7 +68,10 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "@sentry/react-native",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

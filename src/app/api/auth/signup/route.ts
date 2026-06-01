@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   const { firstName, lastName, email, password } = await req.json() as {
@@ -16,8 +17,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 422 });
   }
 
-  // TODO: hash password, insert user into DB (Prisma), send welcome email
-  const mockUser = { id: `usr_${Date.now()}`, email, name: `${firstName} ${lastName}`, role: 'owner' };
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name: `${firstName} ${lastName}` },
+    },
+  });
 
-  return NextResponse.json({ user: mockUser }, { status: 201 });
+  if (error) {
+    return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 400 });
+  }
+
+  return NextResponse.json(
+    { user: { id: data.user?.id, email: data.user?.email } },
+    { status: 201 }
+  );
 }

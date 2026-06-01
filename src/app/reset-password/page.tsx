@@ -1,18 +1,17 @@
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Circle, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { useLang } from '@/i18n';
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
   const { t } = useLang();
   const rp = t.resetPassword;
-  const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,112 +26,134 @@ export default function ResetPasswordPage() {
     setError('');
     setLoading(true);
     try {
+      const supabase = createClient();
       const { error: err } = await supabase.auth.updateUser({ password });
       if (err) throw err;
-      toast.success(rp.toastSuccess, { description: rp.toastSuccessDesc, duration: 5000 });
+      toast.success(rp.toastSuccess, { description: rp.toastSuccessDesc });
       router.push('/login');
-    } catch {
-      setError(rp.errorFailed);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : rp.errorExpired;
+      setError(msg.includes('session') || msg.includes('token') || msg.includes('expired')
+        ? rp.errorExpired
+        : msg);
     } finally {
       setLoading(false);
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: '#111522',
+    border: '1px solid rgba(255,255,255,0.08)',
+  };
+
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center px-4 py-12"
-      style={{ backgroundColor: '#0A0D14', fontFamily: 'Inter, sans-serif' }}
+    <main
+      className="relative flex min-h-screen w-full items-center justify-center p-4 font-sans"
+      style={{ backgroundColor: '#0A0D14' }}
     >
       <motion.div
-        className="w-full max-w-md"
+        className="w-full max-w-[420px]"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        {/* Back link */}
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-1.5 text-xs font-medium mb-10 group transition-colors"
-          style={{ color: 'rgba(184,189,199,0.45)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#B8BDC7')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(184,189,199,0.45)')}
-        >
-          <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
-          {rp.backToLogin}
-        </Link>
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 mb-10">
+          <Circle className="fill-white text-white h-4 w-4" />
+          <span className="text-base font-semibold tracking-tight text-white">Minerva OS</span>
+        </div>
 
-        {/* Card */}
-        <div
-          className="rounded-2xl p-8"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
-        >
-          <h1 className="text-2xl font-semibold mb-2" style={{ color: '#F5F1E8' }}>{rp.heading}</h1>
-          <p className="text-sm mb-8" style={{ color: '#8A9099' }}>{rp.sub}</p>
+        <div className="space-y-8">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-medium tracking-tight text-white">{rp.heading}</h1>
+            <p className="text-sm" style={{ color: '#8A9099' }}>{rp.subheading}</p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* New password */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium" style={{ color: '#B8BDC7' }}>{rp.newLabel}</label>
+              <label className="block text-sm font-medium text-white">{rp.newPassword}</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder={rp.placeholder}
-                  className="w-full rounded-xl h-11 px-4 pr-11 text-sm placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/15 transition-all"
-                  style={{ backgroundColor: '#1A1A1A', border: 'none', color: '#F5F1E8' }}
+                  placeholder="••••••••"
+                  className="w-full h-11 px-4 pr-10 text-sm rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
+                  style={inputStyle}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: 'rgba(184,189,199,0.35)' }}
-                  aria-label={showPassword ? 'Hide' : 'Show'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
             {/* Confirm password */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium" style={{ color: '#B8BDC7' }}>{rp.confirmLabel}</label>
+              <label className="block text-sm font-medium text-white">{rp.confirmPassword}</label>
               <div className="relative">
                 <input
                   type={showConfirm ? 'text' : 'password'}
                   value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
+                  onChange={(e) => setConfirm(e.target.value)}
                   required
-                  placeholder={rp.placeholder}
-                  className="w-full rounded-xl h-11 px-4 pr-11 text-sm placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/15 transition-all"
-                  style={{ backgroundColor: '#1A1A1A', border: 'none', color: '#F5F1E8' }}
+                  placeholder="••••••••"
+                  className="w-full h-11 px-4 pr-10 text-sm rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
+                  style={inputStyle}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: 'rgba(184,189,199,0.35)' }}
-                  aria-label={showConfirm ? 'Hide' : 'Show'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
                 >
-                  {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            {error && <p className="text-sm" style={{ color: '#A86A6A' }}>{error}</p>}
+            <p className="text-xs pl-1 -mt-1" style={{ color: '#8A9099' }}>{rp.hint}</p>
+
+            {error && (
+              <div
+                className="rounded-xl p-3"
+                style={{
+                  backgroundColor: 'rgba(168,106,106,0.08)',
+                  border: '1px solid rgba(168,106,106,0.2)',
+                }}
+              >
+                <p className="text-sm" style={{ color: '#A86A6A' }}>{error}</p>
+              </div>
+            )}
 
             <button
               type="submit"
-              disabled={loading || !password || !confirm}
-              className="w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              style={{ backgroundColor: '#F5F1E8', color: '#0A0D14', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer' }}
+              disabled={loading}
+              className="w-full h-12 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 mt-2"
+              style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
             >
-              {loading ? <Loader2 size={17} className="animate-spin" /> : rp.submit}
+              {loading ? rp.updating : rp.submit}
             </button>
           </form>
         </div>
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-white"
+            style={{ color: '#8A9099' }}
+          >
+            <ArrowLeft size={14} />
+            {rp.backToLogin}
+          </Link>
+        </div>
       </motion.div>
-    </div>
+    </main>
   );
 }

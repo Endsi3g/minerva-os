@@ -1,3 +1,10 @@
-﻿'use client';
+'use client';
 import Billing from '@/modules/app/Billing';
-export default function BillingPage() { return <Billing />; }
+import { ErrorBoundary } from '@/components/minerva/ErrorBoundary';
+export default function BillingPage() {
+  return (
+    <ErrorBoundary>
+      <Billing />
+    </ErrorBoundary>
+  );
+}

@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder';
-
-const supabaseAdmin = createSupabaseClient(supabaseUrl, serviceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { isDemoMode } from '@/lib/demo';
 
 export async function POST(req: NextRequest) {
   try {
+    // Validate webhook secret if configured (recommended for production)
+    const webhookSecret = process.env.LEAD_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const authHeader = req.headers.get('authorization');
+      const provided = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+      if (provided !== webhookSecret) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get('workspace_id');
 
@@ -24,10 +25,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.warn(
-        '[CRM Lead Webhook] SUPABASE_SERVICE_ROLE_KEY is not defined in env. Database writes may fail due to RLS policies.'
-      );
+    if (!isDemoMode()) {
+      // Verify the workspace exists before inserting any data
+      const { data: workspace, error: wsError } = await supabaseAdmin
+        .from('workspaces')
+        .select('id')
+        .eq('id', workspaceId)
+        .maybeSingle();
+
+      if (wsError || !workspace) {
+        return NextResponse.json({ error: 'Invalid workspace' }, { status: 400 });
+      }
     }
 
     const payload = await req.json();
@@ -183,7 +191,7 @@ Lead Notes: ${finalNotes}
           warning: 'Database tables missing. Running in mock fallback mode.'
         });
       }
-      return NextResponse.json({ error: 'Failed to create client record: ' + clientError.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to create client record.' }, { status: 500 });
     }
 
     // Step B: Insert Deal
@@ -204,7 +212,7 @@ Lead Notes: ${finalNotes}
 
     if (dealError) {
       console.error('[Lead Webhook Deal Error]:', dealError);
-      return NextResponse.json({ error: 'Failed to create deal record: ' + dealError.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to create deal record.' }, { status: 500 });
     }
 
     // Step C: Insert Email Draft
@@ -224,7 +232,7 @@ Lead Notes: ${finalNotes}
 
     if (draftError) {
       console.error('[Lead Webhook Email Draft Error]:', draftError);
-      return NextResponse.json({ error: 'Failed to create email draft record: ' + draftError.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to create email draft record.' }, { status: 500 });
     }
 
     // Log Activity
@@ -244,8 +252,8 @@ Lead Notes: ${finalNotes}
       score: aiScore,
       summary: aiSummary,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('[Lead API Route Process Error]:', err);
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

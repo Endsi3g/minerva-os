@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { FlickeringGrid } from '@/components/ui/flickering-grid';
+import { useAuth } from '@/contexts/AuthContext';
 
 const STEPS = [
   { id: 'workspace', label: 'Workspace', description: 'Set up your workspace identity' },
@@ -68,17 +69,41 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 6,
 };
 
-function WorkspaceStep({ onNext, workspaceId }: { onNext: () => void; workspaceId: string }) {
+function WorkspaceStep({ onNext }: { onNext: (id: string) => void }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   async function handleNext() {
+    if (!name) return;
     setLoading(true);
-    if (name && workspaceId) {
-      await supabase.from('workspaces').update({ name }).eq('id', workspaceId);
+    try {
+      const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+      const ownerId = user?.id || 'demo-user-01';
+      
+      const { data: ws } = await supabase
+        .from('workspaces')
+        .insert({ name, slug, owner_user_id: ownerId })
+        .select()
+        .single();
+
+      if (ws) {
+        if (user) {
+          await supabase
+            .from('user_profiles')
+            .update({ workspace_id: ws.id })
+            .eq('user_id', user.id);
+        }
+        onNext(ws.id);
+      } else {
+        onNext('');
+      }
+    } catch (e) {
+      console.error(e);
+      onNext('');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    onNext();
   }
 
   return (
@@ -253,15 +278,31 @@ const ghostBtn: React.CSSProperties = {
 export function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [workspaceId, setWorkspaceId] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
-    supabase.from('workspaces').select('*').then(({ data }) => {
-      if (data) setWorkspaces(data);
-    });
-  }, []);
-
-  const workspaceId = workspaces[0]?.id ?? '';
+    if (!user) return;
+    supabase.from('user_profiles')
+      .select('workspace_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data: profile }) => {
+        if (profile?.workspace_id) {
+          setWorkspaceId(profile.workspace_id);
+        } else {
+          supabase.from('workspaces')
+            .select('id')
+            .eq('owner_user_id', user.id)
+            .limit(1)
+            .then(({ data: wsData }) => {
+              if (wsData && wsData.length > 0) {
+                setWorkspaceId(wsData[0].id);
+              }
+            });
+        }
+      });
+  }, [user]);
 
   function handleComplete() {
     router.push('/app/dashboard');
@@ -293,7 +334,14 @@ export function OnboardingWizard() {
           <p style={{ color: '#8A9099', fontSize: 13 }}>Step {step + 1} of {STEPS.length}: {STEPS[step].description}</p>
         </div>
         <ProgressBar current={step} />
-        {step === 0 && <WorkspaceStep onNext={() => setStep(1)} workspaceId={workspaceId} />}
+        {step === 0 && (
+          <WorkspaceStep
+            onNext={(id) => {
+              if (id) setWorkspaceId(id);
+              setStep(1);
+            }}
+          />
+        )}
         {step === 1 && <TeamStep onNext={() => setStep(2)} onBack={() => setStep(0)} workspaceId={workspaceId} />}
         {step === 2 && <ClientStep onNext={() => setStep(3)} onBack={() => setStep(1)} workspaceId={workspaceId} />}
         {step === 3 && <ProjectStep onNext={handleComplete} onBack={() => setStep(2)} workspaceId={workspaceId} />}

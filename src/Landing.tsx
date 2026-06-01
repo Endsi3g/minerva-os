@@ -11,7 +11,7 @@ import { useLang, type Lang } from '@/i18n';
 import { cn } from '@/lib/utils';
 import LandingFooter from '@/components/LandingFooter';
 
-const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4';
+const BG_VIDEO = process.env.NEXT_PUBLIC_BG_VIDEO_URL ?? '';
 
 const NAV_PATHS = ['/platform', '/modules', '/portal', '/security', '/insights'];
 

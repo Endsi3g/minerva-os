@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import {
+  MOCK_LEADS, MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS,
+  MOCK_INVOICES, MOCK_APPROVALS,
+} from '@/lib/mock-data';
+
+const MOCK_WS_ID = 'mock-ws';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 // ── Mappings (snake_case -> camelCase & id -> _id compatibility) ─────────────
 
@@ -161,13 +168,19 @@ export function mapActivity(db: any) {
 // ── Queries ──────────────────────────────────────────────────────────────────
 
 export function useWorkspaces() {
-  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [workspaces, setWorkspaces] = useState<any[] | null>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaces([{ _id: MOCK_WS_ID, id: MOCK_WS_ID, name: 'Uprising Studio', slug: 'uprising' }]);
+      return;
+    }
     async function fetchWorkspaces() {
       const { data, error } = await supabase.from('workspaces').select('*');
       if (!error && data) {
         setWorkspaces(data.map(w => ({ _id: w.id, id: w.id, name: w.name, slug: w.slug })));
+      } else {
+        setWorkspaces([]);
       }
     }
     fetchWorkspaces();
@@ -177,11 +190,19 @@ export function useWorkspaces() {
 }
 
 export function useClients(workspaceId: string | undefined | null) {
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[] | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setClients([]);
+    if (!workspaceId) { return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setClients(MOCK_CLIENTS.map(c => ({
+        _id: c.id, id: c.id, workspaceId,
+        company: c.company, contact: c.contact, email: c.email,
+        monthlyValue: c.monthlyValue, status: c.status,
+        industry: (c as any).industry ?? '',
+        activeProjects: c.activeProjects ?? 0,
+        createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -195,6 +216,8 @@ export function useClients(workspaceId: string | undefined | null) {
 
       if (active && !error && data) {
         setClients(data.map(mapClient));
+      } else if (error) {
+        setClients([]);
       }
     }
 
@@ -217,11 +240,21 @@ export function useClients(workspaceId: string | undefined | null) {
 }
 
 export function useProjects(workspaceId: string | undefined | null) {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[] | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setProjects([]);
+    if (!workspaceId) { return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setProjects(MOCK_PROJECTS.map(p => ({
+        _id: p.id, id: p.id, workspaceId,
+        clientId: p.clientId, clientName: p.client,
+        name: p.name, status: p.status, dueDate: p.dueDate,
+        budget: p.budget, spent: p.spent,
+        totalTasks: p.totalTasks, doneTasks: p.doneTasks,
+        healthScore: p.spent / p.budget > 0.9 ? 62 : 90,
+        activeRiskFlags: p.spent / p.budget > 0.9 ? ['Over budget threshold'] : [],
+        createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -236,6 +269,8 @@ export function useProjects(workspaceId: string | undefined | null) {
 
       if (active && !error && data) {
         setProjects(data.map(mapProject));
+      } else if (error) {
+        setProjects([]);
       }
     }
 
@@ -257,26 +292,62 @@ export function useProjects(workspaceId: string | undefined | null) {
   return projects;
 }
 
-export function useTasks(workspaceId: string | undefined | null, projectId?: string | null) {
-  const [tasks, setTasks] = useState<any[]>([]);
+export function useTasks(
+  workspaceId: string | undefined | null,
+  projectId?: string | null,
+  page?: number,
+  pageSize: number = 50
+): any {
+  const [tasks, setTasks] = useState<any[] | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setTasks([]);
+    if (!workspaceId) { return; }
+    if (workspaceId === MOCK_WS_ID) {
+      const filtered = projectId
+        ? MOCK_TASKS.filter(t => t.projectId === projectId)
+        : MOCK_TASKS;
+      let mapped = filtered.map(t => ({
+        _id: t.id, id: t.id, workspaceId,
+        projectId: t.projectId, title: t.title, description: '',
+        status: t.status, priority: t.priority,
+        assignee: t.assignee, dueDate: t.dueDate,
+        estimatedHours: 0, createdAt: '2026-01-01',
+      }));
+      setTotalCount(mapped.length);
+      if (page !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize;
+        mapped = mapped.slice(from, to);
+      }
+      setTasks(mapped);
       return;
     }
 
     let active = true;
 
     async function fetchTasks() {
-      let query = supabase.from('tasks').select('*').eq('workspace_id', workspaceId);
+      let query = supabase.from('tasks').select('*', { count: 'exact' }).eq('workspace_id', workspaceId);
       if (projectId) {
         query = query.eq('project_id', projectId);
       }
 
-      const { data, error } = await query;
-      if (active && !error && data) {
-        setTasks(data.map(mapTask));
+      if (page !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
+      if (active) {
+        if (!error && data) {
+          setTasks(data.map(mapTask));
+          if (count !== null) {
+            setTotalCount(count);
+          }
+        } else if (error) {
+          setTasks([]);
+        }
       }
     }
 
@@ -293,17 +364,27 @@ export function useTasks(workspaceId: string | undefined | null, projectId?: str
       active = false;
       channel.unsubscribe();
     };
-  }, [workspaceId, projectId]);
+  }, [workspaceId, projectId, page, pageSize]);
 
+  if (page !== undefined) {
+    return { data: tasks, count: totalCount };
+  }
   return tasks;
 }
 
 export function useDeals(workspaceId: string | undefined | null) {
-  const [deals, setDeals] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[] | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setDeals([]);
+    if (!workspaceId) { return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setDeals(MOCK_LEADS.map(l => ({
+        _id: l.id, id: l.id, workspaceId,
+        company: l.company, contact: l.contact, email: l.email,
+        value: l.value, stage: l.stage, notes: '',
+        lastContact: new Date(Date.now() - l.daysInStage * 86_400_000).toISOString(),
+        createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -318,6 +399,8 @@ export function useDeals(workspaceId: string | undefined | null) {
 
       if (active && !error && data) {
         setDeals(data.map(mapDeal));
+      } else if (error) {
+        setDeals([]);
       }
     }
 
@@ -339,26 +422,61 @@ export function useDeals(workspaceId: string | undefined | null) {
   return deals;
 }
 
-export function useInvoices(workspaceId: string | undefined | null) {
-  const [invoices, setInvoices] = useState<any[]>([]);
+export function useInvoices(
+  workspaceId: string | undefined | null,
+  page?: number,
+  pageSize: number = 50
+): any {
+  const [invoices, setInvoices] = useState<any[] | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setInvoices([]);
+    if (!workspaceId) { return; }
+    if (workspaceId === MOCK_WS_ID) {
+      let mapped = MOCK_INVOICES.map(i => ({
+        _id: i.id, id: i.id, workspaceId,
+        clientId: i.clientId, invoiceNumber: (i as any).number ?? i.id,
+        amount: i.amount, status: i.status,
+        date: (i as any).issuedDate ?? i.id, dueDate: i.dueDate,
+        items: (i as any).lineItems ?? [],
+        paidDate: (i as any).paidDate ?? null,
+        tps: 0, tvq: 0, createdAt: '2026-01-01',
+      }));
+      setTotalCount(mapped.length);
+      if (page !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize;
+        mapped = mapped.slice(from, to);
+      }
+      setInvoices(mapped);
       return;
     }
 
     let active = true;
 
     async function fetchInvoices() {
-      const { data, error } = await supabase
+      let query = supabase
         .from('invoices')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('workspace_id', workspaceId)
         .order('date', { ascending: false });
 
-      if (active && !error && data) {
-        setInvoices(data.map(mapInvoice));
+      if (page !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
+      if (active) {
+        if (!error && data) {
+          setInvoices(data.map(mapInvoice));
+          if (count !== null) {
+            setTotalCount(count);
+          }
+        } else if (error) {
+          setInvoices([]);
+        }
       }
     }
 
@@ -375,17 +493,19 @@ export function useInvoices(workspaceId: string | undefined | null) {
       active = false;
       channel.unsubscribe();
     };
-  }, [workspaceId]);
+  }, [workspaceId, page, pageSize]);
 
+  if (page !== undefined) {
+    return { data: invoices, count: totalCount };
+  }
   return invoices;
 }
 
 export function useRetainers(workspaceId: string | undefined | null) {
-  const [retainers, setRetainers] = useState<any[]>([]);
+  const [retainers, setRetainers] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (!workspaceId) {
-      setRetainers([]);
       return;
     }
 
@@ -398,8 +518,12 @@ export function useRetainers(workspaceId: string | undefined | null) {
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: false });
 
-      if (active && !error && data) {
-        setRetainers(data.map(mapRetainer));
+      if (active) {
+        if (!error && data) {
+          setRetainers(data.map(mapRetainer));
+        } else if (error) {
+          setRetainers([]);
+        }
       }
     }
 
@@ -422,11 +546,10 @@ export function useRetainers(workspaceId: string | undefined | null) {
 }
 
 export function useFinances(workspaceId: string | undefined | null) {
-  const [finances, setFinances] = useState<any[]>([]);
+  const [finances, setFinances] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (!workspaceId) {
-      setFinances([]);
       return;
     }
 
@@ -439,8 +562,12 @@ export function useFinances(workspaceId: string | undefined | null) {
         .eq('workspace_id', workspaceId)
         .order('date', { ascending: false });
 
-      if (active && !error && data) {
-        setFinances(data.map(mapFinance));
+      if (active) {
+        if (!error && data) {
+          setFinances(data.map(mapFinance));
+        } else if (error) {
+          setFinances([]);
+        }
       }
     }
 
@@ -463,9 +590,19 @@ export function useFinances(workspaceId: string | undefined | null) {
 }
 
 export function useApprovals(workspaceId?: string | undefined | null) {
-  const [approvals, setApprovals] = useState<any[]>([]);
+  const [approvals, setApprovals] = useState<any[] | null>(null);
 
   useEffect(() => {
+    if (workspaceId === MOCK_WS_ID || (IS_TEST && !workspaceId)) {
+      setApprovals(MOCK_APPROVALS.map(a => ({
+        _id: a.id, id: a.id, workspaceId: workspaceId ?? MOCK_WS_ID,
+        projectId: (a as any).projectId ?? null,
+        name: a.name, type: a.type, status: a.status,
+        submittedDate: a.submittedDate, fileUrl: null, createdAt: '2026-01-01',
+      })));
+      return;
+    }
+
     let active = true;
 
     async function fetchApprovals() {
@@ -475,8 +612,12 @@ export function useApprovals(workspaceId?: string | undefined | null) {
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
-      if (active && !error && data) {
-        setApprovals(data.map(mapApproval));
+      if (active) {
+        if (!error && data) {
+          setApprovals(data.map(mapApproval));
+        } else if (error) {
+          setApprovals([]);
+        }
       }
     }
 
@@ -499,11 +640,10 @@ export function useApprovals(workspaceId?: string | undefined | null) {
 }
 
 export function useActivity(workspaceId: string | undefined | null) {
-  const [activity, setActivity] = useState<any[]>([]);
+  const [activity, setActivity] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (!workspaceId) {
-      setActivity([]);
       return;
     }
 
@@ -517,8 +657,12 @@ export function useActivity(workspaceId: string | undefined | null) {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (active && !error && data) {
-        setActivity(data.map(mapActivity));
+      if (active) {
+        if (!error && data) {
+          setActivity(data.map(mapActivity));
+        } else if (error) {
+          setActivity([]);
+        }
       }
     }
 

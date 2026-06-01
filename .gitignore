@@ -5,6 +5,7 @@ node_modules/
 dist/
 dist-ssr/
 .next/
+.expo/
 
 # Environment variables
 .env
@@ -31,3 +32,5 @@ npm-debug.log*
 # TypeScript cache
 *.tsbuildinfo
 tests/results/
+.vercel
+.env*

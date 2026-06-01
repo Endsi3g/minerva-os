@@ -109,7 +109,7 @@ export default function Files() {
             name: file.name,
             type: fileType,
             size: file.size,
-            url: `https://kcwdmufkyjsitsuxmqld.supabase.co/storage/v1/object/public/assets/${file.name}`,
+            url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets/${file.name}`,
           })
           .select()
           .single();

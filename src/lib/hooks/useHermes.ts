@@ -32,11 +32,29 @@ export function useHermes(workspaceContext?: string) {
         throw new Error('Failed to connect to Hermes');
       }
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error('No reader available');
 
-      const assistantMessage: Message = { role: 'assistant', content: data.content };
-      setMessages(prev => [...prev, assistantMessage]);
+      // Append an empty assistant message to update with stream
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+      let assistantContent = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        assistantContent += chunk;
+
+        setMessages(prev => {
+          const updated = [...prev];
+          if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
+            updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+          }
+          return updated;
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {

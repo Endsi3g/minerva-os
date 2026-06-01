@@ -12,9 +12,10 @@ import { supabase } from '@/lib/supabase';
 interface CommentSectionProps {
   targetId: string;
   targetType: 'approval' | 'task';
+  token?: string;
 }
 
-export function CommentSection({ targetId, targetType }: CommentSectionProps) {
+export function CommentSection({ targetId, targetType, token }: CommentSectionProps) {
   const { user } = useAuth();
   const { t } = useLang();
   const c = t.comments;
@@ -26,46 +27,74 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
   useEffect(() => {
     if (!targetId || !targetType) return;
     async function loadComments() {
-      const { data } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('target_id', targetId)
-        .eq('target_type', targetType)
-        .order('timestamp', { ascending: true });
-      if (data) {
-        setComments(data.map(comment => ({
-          ...comment,
-          _id: comment.id,
-        })));
+      if (token) {
+        try {
+          const res = await fetch(`/api/portal/comment?token=${token}&targetId=${targetId}&targetType=${targetType}`);
+          if (res.ok) {
+            const data = await res.json();
+            setComments(data);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        const { data } = await supabase
+          .from('comments')
+          .select('*')
+          .eq('target_id', targetId)
+          .eq('target_type', targetType)
+          .order('timestamp', { ascending: true });
+        if (data) {
+          setComments(data.map(comment => ({
+            ...comment,
+            _id: comment.id,
+          })));
+        }
       }
     }
     loadComments();
-  }, [targetId, targetType]);
+  }, [targetId, targetType, token]);
 
   async function handleSubmit() {
-    if (!content.trim() || !user) return;
+    if (!content.trim()) return;
+    if (!token && !user) return;
     setSubmitting(true);
     try {
-      const { data, error } = await supabase
-        .from('comments')
-        .insert({
-          target_id: targetId,
-          target_type: targetType,
-          author: user.name || user.email || 'Anonymous',
-          content: content.trim(),
-        })
-        .select()
-        .single();
+      if (token) {
+        const res = await fetch('/api/portal/comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, targetId, targetType, content: content.trim() }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.comment) {
+            setComments(prev => [...prev, data.comment]);
+            setContent('');
+          }
+        }
+      } else {
+        const { data, error } = await supabase
+          .from('comments')
+          .insert({
+            target_id: targetId,
+            target_type: targetType,
+            author: user?.name || user?.email || 'Anonymous',
+            content: content.trim(),
+          })
+          .select()
+          .single();
 
-      if (!error && data) {
-        setComments(prev => [
-          ...prev,
-          {
-            ...data,
-            _id: data.id,
-          },
-        ]);
-        setContent('');
+        if (!error && data) {
+          setComments(prev => [
+            ...prev,
+            {
+              ...data,
+              _id: data.id,
+            },
+          ]);
+          setContent('');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -123,7 +152,7 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
         />
         <Button
           size="icon"
-          disabled={!content.trim() || submitting}
+          disabled={!content.trim() || submitting || (!token && !user)}
           onClick={handleSubmit}
           className="absolute bottom-2 right-2 h-7 w-7 text-sage hover:bg-sage/10"
         >

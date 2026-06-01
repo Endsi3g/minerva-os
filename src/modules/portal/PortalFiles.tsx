@@ -4,6 +4,7 @@ import { Search, Image, Video, FileText, Archive, Download } from 'lucide-react'
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import type { FileType } from '@/lib/types';
+import { useLang } from '@/i18n';
 
 const TYPE_CONFIG: Record<FileType, { icon: React.ElementType; class: string; bg: string }> = {
   image:    { icon: Image,    class: 'text-[#7FA38A]',   bg: 'bg-[#7FA38A]/10'   },
@@ -13,15 +14,33 @@ const TYPE_CONFIG: Record<FileType, { icon: React.ElementType; class: string; bg
 };
 
 export default function PortalFiles() {
-  const { isValid, files } = usePortalData();
+  const { t, lang } = useLang();
+  const { isValid, files, token } = usePortalData();
   const [query, setQuery] = useState('');
 
   if (!isValid) return null;
 
   const filtered = files.filter((f: any) =>
-    f.name.toLowerCase().includes(query.toLowerCase()) ||
-    f.project.toLowerCase().includes(query.toLowerCase())
+    f.name.toLowerCase().includes(query.toLowerCase())
   );
+
+  async function handleDownload(file: any) {
+    if (!token) return;
+    try {
+      await fetch('/api/portal/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          event: 'file_downloaded',
+          metadata: { fileId: file.id, name: file.name, url: file.url },
+        }),
+      });
+    } catch (err) {
+      console.error('Error logging file download:', err);
+    }
+    window.open(file.url, '_blank');
+  }
 
   return (
     <div className="space-y-6">
@@ -32,10 +51,10 @@ export default function PortalFiles() {
             className="text-2xl font-normal"
             style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}
           >
-            Files
+            {t.app.sidebar.files}
           </h1>
           <p className="text-sm mt-1" style={{ color: '#8A9099' }}>
-            {files.length} shared asset{files.length !== 1 ? 's' : ''} from Uprising Studio.
+            {files.length} {t.app.files.stats}
           </p>
         </div>
       </div>
@@ -45,7 +64,7 @@ export default function PortalFiles() {
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#8A9099' }} />
         <input
           type="text"
-          placeholder="Search files..."
+          placeholder={t.app.files.searchPlaceholder}
           value={query}
           onChange={e => setQuery(e.target.value)}
           className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none transition-colors duration-200"
@@ -62,7 +81,7 @@ export default function PortalFiles() {
       {filtered.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filtered.map((file: any) => {
-            const cfg = TYPE_CONFIG[file.type as FileType];
+            const cfg = TYPE_CONFIG[file.type as FileType] || TYPE_CONFIG.document;
             const Icon = cfg.icon;
             return (
               <div
@@ -84,7 +103,6 @@ export default function PortalFiles() {
                   >
                     {file.name}
                   </p>
-                  <p className="text-[10px] mt-0.5 truncate" style={{ color: '#8A9099' }}>{file.project}</p>
                 </div>
 
                 {/* Meta + download */}
@@ -94,8 +112,9 @@ export default function PortalFiles() {
                 >
                   <span className="text-[10px]" style={{ color: '#8A9099' }}>{file.size}</span>
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-lg hover:bg-white/5"
-                    title="Download"
+                    onClick={() => handleDownload(file)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-lg hover:bg-white/5 cursor-pointer"
+                    title={lang === 'fr' ? 'Télécharger' : 'Download'}
                     aria-label="Download file"
                   >
                     <Download size={12} style={{ color: '#B8BDC7' }} />
@@ -107,16 +126,17 @@ export default function PortalFiles() {
         </div>
       ) : (
         <div className="py-20 text-center">
-          <p className="text-sm" style={{ color: '#B8BDC7' }}>No files match "{query}"</p>
+          <p className="text-sm" style={{ color: '#B8BDC7' }}>{t.app.files.noFiles} "{query}"</p>
           <button
             onClick={() => setQuery('')}
-            className="text-xs mt-2 transition-colors duration-200 hover:text-white/50"
+            className="text-xs mt-2 transition-colors duration-200 hover:text-white/50 cursor-pointer"
             style={{ color: '#8A9099' }}
           >
-            Clear search
+            {t.app.clients.clearSearch}
           </button>
         </div>
       )}
     </div>
   );
 }
+

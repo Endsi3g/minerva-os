@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import type { ApprovalStatus, DeliverableType } from '@/lib/types';
 import { useLang } from '@/i18n';
-import { supabase } from '@/lib/supabase';
 import { CommentSection } from '@/components/minerva/CommentSection';
 import { ChoicePoll } from '@/components/ui/choice-poll';
 
@@ -15,11 +14,13 @@ function DeliverableRow({
   onAction,
   t,
   lang,
+  token,
 }: {
   approval: any;
   onAction: (id: string, status: ApprovalStatus) => void;
   t: any;
   lang: string;
+  token?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const pd = t.portal.deliverables;
@@ -135,7 +136,7 @@ function DeliverableRow({
                     )}
                   </div>
                   <div className="flex-1 overflow-hidden">
-                    <CommentSection targetId={approval._id} targetType="approval" />
+                    <CommentSection targetId={approval._id} targetType="approval" token={token} />
                   </div>
                 </div>
               </div>
@@ -151,7 +152,7 @@ export default function PortalDeliverables() {
   const { t, lang } = useLang();
   const pd = t.portal.deliverables;
 
-  const { isValid, approvals, projects } = usePortalData();
+  const { isValid, approvals, projects, token, refresh } = usePortalData();
   const [localApprovals, setLocalApprovals] = useState<any[]>([]);
 
   useEffect(() => {
@@ -169,14 +170,24 @@ export default function PortalDeliverables() {
   });
 
   async function handleAction(id: string, status: ApprovalStatus) {
-    const { error } = await supabase
-      .from('approvals')
-      .update({ status })
-      .eq('id', id);
-    if (!error) {
-      setLocalApprovals(prev =>
-        prev.map(a => a._id === id ? { ...a, status } : a)
-      );
+    if (!token) return;
+    try {
+      const res = await fetch('/api/portal/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, approvalId: id, status }),
+      });
+      if (res.ok) {
+        setLocalApprovals(prev =>
+          prev.map(a => a._id === id ? { ...a, status } : a)
+        );
+        refresh();
+      } else {
+        const errData = await res.json();
+        console.error('Failed to update approval:', errData.error);
+      }
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -206,7 +217,7 @@ export default function PortalDeliverables() {
           </p>
           <div className="space-y-2">
             {pending.map((a: any) => (
-              <DeliverableRow key={a._id} approval={a} onAction={handleAction} t={t} lang={lang} />
+              <DeliverableRow key={a._id} approval={a} onAction={handleAction} t={t} lang={lang} token={token} />
             ))}
           </div>
         </section>
@@ -231,7 +242,7 @@ export default function PortalDeliverables() {
           </p>
           <div className="space-y-2">
             {resolved.map((a: any) => (
-              <DeliverableRow key={a._id} approval={a} onAction={handleAction} t={t} lang={lang} />
+              <DeliverableRow key={a._id} approval={a} onAction={handleAction} t={t} lang={lang} token={token} />
             ))}
           </div>
         </section>
@@ -239,3 +250,4 @@ export default function PortalDeliverables() {
     </div>
   );
 }
+

@@ -92,7 +92,7 @@ function computeRiskFlags(t: Translations, data: { projects: any[], invoices: an
 function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspaceId: any }) {
   const activity = useActivity(workspaceId);
 
-  if (activity.length === 0) {
+  if (activity === null) {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map(i => (
@@ -104,8 +104,13 @@ function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspa
             </div>
           </div>
         ))}
-        <p className="text-center text-xs text-fog pt-4">{emptyLabel}</p>
       </div>
+    );
+  }
+
+  if (activity.length === 0) {
+    return (
+      <p className="text-center text-xs text-fog pt-4">{emptyLabel}</p>
     );
   }
 
@@ -475,6 +480,75 @@ function FlagCard({ flag, onDismiss, onNavigate }: {
 
 type Tab = 'overview' | 'firefighter';
 
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 max-w-5xl animate-pulse">
+      {/* Greeting skeleton */}
+      <div className="space-y-2">
+        <Skeleton className="h-9 w-64 bg-white/5" />
+        <Skeleton className="h-4 w-48 bg-white/5" />
+      </div>
+
+      {/* Tab bar skeleton */}
+      <div className="flex gap-4 border-b border-white/5 pb-2">
+        <Skeleton className="h-4 w-16 bg-white/5" />
+        <Skeleton className="h-4 w-24 bg-white/5" />
+      </div>
+
+      {/* Daily Briefing skeleton */}
+      <div className="rounded-xl p-4 border border-white/5 bg-card space-y-3">
+        <Skeleton className="h-4 w-28 bg-white/5" />
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-full bg-white/5" />
+          <Skeleton className="h-3 w-5/6 bg-white/5" />
+          <Skeleton className="h-3 w-4/5 bg-white/5" />
+        </div>
+      </div>
+
+      {/* KPI Cards skeleton */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-white/5 bg-card p-4 space-y-4">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-3 w-20 bg-white/5" />
+              <Skeleton className="h-4 w-4 bg-white/5" />
+            </div>
+            <Skeleton className="h-7 w-16 bg-white/5" />
+            <Skeleton className="h-3 w-24 bg-white/5" />
+          </div>
+        ))}
+      </div>
+
+      {/* Grid skeleton for Activity feed & Quick actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 rounded-xl border border-white/5 bg-card p-5 space-y-4">
+          <Skeleton className="h-4 w-28 bg-white/5" />
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="h-7 w-7 rounded-full bg-white/5 shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-3 w-3/4 bg-white/5" />
+                  <Skeleton className="h-2 w-1/4 bg-white/5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="rounded-xl border border-white/5 bg-card p-5 space-y-4">
+          <Skeleton className="h-4 w-24 bg-white/5" />
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-full bg-white/5" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const { t } = useLang();
@@ -482,7 +556,7 @@ export default function Dashboard() {
   const [tab, setTab] = useState<Tab>('overview');
 
   const workspaces = useWorkspaces();
-  const workspaceId = workspaces[0]?._id;
+  const workspaceId = workspaces?.[0]?._id;
 
   const projects = useProjects(workspaceId);
   const invoices = useInvoices(workspaceId);
@@ -490,17 +564,21 @@ export default function Dashboard() {
   const deals = useDeals(workspaceId);
   const tasks = useTasks(workspaceId);
 
+  const isLoading = workspaces === null || projects === null || invoices === null || approvals === null || deals === null || tasks === null;
+
   const d = t.app.dashboard;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? d.greetingMorning : hour < 18 ? d.greetingAfternoon : d.greetingEvening;
   const displayName = user?.name ?? 'Uprising Studio';
 
-  const activeProjectsCount = projects.filter((p: any) => p.status === 'active').length;
-  const openTasksCount = tasks.filter((tsk: any) => tsk.status !== 'done').length;
-  const pendingApprovalsCount = approvals.filter((a: any) => a.status === 'pending').length;
+  const activeProjectsCount = projects ? projects.filter((p: any) => p.status === 'active').length : 0;
+  const openTasksCount = tasks ? tasks.filter((tsk: any) => tsk.status !== 'done').length : 0;
+  const pendingApprovalsCount = approvals ? approvals.filter((a: any) => a.status === 'pending').length : 0;
   const revenueMtd = invoices
-    .filter((i: any) => i.status === 'paid' && new Date(i.date).getMonth() === new Date().getMonth())
-    .reduce((acc: any, i: any) => acc + i.amount, 0);
+    ? invoices
+        .filter((i: any) => i.status === 'paid' && new Date(i.date).getMonth() === new Date().getMonth())
+        .reduce((acc: any, i: any) => acc + i.amount, 0)
+    : 0;
 
   const kpis = [
     { label: d.kpis.activeProjects, value: String(activeProjectsCount), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage' },
@@ -516,13 +594,22 @@ export default function Dashboard() {
     { label: d.sendInvoice, to: '/app/billing' },
   ];
 
-  const allFlags = computeRiskFlags(t, { projects, invoices, approvals, deals });
+  const allFlags = computeRiskFlags(t, {
+    projects: projects || [],
+    invoices: invoices || [],
+    approvals: approvals || [],
+    deals: deals || []
+  });
   const [dismissed, setDismissed] = useState<string[]>([]);
   const activeFlags = allFlags.filter(f => !dismissed.includes(f.id));
 
   const briefingContext = workspaceId
     ? `Active projects: ${activeProjectsCount}. Open tasks: ${openTasksCount}. Pending approvals: ${pendingApprovalsCount}. Revenue MTD: $${(revenueMtd / 1000).toFixed(1)}k. Active risk flags: ${activeFlags.length} (${activeFlags.filter(f => f.severity === 'high').length} critical, ${activeFlags.filter(f => f.severity === 'medium').length} medium).`
     : '';
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-6 max-w-5xl">

@@ -136,12 +136,41 @@ interface NewProjectForm {
 
 const EMPTY_FORM: NewProjectForm = { name: '', clientId: '', dueDate: '', budget: '' };
 
+import { Skeleton } from '@/components/ui/skeleton';
+
+function ProjectCardSkeleton() {
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 space-y-4 animate-pulse">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2 flex-1">
+          <Skeleton className="h-4 w-3/4 bg-white/5" />
+          <Skeleton className="h-3 w-1/2 bg-white/5" />
+        </div>
+        <Skeleton className="h-5 w-16 rounded-full shrink-0 bg-white/5" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-2 w-full bg-white/5" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-2 w-full bg-white/5" />
+      </div>
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex -space-x-1.5">
+          <Skeleton className="h-6 w-6 rounded-full bg-white/5" />
+          <Skeleton className="h-6 w-6 rounded-full bg-white/5" />
+        </div>
+        <Skeleton className="h-3 w-20 bg-white/5" />
+      </div>
+    </div>
+  );
+}
+
 export default function Projects() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const p = t.app.projects;
 
   const workspaces = useWorkspaces();
-  const workspaceId = workspaces[0]?.id;
+  const workspaceId = workspaces?.[0]?.id;
 
   const projects = useProjects(workspaceId);
   const clients = useClients(workspaceId);
@@ -151,11 +180,13 @@ export default function Projects() {
   const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM);
   const [viewTab, setViewTab] = useState<'grid' | 'timeline'>('grid');
 
-  const activeCount = projects.filter((p: any) => p.status === 'active').length;
+  const isLoading = projects === null || clients === null;
+  const activeCount = projects ? projects.filter((p: any) => p.status === 'active').length : 0;
+  const totalCount = projects ? projects.length : 0;
 
   async function handleAdd() {
     if (!form.name.trim() || !form.clientId) return;
-    const client = clients.find((c: any) => c._id === form.clientId);
+    const client = clients?.find((c: any) => c._id === form.clientId);
     
     await createProject({
       workspaceId: workspaceId!,
@@ -178,7 +209,7 @@ export default function Projects() {
           <p className="text-sm text-fog mt-0.5">
             {p.stats
               .replace('active', String(activeCount))
-              .replace('total', String(projects.length))}
+              .replace('total', String(totalCount))}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -197,33 +228,55 @@ export default function Projects() {
               <GanttChartSquare size={13} />
             </button>
           </div>
-          <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
+          <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }} id="btn-new-project">
             <Plus size={14} />
             {p.newProject}
           </Button>
         </div>
       </div>
 
-      {viewTab === 'timeline' && (
-        <div className="rounded-xl border border-border bg-card p-4 mb-4">
-          <GanttTimeline projects={projects as any[]} />
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <ProjectCardSkeleton key={i} />)}
         </div>
-      )}
+      ) : totalCount === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-white/5 p-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-fog">
+            <GanttChartSquare size={20} />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-ivory">{lang === 'fr' ? 'Aucun projet trouvé' : 'No projects found'}</p>
+            <p className="text-xs text-fog max-w-xs">{lang === 'fr' ? 'Créez votre premier projet pour commencer à suivre votre travail.' : 'Create your first project to start tracking deliverables.'}</p>
+          </div>
+          <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }} className="rounded-full">
+            <Plus size={14} className="mr-1.5" />
+            {p.newProject}
+          </Button>
+        </div>
+      ) : (
+        <>
+          {viewTab === 'timeline' && (
+            <div className="rounded-xl border border-border bg-card p-4 mb-4">
+              <GanttTimeline projects={projects as any[]} />
+            </div>
+          )}
 
-      {viewTab === 'grid' && (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map((proj: any) => (
-          <ProjectCard key={proj._id} project={{
-            ...proj,
-            id: proj._id,
-            client: proj.clientName,
-            spent: 0,
-            totalTasks: 0,
-            doneTasks: 0,
-            team: ['US']
-          }} />
-        ))}
-      </div>
+          {viewTab === 'grid' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.map((proj: any) => (
+                <ProjectCard key={proj._id} project={{
+                  ...proj,
+                  id: proj._id,
+                  client: proj.clientName,
+                  spent: 0,
+                  totalTasks: 0,
+                  doneTasks: 0,
+                  team: ['US']
+                }} />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -244,7 +297,7 @@ export default function Projects() {
                   <SelectValue placeholder={p.form.clientPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map((c: any) => (
+                  {clients?.map((c: any) => (
                     <SelectItem key={c._id} value={c._id}>{c.company}</SelectItem>
                   ))}
                 </SelectContent>

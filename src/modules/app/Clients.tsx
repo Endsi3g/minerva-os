@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+'use client';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Copy, Check, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -20,6 +28,32 @@ import { ClientCard } from '@/components/minerva/ClientCard';
 import type { ClientStatus } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { useWorkspaces, useClients, useProjects, useAddClient } from '@/lib/hooks/useSupabase';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function ClientCardSkeleton() {
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 space-y-4 animate-pulse">
+      <div className="flex items-start justify-between gap-3">
+        <Skeleton className="h-10 w-10 rounded-full bg-white/5 shrink-0" />
+        <Skeleton className="h-5 w-16 rounded-full shrink-0 bg-white/5" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-3/4 bg-white/5" />
+        <Skeleton className="h-3 w-1/2 bg-white/5" />
+      </div>
+      <div className="space-y-1">
+        <Skeleton className="h-3 w-1/3 bg-white/5" />
+        <Skeleton className="h-3 w-1/2 bg-white/5" />
+      </div>
+      <div className="flex items-center justify-between border-t border-white/5 pt-3">
+        <Skeleton className="h-4 w-20 bg-white/5" />
+        <Skeleton className="h-4 w-16 bg-white/5" />
+      </div>
+    </div>
+  );
+}
 
 interface NewClientForm {
   company: string;
@@ -37,9 +71,10 @@ const EMPTY_FORM: NewClientForm = {
 export default function Clients() {
   const { t } = useLang();
   const cKeys = t.app.clients;
+  const pKeys = cKeys.portal;
 
   const workspaces = useWorkspaces();
-  const workspaceId = workspaces[0]?.id;
+  const workspaceId = workspaces?.[0]?.id;
 
   const clients = useClients(workspaceId);
   const projects = useProjects(workspaceId);
@@ -49,13 +84,42 @@ export default function Clients() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewClientForm>(EMPTY_FORM);
 
-  const filtered = clients.filter((c: any) =>
+  const [portalDialogOpen, setPortalDialogOpen] = useState(false);
+  const [portalUrl, setPortalUrl] = useState('');
+  const [portalGenerating, setPortalGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // New Client Portal States
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [selectedScopes, setSelectedScopes] = useState<string[]>(['approvals', 'files', 'invoices']);
+  const [expiryOption, setExpiryOption] = useState<string>('30');
+  const [customExpiryDate, setCustomExpiryDate] = useState<string>('');
+  const [activeToken, setActiveToken] = useState<any>(null);
+  const [portalTokens, setPortalTokens] = useState<any[]>([]);
+
+  const isLoading = clients === null || projects === null;
+  const filtered = clients ? clients.filter((c: any) =>
     c.company.toLowerCase().includes(query.toLowerCase())
-  );
+  ) : [];
+
+  async function refreshTokens() {
+    if (!workspaceId) return;
+    const { data } = await supabase
+      .from('portal_tokens')
+      .select('*')
+      .eq('workspace_id', workspaceId);
+    if (data) {
+      setPortalTokens(data);
+    }
+  }
+
+  useEffect(() => {
+    refreshTokens();
+  }, [workspaceId]);
 
   async function handleAdd() {
     if (!form.company.trim() || !workspaceId) return;
-    
+
     await addClient({
       workspaceId,
       company: form.company.trim(),
@@ -64,9 +128,133 @@ export default function Clients() {
       status: form.status,
       monthlyValue: parseFloat(form.monthlyValue) || undefined,
     });
-    
+
     setSheetOpen(false);
     setForm(EMPTY_FORM);
+  }
+
+  async function handleGeneratePortalLink(clientId: string) {
+    if (!workspaceId) return;
+    setPortalGenerating(true);
+    setPortalUrl('');
+    setPortalDialogOpen(true);
+    setCopied(false);
+    setSelectedClientId(clientId);
+    setActiveToken(null);
+
+    // Fetch existing token if any
+    const { data: existingToken, error } = await supabase
+      .from('portal_tokens')
+      .select('*')
+      .eq('client_id', clientId)
+      .maybeSingle();
+
+    setPortalGenerating(false);
+
+    if (!error && existingToken) {
+      setActiveToken(existingToken);
+      setPortalUrl(`${window.location.origin}/portal/${existingToken.token}`);
+      setSelectedScopes(existingToken.scopes || []);
+      
+      const expiryDate = new Date(existingToken.expires_at);
+      const days = Math.round((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (days === 7) setExpiryOption('7');
+      else if (days === 30) setExpiryOption('30');
+      else if (days === 90) setExpiryOption('90');
+      else {
+        setExpiryOption('custom');
+        setCustomExpiryDate(existingToken.expires_at.split('T')[0]);
+      }
+    } else {
+      setSelectedScopes(['approvals', 'files', 'invoices']);
+      setExpiryOption('30');
+      setCustomExpiryDate('');
+    }
+  }
+
+  async function handleGenerateLink() {
+    if (!selectedClientId || !workspaceId) return;
+    setPortalGenerating(true);
+
+    const token = crypto.randomUUID();
+    let expiresAt: string;
+    if (expiryOption === 'custom') {
+      if (!customExpiryDate) {
+        toast.error('Please select a custom expiry date.');
+        setPortalGenerating(false);
+        return;
+      }
+      expiresAt = new Date(customExpiryDate).toISOString();
+    } else {
+      const days = parseInt(expiryOption) || 30;
+      expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    }
+
+    // Delete existing token if any (clean up)
+    await supabase
+      .from('portal_tokens')
+      .delete()
+      .eq('client_id', selectedClientId);
+
+    const { data: newToken, error } = await supabase
+      .from('portal_tokens')
+      .insert({
+        token,
+        client_id: selectedClientId,
+        workspace_id: workspaceId,
+        expires_at: expiresAt,
+        scopes: selectedScopes,
+      })
+      .select()
+      .single();
+
+    setPortalGenerating(false);
+
+    if (error) {
+      toast.error('Failed to generate link.');
+      return;
+    }
+
+    setActiveToken(newToken);
+    setPortalUrl(`${window.location.origin}/portal/${token}`);
+    toast.success('Portal link created successfully.');
+    refreshTokens();
+  }
+
+  async function handleRevokeLink() {
+    if (!selectedClientId) return;
+    setPortalGenerating(true);
+
+    const { error } = await supabase
+      .from('portal_tokens')
+      .delete()
+      .eq('client_id', selectedClientId);
+
+    setPortalGenerating(false);
+
+    if (error) {
+      toast.error('Failed to revoke access.');
+      return;
+    }
+
+    setActiveToken(null);
+    setPortalUrl('');
+    toast.success('Portal access revoked.');
+    refreshTokens();
+  }
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(portalUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleScopeToggle(scope: string) {
+    setSelectedScopes(prev =>
+      prev.includes(scope)
+        ? prev.filter(s => s !== scope)
+        : [...prev, scope]
+    );
   }
 
   return (
@@ -76,7 +264,7 @@ export default function Clients() {
         <div>
           <h1 className="text-2xl font-semibold text-ivory">{cKeys.title}</h1>
           <p className="text-sm text-fog mt-0.5">
-            {cKeys.stats.replace('{{count}}', String(clients.length))}
+            {cKeys.stats.replace('{{count}}', String(clients ? clients.length : 0))}
           </p>
         </div>
         <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
@@ -97,32 +285,54 @@ export default function Clients() {
       </div>
 
       {/* Grid */}
-      {filtered.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <ClientCardSkeleton key={i} />)}
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((client: any) => {
-            const activeProjectsCount = projects.filter((p: any) => 
+            const activeProjectsCount = projects ? projects.filter((p: any) =>
               (p.clientId === client._id || p.clientName === client.company) && p.status === 'active'
-            ).length;
+            ).length : 0;
             return (
-              <ClientCard key={client._id} client={{
-                ...client,
-                id: client._id,
-                activeProjects: activeProjectsCount,
-                industry: client.industry || 'Services',
-                monthlyValue: client.monthlyValue || 0
-              }} />
+              <ClientCard
+                key={client._id}
+                client={{
+                  ...client,
+                  id: client._id,
+                  activeProjects: activeProjectsCount,
+                  industry: client.industry || 'Services',
+                  monthlyValue: client.monthlyValue || 0,
+                }}
+                onPortalLink={handleGeneratePortalLink}
+                activePortalToken={portalTokens.find(t => t.client_id === client._id)}
+              />
             );
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
-          <p className="text-sm text-silver">
-            {query ? `${cKeys.noClients} "${query}"` : cKeys.noClientsYet}
-          </p>
-          {query && (
+        <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-white/5 p-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-fog">
+            <Users size={20} />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-ivory">
+              {query ? `${cKeys.noClients} "${query}"` : cKeys.noClientsYet}
+            </p>
+            {!query && (
+              <p className="text-xs text-fog max-w-xs">Add your first client account to begin tracking projects and billing retainers.</p>
+            )}
+          </div>
+          {query ? (
             <button onClick={() => setQuery('')} className="text-xs text-fog hover:text-silver transition-colors">
               {cKeys.clearSearch}
             </button>
+          ) : (
+            <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }} className="rounded-full">
+              <Plus size={14} className="mr-1.5" />
+              {cKeys.addClient}
+            </Button>
           )}
         </div>
       )}
@@ -173,6 +383,125 @@ export default function Clients() {
           <Button className="w-full" onClick={handleAdd}>{cKeys.form.add}</Button>
         </SheetContent>
       </Sheet>
+
+      {/* Portal link dialog */}
+      <Dialog open={portalDialogOpen} onOpenChange={setPortalDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-midnight border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-ivory">{pKeys.dialogTitle}</DialogTitle>
+            <DialogDescription className="text-fog">{pKeys.dialogDesc}</DialogDescription>
+          </DialogHeader>
+
+          {portalGenerating ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-sm text-fog animate-pulse">{pKeys.generating}</p>
+            </div>
+          ) : (
+            <div className="space-y-6 mt-4">
+              {/* Active Link Input */}
+              {portalUrl && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-ivory flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#7FA38A]" />
+                    {pKeys.activeLink}
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={portalUrl}
+                      className="text-xs text-silver bg-[#171C2A] border-white/5 flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 border-white/10 text-fog hover:text-ivory gap-1.5"
+                      onClick={handleCopy}
+                    >
+                      {copied ? <Check size={14} className="text-sage" /> : <Copy size={14} />}
+                      {copied ? pKeys.copied : pKeys.copyLink}
+                    </Button>
+                  </div>
+                  {activeToken && (
+                    <p className="text-[10px] text-fog">
+                      Expires: {new Date(activeToken.expires_at).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Scopes Section */}
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold text-ivory">{pKeys.scopes}</Label>
+                <div className="space-y-2.5 rounded-xl border border-white/5 bg-[#171C2A]/50 p-4">
+                  {[
+                    { id: 'approvals', label: pKeys.scopeApprovals },
+                    { id: 'files', label: pKeys.scopeFiles },
+                    { id: 'invoices', label: pKeys.scopeInvoices },
+                    { id: 'tickets', label: pKeys.scopeTickets },
+                    { id: 'nps', label: pKeys.scopeNps },
+                  ].map(s => (
+                    <label key={s.id} className="flex items-center gap-2.5 cursor-pointer text-xs text-silver hover:text-ivory transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={selectedScopes.includes(s.id)}
+                        onChange={() => handleScopeToggle(s.id)}
+                        className="rounded border-white/10 bg-midnight text-sage focus:ring-0 focus:ring-offset-0 accent-[#7FA38A] h-3.5 w-3.5"
+                      />
+                      <span>{s.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Expiry Section */}
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold text-ivory">{pKeys.expiry}</Label>
+                <div className="flex gap-2">
+                  <Select value={expiryOption} onValueChange={setExpiryOption}>
+                    <SelectTrigger className="flex-1 text-xs bg-[#171C2A] border-white/5 text-silver">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-midnight border-white/10">
+                      <SelectItem value="7">{pKeys.days7}</SelectItem>
+                      <SelectItem value="30">{pKeys.days30}</SelectItem>
+                      <SelectItem value="90">{pKeys.days90}</SelectItem>
+                      <SelectItem value="custom">{pKeys.custom}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {expiryOption === 'custom' && (
+                    <Input
+                      type="date"
+                      value={customExpiryDate}
+                      onChange={e => setCustomExpiryDate(e.target.value)}
+                      className="text-xs text-silver bg-[#171C2A] border-white/5 max-w-[150px]"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                {activeToken && (
+                  <Button
+                    variant="ghost"
+                    onClick={handleRevokeLink}
+                    className="flex-1 text-xs text-[#A86A6A] hover:bg-[#A86A6A]/10 hover:text-[#A86A6A] border border-[#A86A6A]/20"
+                  >
+                    {pKeys.revoke}
+                  </Button>
+                )}
+                <Button
+                  onClick={handleGenerateLink}
+                  className="flex-1 text-xs bg-ivory text-midnight hover:bg-white rounded-full font-medium"
+                >
+                  {pKeys.generate}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
