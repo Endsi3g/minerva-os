@@ -1,9 +1,9 @@
-import * as Sentry from 'sentry-expo';
+import * as Sentry from '@sentry/react-native';
 
 export function initSentry() {
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? '',
-    enableInExpoDevelopment: false,
+    enabled: !__DEV__,
     debug: false,
     tracesSampleRate: 0.2,
   });
@@ -11,5 +11,5 @@ export function initSentry() {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const captureException = (err: unknown, context?: Record<string, any>) => {
-  Sentry.Native.captureException(err, context ? { extra: context } : undefined);
+  Sentry.captureException(err, context ? { extra: context } : undefined);
 };

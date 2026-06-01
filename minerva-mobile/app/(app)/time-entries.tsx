@@ -7,7 +7,7 @@ import {
   Alert,
 } from 'react-native';
 import { useState, useCallback, useEffect } from 'react';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/Header';

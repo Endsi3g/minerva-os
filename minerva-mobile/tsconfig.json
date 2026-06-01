@@ -5,7 +5,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
   "include": [
@@ -13,6 +15,7 @@
     "**/*.tsx",
     ".expo/types/**/*.d.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    ".expo/types/**/*.ts"
   ]
 }

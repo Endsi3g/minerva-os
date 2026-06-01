@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { initSentry } from '@/lib/sentry';
 import { registerBackgroundTimerSync } from '@/lib/backgroundTimer';
+import * as Sentry from '@sentry/react-native';
 import '../global.css';
 
 initSentry();
@@ -19,10 +20,12 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
-export default function RootLayout() {
+function RootLayout() {
   useEffect(() => {
     Notifications.requestPermissionsAsync().catch(() => undefined);
     registerBackgroundTimerSync();
@@ -56,3 +59,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(RootLayout);
