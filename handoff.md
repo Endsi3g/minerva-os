@@ -1,7 +1,8 @@
 # Handoff Report — Minerva OS v2.1.0
 
-**Date:** 2026-05-29  
+**Date:** 2026-06-01  
 **Stack:** Next.js 15 · Supabase · TypeScript strict · Tailwind CSS v4  
+**Mobile:** Expo SDK 54 · React Native 0.81 · pnpm  
 **Status:** 75% production-ready — auth + UI complete, data layer pending
 
 ---
@@ -28,6 +29,19 @@
 All 22 modules exist at `/app/*` and render correctly with mock data:
 Dashboard · Pipeline · Clients · Projects · Tasks · Approvals · Files · Billing · Proposals · Expenses · Knowledge Base · Tickets · NPS · Resource Planning · Time Tracking · Agent Ops · Services · Fulfillment · Finance · Call Preps · Reports · Settings
 
+### Mobile app (Expo 54 · React Native 0.81)
+17 screens across iOS and Android:
+Dashboard · Pipeline · Clients · Projects · Approvals · Files · Billing · Expenses · Knowledge Base · Proposals · Tickets · Time Entries · Timer · Notifications · Profile · More
+
+Key mobile features:
+- **Sentry crash reporting** — root layout wrapped with `Sentry.wrap()`, using `@sentry/react-native ~7.2.0`
+- **pnpm** — migrated from npm/`package-lock.json` to `pnpm-lock.yaml`
+- **Expo 54** — upgraded from SDK 52 (React 19.1, RN 0.81.5)
+- **iOS-native UX** — ActionSheetIOS, Haptics, BlurView, SegmentedControl
+- **Offline detection** — NetInfo banner
+- **Background timer sync** — via `expo-task-manager` + `expo-background-fetch`
+- **EAS build profiles** — preview + production
+
 ### Design system
 **Celestial Editorial Noir** — obsidian background (`#0A0D14`), midnight cards (`#111522`), ivory text (`#F5F1E8`). All tokens defined in `src/index.css` as `@theme` variables generating Tailwind utilities. Dark mode forced via custom `ThemeProvider`.
 
@@ -37,35 +51,45 @@ Full EN/FR coverage via `useLang()` hook in `src/i18n.tsx`. Every user-visible s
 ### Notifications
 Sonner v2 wired into root providers. `toast.success()` fires on signup. Available for use anywhere in the app.
 
+### Dev service worker cleanup (v2.1.0)
+`providers.tsx` now auto-unregisters stale service workers in development mode to prevent caching issues that caused blank pages or stale assets during local dev.
+
 ---
 
 ## 2. Project structure
 
 ```
-src/
-  app/
-    page.tsx              Root → WelcomePage
-    welcome/page.tsx      Splash screen (flickering grid + skip)
-    login/page.tsx        Login (split-screen video)
-    signup/page.tsx       Sign up (split-screen video)
-    forgot-password/      PKCE reset request
-    reset-password/       New password form
-    auth/callback/        PKCE code exchange route
-    app/                  Protected app shell + 22 modules
-    portal/[token]/       Client-facing portal
-  contexts/
-    AuthContext.tsx        Supabase session + user state
-  lib/
-    supabase.ts            Plain supabase-js client
-    supabase/client.ts     SSR browser client (createBrowserClient)
-    supabase/server.ts     SSR server client (createServerClient)
-    supabase/middleware.ts Session refresh middleware
-  components/
-    ui/                   shadcn/ui components reskinned to Minerva tokens
-    layout/               AppShell, Sidebar, AppHeader, CommandPalette, TimerWidget
-    minerva/              Business composites (GettingStartedChecklist, etc.)
-  i18n.tsx                EN/FR translations (1900+ lines)
-  providers.tsx           ThemeProvider + LangProvider + AuthProvider + Toaster
+minerva-os/
+  src/
+    app/
+      page.tsx              Root → WelcomePage
+      welcome/page.tsx      Splash screen (flickering grid + skip)
+      login/page.tsx        Login (split-screen video)
+      signup/page.tsx       Sign up (split-screen video)
+      forgot-password/      PKCE reset request
+      reset-password/       New password form
+      auth/callback/        PKCE code exchange route
+      app/                  Protected app shell + 22 modules
+      portal/[token]/       Client-facing portal
+    contexts/
+      AuthContext.tsx        Supabase session + user state
+    lib/
+      supabase.ts            Plain supabase-js client
+      supabase/client.ts     SSR browser client (createBrowserClient)
+      supabase/server.ts     SSR server client (createServerClient)
+      supabase/middleware.ts Session refresh middleware
+    components/
+      ui/                   shadcn/ui components reskinned to Minerva tokens
+      layout/               AppShell, Sidebar, AppHeader, CommandPalette, TimerWidget
+      minerva/              Business composites (GettingStartedChecklist, etc.)
+    i18n.tsx                EN/FR translations (1900+ lines)
+    providers.tsx           ThemeProvider + LangProvider + AuthProvider + Toaster + dev SW cleanup
+  minerva-mobile/           Expo 54 mobile app (pnpm)
+  minerva-mcp/              MCP server for AI tool integrations
+  electron/                 Electron desktop shell
+  scripts/                  dev.bat interactive launcher
+  tests/                    Playwright audit suite
+  docs/                     Deployment + next steps
 ```
 
 ---
@@ -83,7 +107,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://kcwdmufkyjsitsuxmqld.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_fJZzWMwE5Sl1zkr9h7fiLQ_6-OOCDIB
 ```
 
-### Tables (DDL in `handoff.md` legacy section / Supabase SQL editor)
+### Tables (DDL in Supabase SQL editor)
 39 tables defined. Key ones: `organizations`, `workspaces`, `user_profiles`, `clients`, `projects`, `tasks`, `approvals`, `invoices`, `proposals`, `deals`, `assets`, `knowledge_base`, `agents`, `risk_flags`.
 
 ### Auth trigger needed
@@ -121,6 +145,13 @@ create trigger on_auth_user_created
 | `desktop-release.yml` | Push `v*` tag | Electron builds |
 | `mobile.yml` | Manual | EAS build (iOS + Android) |
 
+### Releases to date
+| Tag | Highlights |
+|---|---|
+| `v2.1.0` | Expo 54 upgrade, Sentry wrap, pnpm migration, dev SW cleanup |
+| `v2.0.1` | Redesign landing CTA, fix login page, grey signup video, Electron welcome |
+| `v2.0.0` | Landing overhaul, animations, nav links, i18n toggle, changelog |
+
 To publish a release:
 ```bash
 git tag -a v2.2.0 -m "description"
@@ -132,9 +163,15 @@ git push origin v2.2.0
 ## 5. Local development
 
 ```bash
+# Web
 npm ci
 cp .env.example .env.local   # add Supabase keys
 npm run dev                   # http://localhost:3000
+
+# Mobile
+cd minerva-mobile
+pnpm install
+npx expo start
 ```
 
 Windows shortcut: double-click `scripts/dev.bat` for an interactive menu (web, Electron, mobile, MCP server).
@@ -165,3 +202,4 @@ Every app module uses static mock data. The data layer is Priority 1 — see **`
 - **Left column on auth pages** — `justify-center` over video background, never `justify-end`
 - **Commits in English** — UI copy bilingual via i18n
 - **No em dashes** — use commas, full stops, or middle dots in UI copy
+- **Mobile uses pnpm** — do not use npm in `minerva-mobile/`

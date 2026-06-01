@@ -24,19 +24,27 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 - PDF export for invoices and proposals
 - Sentry error monitoring + PostHog product analytics
 - PWA support + Electron desktop shell
+- Dev service worker auto-cleanup to prevent stale cache issues
 
 ### Desktop (Electron 42)
 - macOS (arm64 + x64) `.dmg`
 - Windows (x64) `.exe` NSIS installer
 - System tray, `minerva://` deep links, auto-updater
 
-### Mobile (Expo SDK 52 · React Native 0.76)
-- 22 screens for iOS and Android
+### Mobile (Expo SDK 54 · React Native 0.81)
+- 17 screens for iOS and Android
 - 100% bilingual EN / FR via `MobileLangProvider`
 - iOS-native UX: ActionSheetIOS, Haptics, BlurView, SegmentedControl
-- Sentry crash reporting, offline detection, background timer sync
+- Sentry crash reporting via `@sentry/react-native` — root layout wrapped with `Sentry.wrap()`
+- Offline detection, background timer sync
 - EAS build profiles (preview + production)
+- pnpm package manager
 - TestFlight-ready
+
+### MCP server (minerva-mcp)
+- Model Context Protocol server for AI tool integrations
+- Browser session management + Supabase client
+- Extensible tool system
 
 ---
 
@@ -45,7 +53,7 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 | Layer | Technology |
 |---|---|
 | Framework | Next.js 15 + React 18 + TypeScript (strict) |
-| Mobile | Expo SDK 52 + React Native 0.76 + NativeWind v4 |
+| Mobile | Expo SDK 54 + React Native 0.81 + NativeWind v4 + pnpm |
 | Desktop | Electron 42 |
 | Backend | Supabase (PostgreSQL + Auth + Storage) |
 | Auth | Supabase Auth — email/password, PKCE reset flow |
@@ -89,9 +97,11 @@ npm run dev
 
 # 4. Mobile (separate terminal)
 cd minerva-mobile
-npm ci
+pnpm install
 npx expo start
 ```
+
+Windows shortcut: double-click `scripts/dev.bat` for an interactive menu (web, Electron, mobile, MCP server).
 
 ---
 
@@ -126,6 +136,22 @@ See **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions covering:
 
 ---
 
+## Releases
+
+| Tag | Date | Highlights |
+|---|---|---|
+| `v2.1.0` | 2026-06-01 | Expo 54 upgrade, Sentry wrap, pnpm migration, dev SW cleanup |
+| `v2.0.1` | — | Redesign landing CTA, fix login page, Electron welcome |
+| `v2.0.0` | — | Landing overhaul, animations, i18n toggle, changelog |
+
+To publish a new release:
+```bash
+git tag -a v2.2.0 -m "description"
+git push origin v2.2.0
+```
+
+---
+
 ## Testing
 
 ```bash
@@ -151,3 +177,4 @@ npm run test:audit:report
 - No `overflow-hidden + maxHeight` for animated panels — use `translateY` slides
 - Commit messages in English, code comments in English, UI copy bilingual (EN/FR)
 - Left column of auth pages: centered content (`justify-center`) over video background
+- Mobile uses **pnpm** — do not use npm in `minerva-mobile/`
