@@ -16,8 +16,10 @@ import path from 'path';
 
 
 const IS_DEV = process.env.NODE_ENV === 'development';
+const DEMO_MODE = process.env.DEMO_MODE === '1' || process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 const PROD_URL = process.env.MINERVA_APP_URL ?? 'https://minerva-os.vercel.app';
-const APP_URL = IS_DEV ? 'http://localhost:3000' : PROD_URL;
+const DEV_PORT = process.env.PORT ?? '3001';
+const APP_URL = IS_DEV ? `http://localhost:${DEV_PORT}` : PROD_URL;
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -44,7 +46,7 @@ function createWindow() {
     show: false,
   });
 
-  mainWindow.loadURL(`${APP_URL}/welcome`);
+  mainWindow.loadURL(DEMO_MODE ? `${APP_URL}/app/dashboard` : `${APP_URL}/welcome`);
 
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();

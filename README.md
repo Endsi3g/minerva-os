@@ -65,7 +65,7 @@ Dark-first editorial aesthetic. No neon, no generic SaaS gradients.
 | `midnight` | `#111522` | Cards, inputs |
 | `ivory` | `#F5F1E8` | Primary text, CTA |
 | `silver` | `#B8BDC7` | Secondary text |
-| `fog` | `#8A9099` | Metadata, tertiary |
+| `fog` | `#9FA8B5` | Metadata, tertiary (WCAG AAA 7.21:1 on midnight) |
 | `sage` | `#7FA38A` | Success, active |
 | `amber` | `#B89B6A` | Warning |
 | `rose` | `#A86A6A` | Error, danger |
@@ -78,20 +78,68 @@ Dark-first editorial aesthetic. No neon, no generic SaaS gradients.
 # 1. Clone and install
 git clone https://github.com/Endsi3g/minerva-os.git
 cd minerva-os
-npm ci
+pnpm install
 
 # 2. Copy env vars
 cp .env.example .env.local
 # Fill in NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, etc.
 
 # 3. Start Next.js
-npm run dev
+pnpm dev
 
 # 4. Mobile (separate terminal)
 cd minerva-mobile
-npm ci
+pnpm install
 npx expo start
 ```
+
+---
+
+## Demo mode (no Supabase required)
+
+All 23 authenticated routes can be explored with fully realistic mock data — no database connection needed.
+
+### Activate
+
+The repo ships with demo mode already enabled in `.env.local`:
+
+```
+NEXT_PUBLIC_PLAYWRIGHT_TEST=1
+PLAYWRIGHT_TEST=1
+```
+
+### Run
+
+```bash
+pnpm dev   # starts on http://localhost:3001
+# navigate to /app/dashboard — auth is bypassed, all modules show mock data
+```
+
+### What is mocked
+
+| Layer | What you get |
+|---|---|
+| Auth | Demo user: Alex Martin (owner role) — no Supabase session needed |
+| All 22 modules | Dashboard, Pipeline, Clients, Projects, Tasks, Approvals, Files, Billing, Proposals, Expenses, KB, Tickets, NPS, Resource Planning, Time Tracking, Agent Ops, Services, Fulfillment, Finance, Call Preps, Reports, Settings |
+| CRUD operations | Add / edit / delete all update local state only — no DB writes |
+| Notifications | 3 pre-seeded notifications in AppHeader |
+| Timer widget | Start / stop timer persisted in memory |
+| Command Palette | Search across mock clients and projects |
+| Comments | Pre-loaded + submittable in memory |
+| Presence | Disabled (no Realtime channel opened) |
+
+### Electron demo mode
+
+```bash
+pnpm electron:compile   # compile main process once
+pnpm electron:demo      # starts Next.js + opens Electron directly at /app/dashboard
+```
+
+### Switch to production
+
+1. Replace the Supabase env vars in `.env.local` with your project's real keys
+2. Remove `NEXT_PUBLIC_PLAYWRIGHT_TEST=1` and `PLAYWRIGHT_TEST=1`
+3. `pnpm dev` — app authenticates via Supabase and reads live data
 
 ---
 
