@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Plus, Ticket } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { usePortalData } from './usePortalData';
 import { useLang } from '@/i18n';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import { toast } from 'sonner';
 
 export default function PortalTickets() {
   const { lang } = useLang();
-  const { clientId, workspaceId, isValid } = usePortalData();
+  const { clientId, workspaceId, isValid, tickets, token, refresh } = usePortalData();
 
   const [clientTickets, setClientTickets] = useState<any[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -25,58 +24,35 @@ export default function PortalTickets() {
   });
 
   useEffect(() => {
-    if (!clientId) return;
-    async function loadTickets() {
-      const { data } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('client_id', clientId)
-        .order('created_at', { ascending: false });
-      if (data) {
-        setClientTickets(data.map(t => ({
-          ...t,
-          _id: t.id,
-          clientId: t.client_id,
-        })));
-      }
+    if (tickets) {
+      setClientTickets(tickets);
     }
-    loadTickets();
-  }, [clientId]);
+  }, [tickets]);
 
   if (!isValid) return null;
 
   async function handleSubmit() {
-    if (!clientId || !workspaceId) return;
+    if (!clientId || !workspaceId || !token) return;
     if (!form.subject || !form.description) {
       toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill all required fields');
       return;
     }
     try {
-      const { data, error } = await supabase
-        .from('tickets')
-        .insert({
-          workspace_id: workspaceId,
-          client_id: clientId,
+      const res = await fetch('/api/portal/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
           subject: form.subject,
           description: form.description,
           priority: form.priority,
           category: form.category,
-          status: 'open',
-        })
-        .select()
-        .single();
+        }),
+      });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      if (data) {
-        setClientTickets(prev => [
-          {
-            ...data,
-            _id: data.id,
-            clientId: data.client_id,
-          },
-          ...prev,
-        ]);
+      if (res.ok && data.success) {
         toast.success(lang === 'fr' ? 'Ticket soumis avec succès' : 'Request submitted successfully');
         setSheetOpen(false);
         setForm({
@@ -85,6 +61,9 @@ export default function PortalTickets() {
           priority: 'medium',
           category: 'question',
         });
+        refresh();
+      } else {
+        throw new Error(data.error || 'Failed to submit ticket');
       }
     } catch (e) {
       console.error(e);

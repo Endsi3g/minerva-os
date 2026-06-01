@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import type { Approval, ApprovalStatus } from '@/lib/types';
 
 export function usePortalData() {
@@ -10,6 +9,14 @@ export function usePortalData() {
 
   const [portalData, setPortalData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [clientEmail, setClientEmail] = useState('');
+  const [isExpired, setIsExpired] = useState(false);
+  const [triggerFetch, setTriggerFetch] = useState(0);
+
+  function refresh() {
+    setTriggerFetch(prev => prev + 1);
+  }
 
   useEffect(() => {
     if (!token) {
@@ -19,131 +26,32 @@ export function usePortalData() {
 
     async function fetchPortalData() {
       try {
-        const { data: tokenRow } = await supabase
-          .from('portal_tokens')
-          .select('*')
-          .eq('token', token)
-          .maybeSingle();
-
-        if (!tokenRow) {
-          setLoading(false);
-          return;
+        const res = await fetch(`/api/portal/data?token=${token}`);
+        if (res.status === 401) {
+          setIsExpired(true);
+          setPortalData(null);
+        } else if (res.status === 403) {
+          const data = await res.json();
+          setNeedsVerification(true);
+          setClientEmail(data.email || '');
+          setPortalData(null);
+        } else if (res.ok) {
+          const data = await res.json();
+          setPortalData(data);
+          setNeedsVerification(false);
+          setIsExpired(false);
+        } else {
+          setPortalData(null);
         }
-
-        const clientId = tokenRow.client_id;
-
-        // Fetch client details
-        const { data: client } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('id', clientId)
-          .maybeSingle();
-
-        if (!client) {
-          setLoading(false);
-          return;
-        }
-
-        // Fetch projects
-        const { data: dbProjects } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('client_id', clientId);
-
-        const projects = (dbProjects ?? []).map(p => ({
-          ...p,
-          _id: p.id,
-          workspaceId: p.workspace_id,
-          clientId: p.client_id,
-          clientName: p.client_name,
-          dueDate: p.due_date,
-          budget: Number(p.budget),
-          healthScore: p.health_score,
-          activeRiskFlags: p.active_risk_flags,
-        }));
-
-        const projectIds = projects.map(p => p.id);
-
-        // Parallel requests
-        const [
-          { data: dbTasks },
-          { data: dbApprovals },
-          { data: dbAssets },
-          { data: dbInvoices },
-          { data: dbMilestones },
-        ] = await Promise.all([
-          projectIds.length > 0
-            ? supabase.from('tasks').select('*').in('project_id', projectIds)
-            : Promise.resolve({ data: [] }),
-          projectIds.length > 0
-            ? supabase.from('approvals').select('*').in('project_id', projectIds)
-            : Promise.resolve({ data: [] }),
-          supabase.from('assets').select('*').eq('client_id', clientId),
-          supabase.from('invoices').select('*').eq('client_id', clientId),
-          projectIds.length > 0
-            ? supabase.from('milestones').select('*').in('project_id', projectIds)
-            : Promise.resolve({ data: [] }),
-        ]);
-
-        const mappedTasks = (dbTasks ?? []).map(t => ({
-          ...t,
-          _id: t.id,
-          projectId: t.project_id,
-          estimatedHours: t.estimated_hours ? Number(t.estimated_hours) : 0,
-        }));
-
-        const mappedApprovals = (dbApprovals ?? []).map(a => ({
-          ...a,
-          _id: a.id,
-          projectId: a.project_id,
-          submittedDate: a.submitted_date,
-          fileUrl: a.file_url,
-        }));
-
-        const mappedAssets = (dbAssets ?? []).map(a => ({
-          ...a,
-          _id: a.id,
-          uploadedAt: a.uploaded_at,
-        }));
-
-        const mappedInvoices = (dbInvoices ?? []).map(i => ({
-          ...i,
-          _id: i.id,
-          invoiceNumber: i.invoice_number,
-          dueDate: i.due_date,
-          paidDate: i.paid_date,
-        }));
-
-        const mappedMilestones = (dbMilestones ?? []).map(m => ({
-          ...m,
-          _id: m.id,
-          projectId: m.project_id,
-          dueDate: m.due_date,
-        }));
-
-        setPortalData({
-          client: {
-            _id: client.id,
-            id: client.id,
-            company: client.company,
-            workspaceId: client.workspace_id,
-          },
-          projects,
-          tasks: mappedTasks,
-          approvals: mappedApprovals,
-          assets: mappedAssets,
-          invoices: mappedInvoices,
-          milestones: mappedMilestones,
-        });
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching portal data:', err);
       } finally {
         setLoading(false);
       }
     }
 
     fetchPortalData();
-  }, [token]);
+  }, [token, triggerFetch]);
 
   const isValid = !!portalData;
   const clientName = portalData?.client?.company ?? 'Unknown Client';
@@ -157,12 +65,18 @@ export function usePortalData() {
     workspaceId,
     isValid,
     loading,
+    needsVerification,
+    clientEmail,
+    isExpired,
     projects: portalData?.projects ?? [],
     tasks: portalData?.tasks ?? [],
     approvals: portalData?.approvals ?? [],
     files: portalData?.assets ?? [],
     invoices: portalData?.invoices ?? [],
     milestones: portalData?.milestones ?? [],
+    tickets: portalData?.tickets ?? [],
+    scopes: portalData?.scopes ?? [],
+    refresh,
   };
 }
 

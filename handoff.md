@@ -1,9 +1,9 @@
-# Handoff Report — Minerva OS v2.1.0
+# Handoff Report — Minerva OS v2.2.0
 
 **Date:** 2026-06-01  
 **Stack:** Next.js 15 · Supabase · TypeScript strict · Tailwind CSS v4  
 **Mobile:** Expo SDK 54 · React Native 0.81 · pnpm  
-**Status:** 75% production-ready — auth + UI complete, data layer pending
+**Status:** 80% production-ready — auth, secure client portal, and UI complete, database tables mocked
 
 ---
 
@@ -53,6 +53,13 @@ Sonner v2 wired into root providers. `toast.success()` fires on signup. Availabl
 
 ### Dev service worker cleanup (v2.1.0)
 `providers.tsx` now auto-unregisters stale service workers in development mode to prevent caching issues that caused blank pages or stale assets during local dev.
+
+### Secure Client Portal & Proposals (v2.2.0)
+- **Secure public routes**: Public guests do not query Supabase directly. All database reads and updates route through server-side Next.js API endpoints (`/api/portal/*`) using a secure `supabaseAdmin` client.
+- **Identity validation gate**: Visitors are redirected to an email verification gate that validates their identity against registered client records. Successful validation sets a secure HTTP-only verification cookie (`minerva_portal_email`).
+- **Scope-based navigation**: Side navigation tabs (Approvals, Files, Invoices, Tickets, NPS) are dynamically enabled or blocked based on the specific portal token's `scopes` array.
+- **Auditing & event logging**: Activity logging records events such as `portal_accessed`, `email_verified`, `file_downloaded`, `approval_approved`, `comment_added`, `proposal_signed`, etc.
+- **Bilingual support**: Full English and French translation switcher on both the Client Portal and Proposal Viewer.
 
 ---
 
@@ -148,14 +155,15 @@ create trigger on_auth_user_created
 ### Releases to date
 | Tag | Highlights |
 |---|---|
+| `v2.2.0` | Secure Client Portal email gate, token scopes, activity logging, and API-driven proposal viewer |
 | `v2.1.0` | Expo 54 upgrade, Sentry wrap, pnpm migration, dev SW cleanup |
 | `v2.0.1` | Redesign landing CTA, fix login page, grey signup video, Electron welcome |
 | `v2.0.0` | Landing overhaul, animations, nav links, i18n toggle, changelog |
 
 To publish a release:
 ```bash
-git tag -a v2.2.0 -m "description"
-git push origin v2.2.0
+git tag -a v2.3.0 -m "description"
+git push origin v2.3.0
 ```
 
 ---

@@ -1,18 +1,13 @@
 'use client';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import { usePortalData } from './usePortalData';
 import { NavLink } from '@/components/ui/nav-link';
-
-const PORTAL_TABS = [
-  { label: 'Overview',     path: '' },
-  { label: 'Deliverables', path: 'deliverables' },
-  { label: 'Files',        path: 'files' },
-  { label: 'Invoices',     path: 'invoices' },
-  { label: 'Support',      path: 'tickets' },
-  { label: 'Satisfaction', path: 'nps' },
-];
+import { useLang } from '@/i18n';
+import { Button } from '@/components/ui/button';
+import PortalEmailGate from './PortalEmailGate';
+import PortalExpired from './PortalExpired';
 
 function PortalLoadingSkeleton() {
   return (
@@ -36,17 +31,6 @@ function PortalLoadingSkeleton() {
             <div className="h-4 w-px" style={{ backgroundColor: 'rgba(255,255,255,0.10)' }} />
             <span className="text-sm" style={{ color: '#8A9099' }}>Client Portal</span>
           </div>
-          <div className="flex gap-0 -mb-px">
-            {PORTAL_TABS.map(tab => (
-              <span
-                key={tab.label}
-                className="px-4 py-2.5 text-sm border-b-2 border-transparent"
-                style={{ color: '#8A9099' }}
-              >
-                {tab.label}
-              </span>
-            ))}
-          </div>
         </div>
       </header>
       <main className="max-w-5xl mx-auto px-5 py-10">
@@ -67,21 +51,54 @@ function PortalLoadingSkeleton() {
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const token = params?.token as string | undefined;
-  const { clientName, isValid, loading } = usePortalData();
+  const { t, lang, setLang } = useLang();
+  const pathname = usePathname();
   const router = useRouter();
 
+  const {
+    clientName,
+    isValid,
+    loading,
+    needsVerification,
+    isExpired,
+    scopes,
+    refresh,
+  } = usePortalData();
+
+  const PORTAL_TABS = [
+    { label: t.app.sidebar.dashboard,     path: '',             scope: null },
+    { label: t.app.sidebar.approvals,     path: 'deliverables', scope: 'approvals' },
+    { label: t.app.sidebar.files,         path: 'files',        scope: 'files' },
+    { label: t.app.sidebar.billing,       path: 'invoices',     scope: 'invoices' },
+    { label: t.app.sidebar.tickets,       path: 'tickets',      scope: 'tickets' },
+    { label: t.app.sidebar.nps,           path: 'nps',          scope: 'nps' },
+  ];
+
+  // Block unauthorized direct URL access
   useEffect(() => {
-    if (!loading && !isValid) router.replace('/');
-  }, [loading, isValid, router]);
+    if (loading || !token || !isValid) return;
+
+    const currentTab = PORTAL_TABS.find(tab => {
+      if (tab.path === '') {
+        return pathname === `/portal/${token}` || pathname === `/portal/${token}/`;
+      }
+      return pathname?.endsWith(`/${tab.path}`);
+    });
+
+    if (currentTab && currentTab.scope && !scopes.includes(currentTab.scope)) {
+      router.replace(`/portal/${token}`);
+    }
+  }, [loading, token, isValid, pathname, scopes, router]);
 
   if (loading) return <PortalLoadingSkeleton />;
-  if (!isValid) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-obsidian" style={{ backgroundColor: '#0A0D14' }}>
-        <p className="text-silver text-sm" style={{ color: '#B8BDC7' }}>Ce lien d'accès est invalide ou expiré.</p>
-      </div>
-    );
+  if (isExpired) return <PortalExpired />;
+  if (needsVerification && token) {
+    return <PortalEmailGate token={token} onVerified={refresh} />;
   }
+  if (!isValid) return <PortalExpired />;
+
+  // Filter tabs by scope
+  const visibleTabs = PORTAL_TABS.filter(tab => !tab.scope || scopes.includes(tab.scope));
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif" }}>
@@ -127,18 +144,28 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
             <div className="flex-1" />
 
+            {/* Language Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLang(lang === 'en' ? 'fr' : 'en')}
+              className="text-xs text-[#8A9099] hover:text-[#F5F1E8] border border-white/5 h-8 px-2.5 rounded-lg"
+            >
+              {lang === 'en' ? 'FR' : 'EN'}
+            </Button>
+
             <Link
               href="/"
               className="text-xs transition-colors duration-200 hover:text-white/60"
               style={{ color: '#8A9099' }}
             >
-              &larr; Back to site
+              &larr; {t.nav.back}
             </Link>
           </div>
 
           {/* Tab bar */}
           <div className="flex gap-0 -mb-px">
-            {PORTAL_TABS.map(tab => (
+            {visibleTabs.map(tab => (
               <NavLink
                 key={tab.label}
                 href={tab.path === '' ? `/portal/${token}` : `/portal/${token}/${tab.path}`}
@@ -165,3 +192,4 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     </div>
   );
 }
+

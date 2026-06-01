@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import type { InvoiceStatus } from '@/lib/types';
 import { toast } from 'sonner';
-
+import { useLang } from '@/i18n';
+import { InvoicePdf, downloadPdf } from '@/components/minerva/PdfExport';
 
 const STATUS_CONFIG: Record<InvoiceStatus, { label: string; class: string }> = {
   draft:     { label: 'Draft',    class: 'text-[#8A9099] bg-[#8A9099]/10 border-[#8A9099]/20' },
@@ -21,7 +22,8 @@ function fmt(amount: number, currency: string) {
 }
 
 export default function PortalInvoices() {
-  const { isValid, invoices: rawInvoices, projects, token } = usePortalData();
+  const { t, lang } = useLang();
+  const { isValid, invoices: rawInvoices, projects, token, clientName } = usePortalData();
   const [payingId, setPayingId] = useState<string | null>(null);
 
   if (!isValid) return null;
@@ -54,6 +56,28 @@ export default function PortalInvoices() {
     }
   }
 
+  async function handleDownload(invoice: any) {
+    if (!token) return;
+    try {
+      // 1. Log activity via API
+      await fetch('/api/portal/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          event: 'invoice_downloaded',
+          metadata: { invoiceId: invoice.id, number: invoice.number },
+        }),
+      });
+
+      // 2. Generate and download PDF
+      const doc = <InvoicePdf invoice={invoice} workspaceName="Minerva OS" clientName={clientName} />;
+      await downloadPdf(doc, `Invoice-${invoice.number}.pdf`);
+    } catch (err) {
+      console.error('Failed to download invoice PDF:', err);
+    }
+  }
+
   // Map to local UI format
   const invoices = rawInvoices.map((inv: any) => {
     const project = projects.find((p: any) => p._id === inv.projectId);
@@ -63,8 +87,11 @@ export default function PortalInvoices() {
       number: inv.invoiceNumber,
       issuedDate: inv.date,
       project: project?.name || '...',
-      currency: 'USD', // Default as it's not in schema
-      paidDate: null,   // Default as it's not in schema
+      currency: 'USD',
+      paidDate: inv.paid_date || null,
+      tps: Number(inv.tps || 0),
+      tvq: Number(inv.tvq || 0),
+      items: inv.items || [{ description: 'Fulfillment services', quantity: 1, price: inv.amount }],
     };
   });
 
@@ -83,18 +110,18 @@ export default function PortalInvoices() {
           className="text-2xl font-normal"
           style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}
         >
-          Invoices
+          {t.app.sidebar.billing}
         </h1>
         <p className="text-sm mt-1" style={{ color: '#8A9099' }}>
-          Your billing history with Uprising Studio.
+          {lang === 'fr' ? 'Votre historique de facturation avec Minerva.' : 'Your billing history with Minerva.'}
         </p>
       </div>
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: 'Outstanding', value: outstanding > 0 ? fmt(outstanding, 'USD') : '—', sub: 'awaiting payment', color: outstanding > 0 ? '#B89B6A' : '#7FA38A' },
-          { label: 'Total paid',  value: fmt(paid, 'USD'),   sub: 'all time',           color: '#7FA38A' },
+          { label: t.app.billing.summary.outstanding, value: outstanding > 0 ? fmt(outstanding, 'USD') : '—', sub: lang === 'fr' ? 'en attente de paiement' : 'awaiting payment', color: outstanding > 0 ? '#B89B6A' : '#7FA38A' },
+          { label: t.app.billing.summary.collected,  value: fmt(paid, 'USD'),   sub: lang === 'fr' ? 'au total' : 'all time',           color: '#7FA38A' },
         ].map(s => (
           <div
             key={s.label}
@@ -111,7 +138,7 @@ export default function PortalInvoices() {
       {/* Invoice list */}
       <div className="space-y-2">
         {invoices.length === 0 && (
-          <p className="text-sm text-center py-12" style={{ color: '#8A9099' }}>No invoices yet.</p>
+          <p className="text-sm text-center py-12" style={{ color: '#8A9099' }}>{t.app.billing.invoices.empty}</p>
         )}
         {invoices.map((invoice: any, i: number) => {
           const sc = STATUS_CONFIG[invoice.status as InvoiceStatus] || STATUS_CONFIG.draft;
@@ -132,7 +159,7 @@ export default function PortalInvoices() {
                   <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border', sc.class)}>{sc.label}</span>
                 </div>
                 <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8A9099' }}>
-                  {invoice.project} · Issued {new Date(invoice.issuedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {invoice.project} · Issued {new Date(invoice.issuedDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
               </div>
 
@@ -140,8 +167,8 @@ export default function PortalInvoices() {
               <div className="hidden sm:block text-right shrink-0">
                 <p className="text-xs" style={{ color: '#8A9099' }}>
                   {invoice.status === 'paid' && invoice.paidDate
-                    ? `Paid ${new Date(invoice.paidDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-                    : `Due ${new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                    ? `Paid ${new Date(invoice.paidDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`
+                    : `Due ${new Date(invoice.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`}
                 </p>
               </div>
 
@@ -156,7 +183,7 @@ export default function PortalInvoices() {
                   <button
                     onClick={() => handlePay(invoice)}
                     disabled={payingId !== null}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     style={{
                       backgroundColor: 'rgba(127,163,138,0.10)',
                       border: '1px solid rgba(127,163,138,0.22)',
@@ -168,8 +195,9 @@ export default function PortalInvoices() {
                   </button>
                 )}
                 <button
-                  className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-white/5"
-                  title="Download PDF"
+                  onClick={() => handleDownload(invoice)}
+                  className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-white/5 cursor-pointer"
+                  title={lang === 'fr' ? 'Télécharger PDF' : 'Download PDF'}
                   aria-label="Download invoice"
                 >
                   <Download size={13} style={{ color: '#8A9099' }} />
@@ -182,3 +210,4 @@ export default function PortalInvoices() {
     </div>
   );
 }
+

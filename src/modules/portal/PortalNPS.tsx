@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { usePortalData } from './usePortalData';
 import { useLang } from '@/i18n';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { toast } from 'sonner';
 
 export default function PortalNPS() {
   const { lang } = useLang();
-  const { clientId, workspaceId, isValid } = usePortalData();
+  const { clientId, workspaceId, isValid, token } = usePortalData();
 
   const [score, setScore] = useState<number | null>(null);
   const [reason, setReason] = useState('');
@@ -21,27 +20,31 @@ export default function PortalNPS() {
   if (!isValid) return null;
 
   async function handleSubmit() {
-    if (!clientId || !workspaceId || score === null) {
+    if (!clientId || !workspaceId || score === null || !token) {
       toast.error(lang === 'fr' ? 'Veuillez sélectionner un score' : 'Please select a score');
       return;
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('nps_responses')
-        .insert({
-          workspace_id: workspaceId,
-          client_id: clientId,
+      const res = await fetch('/api/portal/nps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
           score,
           reason: reason || null,
           suggestion: suggestion || null,
-          trigger_event: 'manual',
-        });
+        }),
+      });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      setSubmitted(true);
-      toast.success(lang === 'fr' ? 'Merci pour vos commentaires !' : 'Thank you for your feedback!');
+      if (res.ok && data.success) {
+        setSubmitted(true);
+        toast.success(lang === 'fr' ? 'Merci pour vos commentaires !' : 'Thank you for your feedback!');
+      } else {
+        throw new Error(data.error || 'Failed to submit feedback');
+      }
     } catch (e) {
       console.error(e);
       toast.error(lang === 'fr' ? 'Échec de la soumission.' : 'Submission failed.');

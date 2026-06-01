@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,9 +65,32 @@ export default function Clients() {
   const [portalGenerating, setPortalGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // New Client Portal States
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [selectedScopes, setSelectedScopes] = useState<string[]>(['approvals', 'files', 'invoices']);
+  const [expiryOption, setExpiryOption] = useState<string>('30');
+  const [customExpiryDate, setCustomExpiryDate] = useState<string>('');
+  const [activeToken, setActiveToken] = useState<any>(null);
+  const [portalTokens, setPortalTokens] = useState<any[]>([]);
+
   const filtered = clients.filter((c: any) =>
     c.company.toLowerCase().includes(query.toLowerCase())
   );
+
+  async function refreshTokens() {
+    if (!workspaceId) return;
+    const { data } = await supabase
+      .from('portal_tokens')
+      .select('*')
+      .eq('workspace_id', workspaceId);
+    if (data) {
+      setPortalTokens(data);
+    }
+  }
+
+  useEffect(() => {
+    refreshTokens();
+  }, [workspaceId]);
 
   async function handleAdd() {
     if (!form.company.trim() || !workspaceId) return;
@@ -91,34 +114,122 @@ export default function Clients() {
     setPortalUrl('');
     setPortalDialogOpen(true);
     setCopied(false);
+    setSelectedClientId(clientId);
+    setActiveToken(null);
+
+    // Fetch existing token if any
+    const { data: existingToken, error } = await supabase
+      .from('portal_tokens')
+      .select('*')
+      .eq('client_id', clientId)
+      .maybeSingle();
+
+    setPortalGenerating(false);
+
+    if (!error && existingToken) {
+      setActiveToken(existingToken);
+      setPortalUrl(`${window.location.origin}/portal/${existingToken.token}`);
+      setSelectedScopes(existingToken.scopes || []);
+      
+      const expiryDate = new Date(existingToken.expires_at);
+      const days = Math.round((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (days === 7) setExpiryOption('7');
+      else if (days === 30) setExpiryOption('30');
+      else if (days === 90) setExpiryOption('90');
+      else {
+        setExpiryOption('custom');
+        setCustomExpiryDate(existingToken.expires_at.split('T')[0]);
+      }
+    } else {
+      setSelectedScopes(['approvals', 'files', 'invoices']);
+      setExpiryOption('30');
+      setCustomExpiryDate('');
+    }
+  }
+
+  async function handleGenerateLink() {
+    if (!selectedClientId || !workspaceId) return;
+    setPortalGenerating(true);
 
     const token = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    let expiresAt: string;
+    if (expiryOption === 'custom') {
+      if (!customExpiryDate) {
+        toast.error('Please select a custom expiry date.');
+        setPortalGenerating(false);
+        return;
+      }
+      expiresAt = new Date(customExpiryDate).toISOString();
+    } else {
+      const days = parseInt(expiryOption) || 30;
+      expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    }
 
-    const { error } = await supabase.from('portal_tokens').insert({
-      token,
-      client_id: clientId,
-      workspace_id: workspaceId,
-      expires_at: expiresAt,
-      scopes: ['approvals', 'files', 'invoices'],
-    });
+    // Delete existing token if any (clean up)
+    await supabase
+      .from('portal_tokens')
+      .delete()
+      .eq('client_id', selectedClientId);
+
+    const { data: newToken, error } = await supabase
+      .from('portal_tokens')
+      .insert({
+        token,
+        client_id: selectedClientId,
+        workspace_id: workspaceId,
+        expires_at: expiresAt,
+        scopes: selectedScopes,
+      })
+      .select()
+      .single();
 
     setPortalGenerating(false);
 
     if (error) {
-      toast.error(pKeys.error);
-      setPortalDialogOpen(false);
+      toast.error('Failed to generate link.');
       return;
     }
 
-    const url = `${window.location.origin}/portal/${token}`;
-    setPortalUrl(url);
+    setActiveToken(newToken);
+    setPortalUrl(`${window.location.origin}/portal/${token}`);
+    toast.success('Portal link created successfully.');
+    refreshTokens();
+  }
+
+  async function handleRevokeLink() {
+    if (!selectedClientId) return;
+    setPortalGenerating(true);
+
+    const { error } = await supabase
+      .from('portal_tokens')
+      .delete()
+      .eq('client_id', selectedClientId);
+
+    setPortalGenerating(false);
+
+    if (error) {
+      toast.error('Failed to revoke access.');
+      return;
+    }
+
+    setActiveToken(null);
+    setPortalUrl('');
+    toast.success('Portal access revoked.');
+    refreshTokens();
   }
 
   async function handleCopy() {
     await navigator.clipboard.writeText(portalUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleScopeToggle(scope: string) {
+    setSelectedScopes(prev =>
+      prev.includes(scope)
+        ? prev.filter(s => s !== scope)
+        : [...prev, scope]
+    );
   }
 
   return (
@@ -166,6 +277,7 @@ export default function Clients() {
                   monthlyValue: client.monthlyValue || 0,
                 }}
                 onPortalLink={handleGeneratePortalLink}
+                activePortalToken={portalTokens.find(t => t.client_id === client._id)}
               />
             );
           })}
@@ -239,25 +351,111 @@ export default function Clients() {
           </DialogHeader>
 
           {portalGenerating ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-12">
               <p className="text-sm text-fog animate-pulse">{pKeys.generating}</p>
             </div>
           ) : (
-            <div className="flex items-center gap-2 mt-2">
-              <Input
-                readOnly
-                value={portalUrl}
-                className="text-xs text-silver bg-dusk border-white/08 flex-1"
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                className="shrink-0 border-white/10 text-fog hover:text-ivory gap-1.5"
-                onClick={handleCopy}
-              >
-                {copied ? <Check size={14} className="text-sage" /> : <Copy size={14} />}
-                {copied ? pKeys.copied : pKeys.copyLink}
-              </Button>
+            <div className="space-y-6 mt-4">
+              {/* Active Link Input */}
+              {portalUrl && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-ivory flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#7FA38A]" />
+                    {pKeys.activeLink}
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={portalUrl}
+                      className="text-xs text-silver bg-[#171C2A] border-white/5 flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 border-white/10 text-fog hover:text-ivory gap-1.5"
+                      onClick={handleCopy}
+                    >
+                      {copied ? <Check size={14} className="text-sage" /> : <Copy size={14} />}
+                      {copied ? pKeys.copied : pKeys.copyLink}
+                    </Button>
+                  </div>
+                  {activeToken && (
+                    <p className="text-[10px] text-fog">
+                      Expires: {new Date(activeToken.expires_at).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Scopes Section */}
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold text-ivory">{pKeys.scopes}</Label>
+                <div className="space-y-2.5 rounded-xl border border-white/5 bg-[#171C2A]/50 p-4">
+                  {[
+                    { id: 'approvals', label: pKeys.scopeApprovals },
+                    { id: 'files', label: pKeys.scopeFiles },
+                    { id: 'invoices', label: pKeys.scopeInvoices },
+                    { id: 'tickets', label: pKeys.scopeTickets },
+                    { id: 'nps', label: pKeys.scopeNps },
+                  ].map(s => (
+                    <label key={s.id} className="flex items-center gap-2.5 cursor-pointer text-xs text-silver hover:text-ivory transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={selectedScopes.includes(s.id)}
+                        onChange={() => handleScopeToggle(s.id)}
+                        className="rounded border-white/10 bg-midnight text-sage focus:ring-0 focus:ring-offset-0 accent-[#7FA38A] h-3.5 w-3.5"
+                      />
+                      <span>{s.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Expiry Section */}
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold text-ivory">{pKeys.expiry}</Label>
+                <div className="flex gap-2">
+                  <Select value={expiryOption} onValueChange={setExpiryOption}>
+                    <SelectTrigger className="flex-1 text-xs bg-[#171C2A] border-white/5 text-silver">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-midnight border-white/10">
+                      <SelectItem value="7">{pKeys.days7}</SelectItem>
+                      <SelectItem value="30">{pKeys.days30}</SelectItem>
+                      <SelectItem value="90">{pKeys.days90}</SelectItem>
+                      <SelectItem value="custom">{pKeys.custom}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {expiryOption === 'custom' && (
+                    <Input
+                      type="date"
+                      value={customExpiryDate}
+                      onChange={e => setCustomExpiryDate(e.target.value)}
+                      className="text-xs text-silver bg-[#171C2A] border-white/5 max-w-[150px]"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                {activeToken && (
+                  <Button
+                    variant="ghost"
+                    onClick={handleRevokeLink}
+                    className="flex-1 text-xs text-[#A86A6A] hover:bg-[#A86A6A]/10 hover:text-[#A86A6A] border border-[#A86A6A]/20"
+                  >
+                    {pKeys.revoke}
+                  </Button>
+                )}
+                <Button
+                  onClick={handleGenerateLink}
+                  className="flex-1 text-xs bg-ivory text-midnight hover:bg-white rounded-full font-medium"
+                >
+                  {pKeys.generate}
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
