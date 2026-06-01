@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Circle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(email, password);
+      toast.success('Welcome back', { description: 'Signed in to Minerva OS.', duration: 3000 });
       const next = searchParams?.get('next') ?? '/app/dashboard';
       router.push(next);
     } catch (err) {

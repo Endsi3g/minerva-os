@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Chrome, Github, Eye, EyeOff, Circle } from 'lucide-react';
+import { toast } from 'sonner';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -50,6 +51,10 @@ export default function SignUp() {
     setIsLoading(true);
     try {
       await signup(firstName, lastName, email, password);
+      toast.success('Account created', {
+        description: `Welcome to Minerva OS, ${firstName}.`,
+        duration: 4000,
+      });
       router.push('/app/onboarding');
     } catch (err) {
       setError(err instanceof Error ? err.message : s.errorFailed);
