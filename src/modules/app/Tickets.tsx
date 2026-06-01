@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { MOCK_TICKETS, MOCK_CLIENTS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 const STATUS_CONFIG: Record<string, { label: string; class: string; icon: React.ElementType }> = {
   open:        { label: 'Open',        class: 'text-warm bg-warm/10 border-warm/20',   icon: AlertCircle },
@@ -40,6 +42,12 @@ function TicketForm({ workspaceId, clients, onClose, onCreated }: { workspaceId:
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!subject || !clientId) return;
+    if (IS_TEST) {
+      const mockTicket = { id: `test-${Date.now()}`, _id: `test-${Date.now()}`, subject, description, priority, category, status: 'open', client_id: clientId, clientId };
+      onCreated(mockTicket);
+      onClose();
+      return;
+    }
     setSaving(true);
     const { data } = await supabase.from('tickets').insert({
       workspace_id: workspaceId,
@@ -109,6 +117,12 @@ export default function Tickets() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaceId('test-workspace');
+      setTickets(MOCK_TICKETS.map(t => ({ ...t, _id: t.id })));
+      setClients(MOCK_CLIENTS.map(c => ({ ...c, _id: c.id })));
+      return;
+    }
     async function load() {
       const wsRes = await supabase.from('workspaces').select('id').limit(1);
       const wid = wsRes.data?.[0]?.id;
@@ -125,6 +139,10 @@ export default function Tickets() {
   }, []);
 
   async function updateTicketStatus(id: string, status: string) {
+    if (IS_TEST) {
+      setTickets(prev => prev.map(t => t.id === id ? { ...t, status, _id: id } : t));
+      return;
+    }
     await supabase.from('tickets').update({ status }).eq('id', id);
     setTickets(prev => prev.map(t => t.id === id ? { ...t, status, _id: id } : t));
   }

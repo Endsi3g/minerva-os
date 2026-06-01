@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { MOCK_CALL_PREPS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 export default function CallPreps() {
   const { t } = useLang();
@@ -18,6 +20,16 @@ export default function CallPreps() {
 
   const generateBrief = async (callId: string) => {
     if (generatingId) return;
+    if (IS_TEST) {
+      setCalls(prev =>
+        prev.map(c => c._id === callId ? {
+          ...c,
+          summary: 'Demo AI summary: key topics include project status, upcoming deliverables, and client feedback.',
+          status: 'prepped',
+        } : c)
+      );
+      return;
+    }
     setGeneratingId(callId);
     try {
       const res = await fetch('/api/ai/call-prep', {
@@ -44,6 +56,19 @@ export default function CallPreps() {
   };
 
   useEffect(() => {
+    if (IS_TEST) {
+      setCalls(MOCK_CALL_PREPS.map(cp => ({
+        ...cp,
+        _id: cp.id,
+        startTime: `${cp.date}T${cp.time}:00`,
+        endTime: null,
+        prepChecklist: cp.checklist.map(c => ({ task: c.item, completed: c.done })),
+        notesUrl: null,
+        attendees: [cp.client],
+        summary: null,
+      })));
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -52,6 +77,7 @@ export default function CallPreps() {
   const workspaceId = workspaces[0]?.id;
 
   useEffect(() => {
+    if (IS_TEST) return;
     if (!workspaceId) return;
     async function loadCalls() {
       const { data } = await supabase
@@ -80,6 +106,13 @@ export default function CallPreps() {
     if (!call) return;
     const newList = [...call.prepChecklist];
     newList[taskIndex] = { ...newList[taskIndex], completed: !newList[taskIndex].completed };
+
+    if (IS_TEST) {
+      setCalls(prev =>
+        prev.map(c => c._id === callId ? { ...c, prepChecklist: newList } : c)
+      );
+      return;
+    }
 
     const { error } = await supabase
       .from('calls')

@@ -4,6 +4,9 @@ import { Play, Square, Clock, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { MOCK_PROJECTS, MOCK_TASKS } from '@/lib/mock-data';
+
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 import { motion } from 'motion/react';
 import { MorphSurface } from '@/components/ui/morph-surface';
 import { TextureButton } from '@/components/ui/texture-button';
@@ -39,6 +42,10 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaces([{ id: 'mock-ws', name: 'Uprising Studio' }]);
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -46,10 +53,10 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
 
   const workspaceId = workspaces[0]?.id;
 
-  // Fetch and subscribe to active timer via Supabase Realtime
   useEffect(() => {
+    if (IS_TEST) { setActiveTimer(null); return; }
     if (!userId) return;
-    
+
     async function loadActiveTimer() {
       const { data } = await supabase
         .from('active_timers')
@@ -57,11 +64,7 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
         .eq('user_id', userId)
         .maybeSingle();
       if (data) {
-        setActiveTimer({
-          ...data,
-          _id: data.id,
-          startTime: Number(data.start_time),
-        });
+        setActiveTimer({ ...data, _id: data.id, startTime: Number(data.start_time) });
       } else {
         setActiveTimer(null);
       }
@@ -70,68 +73,36 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
 
     const channel = supabase
       .channel(`active_timers_user_${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'active_timers',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setActiveTimer({
-              ...payload.new,
-              _id: payload.new.id,
-              startTime: Number(payload.new.start_time),
-            });
-          } else if (payload.eventType === 'DELETE') {
-            setActiveTimer(null);
-          } else if (payload.eventType === 'UPDATE') {
-            setActiveTimer({
-              ...payload.new,
-              _id: payload.new.id,
-              startTime: Number(payload.new.start_time),
-            });
-          }
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'active_timers', filter: `user_id=eq.${userId}` }, (payload) => {
+        if (payload.eventType === 'INSERT') setActiveTimer({ ...payload.new, _id: payload.new.id, startTime: Number(payload.new.start_time) });
+        else if (payload.eventType === 'DELETE') setActiveTimer(null);
+        else if (payload.eventType === 'UPDATE') setActiveTimer({ ...payload.new, _id: payload.new.id, startTime: Number(payload.new.start_time) });
+      })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
-  // Fetch projects
   useEffect(() => {
-    if (!workspaceId) return;
-    supabase
-      .from('projects')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .then(({ data }) => {
-        if (data) {
-          setProjects(data.map(p => ({ ...p, _id: p.id })));
-        }
-      });
-  }, [workspaceId]);
-
-  // Fetch project tasks
-  useEffect(() => {
-    if (!selectedProjectId) {
-      setProjectTasks([]);
+    if (IS_TEST) {
+      setProjects(MOCK_PROJECTS.map(p => ({ _id: p.id, id: p.id, name: p.name })));
       return;
     }
-    supabase
-      .from('tasks')
-      .select('*')
-      .eq('project_id', selectedProjectId)
-      .then(({ data }) => {
-        if (data) {
-          setProjectTasks(data.map(t => ({ ...t, _id: t.id })));
-        }
-      });
+    if (!workspaceId) return;
+    supabase.from('projects').select('*').eq('workspace_id', workspaceId).then(({ data }) => {
+      if (data) setProjects(data.map(p => ({ ...p, _id: p.id })));
+    });
+  }, [workspaceId]);
+
+  useEffect(() => {
+    if (!selectedProjectId) { setProjectTasks([]); return; }
+    if (IS_TEST) {
+      setProjectTasks(MOCK_TASKS.filter(t => t.projectId === selectedProjectId).map(t => ({ _id: t.id, id: t.id, title: t.title })));
+      return;
+    }
+    supabase.from('tasks').select('*').eq('project_id', selectedProjectId).then(({ data }) => {
+      if (data) setProjectTasks(data.map(t => ({ ...t, _id: t.id })));
+    });
   }, [selectedProjectId]);
 
   useEffect(() => {
@@ -150,27 +121,32 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
   }, [activeTimer]);
 
   async function handleStart() {
-    if (!workspaceId || !description.trim()) return;
+    if (!description.trim()) return;
     const startTime = Date.now();
+    const newTimer = {
+      _id: `demo-timer-${startTime}`,
+      id: `demo-timer-${startTime}`,
+      description: description.trim(),
+      project_id: selectedProjectId || null,
+      task_id: selectedTaskId || null,
+      startTime,
+    };
+    if (IS_TEST) {
+      setActiveTimer(newTimer);
+      setDescription('');
+      setSelectedProjectId('');
+      setSelectedTaskId('');
+      setShowForm(false);
+      return;
+    }
+    if (!workspaceId) return;
     const { data, error } = await supabase
       .from('active_timers')
-      .insert({
-        workspace_id: workspaceId,
-        user_id: userId,
-        description: description.trim(),
-        project_id: selectedProjectId || null,
-        task_id: selectedTaskId || null,
-        start_time: startTime,
-      })
+      .insert({ workspace_id: workspaceId, user_id: userId, description: description.trim(), project_id: selectedProjectId || null, task_id: selectedTaskId || null, start_time: startTime })
       .select()
       .single();
-
     if (!error && data) {
-      setActiveTimer({
-        ...data,
-        _id: data.id,
-        startTime: Number(data.start_time),
-      });
+      setActiveTimer({ ...data, _id: data.id, startTime: Number(data.start_time) });
       setDescription('');
       setSelectedProjectId('');
       setSelectedTaskId('');
@@ -179,32 +155,20 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
   }
 
   async function handleStop() {
-    if (!workspaceId || !activeTimer) return;
-    const endTime = Date.now();
-    const duration = endTime - activeTimer.startTime;
-
-    // Create time entry
-    await supabase.from('time_entries').insert({
-      workspace_id: workspaceId,
-      user_id: userId,
-      project_id: activeTimer.project_id || null,
-      task_id: activeTimer.task_id || null,
-      description: activeTimer.description,
-      start_time: activeTimer.startTime,
-      end_time: endTime,
-      duration: duration,
-      billable: false,
-    });
-
-    // Delete active timer
-    await supabase.from('active_timers').delete().eq('id', activeTimer._id);
+    if (!activeTimer) return;
     setActiveTimer(null);
+    if (IS_TEST) return;
+    if (!workspaceId) return;
+    const endTime = Date.now();
+    await supabase.from('time_entries').insert({ workspace_id: workspaceId, user_id: userId, project_id: activeTimer.project_id || null, task_id: activeTimer.task_id || null, description: activeTimer.description, start_time: activeTimer.startTime, end_time: endTime, duration: endTime - activeTimer.startTime, billable: false });
+    await supabase.from('active_timers').delete().eq('id', activeTimer._id);
   }
 
   async function handleCancel() {
     if (!activeTimer) return;
-    await supabase.from('active_timers').delete().eq('id', activeTimer._id);
     setActiveTimer(null);
+    if (IS_TEST) return;
+    await supabase.from('active_timers').delete().eq('id', activeTimer._id);
   }
 
   if (collapsed) {

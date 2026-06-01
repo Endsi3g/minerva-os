@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
+import { MOCK_AGENT_CONFIGS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,6 +60,10 @@ export default function AgentOps() {
   ], [audit]);
 
   async function loadData() {
+    if (IS_TEST) {
+      setAgents(MOCK_AGENT_CONFIGS.map(a => ({ ...a, _id: a.id })));
+      return;
+    }
     const wsRes = await supabase.from('workspaces').select('id').limit(1);
     const wid = wsRes.data?.[0]?.id;
     if (!wid) return;
@@ -87,6 +93,16 @@ export default function AgentOps() {
   const handleSave = async () => {
     if (!editingAgent) return;
     setSaveStatus('saving');
+
+    if (IS_TEST) {
+      setAgents(prev => prev.map(a => a.id === editingAgent.id ? { ...a, instructions: editedInstructions } : a));
+      setSaveStatus('saved');
+      setTimeout(() => {
+        setEditingAgent(null);
+      }, 1000);
+      return;
+    }
+
     const { error } = await supabase
       .from('agents')
       .update({ instructions: editedInstructions })

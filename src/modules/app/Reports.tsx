@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { useMemo, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Download } from 'lucide-react';
+import { MOCK_CLIENTS, MOCK_LEADS, MOCK_TASKS, MOCK_APPROVALS, MOCK_INVOICES, MOCK_TIME_ENTRIES, MOCK_EXPENSES } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 /* ── Palette ─────────────────────────────────────────────────────────────── */
 
@@ -86,6 +88,16 @@ export default function Reports() {
 
   useEffect(() => {
     async function load() {
+      if (IS_TEST) {
+        setClients(MOCK_CLIENTS.map(c => ({ ...c, _id: c.id, company: c.company })));
+        setDeals(MOCK_LEADS.map(l => ({ ...l, _id: l.id, value: l.value, stage: l.stage })));
+        setTasks(MOCK_TASKS.map(t => ({ ...t, _id: t.id })));
+        setApprovals(MOCK_APPROVALS.map(a => ({ ...a, _id: a.id })));
+        setInvoices(MOCK_INVOICES.map(i => ({ ...i, _id: i.id, clientId: i.clientId, amount: i.amount })));
+        setTimeEntries(MOCK_TIME_ENTRIES.map(e => ({ ...e, _id: e.id, startTime: e.startTime, clientId: null })));
+        setExpenses(MOCK_EXPENSES.map(e => ({ ...e, _id: e.id, clientId: null })));
+        return;
+      }
       const wsRes = await supabase.from('workspaces').select('id').limit(1);
       const wid = wsRes.data?.[0]?.id;
       if (!wid) return;

@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { MOCK_FULFILLMENT_ITEMS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 export default function Fulfillment() {
   const { t } = useLang();
@@ -17,6 +19,10 @@ export default function Fulfillment() {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setDeliveries(MOCK_FULFILLMENT_ITEMS.map(f => ({ ...f, _id: f.id, serviceType: f.client })));
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -25,7 +31,7 @@ export default function Fulfillment() {
   const workspaceId = workspaces[0]?.id;
 
   useEffect(() => {
-    if (!workspaceId) return;
+    if (IS_TEST || !workspaceId) return;
     async function loadDeliveries() {
       const { data } = await supabase
         .from('fulfillment')
@@ -55,6 +61,17 @@ export default function Fulfillment() {
 
     const doneCount = newChecklist.filter((i: any) => i.done).length;
     const progress = Math.round((doneCount / newChecklist.length) * 100);
+
+    if (IS_TEST) {
+      setDeliveries(prev =>
+        prev.map(d =>
+          d._id === deliveryId
+            ? { ...d, checklist: newChecklist, progress, status: progress === 100 ? 'completed' : 'in_progress' }
+            : d
+        )
+      );
+      return;
+    }
 
     const { error } = await supabase
       .from('fulfillment')

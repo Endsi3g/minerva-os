@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CommentSection } from '@/components/minerva/CommentSection';
 import { ChoicePoll, VoteTally } from '@/components/ui/choice-poll';
+import { MOCK_APPROVALS, MOCK_PROJECTS, MOCK_CLIENTS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 export default function Approvals() {
   const { t, lang } = useLang();
@@ -20,6 +22,12 @@ export default function Approvals() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setApprovalsRaw(MOCK_APPROVALS.map(a => ({ ...a, _id: a.id, project_id: null, client_id: null })));
+      setProjects(MOCK_PROJECTS.map(p => ({ ...p, _id: p.id })));
+      setClients(MOCK_CLIENTS.map(c => ({ ...c, _id: c.id })));
+      return;
+    }
     async function load() {
       const wsRes = await supabase.from('workspaces').select('id').limit(1);
       const wid = wsRes.data?.[0]?.id;
@@ -37,6 +45,10 @@ export default function Approvals() {
   }, []);
 
   async function handleStatusChange(id: string, status: ApprovalStatus) {
+    if (IS_TEST) {
+      setApprovalsRaw(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      return;
+    }
     await supabase.from('approvals').update({ status }).eq('id', id);
     setApprovalsRaw(prev => prev.map(a => a.id === id ? { ...a, status } : a));
   }
@@ -47,12 +59,12 @@ export default function Approvals() {
     return {
       id: app.id,
       name: app.name,
-      project: project?.name || '...',
-      client: client?.company || '...',
+      project: project?.name || app.project || '...',
+      client: client?.company || app.client || '...',
       status: app.status as ApprovalStatus,
       type: app.type as DeliverableType,
-      submittedBy: 'Studio',
-      submittedDate: app.submitted_date ?? app.created_at,
+      submittedBy: app.submittedBy ?? 'Studio',
+      submittedDate: app.submittedDate ?? app.submitted_date ?? app.created_at,
     };
   });
 

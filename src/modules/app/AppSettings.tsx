@@ -6,6 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 // Convex removed — Supabase is used instead.
 import { supabase } from '@/lib/supabase';
+import { MOCK_CLIENTS, MOCK_PROJECTS, MOCK_INVOICES } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
+
+const MOCK_USER_PROFILE = { id: 'demo-user-id', name: 'Alex Martin', email: 'demo@uprisingstudio.com', role: 'owner', avatar: null, onboardingCompleted: true };
+const MOCK_WORKSPACE = { id: 'mock-ws', name: 'Uprising Studio', _id: 'mock-ws' };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -40,6 +45,11 @@ function ProfileTab() {
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setProfile({ ...MOCK_USER_PROFILE, _id: MOCK_USER_PROFILE.id, avatar_url: null });
+      setName(MOCK_USER_PROFILE.name);
+      return;
+    }
     if (!user?.email) return;
     supabase
       .from('user_profiles')
@@ -56,6 +66,12 @@ function ProfileTab() {
   }, [user]);
 
   async function handleSave() {
+    if (IS_TEST) {
+      setProfile((prev: any) => ({ ...prev, name, avatar_url: avatarUrl.trim() || null }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      return;
+    }
     if (profile?._id) {
       await supabase
         .from('user_profiles')
@@ -210,6 +226,11 @@ function WorkspaceTab() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaces([MOCK_WORKSPACE]);
+      setStudioName(MOCK_WORKSPACE.name);
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data && data.length > 0) {
         setWorkspaces(data.map(w => ({ ...w, _id: w.id })));
@@ -223,6 +244,12 @@ function WorkspaceTab() {
   const currentWorkspace = workspaces[0];
 
   async function handleSave() {
+    if (IS_TEST) {
+      setWorkspaces(prev => prev.map(w => w._id === workspaceId ? { ...w, name: studioName } : w));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      return;
+    }
     if (workspaceId && currentWorkspace) {
       await supabase
         .from('workspaces')
@@ -536,6 +563,13 @@ function PrivacyTab() {
   const workspaceId = workspaces[0]?.id;
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaces([MOCK_WORKSPACE]);
+      setClients(MOCK_CLIENTS.map(c => ({ ...c, _id: c.id })));
+      setProjects(MOCK_PROJECTS.map(p => ({ ...p, _id: p.id })));
+      setInvoices(MOCK_INVOICES.map(i => ({ ...i, _id: i.id })));
+      return;
+    }
     async function loadData() {
       const { data: ws } = await supabase.from('workspaces').select('*');
       if (ws) {

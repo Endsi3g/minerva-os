@@ -8,6 +8,9 @@ import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabase';
+import { MOCK_COMMENTS } from '@/lib/mock-data';
+
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 interface CommentSectionProps {
   targetId: string;
@@ -25,6 +28,10 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
 
   useEffect(() => {
     if (!targetId || !targetType) return;
+    if (IS_TEST) {
+      setComments(MOCK_COMMENTS.map(c => ({ ...c, _id: c.id, author: c.userName, timestamp: c.timestamp })));
+      return;
+    }
     async function loadComments() {
       const { data } = await supabase
         .from('comments')
@@ -33,10 +40,7 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
         .eq('target_type', targetType)
         .order('timestamp', { ascending: true });
       if (data) {
-        setComments(data.map(comment => ({
-          ...comment,
-          _id: comment.id,
-        })));
+        setComments(data.map(comment => ({ ...comment, _id: comment.id })));
       }
     }
     loadComments();
@@ -46,25 +50,25 @@ export function CommentSection({ targetId, targetType }: CommentSectionProps) {
     if (!content.trim() || !user) return;
     setSubmitting(true);
     try {
+      const newComment = {
+        _id: `demo-${Date.now()}`,
+        id: `demo-${Date.now()}`,
+        author: user.name || user.email || 'Anonymous',
+        content: content.trim(),
+        timestamp: new Date().toISOString(),
+      };
+      if (IS_TEST) {
+        setComments(prev => [...prev, newComment]);
+        setContent('');
+        return;
+      }
       const { data, error } = await supabase
         .from('comments')
-        .insert({
-          target_id: targetId,
-          target_type: targetType,
-          author: user.name || user.email || 'Anonymous',
-          content: content.trim(),
-        })
+        .insert({ target_id: targetId, target_type: targetType, author: user.name || user.email || 'Anonymous', content: content.trim() })
         .select()
         .single();
-
       if (!error && data) {
-        setComments(prev => [
-          ...prev,
-          {
-            ...data,
-            _id: data.id,
-          },
-        ]);
+        setComments(prev => [...prev, { ...data, _id: data.id }]);
         setContent('');
       }
     } catch (err) {

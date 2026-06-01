@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { MOCK_EXPENSES, MOCK_PROJECTS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 function fmt(n: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
@@ -37,6 +39,23 @@ function ExpenseForm({ workspaceId, submittedBy, projects, categories, onClose, 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!description || !amount) return;
+    if (IS_TEST) {
+      const mockExpense = {
+        id: `test-${Date.now()}`,
+        _id: `test-${Date.now()}`,
+        description,
+        amount: Number(amount),
+        currency: 'USD',
+        category,
+        date: new Date(date).toISOString(),
+        project_id: projectId || null,
+        status: 'pending',
+        submittedBy,
+      };
+      onCreated(mockExpense);
+      onClose();
+      return;
+    }
     setSaving(true);
     const { data } = await supabase.from('expenses').insert({
       workspace_id: workspaceId,
@@ -110,6 +129,12 @@ export default function Expenses() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaceId('test-workspace');
+      setExpenses(MOCK_EXPENSES.map(e => ({ ...e, _id: e.id })));
+      setProjects(MOCK_PROJECTS.map(p => ({ ...p, _id: p.id })));
+      return;
+    }
     async function load() {
       const wsRes = await supabase.from('workspaces').select('id').limit(1);
       const wid = wsRes.data?.[0]?.id;
@@ -126,14 +151,26 @@ export default function Expenses() {
   }, []);
 
   async function approveExpense(id: string) {
+    if (IS_TEST) {
+      setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'approved' } : e));
+      return;
+    }
     await supabase.from('expenses').update({ status: 'approved', approved_by: user?.name ?? 'Admin' }).eq('id', id);
     setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'approved' } : e));
   }
   async function rejectExpense(id: string) {
+    if (IS_TEST) {
+      setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'rejected' } : e));
+      return;
+    }
     await supabase.from('expenses').update({ status: 'rejected' }).eq('id', id);
     setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'rejected' } : e));
   }
   async function removeExpense(id: string) {
+    if (IS_TEST) {
+      setExpenses(prev => prev.filter(e => e.id !== id));
+      return;
+    }
     await supabase.from('expenses').delete().eq('id', id);
     setExpenses(prev => prev.filter(e => e.id !== id));
   }

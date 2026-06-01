@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { MOCK_PROPOSALS, MOCK_CLIENTS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
   draft:    { label: 'Draft',    class: 'text-fog bg-fog/10 border-fog/20' },
@@ -55,6 +57,16 @@ function ProposalForm({
 
   const handleGenerate = async () => {
     if (!aiBrief.trim() || generating) return;
+    if (IS_TEST) {
+      setSections([
+        { type: 'intro', content: 'We are excited to present this proposal for your consideration.' },
+        { type: 'scope', content: 'Phase 1: Discovery (2 weeks)\nPhase 2: Creative Development (4 weeks)\nPhase 3: Delivery (1 week)' },
+        { type: 'timeline', content: 'Project kickoff within 5 business days of signing.' },
+        { type: 'pricing', content: `Total investment based on the scope outlined above.` },
+        { type: 'terms', content: DEFAULT_SECTIONS.find(s => s.type === 'terms')?.content || '' },
+      ]);
+      return;
+    }
     setGenerating(true);
     try {
       const selectedClient = clients.find(c => c._id === clientId);
@@ -84,6 +96,10 @@ function ProposalForm({
   };
 
   useEffect(() => {
+    if (IS_TEST) {
+      setClients(MOCK_CLIENTS.map(c => ({ ...c, _id: c.id })));
+      return;
+    }
     async function loadData() {
       const [{ data: cData }, { data: sData }] = await Promise.all([
         supabase.from('clients').select('*').eq('workspace_id', workspaceId),
@@ -297,6 +313,11 @@ export default function Proposals() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setProposals(MOCK_PROPOSALS.map(p => ({ ...p, _id: p.id, totalAmount: p.total ?? 0 })));
+      setClients(MOCK_CLIENTS.map(c => ({ ...c, _id: c.id })));
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -305,7 +326,7 @@ export default function Proposals() {
   const workspaceId = workspaces[0]?.id;
 
   useEffect(() => {
-    if (!workspaceId) return;
+    if (IS_TEST || !workspaceId) return;
     async function loadData() {
       const [{ data: prData }, { data: clData }] = await Promise.all([
         supabase.from('proposals').select('*').eq('workspace_id', workspaceId).order('created_at', { ascending: false }),
@@ -338,6 +359,10 @@ export default function Proposals() {
   }
 
   async function sendProposal(proposalId: string) {
+    if (IS_TEST) {
+      setProposals(prev => prev.map(pr => pr._id === proposalId ? { ...pr, status: 'sent' } : pr));
+      return;
+    }
     const { error } = await supabase
       .from('proposals')
       .update({ status: 'sent', sent_at: new Date().toISOString() })
@@ -350,6 +375,10 @@ export default function Proposals() {
   }
 
   async function removeProposal(proposalId: string) {
+    if (IS_TEST) {
+      setProposals(prev => prev.filter(pr => pr._id !== proposalId));
+      return;
+    }
     const { error } = await supabase
       .from('proposals')
       .delete()

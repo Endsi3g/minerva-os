@@ -11,11 +11,14 @@ export interface ActiveUserPresence {
   lastActive: number;
 }
 
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
+
 export function usePresence(location?: string) {
   const { user } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<ActiveUserPresence[]>([]);
 
   useEffect(() => {
+    if (IS_TEST) return;
     if (!user?.email) return;
 
     const channel = supabase.channel(`presence:location:${location || 'global'}`, {

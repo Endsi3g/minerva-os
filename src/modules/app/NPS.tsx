@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { MOCK_NPS_RESPONSES, MOCK_CLIENTS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 type NpsResponse = {
   id: string;
@@ -83,6 +85,24 @@ function NPSForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!clientId || score === null) return;
+    if (IS_TEST) {
+      const now = new Date().toISOString();
+      onAdd({
+        id: `test-${Date.now()}`,
+        _id: `test-${Date.now()}`,
+        client_id: clientId,
+        clientId,
+        score,
+        reason: reason || undefined,
+        suggestion: suggestion || undefined,
+        trigger_event: trigger,
+        triggerEvent: trigger,
+        responded_at: now,
+        respondedAt: now,
+      });
+      onClose();
+      return;
+    }
     setSaving(true);
     try {
       const { data, error } = await supabase
@@ -196,6 +216,10 @@ export default function NPSPage() {
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaces([{ id: 'test-workspace' }]);
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -205,6 +229,23 @@ export default function NPSPage() {
 
   useEffect(() => {
     if (!workspaceId) return;
+    if (IS_TEST) {
+      setResponses(MOCK_NPS_RESPONSES.map(r => ({
+        id: r.id,
+        _id: r.id,
+        client_id: r.clientId,
+        clientId: r.clientId,
+        score: r.score,
+        reason: r.comment || undefined,
+        suggestion: undefined,
+        trigger_event: 'manual',
+        triggerEvent: 'manual',
+        responded_at: r.respondedAt,
+        respondedAt: r.respondedAt,
+      })));
+      setClients(MOCK_CLIENTS.map(c => ({ ...c, _id: c.id })));
+      return;
+    }
     async function loadData() {
       const [{ data: nData }, { data: cData }] = await Promise.all([
         supabase.from('nps_responses').select('*').eq('workspace_id', workspaceId).order('responded_at', { ascending: false }),

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   MOCK_LEADS, MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS,
-  MOCK_INVOICES, MOCK_APPROVALS,
+  MOCK_INVOICES, MOCK_APPROVALS, MOCK_RETAINERS, MOCK_FINANCES, MOCK_ACTIVITY,
 } from '@/lib/mock-data';
 
 const MOCK_WS_ID = 'mock-ws';
@@ -439,8 +439,16 @@ export function useRetainers(workspaceId: string | undefined | null) {
   const [retainers, setRetainers] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setRetainers([]);
+    if (!workspaceId) { setRetainers([]); return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setRetainers(MOCK_RETAINERS.map(r => ({
+        _id: r.id, id: r.id, workspaceId,
+        clientId: r.clientId, client: r.client,
+        amount: r.amount, currency: r.currency, cycle: r.cycle,
+        status: r.status, startDate: r.startDate, renewalDate: r.renewalDate,
+        hoursIncluded: r.hoursIncluded, hoursUsed: r.hoursUsed, notes: r.notes ?? '',
+        createdAt: '2026-01-01',
+      })));
       return;
     }
 
@@ -480,8 +488,14 @@ export function useFinances(workspaceId: string | undefined | null) {
   const [finances, setFinances] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setFinances([]);
+    if (!workspaceId) { setFinances([]); return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setFinances(MOCK_FINANCES.map(f => ({
+        _id: f.id, id: f.id, workspaceId,
+        type: f.type, category: f.category, description: f.description,
+        amount: f.amount, tps: f.tps, tvq: f.tvq, date: f.date,
+        status: f.status, createdAt: f.date,
+      })));
       return;
     }
 
@@ -567,8 +581,13 @@ export function useActivity(workspaceId: string | undefined | null) {
   const [activity, setActivity] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setActivity([]);
+    if (!workspaceId) { setActivity([]); return; }
+    if (workspaceId === MOCK_WS_ID) {
+      setActivity(MOCK_ACTIVITY.map(a => ({
+        _id: a.id, id: a.id, workspaceId,
+        user: a.user, action: a.action, targetName: a.targetName,
+        entityType: a.entityType, timestamp: a.timestamp,
+      })));
       return;
     }
 
@@ -659,6 +678,7 @@ export function useUserProfileByEmail(email: string | undefined | null) {
 
 export function useAddClient() {
   return async (args: { workspaceId: string; company: string; contact: string; email: string; status: string; monthlyValue?: number }) => {
+    if (IS_TEST) return { _id: `demo-${Date.now()}`, id: `demo-${Date.now()}`, ...args };
     const { data, error } = await supabase
       .from('clients')
       .insert({
@@ -679,6 +699,7 @@ export function useAddClient() {
 
 export function useAddProject() {
   return async (args: { workspaceId: string; clientName: string; name: string; status: string; dueDate: string; budget: number; description?: string }) => {
+    if (IS_TEST) return { _id: `demo-${Date.now()}`, id: `demo-${Date.now()}`, ...args, healthScore: 100, activeRiskFlags: [] };
     let embedding: number[] | null = null;
     try {
       const textToEmbed = `${args.name} ${args.description || ''}`.trim();
@@ -717,6 +738,7 @@ export function useAddProject() {
 
 export function useUpdateProject() {
   return async (args: { id: string; name?: string; status?: string; dueDate?: string; budget?: number; description?: string }) => {
+    if (IS_TEST) return { ...args, _id: args.id };
     const updates: any = {};
     if (args.name !== undefined) updates.name = args.name;
     if (args.status !== undefined) updates.status = args.status;
@@ -757,6 +779,7 @@ export function useUpdateProject() {
 
 export function useAddTask() {
   return async (args: { workspaceId: string; title: string; projectId: string; status: string; priority: string; assignee: string; dueDate: string }) => {
+    if (IS_TEST) return { _id: `demo-${Date.now()}`, id: `demo-${Date.now()}`, ...args };
     const { data, error } = await supabase
       .from('tasks')
       .insert({
@@ -788,6 +811,7 @@ export function useAddTask() {
 
 export function useUpdateTask() {
   return async (args: { id: string; status?: string; priority?: string; assignee?: string; dueDate?: string; title?: string }) => {
+    if (IS_TEST) return { ...args, _id: args.id };
     const updates: any = {};
     if (args.status !== undefined) updates.status = args.status;
     if (args.priority !== undefined) updates.priority = args.priority;
@@ -809,17 +833,15 @@ export function useUpdateTask() {
 
 export function useDeleteTask() {
   return async (args: { id: string }) => {
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', args.id);
-
+    if (IS_TEST) return;
+    const { error } = await supabase.from('tasks').delete().eq('id', args.id);
     if (error) throw error;
   };
 }
 
 export function useAddDeal() {
   return async (args: { workspaceId: string; company: string; contact: string; email: string; value: number; stage: string; notes?: string; lastContact: string }) => {
+    if (IS_TEST) return { _id: `demo-${Date.now()}`, id: `demo-${Date.now()}`, ...args };
     const { data, error } = await supabase
       .from('deals')
       .insert({
@@ -842,6 +864,7 @@ export function useAddDeal() {
 
 export function useUpdateDeal() {
   return async (args: { id: string; company: string; contact: string; email: string; value: number; stage: string; notes?: string; lastContact: string }) => {
+    if (IS_TEST) return { ...args, _id: args.id };
     const { data, error } = await supabase
       .from('deals')
       .update({
@@ -864,6 +887,7 @@ export function useUpdateDeal() {
 
 export function useUpdateDealStage() {
   return async (args: { id: string; stage: string }) => {
+    if (IS_TEST) return { _id: args.id, id: args.id, stage: args.stage };
     const { data, error } = await supabase
       .from('deals')
       .update({ stage: args.stage })
@@ -878,6 +902,7 @@ export function useUpdateDealStage() {
 
 export function useAddInvoice() {
   return async (args: { workspaceId: string; clientId: string; invoiceNumber: string; amount: number; status: string; date: string; dueDate: string; items: any[]; tps: number; tvq: number }) => {
+    if (IS_TEST) return { _id: `demo-${Date.now()}`, id: `demo-${Date.now()}`, ...args };
     const { data, error } = await supabase
       .from('invoices')
       .insert({
@@ -902,6 +927,7 @@ export function useAddInvoice() {
 
 export function useUpdateInvoiceStatus() {
   return async (args: { id: string; status: string }) => {
+    if (IS_TEST) return { _id: args.id, id: args.id, status: args.status };
     const { data, error } = await supabase
       .from('invoices')
       .update({ status: args.status })
@@ -916,17 +942,15 @@ export function useUpdateInvoiceStatus() {
 
 export function useDeleteInvoice() {
   return async (args: { id: string }) => {
-    const { error } = await supabase
-      .from('invoices')
-      .delete()
-      .eq('id', args.id);
-
+    if (IS_TEST) return;
+    const { error } = await supabase.from('invoices').delete().eq('id', args.id);
     if (error) throw error;
   };
 }
 
 export function useAddRetainer() {
   return async (args: { workspaceId: string; clientId: string; amount: number; cycle: string; status: string; startDate: string; renewalDate: string; hoursIncluded: number; hoursUsed: number; notes?: string }) => {
+    if (IS_TEST) return { _id: `demo-${Date.now()}`, id: `demo-${Date.now()}`, ...args };
     const { data, error } = await supabase
       .from('retainers')
       .insert({
@@ -951,6 +975,7 @@ export function useAddRetainer() {
 
 export function useUpdateRetainer() {
   return async (args: { id: string; amount?: number; cycle?: string; status?: string; hoursIncluded?: number; hoursUsed?: number; renewalDate?: string; notes?: string }) => {
+    if (IS_TEST) return { ...args, _id: args.id };
     const updates: any = {};
     if (args.amount !== undefined) updates.amount = args.amount;
     if (args.cycle !== undefined) updates.cycle = args.cycle;
@@ -974,6 +999,7 @@ export function useUpdateRetainer() {
 
 export function useDeleteRetainer() {
   return async (args: { id: string }) => {
+    if (IS_TEST) return;
     const { error } = await supabase
       .from('retainers')
       .delete()
@@ -985,6 +1011,7 @@ export function useDeleteRetainer() {
 
 export function useAddFinance() {
   return async (args: { workspaceId: string; type: string; amount: number; category: string; date: string; description: string; tps: number; tvq: number; status: string }) => {
+    if (IS_TEST) return { _id: `demo-${Date.now()}`, id: `demo-${Date.now()}`, ...args };
     const { data, error } = await supabase
       .from('finances')
       .insert({
@@ -1008,6 +1035,7 @@ export function useAddFinance() {
 
 export function useUpdateUserProfile() {
   return async (args: { id: string; name?: string; role?: string; avatar?: string }) => {
+    if (IS_TEST) return { ...args };
     const updates: any = {};
     if (args.name !== undefined) updates.name = args.name;
     if (args.role !== undefined) updates.role = args.role;

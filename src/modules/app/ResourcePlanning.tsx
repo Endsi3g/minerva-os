@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { MOCK_RESOURCE_ENTRIES } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 type Member = {
   id: string;
@@ -179,6 +181,18 @@ export default function ResourcePlanning() {
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setMembers(MOCK_RESOURCE_ENTRIES.map(r => ({
+        id: r.id,
+        _id: r.id,
+        display_name: r.name,
+        displayName: r.name,
+        weekly_hours: r.weeklyCapacity,
+        weeklyHours: r.weeklyCapacity,
+        role: r.role,
+      })));
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -187,7 +201,7 @@ export default function ResourcePlanning() {
   const workspaceId = workspaces[0]?.id;
 
   useEffect(() => {
-    if (!workspaceId) return;
+    if (IS_TEST || !workspaceId) return;
     async function fetchData() {
       const [{ data: mData }, { data: tData }] = await Promise.all([
         supabase.from('member_availability').select('*').eq('workspace_id', workspaceId),
@@ -217,6 +231,10 @@ export default function ResourcePlanning() {
   }, [workspaceId]);
 
   async function removeMember(id: string) {
+    if (IS_TEST) {
+      setMembers(prev => prev.filter(m => m.id !== id));
+      return;
+    }
     await supabase.from('member_availability').delete().eq('id', id);
     setMembers(prev => prev.filter(m => m.id !== id));
   }

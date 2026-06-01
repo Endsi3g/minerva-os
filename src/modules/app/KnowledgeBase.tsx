@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { MOCK_KNOWLEDGE_ARTICLES } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 const CATEGORY_COLORS: Record<string, string> = {
   Process: 'text-sage bg-sage/10',
@@ -99,6 +101,12 @@ function ArticleModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title || !content) return;
+    if (IS_TEST) {
+      const mockId = article?.id ?? `test-${Date.now()}`;
+      onSave({ id: mockId, _id: mockId, title, content, category, tags });
+      onClose();
+      return;
+    }
     setSaving(true);
     try {
       let embedding: number[] | null = null;
@@ -209,6 +217,10 @@ export default function KnowledgeBase() {
   const [isSearchingSemantically, setIsSearchingSemantically] = useState(false);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaces([{ id: 'test-workspace' }]);
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -218,6 +230,10 @@ export default function KnowledgeBase() {
 
   useEffect(() => {
     if (!workspaceId) return;
+    if (IS_TEST) {
+      setArticles(MOCK_KNOWLEDGE_ARTICLES.map(a => ({ ...a, _id: a.id })));
+      return;
+    }
     async function loadArticles() {
       if (query.trim().length >= 3) {
         setIsSearchingSemantically(true);
@@ -261,6 +277,10 @@ export default function KnowledgeBase() {
   }, [workspaceId, query]);
 
   async function removeArticle(id: string) {
+    if (IS_TEST) {
+      setArticles(prev => prev.filter(a => a.id !== id));
+      return;
+    }
     const { error } = await supabase.from('knowledge_base').delete().eq('id', id);
     if (!error) {
       setArticles(prev => prev.filter(a => a.id !== id));

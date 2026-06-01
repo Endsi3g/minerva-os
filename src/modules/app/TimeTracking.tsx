@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Clock, Download, Filter as FilterIcon, Trash2, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { MOCK_TIME_ENTRIES, MOCK_PROJECTS } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,6 +62,11 @@ export default function TimeTracking() {
 
   useEffect(() => {
     async function load() {
+      if (IS_TEST) {
+        setEntries(MOCK_TIME_ENTRIES.map(e => ({ ...e, _id: e.id })));
+        setProjects(MOCK_PROJECTS.map(p => ({ ...p, _id: p.id })));
+        return;
+      }
       const wsRes = await supabase.from('workspaces').select('id').limit(1);
       const wid = wsRes.data?.[0]?.id;
       if (!wid) return;
@@ -74,12 +81,6 @@ export default function TimeTracking() {
   }, []);
 
   async function handleLogTime() {
-    const wsRes = await supabase.from('workspaces').select('id').limit(1);
-    const wid = wsRes.data?.[0]?.id;
-    if (!wid) {
-      toast.error('Please fill all required fields.');
-      return;
-    }
     if (!form.description || !form.hours || !form.date) {
       toast.error('Please fill all required fields.');
       return;
@@ -89,6 +90,41 @@ export default function TimeTracking() {
     const dateObj = new Date(form.date);
     const startTime = dateObj.getTime();
     const endTime = startTime + duration * 60 * 1000;
+
+    if (IS_TEST) {
+      const mockId = `mock-te-${Date.now()}`;
+      setEntries(prev => [
+        {
+          id: mockId,
+          _id: mockId,
+          description: form.description,
+          project_id: form.projectId || null,
+          startTime,
+          endTime,
+          duration,
+          billable: form.billable,
+          hourlyRate: null,
+        },
+        ...prev,
+      ]);
+      toast.success('Time entry logged successfully.');
+      setLogSheetOpen(false);
+      setForm({
+        projectId: '',
+        description: '',
+        date: new Date().toISOString().split('T')[0],
+        hours: '',
+        billable: true,
+      });
+      return;
+    }
+
+    const wsRes = await supabase.from('workspaces').select('id').limit(1);
+    const wid = wsRes.data?.[0]?.id;
+    if (!wid) {
+      toast.error('Please fill all required fields.');
+      return;
+    }
 
     try {
       const { data } = await supabase.from('time_entries').insert({
@@ -259,7 +295,14 @@ export default function TimeTracking() {
                           {formatDuration(entry.duration)}
                         </span>
                         <button
-                          onClick={async () => { await supabase.from('time_entries').delete().eq('id', entry.id); setEntries(prev => prev.filter(e => e.id !== entry.id)); }}
+                          onClick={async () => {
+                            if (IS_TEST) {
+                              setEntries(prev => prev.filter(e => e.id !== entry.id));
+                              return;
+                            }
+                            await supabase.from('time_entries').delete().eq('id', entry.id);
+                            setEntries(prev => prev.filter(e => e.id !== entry.id));
+                          }}
                           className="opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all"
                         >
                           <Trash2 size={12} />

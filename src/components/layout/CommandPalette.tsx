@@ -17,6 +17,9 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { supabase } from '@/lib/supabase';
+import { MOCK_CLIENTS, MOCK_PROJECTS } from '@/lib/mock-data';
+
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 interface CommandPaletteContextType {
   open: boolean;
@@ -89,6 +92,10 @@ function CommandPalette() {
   const [projects, setProjects] = useState<any[]>([]);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setWorkspaces([{ id: 'mock-ws', name: 'Uprising Studio' }]);
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -97,11 +104,26 @@ function CommandPalette() {
   const workspaceId = workspaces[0]?.id;
 
   useEffect(() => {
-    if (!workspaceId || searchQuery.trim().length < 2) {
+    if (searchQuery.trim().length < 2) {
       setClients([]);
       setProjects([]);
       return;
     }
+    if (IS_TEST) {
+      const q = searchQuery.trim().toLowerCase();
+      setClients(
+        MOCK_CLIENTS
+          .filter(c => c.company.toLowerCase().includes(q) || c.contact.toLowerCase().includes(q))
+          .map(c => ({ ...c, _id: c.id }))
+      );
+      setProjects(
+        MOCK_PROJECTS
+          .filter(p => p.name.toLowerCase().includes(q) || p.client.toLowerCase().includes(q))
+          .map(p => ({ ...p, _id: p.id, clientName: p.client }))
+      );
+      return;
+    }
+    if (!workspaceId) return;
     const q = searchQuery.trim();
     async function search() {
       const [{ data: cData }, { data: pData }] = await Promise.all([

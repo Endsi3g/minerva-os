@@ -323,3 +323,129 @@ export const MOCK_PORTAL_TOKENS: ClientPortalToken[] = [
   { token: 'demo-solara',  clientId: 'c8', clientName: 'Solara Health',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices'] },
 ];
 
+// ── Demo mode data (not typed to avoid strict-type overhead) ─────────────────
+
+export const MOCK_TIME_ENTRIES = [
+  { id: 'te1', project: 'Brand Identity Refresh', projectId: 'p1', task: 'Finalise logo variations', userId: 'demo@uprisingstudio.com', date: '2026-05-29', description: 'Logo refinements + client annotations', duration: 135, billable: true, hourlyRate: 95, startTime: 1748512800000, endTime: 1748520900000 },
+  { id: 'te2', project: 'Brand Identity Refresh', projectId: 'p1', task: 'Colour palette documentation', userId: 'demo@uprisingstudio.com', date: '2026-05-30', description: 'Figma token export + PDF', duration: 90, billable: true, hourlyRate: 95, startTime: 1748599200000, endTime: 1748604600000 },
+  { id: 'te3', project: 'Campaign: Q3 Launch', projectId: 'p2', task: 'Social asset templates', userId: 'demo@uprisingstudio.com', date: '2026-05-28', description: 'Instagram + LinkedIn post templates', duration: 180, billable: true, hourlyRate: 95, startTime: 1748426400000, endTime: 1748437200000 },
+  { id: 'te4', project: 'Website Redesign', projectId: 'p3', task: 'Figma component library', userId: 'demo@uprisingstudio.com', date: '2026-05-27', description: 'Atomic design system setup', duration: 240, billable: true, hourlyRate: 95, startTime: 1748340000000, endTime: 1748354400000 },
+  { id: 'te5', project: 'Investor Deck', projectId: 'p5', task: 'Executive summary slide', userId: 'demo@uprisingstudio.com', date: '2026-05-26', description: 'Draft + first revision', duration: 60, billable: false, hourlyRate: 0, startTime: 1748253600000, endTime: 1748257200000 },
+  { id: 'te6', project: 'Motion System V2', projectId: 'p4', task: 'After Effects kit review', userId: 'demo@uprisingstudio.com', date: '2026-05-31', description: 'QA on all looping variants', duration: 120, billable: true, hourlyRate: 110, startTime: 1748685600000, endTime: 1748692800000 },
+  { id: 'te7', project: 'Campaign: Q3 Launch', projectId: 'p2', task: 'Hero video script', userId: 'demo@uprisingstudio.com', date: '2026-06-01', description: 'Script v2 + director notes', duration: 75, billable: true, hourlyRate: 95, startTime: 1748772000000, endTime: 1748776500000 },
+  { id: 'te8', project: 'Brand Identity Refresh', projectId: 'p1', task: 'Typography system', userId: 'demo@uprisingstudio.com', date: '2026-05-25', description: 'Variable font pairing exploration', duration: 150, billable: true, hourlyRate: 95, startTime: 1748167200000, endTime: 1748176200000 },
+];
+
+export const MOCK_EXPENSES = [
+  { id: 'exp1', description: 'Adobe Creative Cloud — team license', category: 'Software', amount: 599, currency: 'USD', date: '2026-06-01', projectId: null, submittedBy: 'demo@uprisingstudio.com', status: 'approved', notes: 'Annual renewal' },
+  { id: 'exp2', description: 'Stock footage pack — Artgrid', category: 'Assets', amount: 149, currency: 'USD', date: '2026-05-28', projectId: 'p2', submittedBy: 'demo@uprisingstudio.com', status: 'approved', notes: 'Q3 campaign production' },
+  { id: 'exp3', description: 'Client lunch — Stratum Labs', category: 'Meals', amount: 87, currency: 'USD', date: '2026-05-25', projectId: 'p1', submittedBy: 'demo@uprisingstudio.com', status: 'pending', notes: 'Kickoff lunch' },
+  { id: 'exp4', description: 'Dribbble Pro subscription', category: 'Software', amount: 15, currency: 'USD', date: '2026-05-20', projectId: null, submittedBy: 'demo@uprisingstudio.com', status: 'approved', notes: '' },
+  { id: 'exp5', description: 'Font license — Neue Haas Grotesk', category: 'Assets', amount: 299, currency: 'USD', date: '2026-05-15', projectId: 'p1', submittedBy: 'demo@uprisingstudio.com', status: 'approved', notes: 'Brand Identity project' },
+  { id: 'exp6', description: 'Notion team plan', category: 'Software', amount: 96, currency: 'USD', date: '2026-05-01', projectId: null, submittedBy: 'demo@uprisingstudio.com', status: 'rejected', notes: 'Duplicate — already covered by workspace plan' },
+];
+
+export const MOCK_TICKETS = [
+  { id: 'tkt1', subject: 'Invoice INV-2026-043 payment dispute', category: 'Billing', priority: 'high', status: 'open', clientId: 'c8', client: 'Solara Health', createdAt: '2026-05-28', description: 'Client disputes the overdue status, claims payment was sent on May 14.' },
+  { id: 'tkt2', subject: 'Portal file access not working', category: 'Bug', priority: 'medium', status: 'in_progress', clientId: 'c2', client: 'Volta Interactive', createdAt: '2026-05-29', description: 'Client cannot download files from their portal. Returns 403 error.' },
+  { id: 'tkt3', subject: 'Request: add team member to project', category: 'Feature', priority: 'low', status: 'resolved', clientId: 'c1', client: 'Stratum Labs', createdAt: '2026-05-20', description: 'Add Camille Moreau as a reviewer on Brand Identity project.' },
+  { id: 'tkt4', subject: 'Motion export quality too compressed', category: 'Question', priority: 'medium', status: 'open', clientId: 'c3', client: 'Pollen Studio', createdAt: '2026-06-01', description: 'Final renders look pixelated at 4K. Need uncompressed version.' },
+  { id: 'tkt5', subject: 'NPS survey link not working', category: 'Bug', priority: 'low', status: 'closed', clientId: 'c5', client: 'Halo Collective', createdAt: '2026-04-25', description: 'NPS email link 404d. Resent manually.' },
+];
+
+export const MOCK_CALL_PREPS = [
+  { id: 'cp1', client: 'Stratum Labs', clientId: 'c1', date: '2026-06-05', time: '10:00', type: 'Check-in', status: 'upcoming', agenda: 'Q2 campaign review, logo suite feedback, June retainer scope', checklist: [{ item: 'Review latest logo feedback', done: true }, { item: 'Prepare revised timeline', done: true }, { item: 'Confirm June scope', done: false }, { item: 'Discuss Q3 strategy', done: false }] },
+  { id: 'cp2', client: 'Volta Interactive', clientId: 'c2', date: '2026-06-03', time: '14:00', type: 'Kickoff', status: 'upcoming', agenda: 'Campaign creative brief walkthrough, asset schedule, delivery milestones', checklist: [{ item: 'Finalize creative brief', done: true }, { item: 'Share asset schedule', done: false }, { item: 'Confirm approval workflow', done: false }] },
+  { id: 'cp3', client: 'Orbis Consulting', clientId: 'c4', date: '2026-05-22', time: '11:00', type: 'Proposal', status: 'completed', agenda: 'Investor deck proposal review and sign-off', checklist: [{ item: 'Send proposal PDF', done: true }, { item: 'Walk through pricing', done: true }, { item: 'Collect signed SOW', done: true }] },
+  { id: 'cp4', client: 'Solara Health', clientId: 'c8', date: '2026-06-10', time: '15:30', type: 'Discovery', status: 'upcoming', agenda: 'Website redesign discovery — user research review, CMS requirements', checklist: [{ item: 'Review user research report', done: false }, { item: 'Confirm CMS preference', done: false }, { item: 'Align on launch date', done: false }] },
+];
+
+export const MOCK_SERVICES = [
+  { id: 'svc1', name: 'Brand Identity', category: 'Branding', description: 'Full brand identity: logo, palette, typography, guidelines PDF', basePrice: 8500, unit: 'project', status: 'active' },
+  { id: 'svc2', name: 'Campaign Production', category: 'Paid Ads', description: 'Multi-channel campaign assets: social, display, video', basePrice: 6000, unit: 'project', status: 'active' },
+  { id: 'svc3', name: 'Website Design', category: 'Web Design', description: 'Full UX/UI design in Figma, responsive, dev-ready', basePrice: 12000, unit: 'project', status: 'active' },
+  { id: 'svc4', name: 'Content Strategy', category: 'Content', description: 'Content audit, editorial calendar, tone of voice guide', basePrice: 3500, unit: 'project', status: 'active' },
+  { id: 'svc5', name: 'Motion System', category: 'Video', description: 'Brand motion kit: intros, outros, social templates in AE', basePrice: 9500, unit: 'project', status: 'active' },
+  { id: 'svc6', name: 'Creative Retainer', category: 'Strategy', description: 'Monthly creative support: design, copy, strategy', basePrice: 5500, unit: 'month', status: 'active' },
+];
+
+export const MOCK_PROPOSALS = [
+  { id: 'prop1', title: 'Brand Identity Proposal — Vantage Digital', clientId: 'c4', client: 'Vantage Digital', status: 'sent', createdAt: '2026-05-20', total: 34000, sections: [{ title: 'Introduction', content: 'We propose a comprehensive brand identity refresh...' }, { title: 'Scope of Work', content: 'Phase 1: Discovery & Strategy (2 weeks)\nPhase 2: Creative Development (4 weeks)\nPhase 3: Delivery & Handoff (1 week)' }, { title: 'Investment', content: 'Total investment: $34,000 + applicable taxes.' }] },
+  { id: 'prop2', title: 'Website Redesign — Cascade Ventures', clientId: 'c7', client: 'Cascade Ventures', status: 'draft', createdAt: '2026-05-28', total: 15500, sections: [{ title: 'Introduction', content: 'Following our discovery call, we are excited to present...' }, { title: 'Scope', content: 'UX audit, wireframes, full design system, Webflow build.' }] },
+  { id: 'prop3', title: 'Q3 Campaign — Solara Health', clientId: 'c8', client: 'Solara Health', status: 'signed', createdAt: '2026-04-15', total: 52000, sections: [{ title: 'Introduction', content: 'Confirmed engagement for Q3 2026 campaign.' }, { title: 'Deliverables', content: 'Hero video, social pack (60 assets), email sequence, landing page.' }] },
+];
+
+export const MOCK_KNOWLEDGE_ARTICLES = [
+  { id: 'ka1', title: 'Client Onboarding Checklist', category: 'Process', tags: ['onboarding', 'clients', 'workflow'], content: 'Step-by-step guide for onboarding new clients: contract signing, portal setup, kickoff call template...', author: 'US', updatedAt: '2026-05-20' },
+  { id: 'ka2', title: 'Brand Asset Delivery Standards', category: 'Process', tags: ['delivery', 'files', 'brand'], content: 'Required file formats, naming conventions, folder structure for all brand deliverables...', author: 'JR', updatedAt: '2026-05-15' },
+  { id: 'ka3', title: 'Retainer Scope Management', category: 'Client', tags: ['retainer', 'scope', 'billing'], content: 'How to handle out-of-scope requests on retainer accounts: communication template, billing adjustments...', author: 'US', updatedAt: '2026-05-10' },
+  { id: 'ka4', title: 'Video Export Specifications', category: 'Technical', tags: ['video', 'export', 'technical'], content: 'Codec, resolution, and bitrate specs for all social platforms: Instagram Reels, LinkedIn, YouTube...', author: 'ML', updatedAt: '2026-05-05' },
+  { id: 'ka5', title: 'Invoice & Tax Process (QC)', category: 'Finance', tags: ['invoice', 'tax', 'TPS', 'TVQ'], content: 'Quebec tax calculation guide: TPS 5%, TVQ 9.975%. When to charge, how to file...', author: 'US', updatedAt: '2026-04-30' },
+];
+
+export const MOCK_NPS_RESPONSES = [
+  { id: 'nps1', clientId: 'c1', client: 'Stratum Labs', score: 10, comment: 'Exceptional quality and communication. Best creative partner we have had.', respondedAt: '2026-05-15', category: 'Promoter' },
+  { id: 'nps2', clientId: 'c2', client: 'Volta Interactive', score: 9, comment: 'Very satisfied. The campaign assets exceeded our expectations.', respondedAt: '2026-05-18', category: 'Promoter' },
+  { id: 'nps3', clientId: 'c8', client: 'Solara Health', score: 7, comment: 'Good work overall. Timeline was tight on the discovery phase.', respondedAt: '2026-05-20', category: 'Passive' },
+  { id: 'nps4', clientId: 'c3', client: 'Pollen Studio', score: 10, comment: 'The motion system is exactly what we needed. Highly recommend.', respondedAt: '2026-05-22', category: 'Promoter' },
+  { id: 'nps5', clientId: 'c4', client: 'Orbis Consulting', score: 8, comment: 'Solid delivery. Would like faster turnaround on revisions.', respondedAt: '2026-04-28', category: 'Passive' },
+  { id: 'nps6', clientId: 'c5', client: 'Halo Collective', score: 6, comment: 'Report was good but communication could be more proactive.', respondedAt: '2026-04-10', category: 'Detractor' },
+  { id: 'nps7', clientId: 'c6', client: 'Apex Creative Co.', score: 9, comment: 'Love working with the team. Very creative and responsive.', respondedAt: '2026-05-25', category: 'Promoter' },
+  { id: 'nps8', clientId: 'c1', client: 'Stratum Labs', score: 10, comment: 'Brand identity refresh was transformative for our business.', respondedAt: '2026-03-15', category: 'Promoter' },
+];
+
+export const MOCK_FINANCES = [
+  { id: 'fin1', type: 'income', category: 'Retainer', description: 'Stratum Labs — June retainer', amount: 8000, tps: 400, tvq: 797.60, date: '2026-06-01', status: 'received' },
+  { id: 'fin2', type: 'income', category: 'Retainer', description: 'Volta Interactive — June retainer', amount: 6000, tps: 300, tvq: 598.50, date: '2026-06-01', status: 'received' },
+  { id: 'fin3', type: 'income', category: 'Invoice', description: 'INV-2026-045 — Motion System', amount: 9500, tps: 475, tvq: 948.63, date: '2026-05-22', status: 'received' },
+  { id: 'fin4', type: 'income', category: 'Invoice', description: 'INV-2026-041 — Brand Identity', amount: 8000, tps: 400, tvq: 797.60, date: '2026-05-12', status: 'received' },
+  { id: 'fin5', type: 'income', category: 'Retainer', description: 'Solara Health — Q2 retainer', amount: 26000, tps: 1300, tvq: 2593.50, date: '2026-04-01', status: 'received' },
+  { id: 'fin6', type: 'expense', category: 'Software', description: 'Adobe CC team license', amount: 599, tps: 29.95, tvq: 59.77, date: '2026-06-01', status: 'paid' },
+  { id: 'fin7', type: 'expense', category: 'Payroll', description: 'Freelance designer — JR (May)', amount: 4200, tps: 0, tvq: 0, date: '2026-05-31', status: 'paid' },
+  { id: 'fin8', type: 'expense', category: 'Payroll', description: 'Freelance motion — ML (May)', amount: 3800, tps: 0, tvq: 0, date: '2026-05-31', status: 'paid' },
+  { id: 'fin9', type: 'expense', category: 'Marketing', description: 'Dribbble Pro + Behance', amount: 35, tps: 1.75, tvq: 3.49, date: '2026-05-15', status: 'paid' },
+  { id: 'fin10', type: 'income', category: 'Invoice', description: 'INV-2026-046 — Annual Report', amount: 12000, tps: 600, tvq: 1197, date: '2026-04-29', status: 'received' },
+];
+
+export const MOCK_ACTIVITY = [
+  { id: 'act1', user: 'JR', action: 'submitted', targetName: 'Logo Suite v3', entityType: 'approval', timestamp: new Date(Date.now() - 1 * 3600 * 1000).toISOString() },
+  { id: 'act2', user: 'US', action: 'marked paid', targetName: 'INV-2026-045', entityType: 'invoice', timestamp: new Date(Date.now() - 4 * 3600 * 1000).toISOString() },
+  { id: 'act3', user: 'PK', action: 'completed task', targetName: 'Social asset templates', entityType: 'task', timestamp: new Date(Date.now() - 8 * 3600 * 1000).toISOString() },
+  { id: 'act4', user: 'ML', action: 'uploaded', targetName: 'motion-kit-looping.zip', entityType: 'file', timestamp: new Date(Date.now() - 24 * 3600 * 1000).toISOString() },
+  { id: 'act5', user: 'AK', action: 'started task', targetName: 'Figma component library', entityType: 'task', timestamp: new Date(Date.now() - 26 * 3600 * 1000).toISOString() },
+  { id: 'act6', user: 'US', action: 'created project', targetName: 'Website Redesign', entityType: 'project', timestamp: new Date(Date.now() - 48 * 3600 * 1000).toISOString() },
+];
+
+export const MOCK_FULFILLMENT_ITEMS = [
+  { id: 'ful1', name: 'Brand Identity Package', projectId: 'p1', project: 'Brand Identity Refresh', clientId: 'c1', client: 'Stratum Labs', dueDate: '2026-07-01', progress: 72, status: 'in_progress', checklist: [{ item: 'Logo suite (5 variants)', done: true }, { item: 'Colour palette tokens', done: true }, { item: 'Typography system', done: true }, { item: 'Icon set (24 icons)', done: false }, { item: 'Brand guidelines PDF', done: false }, { item: 'Social kit (10 templates)', done: false }] },
+  { id: 'ful2', name: 'Q3 Campaign Package', projectId: 'p2', project: 'Campaign: Q3 Launch', clientId: 'c2', client: 'Volta Interactive', dueDate: '2026-06-30', progress: 35, status: 'in_progress', checklist: [{ item: 'Hero video (30s + 15s)', done: true }, { item: 'Social templates (30 units)', done: false }, { item: 'Email sequence (5 parts)', done: false }, { item: 'Landing page design', done: false }] },
+  { id: 'ful3', name: 'Motion System V2', projectId: 'p4', project: 'Motion System V2', clientId: 'c3', client: 'Pollen Studio', dueDate: '2026-06-20', progress: 90, status: 'review', checklist: [{ item: 'Intro animation', done: true }, { item: 'Lower thirds pack', done: true }, { item: 'Looping backgrounds (8)', done: true }, { item: 'AE template package', done: true }, { item: 'Export + QA', done: false }] },
+  { id: 'ful4', name: 'Annual Report 2025', projectId: 'p6', project: 'Annual Report 2025', clientId: 'c5', client: 'Halo Collective', dueDate: '2026-04-30', progress: 100, status: 'delivered', checklist: [{ item: 'Layout design (48 pages)', done: true }, { item: 'Charts & infographics', done: true }, { item: 'Print-ready PDF', done: true }, { item: 'Digital version (interactive)', done: true }] },
+];
+
+export const MOCK_RESOURCE_ENTRIES = [
+  { id: 'res1', name: 'Alex Martin (US)', role: 'Creative Director', weeklyCapacity: 40, weeklyBooked: 28, projects: [{ projectId: 'p1', hours: 10 }, { projectId: 'p2', hours: 8 }, { projectId: 'p5', hours: 6 }, { projectId: 'p4', hours: 4 }] },
+  { id: 'res2', name: 'Julia R. (JR)', role: 'Senior Designer', weeklyCapacity: 35, weeklyBooked: 35, projects: [{ projectId: 'p1', hours: 20 }, { projectId: 'p3', hours: 10 }, { projectId: 'p6', hours: 5 }] },
+  { id: 'res3', name: 'Marc L. (ML)', role: 'Motion Designer', weeklyCapacity: 32, weeklyBooked: 30, projects: [{ projectId: 'p4', hours: 20 }, { projectId: 'p2', hours: 10 }] },
+  { id: 'res4', name: 'Priya K. (PK)', role: 'Copywriter', weeklyCapacity: 30, weeklyBooked: 18, projects: [{ projectId: 'p2', hours: 14 }, { projectId: 'p3', hours: 4 }] },
+];
+
+export const MOCK_AGENT_CONFIGS = [
+  { id: 'ag1', name: 'Risk Analyst', template: 'Risk Analysis', description: 'Scans projects and pipeline for over-budget, overdue, and low-health signals. Generates weekly risk digest.', instructions: 'Analyse all active projects. Flag any project with health < 70 or spend > 85% of budget. List top 3 risks with recommended actions.', status: 'active', lastRun: new Date(Date.now() - 6 * 3600 * 1000).toISOString(), runs: 12 },
+  { id: 'ag2', name: 'Strategic Writer', template: 'Strategic Writer', description: 'Drafts strategic content: executive summaries, proposal introductions, client briefings.', instructions: 'You are a strategic advisor. Write in a confident, editorial tone. No jargon. Max 3 paragraphs per section.', status: 'active', lastRun: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(), runs: 7 },
+  { id: 'ag3', name: 'Finance Auditor', template: 'Financial Auditor', description: 'Reconciles invoices vs. retainer hours, flags discrepancies, prepares monthly finance summary.', instructions: 'Cross-reference invoices against retainer hour logs. Flag any gaps > 10%. Prepare a 1-page summary.', status: 'paused', lastRun: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(), runs: 3 },
+];
+
+export const MOCK_NOTIFICATIONS = [
+  { id: 'notif1', title: 'Approval submitted', message: 'JR submitted "Logo Suite v3" for review on Brand Identity Refresh.', read: false, timestamp: new Date(Date.now() - 1 * 3600 * 1000).toISOString() },
+  { id: 'notif2', title: 'Invoice overdue', message: 'INV-2026-043 for Solara Health is 17 days overdue.', read: false, timestamp: new Date(Date.now() - 8 * 3600 * 1000).toISOString() },
+  { id: 'notif3', title: 'Project at risk', message: 'Motion System V2 is at 93% budget utilisation with tasks remaining.', read: true, timestamp: new Date(Date.now() - 24 * 3600 * 1000).toISOString() },
+];
+
+export const MOCK_COMMENTS = [
+  { id: 'cmt1', userId: 'JR', userName: 'Julia R.', content: 'Updated the logo suite with client feedback from last call. Main changes: simplified icon, adjusted weight on wordmark.', timestamp: new Date(Date.now() - 2 * 3600 * 1000).toISOString() },
+  { id: 'cmt2', userId: 'US', userName: 'Alex Martin', content: 'Looks great. Can we try a version with slightly more spacing on the icon?', timestamp: new Date(Date.now() - 1.5 * 3600 * 1000).toISOString() },
+  { id: 'cmt3', userId: 'ML', userName: 'Marc L.', content: 'Motion version ready for QA — looping set exported at 4K ProRes.', timestamp: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString() },
+  { id: 'cmt4', userId: 'PK', userName: 'Priya K.', content: 'Email sequence v2 attached. Incorporated tone adjustments from brief.', timestamp: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString() },
+];
+

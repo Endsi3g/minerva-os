@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import { MOCK_FILES } from '@/lib/mock-data';
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; class: string; bg: string }> = {
   image:    { icon: Image,    class: 'text-sage',   bg: 'bg-sage/10'   },
@@ -65,6 +67,10 @@ export default function Files() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setAssets(MOCK_FILES.map(f => ({ ...f, _id: f.id, url: null, mimeType: f.type, uploadedAt: f.uploadedDate })));
+      return;
+    }
     supabase.from('workspaces').select('*').then(({ data }) => {
       if (data) setWorkspaces(data);
     });
@@ -73,6 +79,7 @@ export default function Files() {
   const workspaceId = workspaces[0]?.id;
 
   useEffect(() => {
+    if (IS_TEST) return;
     if (!workspaceId) return;
     async function loadAssets() {
       const { data } = await supabase
@@ -96,7 +103,30 @@ export default function Files() {
   );
 
   async function handleFiles(files: FileList | null) {
-    if (!files || !workspaceId) return;
+    if (!files) return;
+    if (IS_TEST) {
+      setUploading(true);
+      for (const file of Array.from(files)) {
+        const fileType = getFileType(file);
+        const mockId = `mock-${Date.now()}-${file.name}`;
+        setAssets(prev => [
+          {
+            _id: mockId,
+            id: mockId,
+            name: file.name,
+            type: fileType,
+            size: file.size,
+            url: null,
+            mimeType: fileType,
+            uploadedAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+      }
+      setUploading(false);
+      return;
+    }
+    if (!workspaceId) return;
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
@@ -133,6 +163,10 @@ export default function Files() {
   }
 
   async function removeAsset(id: string) {
+    if (IS_TEST) {
+      setAssets(prev => prev.filter(a => a._id !== id));
+      return;
+    }
     const { error } = await supabase.from('assets').delete().eq('id', id);
     if (!error) {
       setAssets(prev => prev.filter(a => a._id !== id));

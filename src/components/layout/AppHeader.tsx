@@ -31,6 +31,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCommandPalette } from './CommandPalette';
 import { supabase } from '@/lib/supabase';
+import { MOCK_NOTIFICATIONS } from '@/lib/mock-data';
+
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
 
 const PAGE_LABELS: Record<string, string> = {
   '/app/dashboard': 'Dashboard',
@@ -70,10 +73,13 @@ export function AppHeader() {
   const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
+    if (IS_TEST) {
+      setNotifications(MOCK_NOTIFICATIONS.map(n => ({ ...n, _id: n.id })));
+      return;
+    }
     const email = user?.email;
     if (!email) return;
     async function loadNotifications() {
-      // 1. Get profile
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('id')
@@ -82,7 +88,6 @@ export function AppHeader() {
 
       if (!profile) return;
 
-      // 2. Get notifications
       const { data: list } = await supabase
         .from('notifications')
         .select('*')
@@ -90,10 +95,7 @@ export function AppHeader() {
         .order('timestamp', { ascending: false });
 
       if (list) {
-        setNotifications(list.map(n => ({
-          ...n,
-          _id: n.id,
-        })));
+        setNotifications(list.map(n => ({ ...n, _id: n.id })));
       }
     }
     loadNotifications();
@@ -102,16 +104,9 @@ export function AppHeader() {
   const unreadCount = notifications.filter((n: any) => !n.read).length;
 
   async function handleMarkRead(id: string) {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', id);
-
-    if (!error) {
-      setNotifications(prev =>
-        prev.map(n => n._id === id ? { ...n, read: true } : n)
-      );
-    }
+    setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+    if (IS_TEST) return;
+    await supabase.from('notifications').update({ read: true }).eq('id', id);
   }
 
   return (

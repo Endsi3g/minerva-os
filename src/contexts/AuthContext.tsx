@@ -1,6 +1,14 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 
+const IS_TEST = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === '1';
+const MOCK_AUTH_USER: AuthUser = {
+  id: 'demo-user-id',
+  email: 'demo@uprisingstudio.com',
+  name: 'Alex Martin',
+  role: 'owner',
+};
+
 export type UserRole = 'owner' | 'strategist' | 'project_manager' | 'designer' | 'developer' | 'finance' | 'client_stakeholder' | 'client_reviewer';
 
 export interface AuthUser {
@@ -21,10 +29,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(IS_TEST ? MOCK_AUTH_USER : null);
+  const [isLoading, setIsLoading] = useState(!IS_TEST);
 
   useEffect(() => {
+    if (IS_TEST) return;
+
     let active = true;
 
     async function checkSession() {
@@ -110,11 +120,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function login(email: string, password: string) {
+    if (IS_TEST) { setUser(MOCK_AUTH_USER); return; }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   }
 
   async function signup(firstName: string, lastName: string, email: string, password: string) {
+    if (IS_TEST) { setUser(MOCK_AUTH_USER); return; }
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -128,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
+    if (IS_TEST) { setUser(null); return; }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }
