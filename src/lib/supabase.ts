@@ -421,6 +421,29 @@ function createMockSupabaseClient() {
         on: function() { return this; },
         subscribe: () => ({})
       };
+    },
+    rpc: async (fnName: string, args: any) => {
+      initMockDb();
+      if (fnName === 'match_knowledge_base') {
+        const list = mockDb['knowledge_base'] || [];
+        const filtered = list.filter(item => !args.filter_workspace_id || item.workspace_id === args.filter_workspace_id);
+        return { data: filtered.slice(0, args.match_count), error: null };
+      }
+      if (fnName === 'match_projects') {
+        const list = mockDb['projects'] || [];
+        const filtered = list.filter(item => !args.filter_workspace_id || item.workspace_id === args.filter_workspace_id);
+        return {
+          data: filtered.map(p => ({
+            id: p.id,
+            name: p.name,
+            client_name: p.client_name || p.client || 'Client',
+            status: p.status,
+            similarity: 0.9
+          })).slice(0, args.match_count),
+          error: null
+        };
+      }
+      return { data: [], error: null };
     }
   };
 }
