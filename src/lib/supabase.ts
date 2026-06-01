@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   MOCK_PROJECTS,
   MOCK_TASKS,
@@ -483,4 +484,8 @@ function createMockSupabaseClient() {
   };
 }
 
-export const supabase = (isDemo ? (createMockSupabaseClient() as any) : createClient(supabaseUrl, supabasePublishableKey)) as SupabaseClient;
+// createBrowserClient stores the session in cookies so the SSR middleware
+// (updateSession) can read it server-side. Using createClient here would
+// store the session in localStorage, invisible to the middleware, causing
+// an auth redirect loop after login.
+export const supabase = (isDemo ? (createMockSupabaseClient() as any) : createBrowserClient(supabaseUrl, supabasePublishableKey)) as SupabaseClient;
