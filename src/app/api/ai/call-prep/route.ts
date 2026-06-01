@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth/requireAuth';
+import { isDemoMode } from '@/lib/demo';
 
 let pipelinePromise: any = null;
 
@@ -27,15 +28,6 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient();
 
-    // Fetch user's workspace to validate ownership
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('workspace_id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    // 1. Fetch Call details — RLS on the server client enforces access,
-    //    but we also verify the call belongs to the user's workspace.
     const { data: call, error: callError } = await supabase
       .from('calls')
       .select('*')
@@ -46,8 +38,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Call not found' }, { status: 404 });
     }
 
-    if (profile && profile.workspace_id && call.workspace_id !== profile.workspace_id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!isDemoMode()) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('workspace_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profile && profile.workspace_id && call.workspace_id !== profile.workspace_id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     const workspaceId = call.workspace_id;

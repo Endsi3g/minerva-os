@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseServiceKey) {
+if (!supabaseServiceKey && process.env.DEMO_MODE !== 'true') {
   console.error('[SECURITY] SUPABASE_SERVICE_ROLE_KEY is not set. All admin Supabase operations will fail.');
 }
 

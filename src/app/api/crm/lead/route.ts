@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { isDemoMode } from '@/lib/demo';
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,15 +25,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify the workspace exists before inserting any data
-    const { data: workspace, error: wsError } = await supabaseAdmin
-      .from('workspaces')
-      .select('id')
-      .eq('id', workspaceId)
-      .maybeSingle();
+    if (!isDemoMode()) {
+      // Verify the workspace exists before inserting any data
+      const { data: workspace, error: wsError } = await supabaseAdmin
+        .from('workspaces')
+        .select('id')
+        .eq('id', workspaceId)
+        .maybeSingle();
 
-    if (wsError || !workspace) {
-      return NextResponse.json({ error: 'Invalid workspace' }, { status: 400 });
+      if (wsError || !workspace) {
+        return NextResponse.json({ error: 'Invalid workspace' }, { status: 400 });
+      }
     }
 
     const payload = await req.json();

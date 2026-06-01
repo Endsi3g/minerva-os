@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth/requireAuth';
+import { isDemoMode } from '@/lib/demo';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,15 +16,16 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient();
 
-    // Validate the requested workspaceId belongs to the authenticated user
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('workspace_id')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    if (!isDemoMode()) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('workspace_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    if (profile && profile.workspace_id && profile.workspace_id !== workspaceId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (profile && profile.workspace_id && profile.workspace_id !== workspaceId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // 1. Fetch all data for the workspace to build the audit context

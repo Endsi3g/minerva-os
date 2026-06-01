@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth/requireAuth';
+import { isDemoMode, DEMO_WORKSPACE_ID } from '@/lib/demo';
 
 let pipelinePromise: any = null;
 
@@ -80,14 +81,17 @@ export async function POST(req: NextRequest) {
   let workspaceId: string | undefined;
   try {
     if (lastUserMessage?.content) {
-      const supabase = await createClient();
-      // Resolve workspace from the authenticated user's profile, not from arbitrary data
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('workspace_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      workspaceId = profile?.workspace_id;
+      if (isDemoMode()) {
+        workspaceId = DEMO_WORKSPACE_ID;
+      } else {
+        const supabase = await createClient();
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('workspace_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        workspaceId = profile?.workspace_id;
+      }
 
       if (workspaceId) {
         const extractor = await getEmbedder();
