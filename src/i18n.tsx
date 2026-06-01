@@ -63,6 +63,19 @@ const translations = {
         },
         releases: [
           {
+            version: 'v2.0.1',
+            date: 'May 2026',
+            tag: 'Feature',
+            items: [
+              'Landing CTA redesigned — eyebrow badge, serif heading, download buttons for Windows and macOS',
+              'Login page rebuilt to match Signup layout — same video, grey filter, consistent design system',
+              'Signup & Login video changed from green tint to neutral grey',
+              'Sonner toast notifications on signup and login for instant visual feedback',
+              'Forgot password and reset password flows fully redesigned and functional',
+              'Electron app now starts at the welcome splash instead of the marketing landing page',
+            ] as string[],
+          },
+          {
             version: 'v2.0.0',
             date: 'Jun 2026',
             tag: 'Major',
@@ -1043,6 +1056,19 @@ const translations = {
           },
         },
         releases: [
+          {
+            version: 'v2.0.1',
+            date: 'Mai 2026',
+            tag: 'Fonctionnalité',
+            items: [
+              'CTA de la landing page redessiné — badge, titre serif et boutons de téléchargement Windows/macOS',
+              'Page de connexion reconstruite pour correspondre au style inscription — même vidéo, filtre gris',
+              'Vidéo inscription et connexion changée de vert à gris neutre',
+              'Notifications Sonner à l\'inscription et à la connexion pour un retour visuel immédiat',
+              'Flux «mot de passe oublié» et réinitialisation entièrement redessinés et fonctionnels',
+              'L\'app Electron démarre maintenant sur le splash de bienvenue plutôt que la landing page',
+            ] as string[],
+          },
           {
             version: 'v2.0.0',
             date: 'Jun 2026',
