@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Users, X, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 
@@ -251,7 +252,7 @@ export default function ResourcePlanning() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{res.title}</h1>
+          <TextAnimate text={res.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
             {res.memberCount.replace('{{count}}', String(members.length)).replace('{{capacity}}', String(Math.round(totalCapacity)))}
           </p>

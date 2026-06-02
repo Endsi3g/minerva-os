@@ -17,6 +17,7 @@ import { ShiftCard } from '@/components/ui/shift-card';
 import { Expandable, ExpandableTrigger, ExpandableContent } from '@/components/ui/expandable';
 import { TextureOverlay } from '@/components/ui/texture-overlay';
 import { AnimatedNumber } from '@/components/ui/animated-number';
+import { TextAnimate } from '@/components/ui/text-animate';
 
 /* ── Risk flag computation ───────────────────────────────────────────────── */
 
@@ -620,9 +621,7 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-ivory font-serif italic">
-          {greeting}, {displayName}
-        </h1>
+        <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-3xl font-bold text-ivory font-serif italic" />
         <p className="text-sm text-silver mt-1">{d.subtitle}</p>
       </motion.div>
 
@@ -732,7 +731,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 glass-card border-white/10 bg-midnight">
               <CardHeader>
-                <CardTitle className="text-sm font-bold text-ivory">{d.recentActivity}</CardTitle>
+                <CardTitle><TextAnimate text={d.recentActivity} type="fadeIn" className="text-sm font-bold text-ivory" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <ActivityFeed emptyLabel={d.activityEmpty} workspaceId={workspaceId} />
@@ -741,7 +740,7 @@ export default function Dashboard() {
 
             <Card className="glass-card border-white/10 bg-midnight">
               <CardHeader>
-                <CardTitle className="text-sm font-bold text-ivory">{d.quickActions}</CardTitle>
+                <CardTitle><TextAnimate text={d.quickActions} type="fadeIn" className="text-sm font-bold text-ivory" /></CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {quickActions.map(action => (

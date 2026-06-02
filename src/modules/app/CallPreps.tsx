@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Video, BookOpen, Sparkles, Plus, CheckCircle2, Circle, ExternalLink, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { Badge } from '@/components/ui/badge';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
@@ -142,7 +143,7 @@ export default function CallPreps() {
               <div className="flex items-center gap-2 text-fog text-xs uppercase tracking-widest mb-2">
                 <Video size={14} /> {cp.calendar}
               </div>
-              <h1 className="text-3xl font-serif text-ivory">{selectedCall.title}</h1>
+              <TextAnimate text={selectedCall.title} type="calmInUp" className="text-3xl font-serif text-ivory" />
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex -space-x-2">
                   {selectedCall.attendees.map((a: string, i: number) => (

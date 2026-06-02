@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { PackageCheck, ArrowRight, CheckCircle2, Circle, ListTodo, BarChart3, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useLang } from '@/i18n';
@@ -81,7 +82,7 @@ export default function Fulfillment() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif text-ivory tracking-tight">{fl.title}</h1>
+          <TextAnimate text={fl.title} type="calmInUp" className="text-3xl font-serif text-ivory tracking-tight" />
           <p className="text-sm text-fog mt-1">{deliveries.length} {fl.stats}</p>
         </div>
         <div className="flex gap-2">
