@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Plus, Circle, Loader2, Eye, CheckCircle2 } from 'lucide-react';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -160,7 +161,7 @@ export default function Tasks() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{tk.title}</h1>
+          <TextAnimate text={tk.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
             {tk.stats
               .replace('total', String(totalTasksCount))

@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Search, Upload, Image, Video, FileText, Archive, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
@@ -149,7 +150,7 @@ export default function Files() {
     <>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{f.title}</h1>
+          <TextAnimate text={f.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">{assets.length} {f.stats}</p>
         </div>
         <Button

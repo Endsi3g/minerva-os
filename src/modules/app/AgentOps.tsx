@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
+import { TextAnimate } from '@/components/ui/text-animate';
 import {
   TerminalAnimationRoot,
   TerminalAnimationWindow,
@@ -123,7 +124,7 @@ export default function AgentOps() {
         <div>
           <h1 className="text-3xl font-bold text-ivory font-serif italic flex items-center gap-3">
             <Sparkles className="text-warm" />
-            Agent Operations
+            <TextAnimate text="Agent Operations" type="calmInUp" className="text-3xl font-bold text-ivory font-serif italic" />
           </h1>
           <p className="text-sm text-silver mt-2">
             Monitor, govern, and configure the instructions for your AGI agency agents.
