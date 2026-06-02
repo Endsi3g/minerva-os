@@ -1,16 +1,18 @@
 'use client';
 import { useState } from 'react';
 import { ChevronDown, HelpCircle, Mail, Keyboard } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import { TextAnimate } from '@/components/ui/text-animate';
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
 
   return (
     <div
-      className="rounded-xl border overflow-hidden"
+      className="rounded-xl border"
       style={{ backgroundColor: '#111522', borderColor: 'rgba(255,255,255,0.08)' }}
     >
       <button
@@ -22,19 +24,30 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         <ChevronDown
           size={14}
           className={cn(
-            'shrink-0 text-fog transition-transform duration-200',
+            'shrink-0 text-fog transition-transform duration-300',
             open && 'rotate-180'
           )}
         />
       </button>
-      {open && (
-        <div
-          className="px-4 pb-4 text-sm text-silver leading-relaxed"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-        >
-          <p className="pt-3">{a}</p>
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="answer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            className="overflow-hidden"
+          >
+            <div
+              className="px-4 pb-4 text-sm text-silver leading-relaxed"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+            >
+              <p className="pt-3">{a}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -76,7 +89,7 @@ export default function Support() {
     <div className="max-w-2xl space-y-10">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-ivory">{s.title}</h1>
+        <TextAnimate text={s.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
       </div>
 
       {/* FAQ */}

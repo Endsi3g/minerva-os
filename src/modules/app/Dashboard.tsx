@@ -16,6 +16,7 @@ import type { Translations } from '@/i18n';
 import { ShiftCard } from '@/components/ui/shift-card';
 import { Expandable, ExpandableTrigger, ExpandableContent } from '@/components/ui/expandable';
 import { TextureOverlay } from '@/components/ui/texture-overlay';
+import { AnimatedNumber } from '@/components/ui/animated-number';
 
 /* ── Risk flag computation ───────────────────────────────────────────────── */
 
@@ -581,10 +582,10 @@ export default function Dashboard() {
     : 0;
 
   const kpis = [
-    { label: d.kpis.activeProjects, value: String(activeProjectsCount), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage' },
-    { label: d.kpis.openTasks, value: String(openTasksCount), delta: d.kpis.openTasksDelta, icon: CheckSquare, color: 'text-warm' },
-    { label: d.kpis.pendingApprovals, value: String(pendingApprovalsCount), delta: d.kpis.pendingApprovalsDelta, icon: ClipboardCheck, color: 'text-ember' },
-    { label: d.kpis.revenueMtd, value: `$${(revenueMtd / 1000).toFixed(1)}k`, delta: d.kpis.revenueMtdDelta, icon: DollarSign, color: 'text-silver' },
+    { label: d.kpis.activeProjects, numericValue: activeProjectsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage' },
+    { label: d.kpis.openTasks, numericValue: openTasksCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.openTasksDelta, icon: CheckSquare, color: 'text-warm' },
+    { label: d.kpis.pendingApprovals, numericValue: pendingApprovalsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.pendingApprovalsDelta, icon: ClipboardCheck, color: 'text-ember' },
+    { label: d.kpis.revenueMtd, numericValue: revenueMtd / 1000, format: (n: number) => `$${n.toFixed(1)}k`, delta: d.kpis.revenueMtdDelta, icon: DollarSign, color: 'text-silver' },
   ];
 
   const quickActions = [
@@ -713,7 +714,9 @@ export default function Dashboard() {
                   }
                   middleContent={
                     <div className="w-full text-left">
-                      <p className="text-lg sm:text-xl md:text-2xl font-bold text-ivory tracking-tight truncate">{kpi.value}</p>
+                      <p className="text-lg sm:text-xl md:text-2xl font-bold text-ivory tracking-tight truncate">
+                        <AnimatedNumber value={kpi.numericValue} format={kpi.format} stiffness={80} damping={18} mass={0.5} />
+                      </p>
                       <p className="text-[9px] sm:text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
                         <span className="text-sage">{kpi.delta.split(' ')[0]}</span>
                         <span className="truncate">{kpi.delta.split(' ').slice(1).join(' ')}</span>

@@ -1,6 +1,8 @@
 'use client';
 import { useLang } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { motion } from 'motion/react';
+import { TextAnimate } from '@/components/ui/text-animate';
 
 const TAG_STYLES: Record<string, { bg: string; color: string; border: string }> = {
   // EN tags
@@ -28,8 +30,15 @@ export default function Changelog() {
     <div className="max-w-2xl space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-ivory">{t.landing.vex.changelogTitle}</h1>
-        <p className="text-sm text-fog mt-1">{t.landing.vex.changelogSub}</p>
+        <TextAnimate text={t.landing.vex.changelogTitle} type="calmInUp" className="text-2xl font-semibold text-ivory" />
+        <motion.p
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="text-sm text-fog mt-1"
+        >
+          {t.landing.vex.changelogSub}
+        </motion.p>
       </div>
 
       {/* Timeline */}
@@ -45,7 +54,13 @@ export default function Changelog() {
             const style = TAG_STYLES[release.tag] ?? fallbackStyle();
 
             return (
-              <div key={release.version} className={cn('relative pl-8', i === 0 && '')}>
+              <motion.div
+                key={release.version}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.08, duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+                className={cn('relative pl-8', i === 0 && '')}
+              >
                 {/* Dot */}
                 <div
                   className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2"
@@ -91,7 +106,7 @@ export default function Changelog() {
                     ))}
                   </ul>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
