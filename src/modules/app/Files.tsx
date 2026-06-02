@@ -148,7 +148,7 @@ export default function Files() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <TextAnimate text={f.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">{assets.length} {f.stats}</p>

@@ -133,7 +133,7 @@ export default function AgentOps() {
       </header>
 
       {/* Agents Status Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {agents.map((agent: any, index: number) => (
           <motion.div
             key={agent.id}

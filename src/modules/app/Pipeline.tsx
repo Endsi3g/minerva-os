@@ -299,7 +299,7 @@ export default function Pipeline() {
 
       {/* Add/Edit deal sheet */}
       <Sheet open={sheetOpen} onOpenChange={handleOpenChange}>
-        <SheetContent side="right" className={cn("w-96 p-6 flex flex-col gap-6 transition-all duration-300 overflow-y-auto", emailDraft && "w-[480px] sm:w-[540px]")}>
+        <SheetContent side="right" className={cn("w-full sm:w-96 p-6 flex flex-col gap-6 transition-all duration-300 overflow-y-auto", emailDraft && "sm:w-[480px] lg:w-[540px]")}>
           <SheetHeader>
             <SheetTitle>{editingLead ? p.editDeal : p.newDeal}</SheetTitle>
           </SheetHeader>

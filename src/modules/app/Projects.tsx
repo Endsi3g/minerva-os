@@ -281,7 +281,7 @@ export default function Projects() {
       )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+        <SheetContent side="right" className="w-full sm:w-96 p-6 flex flex-col gap-6">
           <SheetHeader>
             <SheetTitle>{p.newProject}</SheetTitle>
           </SheetHeader>

@@ -175,7 +175,7 @@ export default function Tasks() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex items-center gap-1 mb-5 p-1 rounded-lg bg-card border border-border w-fit">
+      <div className="flex items-center gap-1 mb-5 p-1 rounded-lg bg-card border border-border w-fit max-w-full overflow-x-auto">
         {FILTER_TABS.map(tab => (
           <button
             key={tab.id}
@@ -310,7 +310,7 @@ export default function Tasks() {
 
       {/* Task detail sheet */}
       <Sheet open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <SheetContent side="right" className="w-[400px] bg-midnight border-white/5 flex flex-col p-0">
+        <SheetContent side="right" className="w-full sm:w-[400px] bg-midnight border-white/5 flex flex-col p-0">
           <SheetHeader className="p-6 border-b border-white/5">
             <div className="flex items-center gap-2 mb-1">
               <span className={cn('text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full', PRIORITY_COLOR[selectedTask?.priority as TaskPriority])}>
@@ -332,7 +332,7 @@ export default function Tasks() {
 
       {/* Add task sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+        <SheetContent side="right" className="w-full sm:w-96 p-6 flex flex-col gap-6">
           <SheetHeader>
             <SheetTitle>{tk.newTask}</SheetTitle>
           </SheetHeader>

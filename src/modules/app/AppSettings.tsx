@@ -336,7 +336,7 @@ function TeamTab() {
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
       {/* Invite bar */}
-      <div className="flex gap-2 mb-6 max-w-md">
+      <div className="flex flex-col sm:flex-row gap-2 mb-6 max-w-md">
         <input
           type="email"
           placeholder={s.invitePlaceholder}

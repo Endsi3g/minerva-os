@@ -261,7 +261,7 @@ export default function Clients() {
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <TextAnimate text={cKeys.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
@@ -340,7 +340,7 @@ export default function Clients() {
 
       {/* Add client sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+        <SheetContent side="right" className="w-full sm:w-96 p-6 flex flex-col gap-6">
           <SheetHeader>
             <SheetTitle>{cKeys.newClient}</SheetTitle>
           </SheetHeader>

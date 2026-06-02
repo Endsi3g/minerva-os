@@ -162,12 +162,12 @@ export default function TimeTracking() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <TextAnimate text="Time Tracking" type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">Track billable hours across projects and clients.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button size="sm" onClick={() => setLogSheetOpen(true)}>
             <Plus size={14} />
             Log Time
@@ -288,7 +288,7 @@ export default function TimeTracking() {
       )}
       {/* Log Time Sheet */}
       <Sheet open={logSheetOpen} onOpenChange={setLogSheetOpen}>
-        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+        <SheetContent side="right" className="w-full sm:w-96 p-6 flex flex-col gap-6">
           <SheetHeader>
             <SheetTitle>Log Time</SheetTitle>
           </SheetHeader>

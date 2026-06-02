@@ -213,7 +213,7 @@ export default function Reports() {
       {tab === 'overview' && (<>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
         {(([
           { label: r.kpis.pipelineValue,    numericValue: totalPipeline / 1000, format: (n: number) => '$' + n.toFixed(0) + 'k', color: 'text-silver' },
           { label: r.kpis.winRate,          numericValue: conversionRate,       format: (n: number) => Math.round(n) + '%',      color: 'text-sage' },
@@ -230,7 +230,7 @@ export default function Reports() {
       </div>
 
       {/* Charts grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* Revenue by client */}
         <ReportSection title={r.revenue.title} subtitle={r.revenue.subtitle}>
@@ -385,7 +385,8 @@ export default function Reports() {
             {profitabilityData.length === 0 ? (
               <p className="text-sm text-fog text-center py-10">Add invoices and time entries to see profitability data.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="overflow-x-auto">
+              <div className="min-w-[420px] space-y-2">
                 <div className="grid grid-cols-5 gap-2 text-[10px] text-fog uppercase tracking-widest px-1 pb-2 border-b border-white/5">
                   <span className="col-span-2">Client</span>
                   <span className="text-right">Revenue</span>
@@ -407,6 +408,7 @@ export default function Reports() {
                     </div>
                   </div>
                 ))}
+              </div>
               </div>
             )}
           </ReportSection>

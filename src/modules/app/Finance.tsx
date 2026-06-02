@@ -156,12 +156,12 @@ export default function Finance() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <TextAnimate text={f.title} type="calmInUp" className="text-3xl font-serif text-ivory tracking-tight" />
           <p className="text-sm text-fog mt-1">{f.stats}</p>
         </div>
-        <Button onClick={() => setShowAdd(true)} className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90">
+        <Button onClick={() => setShowAdd(true)} className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90 self-start sm:self-auto">
           <Plus size={16} className="mr-2" /> {t.app.common.add}
         </Button>
       </div>

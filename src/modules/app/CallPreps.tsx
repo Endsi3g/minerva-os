@@ -95,9 +95,9 @@ export default function CallPreps() {
   };
 
   return (
-    <div className="flex h-full gap-8 max-w-7xl mx-auto">
+    <div className="flex flex-col lg:flex-row h-full gap-6 lg:gap-8 max-w-7xl mx-auto">
       {/* Sidebar: Upcoming Calls */}
-      <div className="w-80 shrink-0 space-y-6">
+      <div className="w-full lg:w-80 lg:shrink-0 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-serif text-ivory">{cp.title}</h2>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-fog hover:text-ivory">
@@ -135,7 +135,7 @@ export default function CallPreps() {
       </div>
 
       {/* Main Content: Preparation Area */}
-      <div className="flex-1 min-w-0 bg-midnight/30 rounded-3xl border border-white/5 p-8 overflow-y-auto">
+      <div className="flex-1 min-w-0 bg-midnight/30 rounded-3xl border border-white/5 p-4 md:p-8 overflow-y-auto">
         {selectedCall ? (
           <div className="space-y-10">
             {/* Header */}
@@ -144,7 +144,7 @@ export default function CallPreps() {
                 <Video size={14} /> {cp.calendar}
               </div>
               <TextAnimate text={selectedCall.title} type="calmInUp" className="text-3xl font-serif text-ivory" />
-              <div className="flex items-center gap-4 mt-4">
+              <div className="flex flex-wrap items-center gap-4 mt-4">
                 <div className="flex -space-x-2">
                   {selectedCall.attendees.map((a: string, i: number) => (
                     <div key={i} className="h-6 w-6 rounded-full bg-dusk border border-obsidian flex items-center justify-center text-[10px] text-silver font-medium" title={a}>
@@ -218,8 +218,8 @@ export default function CallPreps() {
 
             {/* Integrations Bar */}
             <div className="pt-8 border-t border-white/5">
-              <div className="flex items-center justify-between text-xs text-fog">
-                <div className="flex gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-fog gap-3">
+                <div className="flex flex-wrap gap-4 sm:gap-6">
                   <div className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-sage" /> Google Calendar Connected
                   </div>

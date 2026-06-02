@@ -324,14 +324,14 @@ export default function KnowledgeBase() {
         />
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <TextAnimate text={kb.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
             {articles ? kb.articleCount.replace('{{count}}', String(articles.length)) : '...'}
           </p>
         </div>
-        <Button size="sm" onClick={() => setModal('new')}>
+        <Button size="sm" onClick={() => setModal('new')} className="self-start sm:self-auto">
           <Plus size={14} />
           {kb.addArticle}
         </Button>

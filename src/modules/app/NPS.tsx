@@ -324,7 +324,7 @@ export default function NPSPage() {
             return (
               <div
                 key={r._id}
-                className="flex items-center gap-4 px-4 py-3 rounded-xl border"
+                className="flex items-start sm:items-center gap-3 sm:gap-4 px-4 py-3 rounded-xl border flex-wrap sm:flex-nowrap"
                 style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
               >
                 <div className={cn('text-2xl font-bold tabular-nums w-10 text-right', scoreColor(r.score))}>{r.score}</div>

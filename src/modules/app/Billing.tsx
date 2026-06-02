@@ -121,11 +121,11 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
       style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
     >
       <div
-        className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-white/[0.015]"
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.015]"
         onClick={() => setExpanded(e => !e)}
       >
         {/* Number */}
-        <div className="w-32 shrink-0">
+        <div className="w-24 sm:w-32 shrink-0">
           <p className="text-sm font-semibold text-ivory tabular-nums">{invoice.invoiceNumber}</p>
         </div>
 
@@ -380,7 +380,7 @@ export default function Billing() {
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <TextAnimate text={b.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
@@ -389,7 +389,7 @@ export default function Billing() {
               .replace('active retainers', String(activeRetainersCount))}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={() => setRetainerSheetOpen(true)} id="btn-new-retainer">
             <Plus size={14} />
             {b.retainers.newRetainer}
@@ -570,7 +570,7 @@ export default function Billing() {
 
       {/* Add Retainer Sheet */}
       <Sheet open={retainerSheetOpen} onOpenChange={setRetainerSheetOpen}>
-        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+        <SheetContent side="right" className="w-full sm:w-96 p-6 flex flex-col gap-6">
           <SheetHeader>
             <SheetTitle>{b.retainers.newRetainer}</SheetTitle>
           </SheetHeader>

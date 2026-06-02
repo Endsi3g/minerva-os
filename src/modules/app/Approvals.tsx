@@ -93,7 +93,7 @@ export default function Approvals() {
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-3 gap-3 mb-8 max-w-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 max-w-lg">
         {(([
           { label: a.summary.pending,  numericValue: pending,  color: 'text-warm' },
           { label: a.summary.revision, numericValue: revision, color: 'text-ember' },
@@ -205,7 +205,7 @@ export default function Approvals() {
 
       {/* Threaded Comments & Tally Sheet */}
       <Sheet open={!!selectedId} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <SheetContent side="right" className="w-[420px] sm:w-[480px] bg-midnight border-white/5 flex flex-col p-0 overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:w-[420px] md:w-[480px] bg-midnight border-white/5 flex flex-col p-0 overflow-y-auto">
           <SheetHeader className="p-6 border-b border-white/5 shrink-0">
             <SheetTitle className="text-xl font-playfair text-ivory">Review & Discussion</SheetTitle>
           </SheetHeader>
