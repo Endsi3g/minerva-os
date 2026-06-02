@@ -1,6 +1,6 @@
 # Minerva OS
 
-**The strategic operating system for elite agencies. v2.2.1**
+**The strategic operating system for elite agencies. v2.3.0**
 
 Minerva OS is the internal agency platform for [Uprising Studio](https://uprisingstudio.com) — a premium platform that centralises CRM, project management, approvals, billing, file storage, AI-powered risk monitoring, and reporting in one cohesive experience.
 
@@ -28,6 +28,11 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 - Secure Client Portal: email validation gate, token verification, scope enforcement, and audit activity logging (e.g. downloads, approvals, comments)
 - API-driven routes: server-side Next.js endpoints using `supabaseAdmin` service role to securely read/write portal actions, preventing guest visitors from querying Supabase directly
 - Proposal Viewer: secure portal for clients to view, sign, or decline proposals with real-time agency notifications and bilingual i18n support
+- Collapsible sidebar with 5 grouped sections (CRM, Delivery, Finance, Intelligence, Ops) — state persisted in localStorage
+- Support page: animated FAQ accordion, contact ticket form (Supabase), keyboard shortcuts reference
+- Changelog page: timeline of versioned releases with tag badges and motion entrance animations
+- Premium animation layer: `AnimatedNumber` spring counters on all KPI cards, `TextAnimate` per-letter entrance on all page titles and section headers, `DirectionAwareTabs` content navigation for AppSettings (6 tabs) and Dashboard (2 tabs), animated pill filter tabs on Billing and Time Tracking
+- Fully responsive: all 22 modules audited and fixed for mobile (375px), tablet (768px), and desktop (1440px)
 
 ### Desktop (Electron 42)
 - macOS (arm64 + x64) `.dmg`
@@ -60,8 +65,8 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 | Desktop | Electron 42 |
 | Backend | Supabase (PostgreSQL + Auth + Storage) |
 | Auth | Supabase Auth — email/password, PKCE reset flow |
-| Styling | Tailwind CSS v4 + shadcn/ui (Minerva design tokens) |
-| Animation | motion/react (Framer Motion v11+) |
+| Styling | Tailwind CSS v4 + shadcn/ui + Cult UI (Minerva design tokens) |
+| Animation | motion/react (Framer Motion v11+) · AnimatedNumber · TextAnimate · DirectionAwareTabs |
 | Notifications | Sonner v2 |
 | Monitoring | Sentry + PostHog |
 | Deployment | Vercel (web) · EAS (mobile) · GitHub Actions (desktop) |
@@ -143,6 +148,7 @@ See **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions covering:
 
 | Tag | Date | Highlights |
 |---|---|---|
+| `v2.3.0` | 2026-06-02 | Collapsible sidebar groups, Support and Changelog pages, AnimatedNumber / TextAnimate / DirectionAwareTabs animation layer, full responsive audit across all 22 modules |
 | `v2.2.1` | 2026-06-01 | Automatic mock fallback in all portal API routes for offline or local-only configurations |
 | `v2.2.0` | 2026-06-01 | Secure Client Portal email gate, token scopes, activity logging, and API-driven proposal viewer |
 | `v2.1.0` | 2026-06-01 | Expo 54 upgrade, Sentry wrap, pnpm migration, dev SW cleanup |
