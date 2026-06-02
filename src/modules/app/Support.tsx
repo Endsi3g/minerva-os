@@ -6,6 +6,8 @@ import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { TextAnimate } from '@/components/ui/text-animate';
+import { Kbd } from '@/components/ui/kbd';
+import { Separator } from '@/components/ui/separator';
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -105,6 +107,8 @@ export default function Support() {
         </div>
       </section>
 
+      <Separator className="bg-white/5" />
+
       {/* Contact form */}
       <section>
         <div className="flex items-center gap-2 mb-4">
@@ -170,6 +174,8 @@ export default function Support() {
         </div>
       </section>
 
+      <Separator className="bg-white/5" />
+
       {/* Keyboard shortcuts */}
       <section>
         <div className="flex items-center gap-2 mb-4">
@@ -187,8 +193,8 @@ export default function Support() {
               style={i > 0 ? { borderTop: '1px solid rgba(255,255,255,0.05)' } : undefined}
             >
               <span className="text-sm text-silver">{sc.label}</span>
-              <kbd
-                className="text-[11px] font-mono px-2 py-0.5 rounded-md"
+              <Kbd
+                className="font-mono text-[11px] h-auto py-0.5 px-2 rounded-md"
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.06)',
                   border: '1px solid rgba(255,255,255,0.12)',
@@ -196,7 +202,7 @@ export default function Support() {
                 }}
               >
                 {sc.keys}
-              </kbd>
+              </Kbd>
             </div>
           ))}
         </div>

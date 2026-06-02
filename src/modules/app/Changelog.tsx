@@ -3,6 +3,7 @@ import { useLang } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { motion } from 'motion/react';
 import { TextAnimate } from '@/components/ui/text-animate';
+import { Badge } from '@/components/ui/badge';
 
 const TAG_STYLES: Record<string, { bg: string; color: string; border: string }> = {
   // EN tags
@@ -83,16 +84,17 @@ export default function Changelog() {
                     <span className="text-sm font-semibold font-mono text-ivory">
                       {release.version}
                     </span>
-                    <span
-                      className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-semibold uppercase tracking-wider rounded-full"
                       style={{
                         backgroundColor: style.bg,
                         color: style.color,
-                        border: `1px solid ${style.border}`,
+                        borderColor: style.border,
                       }}
                     >
                       {release.tag}
-                    </span>
+                    </Badge>
                     <span className="text-xs text-fog ml-auto">{release.date}</span>
                   </div>
 
