@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { PackageCheck, ArrowRight, CheckCircle2, Circle, ListTodo, BarChart3, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useLang } from '@/i18n';
@@ -79,12 +80,12 @@ export default function Fulfillment() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif text-ivory tracking-tight">{fl.title}</h1>
+          <TextAnimate text={fl.title} type="calmInUp" className="text-3xl font-serif text-ivory tracking-tight" />
           <p className="text-sm text-fog mt-1">{deliveries.length} {fl.stats}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 self-start sm:self-auto">
           <Button variant="outline" className="rounded-full border-white/5 bg-white/5 hover:bg-white/10">
             <BarChart3 size={16} className="mr-2" /> {fl.metrics}
           </Button>
@@ -137,7 +138,7 @@ export default function Fulfillment() {
                 </div>
 
                 {/* Progress Strip */}
-                <div className="flex items-center gap-6 p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 p-4 bg-white/[0.02] rounded-xl border border-white/5">
                   <div className="flex-1">
                     <div className="flex justify-between text-xs text-fog mb-2">
                       <span>{fl.onboarding} Progress</span>
@@ -145,8 +146,8 @@ export default function Fulfillment() {
                     </div>
                     <Progress value={activeDelivery.progress} className="h-1.5 bg-obsidian" />
                   </div>
-                  <div className="h-10 w-px bg-white/5" />
-                  <div className="text-right">
+                  <div className="hidden sm:block h-10 w-px bg-white/5" />
+                  <div className="sm:text-right">
                     <p className="text-[10px] text-fog uppercase font-semibold">Status</p>
                     <p className="text-sm text-sage font-medium">{activeDelivery.status.replace('_', ' ')}</p>
                   </div>

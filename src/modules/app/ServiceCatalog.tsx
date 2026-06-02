@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Package, Tag, X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
@@ -171,7 +172,7 @@ export default function ServiceCatalog() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{sc.title}</h1>
+          <TextAnimate text={sc.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
             {sc.subtitle.replace('{{count}}', String(services.length)).replace('{{packages}}', String(packages.length))}
           </p>

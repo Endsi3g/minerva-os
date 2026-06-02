@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Plus, LifeBuoy, Clock, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
@@ -152,7 +153,7 @@ export default function Tickets() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{tk.title}</h1>
+          <TextAnimate text={tk.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">{tk.ticketCount.replace('{{count}}', String(typedTickets.length)).replace('{{open}}', String(openCount))}</p>
         </div>
         <Button size="sm" onClick={() => setShowForm(true)}>
@@ -202,7 +203,7 @@ export default function Tickets() {
                 <StatusIcon size={14} className={sc.class.split(' ')[0]} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-ivory truncate">{ticket.subject as string}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                     {client && <span className="text-[11px] text-fog">{client.company as string}</span>}
                     <span className="text-[11px] text-fog/40">·</span>
                     <span className="text-[11px] text-fog">{ticket.category as string}</span>

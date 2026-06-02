@@ -1,11 +1,10 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Play, Square, Clock, X } from 'lucide-react';
+import { Play, Square, Clock, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
-import { motion } from 'motion/react';
-import { MorphSurface } from '@/components/ui/morph-surface';
+import { motion, AnimatePresence } from 'motion/react';
 import { TextureButton } from '@/components/ui/texture-button';
 
 
@@ -256,93 +255,104 @@ export function TimerWidget({ collapsed }: TimerWidgetProps) {
           </button>
         </div>
       ) : (
-        <MorphSurface
-          isOpen={showForm}
-          onOpenChange={setShowForm}
-          collapsedWidth="auto"
-          collapsedHeight={32}
-          expandedWidth={220}
-          expandedHeight={180}
-          triggerLabel="Start timer"
-          className="w-full justify-start items-center"
-          renderTrigger={({ onClick }) => (
-            <button
-              type="button"
-              onClick={onClick}
-              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-fog hover:text-ivory hover:bg-white/5 transition-colors text-[11px]"
-            >
-              <Clock size={12} className="shrink-0" />
-              <span>Start timer</span>
-            </button>
-          )}
-          renderContent={({ onClose }) => (
-            <div className="flex flex-col gap-2 p-2 w-full h-full text-left bg-midnight rounded-xl">
-              <input
-                autoFocus
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleStart(); if (e.key === 'Escape') onClose(); }}
-                placeholder="What are you working on?"
-                className="w-full text-[11px] bg-transparent text-ivory placeholder:text-fog outline-none border-b border-white/5 pb-1"
-              />
-
-              <select
-                value={selectedProjectId}
-                onChange={e => {
-                  setSelectedProjectId(e.target.value);
-                  setSelectedTaskId('');
-                }}
-                className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
+        <div className="w-full">
+          <button
+            type="button"
+            onClick={() => setShowForm(v => !v)}
+            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-fog hover:text-ivory hover:bg-white/5 transition-colors text-[11px]"
+          >
+            <Clock size={12} className="shrink-0" />
+            <span>Start timer</span>
+            <ChevronDown
+              size={10}
+              className={cn('ml-auto transition-transform', showForm && 'rotate-180')}
+            />
+          </button>
+          <AnimatePresence initial={false}>
+            {showForm && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                className="overflow-hidden"
               >
-                <option value="" className="bg-midnight text-fog">Select Project</option>
-                {projects.map((p: any) => (
-                  <option key={p._id} value={p._id} className="bg-midnight text-silver">
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+                <div className="flex flex-col gap-2 p-2 pt-1 w-full text-left bg-midnight rounded-xl mt-1">
+                  <input
+                    autoFocus
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleStart();
+                      if (e.key === 'Escape') {
+                        setShowForm(false);
+                        setSelectedProjectId('');
+                        setSelectedTaskId('');
+                      }
+                    }}
+                    placeholder="What are you working on?"
+                    className="w-full text-[11px] bg-transparent text-ivory placeholder:text-fog outline-none border-b border-white/5 pb-1"
+                  />
 
-              {selectedProjectId && (
-                <select
-                  value={selectedTaskId}
-                  onChange={e => setSelectedTaskId(e.target.value)}
-                  className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
-                >
-                  <option value="" className="bg-midnight text-fog">Select Task</option>
-                  {projectTasks.map((t: any) => (
-                    <option key={t._id} value={t._id} className="bg-midnight text-silver">
-                      {t.title}
-                    </option>
-                  ))}
-                </select>
-              )}
+                  <select
+                    value={selectedProjectId}
+                    onChange={e => {
+                      setSelectedProjectId(e.target.value);
+                      setSelectedTaskId('');
+                    }}
+                    className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
+                  >
+                    <option value="" className="bg-midnight text-fog">Select Project</option>
+                    {projects.map((p: any) => (
+                      <option key={p._id} value={p._id} className="bg-midnight text-silver">
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
 
-              <div className="flex gap-1.5 mt-auto pt-1">
-                <TextureButton
-                  type="button"
-                  onClick={handleStart}
-                  disabled={!description.trim()}
-                  className="h-7 text-[10px] flex-1 font-semibold"
-                >
-                  <Play size={9} className="mr-1 inline" />
-                  Start
-                </TextureButton>
-                <TextureButton
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    onClose();
-                    setSelectedProjectId('');
-                    setSelectedTaskId('');
-                  }}
-                  className="h-7 px-2 text-[10px] text-fog shrink-0 animate-none border-0"
-                >
-                  <X size={9} />
-                </TextureButton>
-              </div>
-            </div>
-          )}
-        />
+                  {selectedProjectId && (
+                    <select
+                      value={selectedTaskId}
+                      onChange={e => setSelectedTaskId(e.target.value)}
+                      className="w-full text-[10px] bg-midnight text-silver border border-white/5 rounded-md p-1 outline-none cursor-pointer"
+                    >
+                      <option value="" className="bg-midnight text-fog">Select Task</option>
+                      {projectTasks.map((task: any) => (
+                        <option key={task._id} value={task._id} className="bg-midnight text-silver">
+                          {task.title}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  <div className="flex gap-1.5 mt-auto pt-1">
+                    <TextureButton
+                      type="button"
+                      onClick={handleStart}
+                      disabled={!description.trim()}
+                      className="h-7 text-[10px] flex-1 font-semibold"
+                    >
+                      <Play size={9} className="mr-1 inline" />
+                      Start
+                    </TextureButton>
+                    <TextureButton
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        setShowForm(false);
+                        setSelectedProjectId('');
+                        setSelectedTaskId('');
+                      }}
+                      className="h-7 px-2 text-[10px] text-fog shrink-0 animate-none border-0"
+                    >
+                      <X size={9} />
+                    </TextureButton>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
     </div>
   );

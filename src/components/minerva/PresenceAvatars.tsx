@@ -17,7 +17,7 @@ export function PresenceAvatars() {
       {activeUsers.map((presence: any) => {
         const initials = presence.user.slice(0, 2).toUpperCase();
         return (
-          <Tooltip key={presence._id}>
+          <Tooltip key={presence.user}>
             <TooltipTrigger asChild>
               <Avatar className="h-7 w-7 border-2 border-obsidian shrink-0">
                 <AvatarFallback className="text-[10px] bg-dusk text-silver">

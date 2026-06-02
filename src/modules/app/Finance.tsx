@@ -3,6 +3,8 @@ import { useState, useMemo } from 'react';
 import { Plus, Wallet, TrendingUp, TrendingDown, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { AnimatedNumber } from '@/components/ui/animated-number';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -154,12 +156,12 @@ export default function Finance() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif text-ivory tracking-tight">{f.title}</h1>
+          <TextAnimate text={f.title} type="calmInUp" className="text-3xl font-serif text-ivory tracking-tight" />
           <p className="text-sm text-fog mt-1">{f.stats}</p>
         </div>
-        <Button onClick={() => setShowAdd(true)} className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90">
+        <Button onClick={() => setShowAdd(true)} className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90 self-start sm:self-auto">
           <Plus size={16} className="mr-2" /> {t.app.common.add}
         </Button>
       </div>
@@ -173,7 +175,7 @@ export default function Finance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-ivory">{fmt(totals.income)}</p>
+            <p className="text-2xl font-semibold text-ivory"><AnimatedNumber value={totals.income} format={(n) => fmt(n)} stiffness={80} damping={18} mass={0.5} /></p>
           </CardContent>
         </Card>
 
@@ -184,7 +186,7 @@ export default function Finance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-ivory">{fmt(totals.expenses)}</p>
+            <p className="text-2xl font-semibold text-ivory"><AnimatedNumber value={totals.expenses} format={(n) => fmt(n)} stiffness={80} damping={18} mass={0.5} /></p>
           </CardContent>
         </Card>
 
@@ -195,7 +197,7 @@ export default function Finance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-sage">{fmt(totals.net)}</p>
+            <p className="text-2xl font-semibold text-sage"><AnimatedNumber value={totals.net} format={(n) => fmt(n)} stiffness={80} damping={18} mass={0.5} /></p>
           </CardContent>
         </Card>
       </div>
@@ -204,7 +206,7 @@ export default function Finance() {
       <div className="bg-dusk/30 rounded-2xl p-6 border border-white/5">
         <div className="flex items-center gap-2 mb-4 text-ivory">
           <Calculator size={18} className="text-warm" />
-          <h2 className="text-lg font-medium">Quebec Tax Summary (TPS/TVQ)</h2>
+          <TextAnimate text="Quebec Tax Summary (TPS/TVQ)" type="fadeIn" className="text-lg font-medium" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
           <div className="space-y-3">
@@ -234,6 +236,7 @@ export default function Finance() {
 
       {/* Transactions Table */}
       <div className="bg-midnight rounded-2xl border border-white/5 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-white/[0.02] border-b border-white/5">
             <tr>
@@ -272,6 +275,7 @@ export default function Finance() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Add Entry Modal - Notion Minimalist */}

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Star, TrendingUp, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 
@@ -258,7 +259,7 @@ export default function NPSPage() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{nps.title}</h1>
+          <TextAnimate text={nps.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">{nps.responseCount.replace('{{count}}', String(total))}</p>
         </div>
         <Button size="sm" onClick={() => setShowForm(true)}>
@@ -323,7 +324,7 @@ export default function NPSPage() {
             return (
               <div
                 key={r._id}
-                className="flex items-center gap-4 px-4 py-3 rounded-xl border"
+                className="flex items-start sm:items-center gap-3 sm:gap-4 px-4 py-3 rounded-xl border flex-wrap sm:flex-nowrap"
                 style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
               >
                 <div className={cn('text-2xl font-bold tabular-nums w-10 text-right', scoreColor(r.score))}>{r.score}</div>

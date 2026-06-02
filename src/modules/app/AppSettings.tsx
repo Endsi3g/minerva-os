@@ -1,17 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { User, Building2, Users, Bell, Shield, Check, Lock, Download } from 'lucide-react';
+import { Check, Download } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 // Convex removed — Supabase is used instead.
 import { supabase } from '@/lib/supabase';
-
-/* ── Types ───────────────────────────────────────────────────────────────── */
-
-type Tab = 'profile' | 'workspace' | 'team' | 'notifications' | 'security' | 'privacy';
-
-
+import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs';
+import { TextAnimate } from '@/components/ui/text-animate';
 
 /* ── Sub-sections ────────────────────────────────────────────────────────── */
 
@@ -340,7 +336,7 @@ function TeamTab() {
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
       {/* Invite bar */}
-      <div className="flex gap-2 mb-6 max-w-md">
+      <div className="flex flex-col sm:flex-row gap-2 mb-6 max-w-md">
         <input
           type="email"
           placeholder={s.invitePlaceholder}
@@ -510,7 +506,7 @@ function Section({ title, subtitle, children }: { title: string; subtitle: strin
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-ivory">{title}</h2>
+        <TextAnimate text={title} type="fadeIn" className="text-base font-semibold text-ivory" />
         <p className="text-xs text-fog mt-0.5">{subtitle}</p>
       </div>
       {children}
@@ -666,70 +662,28 @@ function PrivacyTab() {
 
 /* ── Main page ───────────────────────────────────────────────────────────── */
 
-const TAB_ICONS: Record<Tab, React.ElementType> = {
-  profile: User,
-  workspace: Building2,
-  team: Users,
-  notifications: Bell,
-  security: Shield,
-  privacy: Lock,
-};
-
 export default function AppSettings() {
   const { t } = useLang();
   const s = t.app.settings;
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'profile',       label: s.tabs.profile },
-    { id: 'workspace',     label: s.tabs.workspace },
-    { id: 'team',          label: s.tabs.team },
-    { id: 'notifications', label: s.tabs.notifications },
-    { id: 'security',      label: s.tabs.security },
-    { id: 'privacy',       label: 'Privacy' },
+  const settingsTabs = [
+    { id: 0, label: s.tabs.profile,       content: <ProfileTab /> },
+    { id: 1, label: s.tabs.workspace,     content: <WorkspaceTab /> },
+    { id: 2, label: s.tabs.team,          content: <TeamTab /> },
+    { id: 3, label: s.tabs.notifications, content: <NotificationsTab /> },
+    { id: 4, label: s.tabs.security,      content: <SecurityTab /> },
+    { id: 5, label: 'Privacy',            content: <PrivacyTab /> },
   ];
 
   return (
     <div className="max-w-3xl space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-ivory">{s.title}</h1>
+        <TextAnimate text={s.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
         <p className="text-sm text-fog mt-1">{s.subtitle}</p>
       </div>
 
-      <div className="flex gap-6">
-        {/* Tab nav */}
-        <nav className="w-44 shrink-0 space-y-0.5">
-          {tabs.map(tab => {
-            const Icon = TAB_ICONS[tab.id];
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left',
-                  activeTab === tab.id
-                    ? 'bg-white/[0.07] text-ivory'
-                    : 'text-fog hover:text-silver hover:bg-white/[0.03]'
-                )}
-              >
-                <Icon size={14} className="shrink-0" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {activeTab === 'profile'       && <ProfileTab />}
-          {activeTab === 'workspace'     && <WorkspaceTab />}
-          {activeTab === 'team'          && <TeamTab />}
-          {activeTab === 'notifications' && <NotificationsTab />}
-          {activeTab === 'security'      && <SecurityTab />}
-          {activeTab === 'privacy'       && <PrivacyTab />}
-        </div>
-      </div>
+      <DirectionAwareTabs tabs={settingsTabs} />
     </div>
   );
 }

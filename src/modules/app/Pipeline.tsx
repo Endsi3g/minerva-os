@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -224,7 +225,7 @@ export default function Pipeline() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{p.title}</h1>
+          <TextAnimate text={p.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
             {p.stats
               .replace('{{count}}', String(localLeads ? localLeads.length : 0))
@@ -298,7 +299,7 @@ export default function Pipeline() {
 
       {/* Add/Edit deal sheet */}
       <Sheet open={sheetOpen} onOpenChange={handleOpenChange}>
-        <SheetContent side="right" className={cn("w-96 p-6 flex flex-col gap-6 transition-all duration-300 overflow-y-auto", emailDraft && "w-[480px] sm:w-[540px]")}>
+        <SheetContent side="right" className={cn("w-full sm:w-96 p-6 flex flex-col gap-6 transition-all duration-300 overflow-y-auto", emailDraft && "sm:w-[480px] lg:w-[540px]")}>
           <SheetHeader>
             <SheetTitle>{editingLead ? p.editDeal : p.newDeal}</SheetTitle>
           </SheetHeader>

@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { useMemo, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Download } from 'lucide-react';
+import { AnimatedNumber } from '@/components/ui/animated-number';
+import { TextAnimate } from '@/components/ui/text-animate';
 
 /* ── Palette ─────────────────────────────────────────────────────────────── */
 
@@ -175,7 +177,7 @@ export default function Reports() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{r.title}</h1>
+          <TextAnimate text={r.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">{r.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -211,22 +213,24 @@ export default function Reports() {
       {tab === 'overview' && (<>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {[
-          { label: r.kpis.pipelineValue,    value: `$${(totalPipeline / 1000).toFixed(0)}k`, color: 'text-silver' },
-          { label: r.kpis.winRate,          value: `${conversionRate}%`,                     color: 'text-sage' },
-          { label: r.kpis.pendingApprovals, value: String(totalPending),                     color: totalPending > 0 ? 'text-warm' : 'text-sage' },
-          { label: r.kpis.approvalsResolved,value: String(totalApproved),                    color: 'text-sage' },
-        ].map(s => (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+        {(([
+          { label: r.kpis.pipelineValue,    numericValue: totalPipeline / 1000, format: (n: number) => '$' + n.toFixed(0) + 'k', color: 'text-silver' },
+          { label: r.kpis.winRate,          numericValue: conversionRate,       format: (n: number) => Math.round(n) + '%',      color: 'text-sage' },
+          { label: r.kpis.pendingApprovals, numericValue: totalPending,                                                          color: totalPending > 0 ? 'text-warm' : 'text-sage' },
+          { label: r.kpis.approvalsResolved,numericValue: totalApproved,                                                         color: 'text-sage' },
+        ] as Array<{ label: string; numericValue: number; format?: (n: number) => string; color: string }>).map(s => (
           <div key={s.label} className="bg-card border border-border rounded-xl p-4">
-            <p className={`text-2xl font-semibold tabular-nums ${s.color}`}>{s.value}</p>
+            <p className={`text-2xl font-semibold tabular-nums ${s.color}`}>
+              <AnimatedNumber value={s.numericValue} format={s.format ?? ((n) => String(Math.round(n)))} stiffness={80} damping={18} mass={0.5} />
+            </p>
             <p className="text-xs text-fog mt-1">{s.label}</p>
           </div>
-        ))}
+        )))}
       </div>
 
       {/* Charts grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* Revenue by client */}
         <ReportSection title={r.revenue.title} subtitle={r.revenue.subtitle}>
@@ -381,7 +385,8 @@ export default function Reports() {
             {profitabilityData.length === 0 ? (
               <p className="text-sm text-fog text-center py-10">Add invoices and time entries to see profitability data.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="overflow-x-auto">
+              <div className="min-w-[420px] space-y-2">
                 <div className="grid grid-cols-5 gap-2 text-[10px] text-fog uppercase tracking-widest px-1 pb-2 border-b border-white/5">
                   <span className="col-span-2">Client</span>
                   <span className="text-right">Revenue</span>
@@ -403,6 +408,7 @@ export default function Reports() {
                     </div>
                   </div>
                 ))}
+              </div>
               </div>
             )}
           </ReportSection>

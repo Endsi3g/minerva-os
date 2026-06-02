@@ -16,6 +16,9 @@ import type { Translations } from '@/i18n';
 import { ShiftCard } from '@/components/ui/shift-card';
 import { Expandable, ExpandableTrigger, ExpandableContent } from '@/components/ui/expandable';
 import { TextureOverlay } from '@/components/ui/texture-overlay';
+import { AnimatedNumber } from '@/components/ui/animated-number';
+import { TextAnimate } from '@/components/ui/text-animate';
+import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs';
 
 /* ── Risk flag computation ───────────────────────────────────────────────── */
 
@@ -478,8 +481,6 @@ function FlagCard({ flag, onDismiss, onNavigate }: {
 
 /* ── Dashboard ────────────────────────────────────────────────────────────── */
 
-type Tab = 'overview' | 'firefighter';
-
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 max-w-5xl animate-pulse">
@@ -506,7 +507,7 @@ function DashboardSkeleton() {
       </div>
 
       {/* KPI Cards skeleton */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-xl border border-white/5 bg-card p-4 space-y-4">
             <div className="flex justify-between items-center">
@@ -553,7 +554,6 @@ export default function Dashboard() {
   const router = useRouter();
   const { t } = useLang();
   const { user } = useAuth();
-  const [tab, setTab] = useState<Tab>('overview');
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?._id;
@@ -581,10 +581,10 @@ export default function Dashboard() {
     : 0;
 
   const kpis = [
-    { label: d.kpis.activeProjects, value: String(activeProjectsCount), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage' },
-    { label: d.kpis.openTasks, value: String(openTasksCount), delta: d.kpis.openTasksDelta, icon: CheckSquare, color: 'text-warm' },
-    { label: d.kpis.pendingApprovals, value: String(pendingApprovalsCount), delta: d.kpis.pendingApprovalsDelta, icon: ClipboardCheck, color: 'text-ember' },
-    { label: d.kpis.revenueMtd, value: `$${(revenueMtd / 1000).toFixed(1)}k`, delta: d.kpis.revenueMtdDelta, icon: DollarSign, color: 'text-silver' },
+    { label: d.kpis.activeProjects, numericValue: activeProjectsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage' },
+    { label: d.kpis.openTasks, numericValue: openTasksCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.openTasksDelta, icon: CheckSquare, color: 'text-warm' },
+    { label: d.kpis.pendingApprovals, numericValue: pendingApprovalsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.pendingApprovalsDelta, icon: ClipboardCheck, color: 'text-ember' },
+    { label: d.kpis.revenueMtd, numericValue: revenueMtd / 1000, format: (n: number) => `$${n.toFixed(1)}k`, delta: d.kpis.revenueMtdDelta, icon: DollarSign, color: 'text-silver' },
   ];
 
   const quickActions = [
@@ -619,155 +619,144 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-ivory font-serif italic">
-          {greeting}, {displayName}
-        </h1>
+        <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-3xl font-bold text-ivory font-serif italic" />
         <p className="text-sm text-silver mt-1">{d.subtitle}</p>
       </motion.div>
 
-      {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-white/5 pb-0">
-        {([['overview', d.tabOverview], ['firefighter', d.tabFirefighter]] as [Tab, string][]).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors',
-              tab === key
-                ? 'border-sage text-sage'
-                : 'border-transparent text-fog hover:text-silver'
-            )}
-          >
-            {key === 'firefighter' && (
-              <Flame size={11} className={cn(activeFlags.length > 0 ? 'text-ember' : 'text-fog')} />
-            )}
-            {label}
-            {key === 'firefighter' && activeFlags.length > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.5 bg-ember/15 text-ember text-[9px] rounded-full">
-                {activeFlags.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      <DirectionAwareTabs tabs={[
+        {
+          id: 0,
+          label: d.tabOverview,
+          content: (
+            <div className="space-y-6 pt-4">
+              {/* Getting Started checklist — shown until all 5 steps complete */}
+              <GettingStartedChecklist />
 
-      {tab === 'overview' && (
-        <>
-          {/* Getting Started checklist — shown until all 5 steps complete */}
-          <GettingStartedChecklist />
-
-          {/* AI Daily Briefing */}
-          {workspaceId && (
-            <DailyBriefing
-              context={briefingContext}
-              labels={{
-                 title: d.briefingTitle,
-                 loading: d.briefingLoading,
-                 error: d.briefingError,
-                 refresh: d.briefingRefresh,
-              }}
-            />
-          )}
-
-          {/* Agent Suggestions */}
-          {workspaceId && <AgentSuggestions workspaceId={workspaceId} />}
-
-          {/* Inline risk flags (compact) */}
-          {activeFlags.length > 0 && (
-            <div className="space-y-2">
-              {activeFlags.slice(0, 3).map(flag => (
-                <FlagCard
-                  key={flag.id}
-                  flag={flag}
-                  onDismiss={id => setDismissed(prev => [...prev, id])}
-                  onNavigate={link => router.push(link)}
+              {/* AI Daily Briefing */}
+              {workspaceId && (
+                <DailyBriefing
+                  context={briefingContext}
+                  labels={{
+                     title: d.briefingTitle,
+                     loading: d.briefingLoading,
+                     error: d.briefingError,
+                     refresh: d.briefingRefresh,
+                  }}
                 />
-              ))}
-              {activeFlags.length > 3 && (
-                <button
-                  onClick={() => setTab('firefighter')}
-                  className="text-xs text-fog hover:text-silver transition-colors pl-1"
-                >
-                  +{activeFlags.length - 3} more alerts — view all
-                </button>
               )}
-            </div>
-          )}
 
-          {/* KPI Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {kpis.map((kpi, index) => (
-              <motion.div
-                key={kpi.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1, duration: 0.4 }}
-              >
-                <ShiftCard
-                  className="glass-card border-white/10 bg-[#111522]"
-                  topContent={
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-[10px] sm:text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</span>
-                      <kpi.icon size={14} className={cn(kpi.color, "opacity-70")} />
-                    </div>
-                  }
-                  middleContent={
-                    <div className="w-full text-left">
-                      <p className="text-lg sm:text-xl md:text-2xl font-bold text-ivory tracking-tight truncate">{kpi.value}</p>
-                      <p className="text-[9px] sm:text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
-                        <span className="text-sage">{kpi.delta.split(' ')[0]}</span>
-                        <span className="truncate">{kpi.delta.split(' ').slice(1).join(' ')}</span>
-                      </p>
-                    </div>
-                  }
-                />
-              </motion.div>
-            ))}
-          </div>
+              {/* Agent Suggestions */}
+              {workspaceId && <AgentSuggestions workspaceId={workspaceId} />}
 
-          {/* Activity feed + quick actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2 glass-card border-white/10 bg-midnight">
-              <CardHeader>
-                <CardTitle className="text-sm font-bold text-ivory">{d.recentActivity}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ActivityFeed emptyLabel={d.activityEmpty} workspaceId={workspaceId} />
-              </CardContent>
-            </Card>
+              {/* Inline risk flags (compact) */}
+              {activeFlags.length > 0 && (
+                <div className="space-y-2">
+                  {activeFlags.slice(0, 3).map(flag => (
+                    <FlagCard
+                      key={flag.id}
+                      flag={flag}
+                      onDismiss={id => setDismissed(prev => [...prev, id])}
+                      onNavigate={link => router.push(link)}
+                    />
+                  ))}
+                  {activeFlags.length > 3 && (
+                    <p className="text-xs text-fog pl-1">+{activeFlags.length - 3} more alerts &middot; see Firefighter tab</p>
+                  )}
+                </div>
+              )}
 
-            <Card className="glass-card border-white/10 bg-midnight">
-              <CardHeader>
-                <CardTitle className="text-sm font-bold text-ivory">{d.quickActions}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {quickActions.map(action => (
-                  <button
-                    key={action.label}
-                    onClick={() => router.push(action.to)}
-                    className="w-full text-left text-sm px-3 py-2 rounded-lg text-silver hover:bg-white/5 hover:text-ivory transition-all duration-300 flex items-center justify-between group"
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {kpis.map((kpi, index) => (
+                  <motion.div
+                    key={kpi.label}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1, duration: 0.4 }}
                   >
-                    {action.label}
-                    <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-                  </button>
+                    <ShiftCard
+                      className="glass-card border-white/10 bg-[#111522]"
+                      topContent={
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[10px] sm:text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</span>
+                          <kpi.icon size={14} className={cn(kpi.color, "opacity-70")} />
+                        </div>
+                      }
+                      middleContent={
+                        <div className="w-full text-left">
+                          <p className="text-lg sm:text-xl md:text-2xl font-bold text-ivory tracking-tight truncate">
+                            <AnimatedNumber value={kpi.numericValue} format={kpi.format} stiffness={80} damping={18} mass={0.5} />
+                          </p>
+                          <p className="text-[9px] sm:text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
+                            <span className="text-sage">{kpi.delta.split(' ')[0]}</span>
+                            <span className="truncate">{kpi.delta.split(' ').slice(1).join(' ')}</span>
+                          </p>
+                        </div>
+                      }
+                    />
+                  </motion.div>
                 ))}
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      )}
+              </div>
 
+              {/* Activity feed + quick actions */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 glass-card border-white/10 bg-midnight">
+                  <CardHeader>
+                    <CardTitle><TextAnimate text={d.recentActivity} type="fadeIn" className="text-sm font-bold text-ivory" /></CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ActivityFeed emptyLabel={d.activityEmpty} workspaceId={workspaceId} />
+                  </CardContent>
+                </Card>
 
-      {tab === 'firefighter' && (
-        <FirefighterView
-          flags={allFlags}
-          dismissed={dismissed}
-          onDismiss={id => setDismissed(prev => [...prev, id])}
-          onNavigate={link => router.push(link)}
-          labels={{ allClear: d.allClear, allClearSub: d.allClearSub }}
-          workspaceId={workspaceId}
-        />
-      )}
+                <Card className="glass-card border-white/10 bg-midnight">
+                  <CardHeader>
+                    <CardTitle><TextAnimate text={d.quickActions} type="fadeIn" className="text-sm font-bold text-ivory" /></CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {quickActions.map(action => (
+                      <button
+                        key={action.label}
+                        onClick={() => router.push(action.to)}
+                        className="w-full text-left text-sm px-3 py-2 rounded-lg text-silver hover:bg-white/5 hover:text-ivory transition-all duration-300 flex items-center justify-between group"
+                      >
+                        {action.label}
+                        <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                      </button>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ),
+        },
+        {
+          id: 1,
+          label: (
+            <span className="flex items-center gap-1.5">
+              <Flame size={11} className={activeFlags.length > 0 ? 'text-ember' : 'text-fog'} />
+              {d.tabFirefighter}
+              {activeFlags.length > 0 && (
+                <span className="px-1.5 py-0.5 bg-ember/15 text-ember text-[9px] rounded-full">
+                  {activeFlags.length}
+                </span>
+              )}
+            </span>
+          ),
+          content: (
+            <div className="pt-4">
+              <FirefighterView
+                flags={allFlags}
+                dismissed={dismissed}
+                onDismiss={id => setDismissed(prev => [...prev, id])}
+                onNavigate={link => router.push(link)}
+                labels={{ allClear: d.allClear, allClearSub: d.allClearSub }}
+                workspaceId={workspaceId}
+              />
+            </div>
+          ),
+        },
+      ]} />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Search, Plus, ChevronDown, ChevronUp, FileDown, Link2, Loader2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { AnimatedNumber } from '@/components/ui/animated-number';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
@@ -119,11 +121,11 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
       style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
     >
       <div
-        className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-white/[0.015]"
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.015]"
         onClick={() => setExpanded(e => !e)}
       >
         {/* Number */}
-        <div className="w-32 shrink-0">
+        <div className="w-24 sm:w-32 shrink-0">
           <p className="text-sm font-semibold text-ivory tabular-nums">{invoice.invoiceNumber}</p>
         </div>
 
@@ -168,6 +170,7 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
             className="overflow-hidden"
           >
             <div className="px-4 pb-3 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-fog uppercase tracking-wider">
@@ -194,6 +197,7 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
                   </tr>
                 </tfoot>
               </table>
+              </div>
 
               {/* Invoice actions */}
               <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -376,16 +380,16 @@ export default function Billing() {
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{b.title}</h1>
+          <TextAnimate text={b.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
             {b.stats
               .replace('invoices', String(totalInvoicesCount))
               .replace('active retainers', String(activeRetainersCount))}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={() => setRetainerSheetOpen(true)} id="btn-new-retainer">
             <Plus size={14} />
             {b.retainers.newRetainer}
@@ -402,23 +406,25 @@ export default function Billing() {
         {isLoading ? (
           [1, 2, 3].map(i => <KpiSkeleton key={i} />)
         ) : (
-          [
-            { label: b.summary.outstanding,   value: fmt(outstanding, lang), color: outstanding > 0 ? 'text-warm'  : 'text-sage', sub: b.summary.outstandingSub },
-            { label: b.summary.overdue,       value: String(overdueCount),  color: overdueCount > 0      ? 'text-ember' : 'text-sage', sub: overdueCount > 0 ? b.summary.overdueSub : b.summary.overdueNone },
-            { label: b.summary.collected,     value: fmt(paidMTD, lang),     color: 'text-sage',   sub: b.summary.collectedSub },
-          ].map((s: any) => (
+          (([
+            { label: b.summary.outstanding,   numericValue: outstanding,  format: (n: number) => fmt(n, lang), color: outstanding > 0 ? 'text-warm'  : 'text-sage', sub: b.summary.outstandingSub },
+            { label: b.summary.overdue,       numericValue: overdueCount, color: overdueCount > 0      ? 'text-ember' : 'text-sage', sub: overdueCount > 0 ? b.summary.overdueSub : b.summary.overdueNone },
+            { label: b.summary.collected,     numericValue: paidMTD,      format: (n: number) => fmt(n, lang), color: 'text-sage',   sub: b.summary.collectedSub },
+          ] as Array<{ label: string; numericValue: number; format?: (n: number) => string; color: string; sub: string }>).map(s => (
             <div key={s.label} className="bg-card border border-border rounded-xl p-4">
-              <p className={cn('text-2xl font-semibold tabular-nums', s.color)}>{s.value}</p>
+              <p className={cn('text-2xl font-semibold tabular-nums', s.color)}>
+                <AnimatedNumber value={s.numericValue} format={s.format ?? ((n) => String(Math.round(n)))} stiffness={80} damping={18} mass={0.5} />
+              </p>
               <p className="text-xs text-fog mt-1">{s.label}</p>
               <p className="text-[10px] text-fog/60 mt-0.5">{s.sub}</p>
             </div>
-          ))
+          )))
         )}
       </div>
 
       {/* Retainers */}
       <section className="mb-8">
-        <h2 className="text-sm font-semibold text-ivory mb-3">{b.retainers.title}</h2>
+        <TextAnimate text={b.retainers.title} type="fadeIn" className="text-sm font-semibold text-ivory mb-3" />
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[1, 2, 3].map(i => <RetainerCardSkeleton key={i} />)}
@@ -474,17 +480,25 @@ export default function Billing() {
       <section>
         <div className="flex items-center gap-3 mb-4 flex-wrap">
           {/* Filters */}
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-card border border-border w-fit">
-            {FILTER_TABS.map(tab => (
+          <div className="flex items-center gap-1 mb-4 overflow-x-auto">
+            {FILTER_TABS.map(f => (
               <button
-                key={tab.id}
-                onClick={() => setFilter(tab.id)}
+                key={f.id}
+                onClick={() => { setFilter(f.id); setPage(1); }}
                 className={cn(
-                  'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
-                  filter === tab.id ? 'bg-dusk text-ivory' : 'text-fog hover:text-silver'
+                  'relative px-3 py-1 rounded-lg text-xs font-medium transition-colors shrink-0',
+                  filter === f.id ? 'text-ivory' : 'text-fog hover:text-silver'
                 )}
               >
-                {tab.label}
+                {filter === f.id && (
+                  <motion.span
+                    layoutId="billing-filter-pill"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
+                  />
+                )}
+                <span className="relative z-10">{f.label}</span>
               </button>
             ))}
           </div>
@@ -556,7 +570,7 @@ export default function Billing() {
 
       {/* Add Retainer Sheet */}
       <Sheet open={retainerSheetOpen} onOpenChange={setRetainerSheetOpen}>
-        <SheetContent side="right" className="w-96 p-6 flex flex-col gap-6">
+        <SheetContent side="right" className="w-full sm:w-96 p-6 flex flex-col gap-6">
           <SheetHeader>
             <SheetTitle>{b.retainers.newRetainer}</SheetTitle>
           </SheetHeader>

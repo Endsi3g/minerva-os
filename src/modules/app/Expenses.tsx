@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Receipt, Check, X, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -157,9 +158,9 @@ export default function Expenses() {
         />
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">{ex.title}</h1>
+          <TextAnimate text={ex.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">
             {ex.subtitle.replace('{{count}}', String(expenses.length))}
           </p>
@@ -196,7 +197,7 @@ export default function Expenses() {
             return (
               <div
                 key={expense._id}
-                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-white/15 group"
+                className="flex items-center gap-3 px-3 sm:px-4 py-3 rounded-xl border transition-colors hover:border-white/15 group"
                 style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
               >
                 <div className="flex-1 min-w-0">
