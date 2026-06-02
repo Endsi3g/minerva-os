@@ -234,6 +234,7 @@ export default function Finance() {
 
       {/* Transactions Table */}
       <div className="bg-midnight rounded-2xl border border-white/5 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-white/[0.02] border-b border-white/5">
             <tr>
@@ -272,6 +273,7 @@ export default function Finance() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Add Entry Modal - Notion Minimalist */}

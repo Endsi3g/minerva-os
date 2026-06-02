@@ -697,9 +697,9 @@ export default function AppSettings() {
         <p className="text-sm text-fog mt-1">{s.subtitle}</p>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* Tab nav */}
-        <nav className="w-44 shrink-0 space-y-0.5">
+        <nav className="flex flex-row overflow-x-auto md:flex-col md:w-44 md:shrink-0 gap-1 pb-2 md:pb-0">
           {tabs.map(tab => {
             const Icon = TAB_ICONS[tab.id];
             return (
@@ -707,7 +707,8 @@ export default function AppSettings() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left',
+                  'whitespace-nowrap shrink-0 flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left',
+                  'md:w-full',
                   activeTab === tab.id
                     ? 'bg-white/[0.07] text-ivory'
                     : 'text-fog hover:text-silver hover:bg-white/[0.03]'

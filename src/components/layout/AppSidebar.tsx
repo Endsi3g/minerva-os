@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -25,7 +26,11 @@ import {
   Headphones,
   Star,
   CalendarRange,
+  ChevronDown,
+  HelpCircle,
+  History,
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { TimerWidget } from './TimerWidget';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -47,34 +52,83 @@ interface NavItem {
   labelKey: keyof ReturnType<typeof useLang>['t']['app']['sidebar'];
 }
 
-const workspaceNavItems: NavItem[] = [
-  { href: '/app/dashboard', icon: LayoutDashboard, labelKey: 'dashboard' },
-  { href: '/app/pipeline',  icon: GitBranch,       labelKey: 'pipeline' },
-  { href: '/app/clients',   icon: Users,           labelKey: 'clients' },
-  { href: '/app/projects',  icon: FolderKanban,    labelKey: 'projects' },
-  { href: '/app/tasks',     icon: CheckSquare,     labelKey: 'tasks' },
-  { href: '/app/call-preps', icon: CalendarCheck,  labelKey: 'callPreps' },
-  { href: '/app/time-tracking', icon: Clock,       labelKey: 'timeTracking' },
+interface NavGroup {
+  key: string;
+  labelKey: keyof ReturnType<typeof useLang>['t']['app']['sidebar'];
+  icon: React.ElementType;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    key: 'crm',
+    labelKey: 'crmGroup',
+    icon: Users,
+    items: [
+      { href: '/app/dashboard',   icon: LayoutDashboard, labelKey: 'dashboard' },
+      { href: '/app/pipeline',    icon: GitBranch,       labelKey: 'pipeline' },
+      { href: '/app/clients',     icon: Users,           labelKey: 'clients' },
+      { href: '/app/call-preps',  icon: CalendarCheck,   labelKey: 'callPreps' },
+    ],
+  },
+  {
+    key: 'delivery',
+    labelKey: 'deliveryGroup',
+    icon: FolderKanban,
+    items: [
+      { href: '/app/projects',    icon: FolderKanban,  labelKey: 'projects' },
+      { href: '/app/tasks',       icon: CheckSquare,   labelKey: 'tasks' },
+      { href: '/app/approvals',   icon: ClipboardCheck, labelKey: 'approvals' },
+      { href: '/app/files',       icon: FileBox,        labelKey: 'files' },
+      { href: '/app/fulfillment', icon: PackageCheck,   labelKey: 'fulfillment' },
+      { href: '/app/resources',   icon: CalendarRange,  labelKey: 'resources' },
+    ],
+  },
+  {
+    key: 'finance',
+    labelKey: 'financeGroup',
+    icon: Receipt,
+    items: [
+      { href: '/app/billing',    icon: Receipt,       labelKey: 'billing' },
+      { href: '/app/finance',    icon: WalletCards,   labelKey: 'finance' },
+      { href: '/app/expenses',   icon: CreditCard,    labelKey: 'expenses' },
+      { href: '/app/proposals',  icon: FileSignature, labelKey: 'proposals' },
+    ],
+  },
+  {
+    key: 'intelligence',
+    labelKey: 'intelligenceGroup',
+    icon: BarChart2,
+    items: [
+      { href: '/app/reports',     icon: BarChart2, labelKey: 'reports' },
+      { href: '/app/nps',         icon: Star,      labelKey: 'nps' },
+      { href: '/app/knowledge',   icon: Library,   labelKey: 'knowledge' },
+      { href: '/app/agent-ops',   icon: Sparkles,  labelKey: 'agentOps' },
+      { href: '/app/changelog',   icon: History,   labelKey: 'changelog' },
+    ],
+  },
+  {
+    key: 'ops',
+    labelKey: 'opsGroup',
+    icon: Settings,
+    items: [
+      { href: '/app/services',      icon: BookOpen,    labelKey: 'serviceCatalog' },
+      { href: '/app/time-tracking', icon: Clock,       labelKey: 'timeTracking' },
+      { href: '/app/tickets',       icon: Headphones,  labelKey: 'tickets' },
+      { href: '/app/support',       icon: HelpCircle,  labelKey: 'support' },
+    ],
+  },
 ];
 
-const studioNavItems: NavItem[] = [
-  { href: '/app/approvals',  icon: ClipboardCheck, labelKey: 'approvals' },
-  { href: '/app/files',      icon: FileBox,         labelKey: 'files' },
-  { href: '/app/billing',    icon: Receipt,         labelKey: 'billing' },
-  { href: '/app/finance',    icon: WalletCards,     labelKey: 'finance' },
-  { href: '/app/reports',    icon: BarChart2,       labelKey: 'reports' },
-  { href: '/app/fulfillment', icon: PackageCheck,   labelKey: 'fulfillment' },
-  { href: '/app/services',   icon: BookOpen,        labelKey: 'serviceCatalog' },
-  { href: '/app/proposals',  icon: FileSignature,   labelKey: 'proposals' },
-  { href: '/app/expenses',   icon: CreditCard,      labelKey: 'expenses' },
-  { href: '/app/knowledge',  icon: Library,         labelKey: 'knowledge' },
-  { href: '/app/tickets',    icon: Headphones,      labelKey: 'tickets' },
-  { href: '/app/nps',        icon: Star,            labelKey: 'nps' },
-  { href: '/app/resources',  icon: CalendarRange,   labelKey: 'resources' },
-  { href: '/app/agent-ops',  icon: Sparkles,        labelKey: 'agentOps' },
-];
-
-function SidebarNavItem({ item, collapsed, sidebar }: { item: NavItem; collapsed: boolean; sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'] }) {
+function SidebarNavItem({
+  item,
+  collapsed,
+  sidebar,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'];
+}) {
   return (
     <NavLink
       href={item.href}
@@ -94,27 +148,65 @@ function SidebarNavItem({ item, collapsed, sidebar }: { item: NavItem; collapsed
   );
 }
 
-function SidebarSection({
-  label,
-  items,
+function SidebarGroup({
+  group,
   collapsed,
   sidebar,
 }: {
-  label: string;
-  items: NavItem[];
+  group: NavGroup;
   collapsed: boolean;
   sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'];
 }) {
+  const [open, setOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem(`sidebar_group_${group.key}`);
+    return saved !== null ? (JSON.parse(saved) as boolean) : true;
+  });
+
+  function toggle() {
+    setOpen(v => {
+      const next = !v;
+      localStorage.setItem(`sidebar_group_${group.key}`, JSON.stringify(next));
+      return next;
+    });
+  }
+
   return (
     <div className="space-y-0.5">
       {!collapsed && (
-        <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-fog">
-          {label}
-        </p>
+        <button
+          type="button"
+          onClick={toggle}
+          className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-fog flex items-center justify-between w-full hover:text-silver transition-colors cursor-pointer rounded-md"
+        >
+          <span>{sidebar[group.labelKey]}</span>
+          <ChevronDown
+            size={10}
+            className={cn('transition-transform duration-200', !open && '-rotate-90')}
+          />
+        </button>
       )}
-      {items.map(item => (
-        <SidebarNavItem key={item.href} item={item} collapsed={collapsed} sidebar={sidebar} />
-      ))}
+      <AnimatePresence initial={false}>
+        {(open || collapsed) && (
+          <motion.div
+            key={group.key}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="overflow-hidden"
+          >
+            {group.items.map(item => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                collapsed={collapsed}
+                sidebar={sidebar}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -127,7 +219,12 @@ export function AppSidebar() {
   const sidebar = t.app.sidebar;
 
   const initials = user?.name
-    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    ? user.name
+        .split(' ')
+        .map(w => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
     : 'US';
 
   async function handleSignOut() {
@@ -159,8 +256,14 @@ export function AppSidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-4 py-2 min-h-0">
-        <SidebarSection label={sidebar.workspace} items={workspaceNavItems} collapsed={collapsed} sidebar={sidebar} />
-        <SidebarSection label={sidebar.studio} items={studioNavItems} collapsed={collapsed} sidebar={sidebar} />
+        {navGroups.map(group => (
+          <SidebarGroup
+            key={group.key}
+            group={group}
+            collapsed={collapsed}
+            sidebar={sidebar}
+          />
+        ))}
       </nav>
 
       {/* Timer Widget */}
@@ -199,8 +302,12 @@ export function AppSidebar() {
               </Avatar>
               {!collapsed && (
                 <div className="flex flex-col items-start min-w-0 flex-1">
-                  <span className="text-xs font-medium text-ivory truncate w-full">{user?.name ?? 'Uprising Studio'}</span>
-                  <span className="text-[10px] text-fog truncate w-full">{user?.role ?? 'Admin'}</span>
+                  <span className="text-xs font-medium text-ivory truncate w-full">
+                    {user?.name ?? 'Uprising Studio'}
+                  </span>
+                  <span className="text-[10px] text-fog truncate w-full">
+                    {user?.role ?? 'Admin'}
+                  </span>
                 </div>
               )}
             </button>

@@ -168,6 +168,7 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
             className="overflow-hidden"
           >
             <div className="px-4 pb-3 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-fog uppercase tracking-wider">
@@ -194,6 +195,7 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
                   </tr>
                 </tfoot>
               </table>
+              </div>
 
               {/* Invoice actions */}
               <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
