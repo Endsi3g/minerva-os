@@ -1,8 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Clock, Download, Filter as FilterIcon, Trash2, Plus } from 'lucide-react';
+import { motion } from 'motion/react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { AnimatedNumber } from '@/components/ui/animated-number';
+import { TextAnimate } from '@/components/ui/text-animate';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -161,7 +164,7 @@ export default function TimeTracking() {
     <>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory">Time Tracking</h1>
+          <TextAnimate text="Time Tracking" type="calmInUp" className="text-2xl font-semibold text-ivory" />
           <p className="text-sm text-fog mt-0.5">Track billable hours across projects and clients.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -178,22 +181,24 @@ export default function TimeTracking() {
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {[
-          { label: 'Total Hours', value: formatDuration(totalMinutes), sub: `${filter === 'week' ? 'this week' : filter === 'month' ? 'this month' : 'all time'}` },
-          { label: 'Billable', value: formatDuration(billableMinutes), sub: totalMinutes ? `${Math.round(billableMinutes / totalMinutes * 100)}% of total` : '0%' },
-          { label: 'Non-billable', value: formatDuration(nonBillable), sub: 'internal / admin' },
-          { label: 'Entries', value: String(filtered.length), sub: 'time records' },
-        ].map(kpi => (
+        {(([
+          { label: 'Total Hours', numericValue: totalMinutes, format: (n: number) => formatDuration(Math.round(n)), sub: `${filter === 'week' ? 'this week' : filter === 'month' ? 'this month' : 'all time'}` },
+          { label: 'Billable', numericValue: billableMinutes, format: (n: number) => formatDuration(Math.round(n)), sub: totalMinutes ? `${Math.round(billableMinutes / totalMinutes * 100)}% of total` : '0%' },
+          { label: 'Non-billable', numericValue: nonBillable, format: (n: number) => formatDuration(Math.round(n)), sub: 'internal / admin' },
+          { label: 'Entries', numericValue: filtered.length, sub: 'time records' },
+        ] as Array<{ label: string; numericValue: number; format?: (n: number) => string; sub: string }>).map(kpi => (
           <div
             key={kpi.label}
             className="rounded-xl p-4"
             style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
           >
             <p className="text-[10px] text-fog uppercase tracking-widest mb-1">{kpi.label}</p>
-            <p className="text-2xl font-semibold text-ivory">{kpi.value}</p>
+            <p className="text-2xl font-semibold text-ivory">
+              <AnimatedNumber value={kpi.numericValue} format={kpi.format ?? ((n) => String(Math.round(n)))} stiffness={80} damping={18} mass={0.5} />
+            </p>
             <p className="text-[11px] text-fog/70 mt-0.5">{kpi.sub}</p>
           </div>
-        ))}
+        )))}
       </div>
 
       {/* Filter tabs */}
@@ -204,13 +209,21 @@ export default function TimeTracking() {
             key={f}
             onClick={() => setFilter(f)}
             className={cn(
-              'px-3 py-1 rounded-lg text-xs transition-colors',
-              filter === f
-                ? 'bg-sage/20 text-sage'
-                : 'text-fog hover:text-ivory hover:bg-white/5'
+              'relative px-3 py-1 rounded-lg text-xs font-medium transition-colors',
+              filter === f ? 'text-ivory' : 'text-fog hover:text-ivory hover:bg-white/5'
             )}
           >
-            {f === 'week' ? 'This Week' : f === 'month' ? 'This Month' : 'All Time'}
+            {filter === f && (
+              <motion.span
+                layoutId="timetracking-filter-pill"
+                className="absolute inset-0 rounded-lg"
+                style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+                transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
+              />
+            )}
+            <span className="relative z-10">
+              {f === 'week' ? 'This Week' : f === 'month' ? 'This Month' : 'All Time'}
+            </span>
           </button>
         ))}
       </div>

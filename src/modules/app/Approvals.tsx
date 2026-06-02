@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Check, RotateCcw, Palette, FileText, Video, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { AnimatedNumber } from '@/components/ui/animated-number';
+import { TextAnimate } from '@/components/ui/text-animate';
 import type { ApprovalStatus, DeliverableType } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
@@ -86,22 +88,24 @@ export default function Approvals() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-ivory">{a.title}</h1>
+        <TextAnimate text={a.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
         <p className="text-sm text-fog mt-0.5">{approvals.length} {a.stats}</p>
       </div>
 
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3 mb-8 max-w-lg">
-        {[
-          { label: a.summary.pending,  value: pending,  color: 'text-warm' },
-          { label: a.summary.revision, value: revision, color: 'text-ember' },
-          { label: a.summary.approved, value: approved, color: 'text-sage' },
-        ].map(stat => (
+        {(([
+          { label: a.summary.pending,  numericValue: pending,  color: 'text-warm' },
+          { label: a.summary.revision, numericValue: revision, color: 'text-ember' },
+          { label: a.summary.approved, numericValue: approved, color: 'text-sage' },
+        ] as Array<{ label: string; numericValue: number; color: string }>).map(stat => (
           <div key={stat.label} className="bg-card border border-border rounded-xl p-4 text-center">
-            <p className={cn('text-2xl font-semibold', stat.color)}>{stat.value}</p>
+            <p className={cn('text-2xl font-semibold', stat.color)}>
+              <AnimatedNumber value={stat.numericValue} format={(n) => String(Math.round(n))} stiffness={80} damping={18} mass={0.5} />
+            </p>
             <p className="text-[10px] text-fog mt-1">{stat.label}</p>
           </div>
-        ))}
+        )))}
       </div>
 
       {/* Grouped lists */}
