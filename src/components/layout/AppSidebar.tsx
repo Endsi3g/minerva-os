@@ -11,6 +11,7 @@ import {
   FileBox,
   Receipt,
   BarChart2,
+  TrendingUp,
   Settings,
   LogOut,
   User,
@@ -29,6 +30,7 @@ import {
   ChevronDown,
   HelpCircle,
   History,
+  GitPullRequest,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -88,10 +90,11 @@ const navGroups: NavGroup[] = [
     labelKey: 'financeGroup',
     icon: Receipt,
     items: [
-      { href: '/app/billing',    icon: Receipt,       labelKey: 'billing' },
-      { href: '/app/finance',    icon: WalletCards,   labelKey: 'finance' },
-      { href: '/app/expenses',   icon: CreditCard,    labelKey: 'expenses' },
-      { href: '/app/proposals',  icon: FileSignature, labelKey: 'proposals' },
+      { href: '/app/billing',        icon: Receipt,       labelKey: 'billing' },
+      { href: '/app/finance',        icon: WalletCards,   labelKey: 'finance' },
+      { href: '/app/profitability',  icon: TrendingUp,    labelKey: 'profitability' },
+      { href: '/app/expenses',       icon: CreditCard,    labelKey: 'expenses' },
+      { href: '/app/proposals',      icon: FileSignature, labelKey: 'proposals' },
     ],
   },
   {
@@ -111,6 +114,7 @@ const navGroups: NavGroup[] = [
     labelKey: 'opsGroup',
     icon: Settings,
     items: [
+      { href: '/app/workflows',      icon: GitPullRequest, labelKey: 'workflows' },
       { href: '/app/services',      icon: BookOpen,    labelKey: 'serviceCatalog' },
       { href: '/app/time-tracking', icon: Clock,       labelKey: 'timeTracking' },
       { href: '/app/tickets',       icon: Headphones,  labelKey: 'tickets' },
