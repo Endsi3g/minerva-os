@@ -50,7 +50,7 @@ export default function SignUp() {
     setError('');
     setIsLoading(true);
     try {
-      const redirectTo = `${window.location.origin}/auth/callback?next=/app/onboarding/discover`;
+      const redirectTo = `${window.location.origin}/auth/callback?next=/onboarding/discover`;
       await signup(firstName, lastName, email, password, redirectTo);
       sessionStorage.setItem('minerva_signup_email', email);
       toast.success(s.toastSuccess, { description: s.toastSuccessDesc });

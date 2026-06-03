@@ -36,6 +36,21 @@
   --glass-blur:         blur(12px);
   --border-glass:       rgba(20, 20, 19, 0.08);
 
+  /* Framer-inspired typography tracking */
+  --tracking-display:    -0.04em;
+  --tracking-heading:    -0.025em;
+  --tracking-subheading: -0.01em;
+
+  /* Elevation shadow system */
+  --shadow-card:   0 1px 2px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+  --shadow-raised: 0 4px 16px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08);
+  --shadow-float:  0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.10);
+
+  /* Gradient spotlight surfaces */
+  --gradient-sage-spot:  linear-gradient(135deg, rgba(127,163,138,0.18) 0%, rgba(127,163,138,0.04) 100%);
+  --gradient-amber-spot: linear-gradient(135deg, rgba(184,155,106,0.18) 0%, rgba(184,155,106,0.04) 100%);
+  --gradient-rose-spot:  linear-gradient(135deg, rgba(168,106,106,0.18) 0%, rgba(168,106,106,0.04) 100%);
+
   /* shadcn/ui token bridge — bg-background, text-foreground, etc. */
   --color-background:               var(--background);
   --color-foreground:               var(--foreground);
@@ -160,6 +175,15 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    font-feature-settings: 'cv01', 'cv05', 'cv09', 'cv11', 'ss03', 'ss07';
+  }
+
+  h1, h2 {
+    letter-spacing: var(--tracking-display);
+  }
+
+  h3 {
+    letter-spacing: var(--tracking-heading);
   }
 
   * {
@@ -208,6 +232,16 @@
   .isometric-tilt:hover {
     transform: rotateX(5deg) rotateY(-5deg) rotateZ(1deg);
   }
+
+  /* Elevation utilities */
+  .shadow-card   { box-shadow: var(--shadow-card); }
+  .shadow-raised { box-shadow: var(--shadow-raised); }
+  .shadow-float  { box-shadow: var(--shadow-float); }
+
+  /* Spotlight gradient surfaces */
+  .spotlight-sage  { background: var(--gradient-sage-spot); }
+  .spotlight-amber { background: var(--gradient-amber-spot); }
+  .spotlight-rose  { background: var(--gradient-rose-spot); }
 }
 
 @property --c5-x1 { syntax: '<percentage>'; inherits: false; initial-value: 10%; }

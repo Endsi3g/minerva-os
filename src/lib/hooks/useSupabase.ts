@@ -176,10 +176,15 @@ export function useWorkspaces() {
       return;
     }
     async function fetchWorkspaces() {
-      const { data, error } = await supabase.from('workspaces').select('*');
-      if (!error && data) {
-        setWorkspaces(data.map(w => ({ _id: w.id, id: w.id, name: w.name, slug: w.slug })));
-      } else {
+      try {
+        const { data, error } = await supabase.from('workspaces').select('*');
+        if (!error && data) {
+          setWorkspaces(data.map(w => ({ _id: w.id, id: w.id, name: w.name, slug: w.slug })));
+        } else {
+          setWorkspaces([]);
+        }
+      } catch (err) {
+        console.error('fetchWorkspaces failed:', err);
         setWorkspaces([]);
       }
     }
@@ -212,15 +217,22 @@ export function useClients(workspaceId: string | undefined | null) {
     let active = true;
 
     async function fetchClients() {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('workspace_id', workspaceId);
+      try {
+        const { data, error } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('workspace_id', workspaceId);
 
-      if (active && !error && data) {
-        setClients(data.map(mapClient));
-      } else if (error) {
-        setClients([]);
+        if (active) {
+          if (!error && data) {
+            setClients(data.map(mapClient));
+          } else {
+            setClients([]);
+          }
+        }
+      } catch (err) {
+        console.error('fetchClients failed:', err);
+        if (active) setClients([]);
       }
     }
 
@@ -267,16 +279,23 @@ export function useProjects(workspaceId: string | undefined | null) {
     let active = true;
 
     async function fetchProjects() {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('due_date', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .order('due_date', { ascending: false });
 
-      if (active && !error && data) {
-        setProjects(data.map(mapProject));
-      } else if (error) {
-        setProjects([]);
+        if (active) {
+          if (!error && data) {
+            setProjects(data.map(mapProject));
+          } else {
+            setProjects([]);
+          }
+        }
+      } catch (err) {
+        console.error('fetchProjects failed:', err);
+        if (active) setProjects([]);
       }
     }
 
@@ -336,27 +355,32 @@ export function useTasks(
     let active = true;
 
     async function fetchTasks() {
-      let query = supabase.from('tasks').select('*', { count: 'exact' }).eq('workspace_id', workspaceId);
-      if (projectId) {
-        query = query.eq('project_id', projectId);
-      }
-
-      if (page !== undefined) {
-        const from = (page - 1) * pageSize;
-        const to = from + pageSize - 1;
-        query = query.range(from, to);
-      }
-
-      const { data, error, count } = await query;
-      if (active) {
-        if (!error && data) {
-          setTasks(data.map(mapTask));
-          if (count !== null) {
-            setTotalCount(count);
-          }
-        } else if (error) {
-          setTasks([]);
+      try {
+        let query = supabase.from('tasks').select('*', { count: 'exact' }).eq('workspace_id', workspaceId);
+        if (projectId) {
+          query = query.eq('project_id', projectId);
         }
+
+        if (page !== undefined) {
+          const from = (page - 1) * pageSize;
+          const to = from + pageSize - 1;
+          query = query.range(from, to);
+        }
+
+        const { data, error, count } = await query;
+        if (active) {
+          if (!error && data) {
+            setTasks(data.map(mapTask));
+            if (count !== null) {
+              setTotalCount(count);
+            }
+          } else {
+            setTasks([]);
+          }
+        }
+      } catch (err) {
+        console.error('fetchTasks failed:', err);
+        if (active) setTasks([]);
       }
     }
 
@@ -403,16 +427,23 @@ export function useDeals(workspaceId: string | undefined | null) {
     let active = true;
 
     async function fetchDeals() {
-      const { data, error } = await supabase
-        .from('deals')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('deals')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .order('created_at', { ascending: false });
 
-      if (active && !error && data) {
-        setDeals(data.map(mapDeal));
-      } else if (error) {
-        setDeals([]);
+        if (active) {
+          if (!error && data) {
+            setDeals(data.map(mapDeal));
+          } else {
+            setDeals([]);
+          }
+        }
+      } catch (err) {
+        console.error('fetchDeals failed:', err);
+        if (active) setDeals([]);
       }
     }
 
@@ -470,28 +501,33 @@ export function useInvoices(
     let active = true;
 
     async function fetchInvoices() {
-      let query = supabase
-        .from('invoices')
-        .select('*', { count: 'exact' })
-        .eq('workspace_id', workspaceId)
-        .order('date', { ascending: false });
+      try {
+        let query = supabase
+          .from('invoices')
+          .select('*', { count: 'exact' })
+          .eq('workspace_id', workspaceId)
+          .order('date', { ascending: false });
 
-      if (page !== undefined) {
-        const from = (page - 1) * pageSize;
-        const to = from + pageSize - 1;
-        query = query.range(from, to);
-      }
-
-      const { data, error, count } = await query;
-      if (active) {
-        if (!error && data) {
-          setInvoices(data.map(mapInvoice));
-          if (count !== null) {
-            setTotalCount(count);
-          }
-        } else if (error) {
-          setInvoices([]);
+        if (page !== undefined) {
+          const from = (page - 1) * pageSize;
+          const to = from + pageSize - 1;
+          query = query.range(from, to);
         }
+
+        const { data, error, count } = await query;
+        if (active) {
+          if (!error && data) {
+            setInvoices(data.map(mapInvoice));
+            if (count !== null) {
+              setTotalCount(count);
+            }
+          } else {
+            setInvoices([]);
+          }
+        }
+      } catch (err) {
+        console.error('fetchInvoices failed:', err);
+        if (active) setInvoices([]);
       }
     }
 
@@ -528,18 +564,23 @@ export function useRetainers(workspaceId: string | undefined | null) {
     let active = true;
 
     async function fetchRetainers() {
-      const { data, error } = await supabase
-        .from('retainers')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('retainers')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .order('created_at', { ascending: false });
 
-      if (active) {
-        if (!error && data) {
-          setRetainers(data.map(mapRetainer));
-        } else if (error) {
-          setRetainers([]);
+        if (active) {
+          if (!error && data) {
+            setRetainers(data.map(mapRetainer));
+          } else {
+            setRetainers([]);
+          }
         }
+      } catch (err) {
+        console.error('fetchRetainers failed:', err);
+        if (active) setRetainers([]);
       }
     }
 
@@ -573,18 +614,23 @@ export function useFinances(workspaceId: string | undefined | null) {
     let active = true;
 
     async function fetchFinances() {
-      const { data, error } = await supabase
-        .from('finances')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('date', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('finances')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .order('date', { ascending: false });
 
-      if (active) {
-        if (!error && data) {
-          setFinances(data.map(mapFinance));
-        } else if (error) {
-          setFinances([]);
+        if (active) {
+          if (!error && data) {
+            setFinances(data.map(mapFinance));
+          } else {
+            setFinances([]);
+          }
         }
+      } catch (err) {
+        console.error('fetchFinances failed:', err);
+        if (active) setFinances([]);
       }
     }
 
@@ -628,18 +674,23 @@ export function useApprovals(workspaceId?: string | undefined | null) {
     let active = true;
 
     async function fetchApprovals() {
-      let query = supabase.from('approvals').select('*');
-      if (workspaceId) {
-        query = query.eq('workspace_id', workspaceId);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-      if (active) {
-        if (!error && data) {
-          setApprovals(data.map(mapApproval));
-        } else if (error) {
-          setApprovals([]);
+      try {
+        let query = supabase.from('approvals').select('*');
+        if (workspaceId) {
+          query = query.eq('workspace_id', workspaceId);
         }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (active) {
+          if (!error && data) {
+            setApprovals(data.map(mapApproval));
+          } else {
+            setApprovals([]);
+          }
+        }
+      } catch (err) {
+        console.error('fetchApprovals failed:', err);
+        if (active) setApprovals([]);
       }
     }
 
@@ -673,19 +724,24 @@ export function useActivity(workspaceId: string | undefined | null) {
     let active = true;
 
     async function fetchActivity() {
-      const { data, error } = await supabase
-        .from('activity')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      try {
+        const { data, error } = await supabase
+          .from('activity')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-      if (active) {
-        if (!error && data) {
-          setActivity(data.map(mapActivity));
-        } else if (error) {
-          setActivity([]);
+        if (active) {
+          if (!error && data) {
+            setActivity(data.map(mapActivity));
+          } else {
+            setActivity([]);
+          }
         }
+      } catch (err) {
+        console.error('fetchActivity failed:', err);
+        if (active) setActivity([]);
       }
     }
 
@@ -720,22 +776,26 @@ export function useUserProfileByEmail(email: string | undefined | null) {
     let active = true;
 
     async function fetchProfile() {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('email', email)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('email', email)
+          .maybeSingle();
 
-      if (active && !error && data) {
-        setProfile({
-          _id: data.id,
-          id: data.id,
-          email: data.email,
-          name: data.name,
-          role: data.role,
-          avatar: data.avatar_url,
-          onboardingCompleted: data.onboarding_completed,
-        });
+        if (active && !error && data) {
+          setProfile({
+            _id: data.id,
+            id: data.id,
+            email: data.email,
+            name: data.name,
+            role: data.role,
+            avatar: data.avatar_url,
+            onboardingCompleted: data.onboarding_completed,
+          });
+        }
+      } catch (err) {
+        console.error('fetchProfile failed:', err);
       }
     }
 

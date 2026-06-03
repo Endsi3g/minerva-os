@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   GitBranch,
@@ -156,11 +156,22 @@ function SidebarGroup({
   collapsed: boolean;
   sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'];
 }) {
+  const pathname = usePathname();
+  const isGroupActive = group.items.some(
+    item => pathname === item.href || pathname.startsWith(item.href + '/')
+  );
+
   const [open, setOpen] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
+    if (typeof window === 'undefined') return isGroupActive;
     const saved = localStorage.getItem(`sidebar_group_${group.key}`);
-    return saved !== null ? (JSON.parse(saved) as boolean) : true;
+    return saved !== null ? (JSON.parse(saved) as boolean) : isGroupActive;
   });
+
+  useEffect(() => {
+    if (isGroupActive) {
+      setOpen(true);
+    }
+  }, [isGroupActive]);
 
   function toggle() {
     setOpen(v => {

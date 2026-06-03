@@ -139,14 +139,24 @@ export function DiscoveryOnboarding() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('onboarding_responses')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    const userId = user.id;
+    let active = true;
+    async function checkOnboarding() {
+      try {
+        const { data, error } = await supabase
+          .from('onboarding_responses')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (!active) return;
+        if (error) {
+          console.error("Error fetching onboarding responses:", error);
+          setLoading(false);
+          return;
+        }
         if (data?.completed_at) {
-          router.replace('/app/onboarding');
+          router.replace('/onboarding');
           return;
         }
         if (data) {
@@ -158,7 +168,15 @@ export function DiscoveryOnboarding() {
           if (data.current_step) setStep(data.current_step);
         }
         setLoading(false);
-      });
+      } catch (err) {
+        console.error("Error in onboarding_responses query:", err);
+        if (active) setLoading(false);
+      }
+    }
+    checkOnboarding();
+    return () => {
+      active = false;
+    };
   }, [user, router]);
 
   async function saveProgress(updates: Record<string, unknown>, nextStep: number) {
@@ -183,7 +201,7 @@ export function DiscoveryOnboarding() {
 
   async function handleSkip() {
     await saveProgress({}, step);
-    router.push('/app/onboarding');
+    router.push('/onboarding');
   }
 
   async function handleStep1Next() {
@@ -223,7 +241,7 @@ export function DiscoveryOnboarding() {
       { onConflict: 'user_id' }
     );
     setSaving(false);
-    router.push('/app/onboarding');
+    router.push('/onboarding');
   }
 
   function toggleFeature(val: string) {

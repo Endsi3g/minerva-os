@@ -99,7 +99,7 @@ function ProfileTab() {
         <div className="md:col-span-1 rounded-2xl p-6 bg-midnight border border-border flex flex-col items-center text-center space-y-4">
           <div
             className="h-24 w-24 rounded-2xl flex items-center justify-center text-2xl font-semibold shrink-0 overflow-hidden"
-            style={{ backgroundColor: '#1A1F32', color: '#F5F1E8', border: '1px solid rgba(255,255,255,0.10)' }}
+            style={{ backgroundColor: 'var(--dusk)', color: 'var(--ivory)', border: '1px solid var(--border)' }}
           >
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -383,7 +383,7 @@ function TeamTab() {
               >
                 <div
                   className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0"
-                  style={{ backgroundColor: '#1A1F32', color: '#B8BDC7' }}
+                  style={{ backgroundColor: 'var(--dusk)', color: 'var(--silver)' }}
                 >
                   {initials}
                 </div>
@@ -393,7 +393,7 @@ function TeamTab() {
                 </div>
                 <span
                   className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#8A9099' }}
+                  style={{ backgroundColor: 'var(--muted)', color: 'var(--fog)' }}
                 >
                   {roleLabels[member.role] ?? member.role}
                 </span>
@@ -695,7 +695,7 @@ export default function AppSettings() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto w-full space-y-8">
+    <div className="w-full space-y-8">
       {/* Header */}
       <div>
         <TextAnimate text={s.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />

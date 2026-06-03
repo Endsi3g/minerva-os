@@ -28,7 +28,7 @@ export default function Changelog() {
   const releases = t.landing.vex.releases;
 
   return (
-    <div className="max-w-7xl mx-auto w-full space-y-8">
+    <div className="w-full space-y-8">
       {/* Header */}
       <div>
         <TextAnimate text={t.landing.vex.changelogTitle} type="calmInUp" className="text-2xl font-semibold text-ivory" />

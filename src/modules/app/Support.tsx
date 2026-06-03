@@ -86,7 +86,7 @@ export default function Support() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto w-full space-y-10">
+    <div className="w-full space-y-10">
       {/* Header */}
       <div>
         <TextAnimate text={s.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />

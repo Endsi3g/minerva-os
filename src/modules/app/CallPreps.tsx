@@ -95,7 +95,7 @@ export default function CallPreps() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full gap-6 lg:gap-8 max-w-7xl mx-auto">
+    <div className="flex flex-col lg:flex-row h-full gap-6 lg:gap-8 w-full">
       {/* Sidebar: Upcoming Calls */}
       <div className="w-full lg:w-80 lg:shrink-0 space-y-6">
         <div className="flex items-center justify-between">

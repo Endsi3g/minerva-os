@@ -9,7 +9,7 @@ export async function updateSession(request: NextRequest) {
   });
 
   const isDemo = process.env.DEMO_MODE === 'true';
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/app');
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/app') || request.nextUrl.pathname.startsWith('/onboarding');
 
   if (isDemo) {
     const hasMockUser = request.cookies.has('minerva_mock_logged_in');

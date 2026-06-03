@@ -95,7 +95,7 @@ export default function Pipeline() {
 
   useEffect(() => {
     if (workspaces !== null && workspaces.length === 0) {
-      router.replace('/app/onboarding/discover');
+      router.replace('/onboarding/discover');
     }
   }, [workspaces, router]);
 

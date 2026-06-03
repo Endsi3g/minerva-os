@@ -482,7 +482,7 @@ function FlagCard({ flag, onDismiss, onNavigate }: {
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6 max-w-5xl animate-pulse">
+    <div className="space-y-6 w-full animate-pulse">
       {/* Greeting skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-9 w-64 bg-white/5" />
@@ -559,7 +559,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (workspaces !== null && workspaces.length === 0) {
-      router.replace('/app/onboarding/discover');
+      router.replace('/onboarding/discover');
     }
   }, [workspaces, router]);
 
@@ -586,10 +586,10 @@ export default function Dashboard() {
     : 0;
 
   const kpis = [
-    { label: d.kpis.activeProjects, numericValue: activeProjectsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage' },
-    { label: d.kpis.openTasks, numericValue: openTasksCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.openTasksDelta, icon: CheckSquare, color: 'text-warm' },
-    { label: d.kpis.pendingApprovals, numericValue: pendingApprovalsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.pendingApprovalsDelta, icon: ClipboardCheck, color: 'text-ember' },
-    { label: d.kpis.revenueMtd, numericValue: revenueMtd / 1000, format: (n: number) => `$${n.toFixed(1)}k`, delta: d.kpis.revenueMtdDelta, icon: DollarSign, color: 'text-silver' },
+    { label: d.kpis.activeProjects, numericValue: activeProjectsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage', spotlight: 'spotlight-sage' },
+    { label: d.kpis.openTasks, numericValue: openTasksCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.openTasksDelta, icon: CheckSquare, color: 'text-warm', spotlight: 'spotlight-amber' },
+    { label: d.kpis.pendingApprovals, numericValue: pendingApprovalsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.pendingApprovalsDelta, icon: ClipboardCheck, color: 'text-ember', spotlight: 'spotlight-rose' },
+    { label: d.kpis.revenueMtd, numericValue: revenueMtd / 1000, format: (n: number) => `$${n.toFixed(1)}k`, delta: d.kpis.revenueMtdDelta, icon: DollarSign, color: 'text-silver', spotlight: 'spotlight-amber' },
   ];
 
   const quickActions = [
@@ -617,7 +617,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto w-full px-4">
+    <div className="space-y-6 w-full px-4">
       {/* Premium Dashboard Banner */}
       <motion.div
         className="relative h-48 sm:h-56 w-full rounded-md overflow-hidden border border-border group"
@@ -625,10 +625,14 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       >
-        {/* Background Image with smooth zoom-in on hover */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
-          style={{ backgroundImage: 'url("/image.png")' }}
+        {/* Background Video with smooth zoom-in on hover */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+          src="/dashboard-banner.mp4"
         />
         {/* Dark Vignette & Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent z-10" />
@@ -714,7 +718,7 @@ export default function Dashboard() {
                     transition={{ delay: index * 0.1, duration: 0.4 }}
                   >
                     <ShiftCard
-                      className="border border-border bg-card rounded-md shadow-none"
+                      className={cn("border border-border rounded-md shadow-card", kpi.spotlight)}
                       topContent={
                         <div className="flex items-center justify-between w-full">
                           <span className="text-[10px] sm:text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</span>

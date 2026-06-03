@@ -119,7 +119,7 @@ export default function AgentOps() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto w-full">
+    <div className="space-y-8 w-full">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-ivory font-serif italic flex items-center gap-3">

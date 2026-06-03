@@ -1,9 +1,14 @@
 'use client';
 import { useEffect } from 'react';
-import { ThemeProvider } from '@/theme';
+import { ThemeProvider, useTheme } from '@/theme';
 import { LangProvider } from '@/i18n';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/sonner';
+
+function ToastWithTheme() {
+  const { theme } = useTheme();
+  return <Toaster theme={theme as 'dark' | 'light'} position="bottom-right" richColors />;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -30,7 +35,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <LangProvider>
         <AuthProvider>
           {children}
-          <Toaster theme="dark" position="bottom-right" richColors />
+          <ToastWithTheme />
         </AuthProvider>
       </LangProvider>
     </ThemeProvider>

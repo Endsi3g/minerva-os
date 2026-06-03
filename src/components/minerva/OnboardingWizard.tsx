@@ -284,40 +284,75 @@ export function OnboardingWizard() {
 
   useEffect(() => {
     if (!user) return;
+    const userId = user.id;
+    let active = true;
 
-    // Gate: ensure discovery onboarding was completed first
-    supabase
-      .from('onboarding_responses')
-      .select('completed_at')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data?.completed_at) {
-          router.replace('/app/onboarding/discover');
+    async function checkOnboardingAndWorkspace() {
+      try {
+        // Gate: ensure discovery onboarding was completed first
+        const { data: onboardingData, error: onboardingError } = await supabase
+          .from('onboarding_responses')
+          .select('completed_at')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (active) {
+          if (onboardingError) {
+            console.error("Error fetching onboarding completion status:", onboardingError);
+            setDiscoveryChecked(true);
+          } else if (!onboardingData?.completed_at) {
+            router.replace('/onboarding/discover');
+            return;
+          } else {
+            setDiscoveryChecked(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error in onboarding completion status query:", err);
+        if (active) setDiscoveryChecked(true);
+      }
+
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('workspace_id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (!active) return;
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
           return;
         }
-        setDiscoveryChecked(true);
-      });
 
-    supabase.from('user_profiles')
-      .select('workspace_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data: profile }) => {
         if (profile?.workspace_id) {
           setWorkspaceId(profile.workspace_id);
         } else {
-          supabase.from('workspaces')
+          const { data: wsData, error: wsError } = await supabase
+            .from('workspaces')
             .select('id')
-            .eq('owner_user_id', user.id)
-            .limit(1)
-            .then(({ data: wsData }) => {
-              if (wsData && wsData.length > 0) {
-                setWorkspaceId(wsData[0].id);
-              }
-            });
+            .eq('owner_user_id', userId)
+            .limit(1);
+
+          if (!active) return;
+          if (wsError) {
+            console.error("Error fetching workspaces:", wsError);
+            return;
+          }
+          if (wsData && wsData.length > 0) {
+            setWorkspaceId(wsData[0].id);
+          }
         }
-      });
+      } catch (err) {
+        console.error("Error in user profile query:", err);
+      }
+    }
+
+    checkOnboardingAndWorkspace();
+
+    return () => {
+      active = false;
+    };
   }, [user, router]);
 
   if (!discoveryChecked) {
