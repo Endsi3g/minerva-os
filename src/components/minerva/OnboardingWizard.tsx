@@ -279,10 +279,26 @@ export function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [workspaceId, setWorkspaceId] = useState('');
+  const [discoveryChecked, setDiscoveryChecked] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user) return;
+
+    // Gate: ensure discovery onboarding was completed first
+    supabase
+      .from('onboarding_responses')
+      .select('completed_at')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data?.completed_at) {
+          router.replace('/app/onboarding/discover');
+          return;
+        }
+        setDiscoveryChecked(true);
+      });
+
     supabase.from('user_profiles')
       .select('workspace_id')
       .eq('user_id', user.id)
@@ -302,7 +318,15 @@ export function OnboardingWizard() {
             });
         }
       });
-  }, [user]);
+  }, [user, router]);
+
+  if (!discoveryChecked) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0D14', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#F5F1E8', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
 
   function handleComplete() {
     router.push('/app/dashboard');
