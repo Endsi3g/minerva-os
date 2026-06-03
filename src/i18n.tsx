@@ -1035,77 +1035,6 @@ const translations = {
         addDeal: 'Add Deal',
         newInvoice: 'New Invoice',
       },
-    },
-    portal: {
-      common: {
-        welcomeBack: 'Welcome back',
-        snapshot: "Here's a snapshot of your active engagement with Uprising Studio.",
-      },
-      overview: {
-        stats: {
-          activeProjects: 'Active projects',
-          activeProjectsSub: 'in progress',
-          pendingApprovals: 'Pending approvals',
-          pendingApprovalsSub: 'awaiting review',
-          outstanding: 'Outstanding',
-          outstandingSub: 'invoices due',
-        },
-        projects: {
-          title: 'Active Projects',
-          due: 'Due',
-          done: 'done',
-          tasksComplete: '{{done}} of {{total}} tasks complete',
-        },
-        milestones: {
-          title: 'Upcoming Milestones',
-          overdueSuffix: 'd overdue',
-          today: 'today',
-        },
-        approvals: {
-          alert: '{{count}} deliverables awaiting your review',
-          action: 'Review and approve',
-        }
-      },
-      deliverables: {
-        title: 'Deliverables',
-        subtitle: 'Review and approve work submitted by Uprising Studio.',
-        pendingTitle: 'Awaiting review',
-        resolvedTitle: 'Previously resolved',
-        submitted: 'submitted',
-        status: {
-          pending: 'Awaiting Review',
-          approved: 'Approved',
-          revision: 'Changes Requested',
-        },
-        actions: {
-          approve: 'Approve',
-          requestChanges: 'Request changes',
-          submitRequest: 'Submit changes request',
-        },
-        form: {
-          notePlaceholder: 'Leave a note for the team (optional):',
-          describeChanges: 'Describe what needs to change...',
-        },
-        empty: {
-          title: 'All caught up',
-          desc: 'No deliverables pending review at this time.',
-        },
-        previouslyResolved: 'Previously resolved',
-        poll: {
-          title: 'Design Options Poll',
-          question: 'Which design concept do you prefer?',
-          voteCount: '{{count}} votes',
-          votedSuccessfully: 'Vote recorded!',
-          committeeTally: 'Client Committee Status',
-          committeeTallyDesc: 'Live votes from client committee members.',
-          voteApprove: 'Vote Approve',
-          voteRevision: 'Vote Revision',
-          voteReject: 'Vote Reject',
-          optionA: 'Option A: Minimal Dark Obsidian',
-          optionB: 'Option B: Editorial Serif & Warm Accents',
-          optionC: 'Option C: Classic Sage High-Contrast',
-        }
-      },
       workflows: {
         title: 'Workflow Engine',
         subtitle: '{{count}} workflows · {{runs}} runs today',
@@ -1126,7 +1055,8 @@ const translations = {
           failed: 'Failed',
           paused: 'Paused',
         },
-        runs: {
+        runs: 'Runs',
+        runsInfo: {
           triggeredBy: 'Triggered by',
           steps: '{{n}} steps',
           duration: 'Duration',
@@ -1223,6 +1153,77 @@ const translations = {
             cancel: 'Cancel',
           },
         },
+      },
+    },
+    portal: {
+      common: {
+        welcomeBack: 'Welcome back',
+        snapshot: "Here's a snapshot of your active engagement with Uprising Studio.",
+      },
+      overview: {
+        stats: {
+          activeProjects: 'Active projects',
+          activeProjectsSub: 'in progress',
+          pendingApprovals: 'Pending approvals',
+          pendingApprovalsSub: 'awaiting review',
+          outstanding: 'Outstanding',
+          outstandingSub: 'invoices due',
+        },
+        projects: {
+          title: 'Active Projects',
+          due: 'Due',
+          done: 'done',
+          tasksComplete: '{{done}} of {{total}} tasks complete',
+        },
+        milestones: {
+          title: 'Upcoming Milestones',
+          overdueSuffix: 'd overdue',
+          today: 'today',
+        },
+        approvals: {
+          alert: '{{count}} deliverables awaiting your review',
+          action: 'Review and approve',
+        }
+      },
+      deliverables: {
+        title: 'Deliverables',
+        subtitle: 'Review and approve work submitted by Uprising Studio.',
+        pendingTitle: 'Awaiting review',
+        resolvedTitle: 'Previously resolved',
+        submitted: 'submitted',
+        status: {
+          pending: 'Awaiting Review',
+          approved: 'Approved',
+          revision: 'Changes Requested',
+        },
+        actions: {
+          approve: 'Approve',
+          requestChanges: 'Request changes',
+          submitRequest: 'Submit changes request',
+        },
+        form: {
+          notePlaceholder: 'Leave a note for the team (optional):',
+          describeChanges: 'Describe what needs to change...',
+        },
+        empty: {
+          title: 'All caught up',
+          desc: 'No deliverables pending review at this time.',
+        },
+        previouslyResolved: 'Previously resolved',
+        poll: {
+          title: 'Design Options Poll',
+          question: 'Which design concept do you prefer?',
+          voteCount: '{{count}} votes',
+          votedSuccessfully: 'Vote recorded!',
+          committeeTally: 'Client Committee Status',
+          committeeTallyDesc: 'Live votes from client committee members.',
+          voteApprove: 'Vote Approve',
+          voteRevision: 'Vote Revision',
+          voteReject: 'Vote Reject',
+          optionA: 'Option A: Minimal Dark Obsidian',
+          optionB: 'Option B: Editorial Serif & Warm Accents',
+          optionC: 'Option C: Classic Sage High-Contrast',
+        }
       },
     },
     welcome: {
@@ -2272,77 +2273,6 @@ const translations = {
         addDeal: 'Ajouter Affaire',
         newInvoice: 'Nouvelle Facture',
       },
-    },
-    portal: {
-      common: {
-        welcomeBack: 'Bon retour',
-        snapshot: 'Voici un aperçu de votre collaboration avec Uprising Studio.',
-      },
-      overview: {
-        stats: {
-          activeProjects: 'Projets actifs',
-          activeProjectsSub: 'en cours',
-          pendingApprovals: 'Approbations en attente',
-          pendingApprovalsSub: 'en attente de revue',
-          outstanding: 'À payer',
-          outstandingSub: 'factures dues',
-        },
-        projects: {
-          title: 'Projets Actifs',
-          due: 'Échéance',
-          done: 'terminé',
-          tasksComplete: '{{done}} sur {{total}} tâches terminées',
-        },
-        milestones: {
-          title: 'Jalons à venir',
-          overdueSuffix: 'j de retard',
-          today: "aujourd'hui",
-        },
-        approvals: {
-          alert: '{{count}} livrables en attente de votre revue',
-          action: 'Réviser et approuver',
-        }
-      },
-      deliverables: {
-        title: 'Livrables',
-        subtitle: 'Révisez et approuvez le travail soumis par Uprising Studio.',
-        pendingTitle: 'En attente de revue',
-        resolvedTitle: 'Résolus précédemment',
-        submitted: 'soumis le',
-        status: {
-          pending: 'En attente de revue',
-          approved: 'Approuvé',
-          revision: 'Changements demandés',
-        },
-        actions: {
-          approve: 'Approuver',
-          requestChanges: 'Demander des changements',
-          submitRequest: 'Envoyer la demande de changements',
-        },
-        form: {
-          notePlaceholder: 'Laissez une note pour l\'équipe (optionnel) :',
-          describeChanges: 'Décrivez ce qui doit changer...',
-        },
-        empty: {
-          title: 'Tout est à jour',
-          desc: 'Aucun livrable en attente de revue pour le moment.',
-        },
-        previouslyResolved: 'Résolus précédemment',
-        poll: {
-          title: 'Sondage options de design',
-          question: 'Quel concept de design préférez-vous ?',
-          voteCount: '{{count}} votes',
-          votedSuccessfully: 'Vote enregistré !',
-          committeeTally: 'Statut du comité client',
-          committeeTallyDesc: 'Votes en temps réel des membres du comité client.',
-          voteApprove: 'Voter Approuver',
-          voteRevision: 'Voter Révisions',
-          voteReject: 'Voter Rejeter',
-          optionA: 'Option A : Minimaliste Obsidian Sombre',
-          optionB: 'Option B : Serif Éditorial & Accents Chauds',
-          optionC: 'Option C : Sauge Classique Contraste Élevé',
-        }
-      },
       workflows: {
         title: 'Moteur de Workflows',
         subtitle: '{{count}} workflows · {{runs}} exécutions aujourd\'hui',
@@ -2363,7 +2293,8 @@ const translations = {
           failed: 'Échoué',
           paused: 'En pause',
         },
-        runs: {
+        runs: 'Exécutions',
+        runsInfo: {
           triggeredBy: 'Déclenché par',
           steps: '{{n}} étapes',
           duration: 'Durée',
@@ -2460,6 +2391,77 @@ const translations = {
             cancel: 'Annuler',
           },
         },
+      },
+    },
+    portal: {
+      common: {
+        welcomeBack: 'Bon retour',
+        snapshot: 'Voici un aperçu de votre collaboration avec Uprising Studio.',
+      },
+      overview: {
+        stats: {
+          activeProjects: 'Projets actifs',
+          activeProjectsSub: 'en cours',
+          pendingApprovals: 'Approbations en attente',
+          pendingApprovalsSub: 'en attente de revue',
+          outstanding: 'À payer',
+          outstandingSub: 'factures dues',
+        },
+        projects: {
+          title: 'Projets Actifs',
+          due: 'Échéance',
+          done: 'terminé',
+          tasksComplete: '{{done}} sur {{total}} tâches terminées',
+        },
+        milestones: {
+          title: 'Jalons à venir',
+          overdueSuffix: 'j de retard',
+          today: "aujourd'hui",
+        },
+        approvals: {
+          alert: '{{count}} livrables en attente de votre revue',
+          action: 'Réviser et approuver',
+        }
+      },
+      deliverables: {
+        title: 'Livrables',
+        subtitle: 'Révisez et approuvez le travail soumis par Uprising Studio.',
+        pendingTitle: 'En attente de revue',
+        resolvedTitle: 'Résolus précédemment',
+        submitted: 'soumis le',
+        status: {
+          pending: 'En attente de revue',
+          approved: 'Approuvé',
+          revision: 'Changements demandés',
+        },
+        actions: {
+          approve: 'Approuver',
+          requestChanges: 'Demander des changements',
+          submitRequest: 'Envoyer la demande de changements',
+        },
+        form: {
+          notePlaceholder: 'Laissez une note pour l\'équipe (optionnel) :',
+          describeChanges: 'Décrivez ce qui doit changer...',
+        },
+        empty: {
+          title: 'Tout est à jour',
+          desc: 'Aucun livrable en attente de revue pour le moment.',
+        },
+        previouslyResolved: 'Résolus précédemment',
+        poll: {
+          title: 'Sondage options de design',
+          question: 'Quel concept de design préférez-vous ?',
+          voteCount: '{{count}} votes',
+          votedSuccessfully: 'Vote enregistré !',
+          committeeTally: 'Statut du comité client',
+          committeeTallyDesc: 'Votes en temps réel des membres du comité client.',
+          voteApprove: 'Voter Approuver',
+          voteRevision: 'Voter Révisions',
+          voteReject: 'Voter Rejeter',
+          optionA: 'Option A : Minimaliste Obsidian Sombre',
+          optionB: 'Option B : Serif Éditorial & Accents Chauds',
+          optionC: 'Option C : Sauge Classique Contraste Élevé',
+        }
       },
     },
     welcome: {
