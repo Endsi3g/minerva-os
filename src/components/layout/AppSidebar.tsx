@@ -11,6 +11,7 @@ import {
   FileBox,
   Receipt,
   BarChart2,
+  TrendingUp,
   Settings,
   LogOut,
   User,
@@ -89,10 +90,11 @@ const navGroups: NavGroup[] = [
     labelKey: 'financeGroup',
     icon: Receipt,
     items: [
-      { href: '/app/billing',    icon: Receipt,       labelKey: 'billing' },
-      { href: '/app/finance',    icon: WalletCards,   labelKey: 'finance' },
-      { href: '/app/expenses',   icon: CreditCard,    labelKey: 'expenses' },
-      { href: '/app/proposals',  icon: FileSignature, labelKey: 'proposals' },
+      { href: '/app/billing',        icon: Receipt,       labelKey: 'billing' },
+      { href: '/app/finance',        icon: WalletCards,   labelKey: 'finance' },
+      { href: '/app/profitability',  icon: TrendingUp,    labelKey: 'profitability' },
+      { href: '/app/expenses',       icon: CreditCard,    labelKey: 'expenses' },
+      { href: '/app/proposals',      icon: FileSignature, labelKey: 'proposals' },
     ],
   },
   {

@@ -280,3 +280,101 @@ export interface SLAPolicy {
   priority: string;
 }
 
+// ── Phase 2.6 — Finance & Profitability ──────────────────────────────────────
+
+export interface ServiceCatalogItem {
+  id: string;
+  workspaceId?: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  category: string;
+  costRate: number;
+  sellRate: number;
+  targetMargin: number;
+  createdAt: string;
+}
+
+export interface ProjectPhase {
+  id: string;
+  workspaceId: string;
+  projectId: string;
+  stage: HandoffStage;
+  budgetHours: number;
+  budgetAmount: number;
+  createdAt: string;
+}
+
+export interface ProjectFinancials {
+  projectId: string;
+  projectName: string;
+  clientName: string;
+  budget: number;
+  estimatedHours: number;
+  loggedHours: number;
+  loggedCost: number;
+  recognizedRevenue: number;
+  margin: number;
+  scopeFlagged: boolean;
+  scopeFlaggedAt?: string;
+  phases: ProjectPhase[];
+}
+
+export type DisputeStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
+
+export interface BillingDispute {
+  id: string;
+  workspaceId: string;
+  invoiceId?: string;
+  projectId?: string;
+  clientId?: string;
+  title: string;
+  description?: string;
+  amountDisputed: number;
+  status: DisputeStatus;
+  resolution?: string;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EstimationLineItem {
+  label: string;
+  hours: number;
+  sellRate: number;
+  costRate: number;
+}
+
+export interface EstimationTemplate {
+  id: string;
+  workspaceId?: string;
+  name: string;
+  serviceType: string;
+  estimatedHours: number;
+  sellRate: number;
+  costRate: number;
+  lineItems: EstimationLineItem[];
+  isBuiltin: boolean;
+  createdAt: string;
+}
+
+export interface CashForecastBucket {
+  label: string;
+  daysFrom: number;
+  daysTo: number;
+  expectedRevenue: number;
+  invoicedAmount: number;
+  milestoneRevenue: number;
+}
+
+export interface PortfolioClient {
+  clientId: string;
+  clientName: string;
+  totalBudget: number;
+  totalRevenue: number;
+  activeProjects: number;
+  avgMargin: number;
+}
+
