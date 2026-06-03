@@ -613,6 +613,40 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {/* Premium Dashboard Banner */}
+      <motion.div
+        className="relative h-48 sm:h-56 w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl group"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {/* Background Image with smooth zoom-in on hover */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+          style={{ backgroundImage: 'url("/image.png")' }}
+        />
+        {/* Dark Vignette & Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent z-10" />
+        <div className="absolute inset-0 bg-radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, rgba(10, 13, 20, 0.6) 100%) z-10" />
+
+        {/* Content over the banner */}
+        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 z-20 flex flex-col justify-end h-full">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-1.5"
+          >
+            <span className="text-[10px] font-semibold tracking-[0.2em] text-[#7FA38A] bg-[#7FA38A]/10 border border-[#7FA38A]/20 px-2.5 py-0.5 rounded-full backdrop-blur-md self-start inline-block">
+              Uprising Studio
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-serif italic">
+              Workspace Core
+            </h2>
+          </motion.div>
+        </div>
+      </motion.div>
+
       {/* Greeting */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

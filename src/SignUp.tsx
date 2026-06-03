@@ -10,7 +10,7 @@ import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
-const BG_VIDEO = process.env.NEXT_PUBLIC_BG_VIDEO_URL ?? '';
+const BG_VIDEO = process.env.NEXT_PUBLIC_BG_VIDEO_URL || '/Plan_fixe_cinématique_Anime_c.mp4';
 
 const containerVariants = {
   hidden: { opacity: 0 },

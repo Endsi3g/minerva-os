@@ -1042,6 +1042,20 @@ const translations = {
         }
       },
     },
+    welcome: {
+      title: 'Minerva OS',
+      studio: 'Uprising Studio',
+      tagline: 'The operating system for elite agencies.',
+      taglineSub: 'One workspace for every client, project, and invoice.',
+      features: [
+        'CRM · Pipeline · Proposals',
+        'Projects · Tasks · Approvals',
+        'Billing · Retainers · Invoices',
+        'Client Portal · AI Agents',
+      ] as string[],
+      skip: 'Skip',
+      hint: 'Press any key or click to continue',
+    },
   },
   fr: {
     nav: {
@@ -2081,6 +2095,20 @@ const translations = {
           optionC: 'Option C : Sauge Classique Contraste Élevé',
         }
       },
+    },
+    welcome: {
+      title: 'Minerva OS',
+      studio: 'Uprising Studio',
+      tagline: "Le système d'exploitation pour les agences d'élite.",
+      taglineSub: 'Un espace de travail pour chaque client, projet et facture.',
+      features: [
+        'CRM · Pipeline · Propositions',
+        'Projets · Tâches · Approbations',
+        'Facturation · Retainers · Factures',
+        'Portail Client · Agents IA',
+      ] as string[],
+      skip: 'Passer',
+      hint: 'Appuyez sur une touche ou cliquez pour continuer',
     },
   },
 };
