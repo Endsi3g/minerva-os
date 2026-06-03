@@ -9,6 +9,7 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 ## What's included
 
 ### Auth + onboarding
+
 - Email + password auth via Supabase
 - PKCE-secure forgot password + reset password flows (auth callback route)
 - Sonner toast notifications on signup for immediate visual feedback
@@ -17,6 +18,7 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 - RBAC: 8 roles — Owner, Strategist, PM, Designer, Developer, Finance, Client Stakeholder, Client Reviewer
 
 ### Web app (Next.js 15 · Vercel)
+
 - 22 modules: Dashboard, Pipeline, Clients, Projects, Tasks, Approvals, Files, Billing, Proposals, Expenses, Knowledge Base, Tickets, NPS, Resource Planning, Time Tracking, Agent Ops, Services, Fulfillment, Finance, Call Preps, Reports, Settings
 - Split-screen signup + login: cinematic video left, form right
 - Fully bilingual EN / FR via custom `useLang()` context — zero hardcoded copy
@@ -35,11 +37,13 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 - Fully responsive: all 22 modules audited and fixed for mobile (375px), tablet (768px), and desktop (1440px)
 
 ### Desktop (Electron 42)
+
 - macOS (arm64 + x64) `.dmg`
 - Windows (x64) `.exe` NSIS installer
 - System tray, `minerva://` deep links, auto-updater
 
 ### Mobile (Expo SDK 54 · React Native 0.81)
+
 - 17 screens for iOS and Android
 - 100% bilingual EN / FR via `MobileLangProvider`
 - iOS-native UX: ActionSheetIOS, Haptics, BlurView, SegmentedControl
@@ -50,6 +54,7 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 - TestFlight-ready
 
 ### MCP server (minerva-mcp)
+
 - Model Context Protocol server for AI tool integrations
 - Browser session management + Supabase client
 - Extensible tool system
@@ -116,12 +121,14 @@ Windows shortcut: double-click `scripts/dev.bat` for an interactive menu (web, E
 ## Auth flows
 
 ### Sign up
+
 1. User fills the split-screen form at `/signup`
 2. `supabase.auth.signUp()` creates the account
 3. Sonner toast fires: "Account created — welcome to Minerva OS"
 4. Redirect to `/app/onboarding`
 
 ### Forgot password
+
 1. User clicks "Forgot password?" on `/login`
 2. Enters email at `/forgot-password` → `resetPasswordForEmail()` sends the link
 3. Email link hits `/auth/callback?next=/reset-password` — PKCE code is exchanged server-side
@@ -134,6 +141,7 @@ Windows shortcut: double-click `scripts/dev.bat` for an interactive menu (web, E
 ## Deployment
 
 See **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions covering:
+
 - Supabase project setup + env vars
 - Vercel web deployment
 - Electron desktop build (.dmg + .exe) + code signing
@@ -156,6 +164,7 @@ See **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions covering:
 | `v2.0.0` | — | Landing overhaul, animations, i18n toggle, changelog |
 
 To publish a new release:
+
 ```bash
 git tag -a v2.3.0 -m "description"
 git push origin v2.3.0
