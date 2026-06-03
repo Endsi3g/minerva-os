@@ -186,6 +186,16 @@ if errorlevel 1 (
 echo   Compilation OK.
 echo.
 
+:: Load env vars from .env.local
+if exist "%~dp0..\.env.local" (
+  for /f "usebackq tokens=1,2 delims==" %%A in ("%~dp0..\.env.local") do (
+    set "KEY=%%A"
+    set "VAL=%%B"
+    if "!KEY!"=="NEXT_PUBLIC_SUPABASE_URL" set "SUPABASE_URL=!VAL!"
+    if "!KEY!"=="NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" set "SUPABASE_KEY=!VAL!"
+  )
+)
+
 :: Check env vars
 if "%SUPABASE_URL%"=="" (
   echo   ATTENTION: SUPABASE_URL non definie.

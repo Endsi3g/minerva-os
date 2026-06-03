@@ -49,5 +49,10 @@
     "@babel/core": "^7.24.0",
     "@types/react": "~19.1.17",
     "typescript": "^5.3.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli"
+    ]
   }
 }

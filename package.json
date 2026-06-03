@@ -1,7 +1,7 @@
 {
   "name": "minerva-os",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.4.0",
   "description": "The strategic operating system for elite agencies",
   "author": "Uprising Studio <hello@uprisingstudio.com>",
   "homepage": "https://minerva-os.vercel.app",
