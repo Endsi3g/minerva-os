@@ -50,9 +50,11 @@ export default function SignUp() {
     setError('');
     setIsLoading(true);
     try {
-      await signup(firstName, lastName, email, password);
+      const redirectTo = `${window.location.origin}/auth/callback?next=/app/onboarding/discover`;
+      await signup(firstName, lastName, email, password, redirectTo);
+      sessionStorage.setItem('minerva_signup_email', email);
       toast.success(s.toastSuccess, { description: s.toastSuccessDesc });
-      router.push('/app/onboarding');
+      router.push('/verify-email');
     } catch (err) {
       setError(err instanceof Error ? err.message : s.errorFailed);
     } finally {
