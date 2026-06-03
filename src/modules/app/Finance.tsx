@@ -168,7 +168,7 @@ export default function Finance() {
 
       {/* Summary Cards - Notion Style */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-midnight border-white/5 shadow-none">
+        <Card className="bg-midnight border-white/5 shadow-card spotlight-amber">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-fog uppercase tracking-wider flex items-center justify-between">
               {f.revenue} <TrendingUp size={14} className="text-sage" />
@@ -179,7 +179,7 @@ export default function Finance() {
           </CardContent>
         </Card>
 
-        <Card className="bg-midnight border-white/5 shadow-none">
+        <Card className="bg-midnight border-white/5 shadow-card spotlight-rose">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-fog uppercase tracking-wider flex items-center justify-between">
               {f.expenses} <TrendingDown size={14} className="text-ember" />
@@ -190,7 +190,7 @@ export default function Finance() {
           </CardContent>
         </Card>
 
-        <Card className="bg-midnight border-white/5 shadow-none ring-1 ring-sage/20">
+        <Card className="bg-midnight border-white/5 shadow-card ring-1 ring-sage/20 spotlight-sage">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-fog uppercase tracking-wider flex items-center justify-between">
               {f.netProfit} <Wallet size={14} className="text-sage" />
