@@ -113,7 +113,7 @@ export default function PortalNPS() {
                   className={`h-10 rounded-lg border text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
                     active
                       ? getActiveScoreColor(idx)
-                      : `border-white/10 text-silver bg-[#111522] ${getScoreColor(idx)}`
+                      : `border-white/10 text-silver bg-midnight ${getScoreColor(idx)}`
                   }`}
                 >
                   {idx}

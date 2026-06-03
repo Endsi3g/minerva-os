@@ -78,7 +78,7 @@ export function ChoicePoll({ approvalId, isAdmin = false }: ChoicePollProps) {
   const pctC = totalChoiceVotes > 0 ? Math.round((choiceVotes.c / totalChoiceVotes) * 100) : 0;
 
   return (
-    <div className="rounded-xl border border-white/6 bg-[#111522] p-5 space-y-4">
+    <div className="rounded-xl border border-border bg-midnight p-5 space-y-4">
       {/* Tabs Header */}
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div className="flex items-center gap-2">
@@ -87,22 +87,22 @@ export function ChoicePoll({ approvalId, isAdmin = false }: ChoicePollProps) {
             {pollTrans.title}
           </h4>
         </div>
-        <div className="flex bg-[#0A0D14] p-0.5 rounded-lg border border-white/5">
+        <div className="flex bg-obsidian p-0.5 rounded-lg border border-white/5">
           <button
             onClick={() => setActiveTab("choices")}
-            className={cn(
-              "px-2.5 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer",
-              activeTab === "choices" ? "bg-[#171C2A] text-[#F5F1E8]" : "text-[#8A9099] hover:text-[#B8BDC7]"
-            )}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer",
+                activeTab === "choices" ? "bg-dusk text-[#F5F1E8]" : "text-[#8A9099] hover:text-[#B8BDC7]"
+              )}
           >
             {isAdmin ? "Options Tally" : "Vote"}
           </button>
           <button
             onClick={() => setActiveTab("tally")}
-            className={cn(
-              "px-2.5 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer",
-              activeTab === "tally" ? "bg-[#171C2A] text-[#F5F1E8]" : "text-[#8A9099] hover:text-[#B8BDC7]"
-            )}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer",
+                activeTab === "tally" ? "bg-dusk text-[#F5F1E8]" : "text-[#8A9099] hover:text-[#B8BDC7]"
+              )}
           >
             Committee
           </button>
@@ -120,7 +120,7 @@ export function ChoicePoll({ approvalId, isAdmin = false }: ChoicePollProps) {
               className={cn(
                 "relative overflow-hidden rounded-lg border px-4 py-3 transition-all cursor-pointer select-none",
                 hasVoted ? "cursor-default" : "hover:border-[#7FA38A]/30 hover:bg-white/[0.01]",
-                selectedChoice === "a" ? "border-[#7FA38A] bg-[#7FA38A]/5" : "border-white/5 bg-[#0A0D14]/40"
+                selectedChoice === "a" ? "border-[#7FA38A] bg-[#7FA38A]/5" : "border-white/5 bg-obsidian/40"
               )}
             >
               {/* Progress bar background */}
@@ -148,7 +148,7 @@ export function ChoicePoll({ approvalId, isAdmin = false }: ChoicePollProps) {
               className={cn(
                 "relative overflow-hidden rounded-lg border px-4 py-3 transition-all cursor-pointer select-none",
                 hasVoted ? "cursor-default" : "hover:border-[#B89B6A]/30 hover:bg-white/[0.01]",
-                selectedChoice === "b" ? "border-[#B89B6A] bg-[#B89B6A]/5" : "border-white/5 bg-[#0A0D14]/40"
+                selectedChoice === "b" ? "border-[#B89B6A] bg-[#B89B6A]/5" : "border-white/5 bg-obsidian/40"
               )}
             >
               {/* Progress bar background */}
@@ -176,7 +176,7 @@ export function ChoicePoll({ approvalId, isAdmin = false }: ChoicePollProps) {
               className={cn(
                 "relative overflow-hidden rounded-lg border px-4 py-3 transition-all cursor-pointer select-none",
                 hasVoted ? "cursor-default" : "hover:border-[#B8BDC7]/30 hover:bg-white/[0.01]",
-                selectedChoice === "c" ? "border-[#B8BDC7] bg-[#B8BDC7]/5" : "border-white/5 bg-[#0A0D14]/40"
+                selectedChoice === "c" ? "border-[#B8BDC7] bg-[#B8BDC7]/5" : "border-white/5 bg-obsidian/40"
               )}
             >
               {/* Progress bar background */}
@@ -263,7 +263,7 @@ export function VoteTally({ approvalId, isAdmin = false }: VoteTallyProps) {
   return (
     <div className="space-y-4">
       {/* Bars Chart */}
-      <div className="space-y-3 bg-[#0A0D14]/40 p-4 rounded-lg border border-white/5">
+      <div className="space-y-3 bg-obsidian/40 p-4 rounded-lg border border-white/5">
         {/* Approved Bar */}
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[11px]">
@@ -328,7 +328,7 @@ export function VoteTally({ approvalId, isAdmin = false }: VoteTallyProps) {
               "flex flex-col items-center justify-center py-2.5 px-1 rounded-lg border text-center transition-all duration-200 cursor-pointer select-none",
               userTallyVote === "approved" 
                 ? "bg-[#7FA38A]/10 border-[#7FA38A] text-[#7FA38A]" 
-                : "border-white/5 bg-[#0A0D14]/20 text-[#8A9099] hover:border-white/10 hover:text-[#B8BDC7]"
+                : "border-white/5 bg-obsidian/20 text-[#8A9099] hover:border-white/10 hover:text-[#B8BDC7]"
             )}
           >
             <span className="text-[10px] font-semibold">{pollTrans.voteApprove}</span>
@@ -340,7 +340,7 @@ export function VoteTally({ approvalId, isAdmin = false }: VoteTallyProps) {
               "flex flex-col items-center justify-center py-2.5 px-1 rounded-lg border text-center transition-all duration-200 cursor-pointer select-none",
               userTallyVote === "revision" 
                 ? "bg-[#B89B6A]/10 border-[#B89B6A] text-[#B89B6A]" 
-                : "border-white/5 bg-[#0A0D14]/20 text-[#8A9099] hover:border-white/10 hover:text-[#B8BDC7]"
+                : "border-white/5 bg-obsidian/20 text-[#8A9099] hover:border-white/10 hover:text-[#B8BDC7]"
             )}
           >
             <span className="text-[10px] font-semibold">{pollTrans.voteRevision}</span>
@@ -352,7 +352,7 @@ export function VoteTally({ approvalId, isAdmin = false }: VoteTallyProps) {
               "flex flex-col items-center justify-center py-2.5 px-1 rounded-lg border text-center transition-all duration-200 cursor-pointer select-none",
               userTallyVote === "rejected" 
                 ? "bg-[#A86A6A]/10 border-[#A86A6A] text-[#A86A6A]" 
-                : "border-white/5 bg-[#0A0D14]/20 text-[#8A9099] hover:border-white/10 hover:text-[#B8BDC7]"
+                : "border-white/5 bg-obsidian/20 text-[#8A9099] hover:border-white/10 hover:text-[#B8BDC7]"
             )}
           >
             <span className="text-[10px] font-semibold">{pollTrans.voteReject}</span>

@@ -93,7 +93,7 @@ export default function Approvals() {
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 max-w-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 w-full">
         {(([
           { label: a.summary.pending,  numericValue: pending,  color: 'text-warm' },
           { label: a.summary.revision, numericValue: revision, color: 'text-ember' },

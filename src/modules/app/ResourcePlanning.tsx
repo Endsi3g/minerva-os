@@ -122,8 +122,7 @@ function AddMemberForm({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-2xl p-6 space-y-4"
-        style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between pb-2 border-b border-white/5">

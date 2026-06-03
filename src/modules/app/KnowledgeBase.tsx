@@ -149,8 +149,7 @@ function ArticleModal({
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-xl rounded-2xl flex flex-col max-h-[90vh]"
-        style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="w-full max-w-xl rounded-2xl flex flex-col max-h-[90vh] bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-white/5">
@@ -159,23 +158,19 @@ function ArticleModal({
         </div>
         <div className="overflow-y-auto flex-1 p-5 space-y-3">
           <input value={title} onChange={e => setTitle(e.target.value)} placeholder={f.titlePlaceholder}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
           <select value={category} onChange={e => setCategory(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-            style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <textarea value={content} onChange={e => setContent(e.target.value)} placeholder={f.contentPlaceholder} rows={8}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none bg-obsidian border border-border" />
           <div>
             <div className="flex gap-2">
               <input value={tagInput} onChange={e => setTagInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
                 placeholder={f.tagPlaceholder}
-                className="flex-1 px-3 py-1.5 rounded-lg text-xs text-ivory placeholder:text-fog outline-none"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                className="flex-1 px-3 py-1.5 rounded-lg text-xs text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
             </div>
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">

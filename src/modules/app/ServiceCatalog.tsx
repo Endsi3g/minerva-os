@@ -77,8 +77,7 @@ function ServiceForm({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl p-6 space-y-4"
-        style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -87,18 +86,14 @@ function ServiceForm({
         </div>
         <div className="space-y-3">
           <input value={name} onChange={e => setName(e.target.value)} placeholder={f.namePlaceholder}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
           <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder={f.descriptionPlaceholder} rows={2}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none bg-obsidian border border-border" />
           <div className="grid grid-cols-2 gap-3">
             <input type="number" value={basePrice} onChange={e => setBasePrice(e.target.value)} placeholder="0"
-              className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+              className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
             <select value={category} onChange={e => setCategory(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-              style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>

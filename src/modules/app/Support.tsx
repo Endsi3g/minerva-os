@@ -14,8 +14,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
   return (
     <div
-      className="rounded-xl border"
-      style={{ backgroundColor: '#111522', borderColor: 'rgba(255,255,255,0.08)' }}
+      className="rounded-xl border bg-midnight border-border"
     >
       <button
         type="button"
@@ -42,8 +41,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
             className="overflow-hidden"
           >
             <div
-              className="px-4 pb-4 text-sm text-silver leading-relaxed"
-              style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+              className="px-4 pb-4 text-sm text-silver leading-relaxed border-t border-border/40"
             >
               <p className="pt-3">{a}</p>
             </div>
@@ -88,7 +86,7 @@ export default function Support() {
   }
 
   return (
-    <div className="max-w-2xl space-y-10">
+    <div className="max-w-7xl mx-auto w-full space-y-10">
       {/* Header */}
       <div>
         <TextAnimate text={s.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
@@ -116,14 +114,12 @@ export default function Support() {
           <h2 className="text-base font-semibold text-ivory">{s.contactTitle}</h2>
         </div>
         <div
-          className="rounded-2xl p-6 space-y-4"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}
+          className="rounded-2xl p-6 space-y-4 bg-midnight border border-border"
         >
           <p className="text-sm text-silver">{s.contactSub}</p>
           {submitted ? (
             <div
-              className="rounded-xl px-4 py-3 text-sm"
-              style={{ backgroundColor: 'rgba(127,163,138,0.1)', border: '1px solid rgba(127,163,138,0.2)', color: '#7FA38A' }}
+              className="rounded-xl px-4 py-3 text-sm bg-sage/10 border border-sage/20 text-sage"
             >
               {s.submitSuccess}
             </div>
@@ -135,12 +131,7 @@ export default function Support() {
                   value={subject}
                   onChange={e => setSubject(e.target.value)}
                   required
-                  className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20"
-                  style={{
-                    backgroundColor: '#0A0D14',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: '#F5F1E8',
-                  }}
+                  className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground"
                 />
               </div>
               <div className="space-y-1.5">
@@ -150,22 +141,16 @@ export default function Support() {
                   onChange={e => setMessage(e.target.value)}
                   required
                   rows={4}
-                  className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 resize-none"
-                  style={{
-                    backgroundColor: '#0A0D14',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: '#F5F1E8',
-                  }}
+                  className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 resize-none bg-obsidian border border-border text-foreground"
                 />
               </div>
               {error && (
-                <p className="text-xs" style={{ color: '#A86A6A' }}>{error}</p>
+                <p className="text-xs text-ember">{error}</p>
               )}
               <button
                 type="submit"
                 disabled={submitting || !subject.trim() || !message.trim()}
-                className="h-9 px-5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
+                className="h-9 px-5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed bg-ivory text-obsidian"
               >
                 {submitting ? '...' : s.submitLabel}
               </button>
@@ -183,23 +168,16 @@ export default function Support() {
           <h2 className="text-base font-semibold text-ivory">{s.shortcutsTitle}</h2>
         </div>
         <div
-          className="rounded-2xl overflow-hidden"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}
+          className="rounded-2xl overflow-hidden bg-midnight border border-border"
         >
           {s.shortcuts.map((sc, i) => (
             <div
               key={i}
-              className="flex items-center justify-between px-5 py-3"
-              style={i > 0 ? { borderTop: '1px solid rgba(255,255,255,0.05)' } : undefined}
+              className="flex items-center justify-between px-5 py-3 border-t border-border/40 first:border-t-0"
             >
               <span className="text-sm text-silver">{sc.label}</span>
               <Kbd
-                className="font-mono text-[11px] h-auto py-0.5 px-2 rounded-md"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: '#B8BDC7',
-                }}
+                className="font-mono text-[11px] h-auto py-0.5 px-2 rounded-md bg-dusk border border-border text-silver"
               >
                 {sc.keys}
               </Kbd>

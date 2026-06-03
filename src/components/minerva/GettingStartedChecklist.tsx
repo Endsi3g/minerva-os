@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
 
 const CHECKLIST_STEPS = [
   { id: 'workspace', label: 'Set up your workspace' },
@@ -47,59 +48,41 @@ export function GettingStartedChecklist() {
   }
 
   return (
-    <div style={{
-      backgroundColor: '#111522',
-      border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 20,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+    <div className="bg-midnight border border-border rounded-2xl p-5 mb-5">
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <p style={{ color: '#F5F1E8', fontSize: 13, fontWeight: 600, margin: 0 }}>Getting started</p>
-          <p style={{ color: '#8A9099', fontSize: 11, margin: '2px 0 0' }}>{completed.length} of {CHECKLIST_STEPS.length} completed</p>
+          <p className="text-ivory text-sm font-semibold m-0">Getting started</p>
+          <p className="text-fog text-[11px] mt-0.5 mb-0">{completed.length} of {CHECKLIST_STEPS.length} completed</p>
         </div>
-        <span style={{ color: '#7FA38A', fontSize: 13, fontWeight: 600 }}>{Math.round(progress)}%</span>
+        <span className="text-sage text-sm font-semibold">{Math.round(progress)}%</span>
       </div>
 
-      <div style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 2, marginBottom: 16 }}>
-        <div style={{ height: 3, width: `${progress}%`, backgroundColor: '#7FA38A', borderRadius: 2, transition: 'width 0.4s ease' }} />
+      <div className="h-[3px] bg-white/5 rounded-full mb-4">
+        <div className="h-full bg-sage rounded-full transition-[width] duration-500" style={{ width: `${progress}%` }} />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="flex flex-col gap-2">
         {CHECKLIST_STEPS.map((step) => {
           const done = completed.includes(step.id);
           return (
             <div
               key={step.id}
               onClick={() => !done && handleMark(step.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                cursor: done ? 'default' : 'pointer',
-                opacity: done ? 0.6 : 1,
-              }}
+              className={cn(
+                "flex items-center gap-2.5",
+                done ? "cursor-default opacity-60" : "cursor-pointer"
+              )}
             >
-              <div style={{
-                width: 20,
-                height: 20,
-                borderRadius: '50%',
-                border: `1.5px solid ${done ? '#7FA38A' : 'rgba(255,255,255,0.15)'}`,
-                backgroundColor: done ? '#7FA38A' : 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                transition: 'all 0.2s',
-              }}>
-                {done && <Check size={11} color="#0A0D14" strokeWidth={3} />}
+              <div className={cn(
+                "w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200",
+                done ? "border-sage bg-sage" : "border-border bg-transparent"
+              )}>
+                {done && <Check size={11} className="text-obsidian" strokeWidth={3} />}
               </div>
-              <span style={{
-                fontSize: 13,
-                color: done ? '#8A9099' : '#B8BDC7',
-                textDecoration: done ? 'line-through' : 'none',
-              }}>
+              <span className={cn(
+                "text-xs",
+                done ? "text-fog line-through" : "text-silver"
+              )}>
                 {step.label}
               </span>
             </div>

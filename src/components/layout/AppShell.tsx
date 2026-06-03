@@ -107,7 +107,7 @@ function MobileBottomNav() {
             side="bottom"
             className="rounded-t-2xl border-t border-white/10 p-0"
             style={{
-              background: '#111522',
+              background: 'var(--midnight)',
               maxHeight: '80vh',
             }}
           >
@@ -138,7 +138,9 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         <AppHeader />
         <ScrollArea className="flex-1">
           <div className={isMobile ? 'p-4 pb-[80px]' : 'p-6 pb-24'}>
-            {children}
+            <div className="max-w-7xl mx-auto w-full">
+              {children}
+            </div>
           </div>
         </ScrollArea>
         <BottomBlur className="absolute z-30" />

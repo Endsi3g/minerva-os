@@ -410,7 +410,7 @@ export default function Clients() {
                     <Input
                       readOnly
                       value={portalUrl}
-                      className="text-xs text-silver bg-[#171C2A] border-white/5 flex-1"
+                      className="text-xs text-silver bg-dusk border-white/5 flex-1"
                     />
                     <Button
                       size="sm"
@@ -433,7 +433,7 @@ export default function Clients() {
               {/* Scopes Section */}
               <div className="space-y-3">
                 <Label className="text-xs font-semibold text-ivory">{pKeys.scopes}</Label>
-                <div className="space-y-2.5 rounded-xl border border-white/5 bg-[#171C2A]/50 p-4">
+                <div className="space-y-2.5 rounded-xl border border-white/5 bg-dusk/50 p-4">
                   {[
                     { id: 'approvals', label: pKeys.scopeApprovals },
                     { id: 'files', label: pKeys.scopeFiles },
@@ -459,7 +459,7 @@ export default function Clients() {
                 <Label className="text-xs font-semibold text-ivory">{pKeys.expiry}</Label>
                 <div className="flex gap-2">
                   <Select value={expiryOption} onValueChange={setExpiryOption}>
-                    <SelectTrigger className="flex-1 text-xs bg-[#171C2A] border-white/5 text-silver">
+                    <SelectTrigger className="flex-1 text-xs bg-dusk border-white/5 text-silver">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-midnight border-white/10">
@@ -475,7 +475,7 @@ export default function Clients() {
                       type="date"
                       value={customExpiryDate}
                       onChange={e => setCustomExpiryDate(e.target.value)}
-                      className="text-xs text-silver bg-[#171C2A] border-white/5 max-w-[150px]"
+                      className="text-xs text-silver bg-dusk border-white/5 max-w-[150px]"
                     />
                   )}
                 </div>

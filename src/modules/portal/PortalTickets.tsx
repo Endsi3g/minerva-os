@@ -97,7 +97,7 @@ export default function PortalTickets() {
 
       <div className="space-y-3">
         {clientTickets.length === 0 ? (
-          <div className="text-center py-12 rounded-2xl border border-white/5 bg-[#111522]/50 flex flex-col items-center justify-center">
+          <div className="text-center py-12 rounded-2xl border border-white/5 bg-midnight/50 flex flex-col items-center justify-center">
             <Ticket className="h-10 w-10 text-fog/30 mb-3" />
             <p className="text-sm text-silver font-medium">
               {lang === 'fr' ? 'Aucune demande en cours' : 'No active requests'}
@@ -112,7 +112,7 @@ export default function PortalTickets() {
             return (
               <div
                 key={ticket._id}
-                className="rounded-xl border border-white/5 bg-[#111522] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="rounded-xl border border-white/5 bg-midnight p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">

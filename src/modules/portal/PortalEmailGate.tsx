@@ -49,20 +49,20 @@ export default function PortalEmailGate({ token, onVerified }: PortalEmailGatePr
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0A0D14] flex flex-col justify-between p-6 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen w-full bg-background flex flex-col justify-between p-6 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Top Header / Language Switcher */}
       <header className="max-w-5xl w-full mx-auto flex items-center justify-between z-10">
         <div className="flex items-center gap-2.5">
-          <div className="h-6 w-6 rounded-md flex items-center justify-center bg-[#F5F1E8]">
-            <span className="text-[10px] font-bold text-[#0A0D14]">M</span>
+          <div className="h-6 w-6 rounded-md flex items-center justify-center bg-ivory">
+            <span className="text-[10px] font-bold text-obsidian">M</span>
           </div>
-          <span className="text-sm font-semibold tracking-wide text-[#F5F1E8]">Minerva</span>
+          <span className="text-sm font-semibold tracking-wide text-ivory">Minerva</span>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setLang(lang === 'en' ? 'fr' : 'en')}
-          className="text-xs text-[#8A9099] hover:text-[#F5F1E8] border border-white/5"
+          className="text-xs text-fog hover:text-ivory border border-white/5"
         >
           {lang === 'en' ? 'FR' : 'EN'}
         </Button>
@@ -78,26 +78,26 @@ export default function PortalEmailGate({ token, onVerified }: PortalEmailGatePr
         >
           <div className="space-y-2 text-center">
             <h1
-              className="text-3xl font-normal text-[#F5F1E8]"
+              className="text-3xl font-normal text-ivory"
               style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '-0.02em' }}
             >
               {eg.title}
             </h1>
-            <p className="text-xs text-[#8A9099] leading-relaxed px-2">
+            <p className="text-xs text-fog leading-relaxed px-2">
               {eg.desc}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A9099] h-4 w-4" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-fog h-4 w-4" />
               <Input
                 type="email"
                 placeholder={eg.placeholder}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                className="pl-10 text-xs text-[#F5F1E8] bg-[#111522] border-white/5 focus-visible:ring-sage/20 placeholder:text-[#8A9099]/50 h-10 rounded-xl"
+                className="pl-10 text-xs text-ivory bg-midnight border-white/5 focus-visible:ring-sage/20 placeholder:text-fog/50 h-10 rounded-xl"
               />
             </div>
 
@@ -105,7 +105,7 @@ export default function PortalEmailGate({ token, onVerified }: PortalEmailGatePr
               <motion.p
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="text-xs text-[#A86A6A] leading-relaxed text-center px-1 font-medium"
+                className="text-xs text-ember leading-relaxed text-center px-1 font-medium"
               >
                 {error}
               </motion.p>
@@ -114,7 +114,7 @@ export default function PortalEmailGate({ token, onVerified }: PortalEmailGatePr
             <Button
               type="submit"
               disabled={loading || !email.trim()}
-              className="w-full bg-[#F5F1E8] text-[#0A0D14] hover:bg-white rounded-full text-xs font-semibold py-5 transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full bg-ivory text-obsidian hover:bg-white rounded-full text-xs font-semibold py-5 transition-all duration-300 flex items-center justify-center gap-2"
             >
               {loading && <Loader2 size={14} className="animate-spin" />}
               {eg.verify}
@@ -124,7 +124,7 @@ export default function PortalEmailGate({ token, onVerified }: PortalEmailGatePr
       </main>
 
       {/* Footer */}
-      <footer className="text-center text-[10px] text-[#8A9099] z-10 opacity-65">
+      <footer className="text-center text-[10px] text-fog z-10 opacity-65">
         Powered by Minerva OS · Uprising Studio
       </footer>
 

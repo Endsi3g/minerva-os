@@ -28,7 +28,7 @@ export default function Changelog() {
   const releases = t.landing.vex.releases;
 
   return (
-    <div className="max-w-2xl space-y-8">
+    <div className="max-w-7xl mx-auto w-full space-y-8">
       {/* Header */}
       <div>
         <TextAnimate text={t.landing.vex.changelogTitle} type="calmInUp" className="text-2xl font-semibold text-ivory" />
@@ -46,8 +46,7 @@ export default function Changelog() {
       <div className="relative">
         {/* Vertical line */}
         <div
-          className="absolute left-[7px] top-2 bottom-2 w-px"
-          style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+          className="absolute left-[7px] top-2 bottom-2 w-px bg-border/40"
         />
 
         <div className="space-y-8">
@@ -66,18 +65,14 @@ export default function Changelog() {
                 <div
                   className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2"
                   style={{
-                    backgroundColor: i === 0 ? style.color : '#171C2A',
-                    borderColor: i === 0 ? style.color : 'rgba(255,255,255,0.15)',
+                    backgroundColor: i === 0 ? style.color : 'var(--dusk)',
+                    borderColor: i === 0 ? style.color : 'var(--border)',
                   }}
                 />
 
                 {/* Card */}
                 <div
-                  className="rounded-2xl p-5 space-y-4"
-                  style={{
-                    backgroundColor: '#111522',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                  }}
+                  className="rounded-2xl p-5 space-y-4 bg-midnight border border-border"
                 >
                   {/* Header row */}
                   <div className="flex items-center gap-3 flex-wrap">

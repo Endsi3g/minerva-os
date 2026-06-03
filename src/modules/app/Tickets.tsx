@@ -59,8 +59,7 @@ function TicketForm({ workspaceId, clients, onClose, onCreated }: { workspaceId:
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl p-6 space-y-4"
-        style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -69,26 +68,21 @@ function TicketForm({ workspaceId, clients, onClose, onCreated }: { workspaceId:
         </div>
         <div className="space-y-3">
           <input value={subject} onChange={e => setSubject(e.target.value)} placeholder={f.subjectPlaceholder}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
           <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder={f.descriptionPlaceholder} rows={3}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none bg-obsidian border border-border" />
           <select value={clientId} onChange={e => setClientId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-            style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
             <option value="">{f.clientPlaceholder}</option>
              {clients.map((c) => <option key={c._id as string} value={c._id as string}>{c.company as string}</option>)}
           </select>
           <div className="grid grid-cols-2 gap-3">
             <select value={priority} onChange={e => setPriority(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-              style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               {PRIORITIES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
             </select>
             <select value={category} onChange={e => setCategory(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-              style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -197,8 +191,7 @@ export default function Tickets() {
             return (
               <div
                 key={ticket._id as string}
-                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-white/15"
-                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-white/15 bg-midnight border-border"
               >
                 <StatusIcon size={14} className={sc.class.split(' ')[0]} />
                 <div className="flex-1 min-w-0">

@@ -58,8 +58,7 @@ function ExpenseForm({ workspaceId, submittedBy, projects, categories, onClose, 
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl p-6 space-y-4"
-        style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -68,25 +67,20 @@ function ExpenseForm({ workspaceId, submittedBy, projects, categories, onClose, 
         </div>
         <div className="space-y-3">
           <input value={description} onChange={e => setDescription(e.target.value)} placeholder={f.descriptionPlaceholder}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
           <div className="grid grid-cols-2 gap-3">
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={f.amount}
-              className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+              className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
             <select value={category} onChange={e => setCategory(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-              style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-obsidian border border-border" />
           {projects.length > 0 && (
             <select value={projectId} onChange={e => setProjectId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-              style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+              className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               <option value="">{f.project}</option>
               {projects.map((p: any) => <option key={p._id} value={p._id}>{p.name}</option>)}
             </select>
@@ -197,8 +191,7 @@ export default function Expenses() {
             return (
               <div
                 key={expense._id}
-                className="flex items-center gap-3 px-3 sm:px-4 py-3 rounded-xl border transition-colors hover:border-white/15 group"
-                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                className="flex items-center gap-3 px-3 sm:px-4 py-3 rounded-xl border transition-colors hover:border-white/15 group bg-midnight border-border"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-ivory truncate">{expense.description}</p>

@@ -94,91 +94,91 @@ function ProfileTab() {
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
-      {/* Avatar */}
-      <div className="flex items-center gap-4 mb-6">
-        <div
-          className="h-16 w-16 rounded-2xl flex items-center justify-center text-lg font-semibold shrink-0 overflow-hidden"
-          style={{ backgroundColor: '#1A1F32', color: '#F5F1E8', border: '1px solid rgba(255,255,255,0.10)' }}
-        >
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-          ) : initials}
-        </div>
-        <div>
-          <p className="text-sm font-medium text-ivory">{name}</p>
-          <p className="text-xs text-fog mt-0.5">{user?.email ?? 'studio@uprising.co'}</p>
-          {user?.role && (
-            <span
-              className="inline-block mt-1.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: 'rgba(127,163,138,0.12)', color: '#7FA38A', border: '1px solid rgba(127,163,138,0.2)' }}
-            >
-              {roleLabels[user.role] ?? user.role}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-4 max-w-md">
-        <SettingsField label={s.displayName}>
-          <input
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
-            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
-          />
-        </SettingsField>
-
-        <SettingsField label={s.avatarUrl}>
-          <div className="flex flex-col gap-2">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              disabled={uploading}
-              className="text-xs text-silver file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ivory file:text-obsidian hover:file:opacity-90 file:cursor-pointer disabled:opacity-50"
-            />
-            {uploading && <p className="text-xs text-fog">Uploading...</p>}
-            {avatarUrl && (
-              <p className="text-[10px] text-fog truncate">URL: {avatarUrl}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start w-full">
+        {/* Left Column - Avatar & Info Card */}
+        <div className="md:col-span-1 rounded-2xl p-6 bg-midnight border border-border flex flex-col items-center text-center space-y-4">
+          <div
+            className="h-24 w-24 rounded-2xl flex items-center justify-center text-2xl font-semibold shrink-0 overflow-hidden"
+            style={{ backgroundColor: '#1A1F32', color: '#F5F1E8', border: '1px solid rgba(255,255,255,0.10)' }}
+          >
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+            ) : initials}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ivory">{name}</p>
+            <p className="text-xs text-fog mt-0.5">{user?.email ?? 'studio@uprising.co'}</p>
+            {user?.role && (
+              <span
+                className="inline-block mt-2.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: 'rgba(127,163,138,0.12)', color: '#7FA38A', border: '1px solid rgba(127,163,138,0.2)' }}
+              >
+                {roleLabels[user.role] ?? user.role}
+              </span>
             )}
           </div>
-        </SettingsField>
+        </div>
 
-        <SettingsField label={s.email}>
-          <input
-            type="email"
-            value={user?.email ?? 'studio@uprising.co'}
-            readOnly
-            className="w-full rounded-xl h-10 px-3 text-sm opacity-50 cursor-not-allowed"
-            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
-          />
-        </SettingsField>
+        {/* Right Column - Form */}
+        <div className="md:col-span-2 space-y-4 w-full">
+          <SettingsField label={s.displayName}>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all bg-midnight border border-border text-foreground"
+            />
+          </SettingsField>
 
-        <SettingsField label={ws.language}>
-          <div className="flex gap-2">
-            {(['en', 'fr'] as Lang[]).map(l => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                className={cn(
-                  'flex-1 h-10 rounded-xl text-sm font-medium transition-all',
-                  lang === l ? 'text-obsidian' : 'text-silver hover:text-ivory'
-                )}
-                style={
-                  lang === l
-                    ? { backgroundColor: '#F5F1E8' }
-                    : { backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)' }
-                }
-              >
-                {l === 'en' ? ws.langEn : ws.langFr}
-              </button>
-            ))}
+          <SettingsField label={s.avatarUrl}>
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={uploading}
+                className="text-xs text-silver file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ivory file:text-obsidian hover:file:opacity-90 file:cursor-pointer disabled:opacity-50"
+              />
+              {uploading && <p className="text-xs text-fog">Uploading...</p>}
+              {avatarUrl && (
+                <p className="text-[10px] text-fog truncate">URL: {avatarUrl}</p>
+              )}
+            </div>
+          </SettingsField>
+
+          <SettingsField label={s.email}>
+            <input
+              type="email"
+              value={user?.email ?? 'studio@uprising.co'}
+              readOnly
+              className="w-full rounded-xl h-10 px-3 text-sm opacity-50 cursor-not-allowed bg-midnight border border-border text-foreground"
+            />
+          </SettingsField>
+
+          <SettingsField label={ws.language}>
+            <div className="flex gap-2">
+              {(['en', 'fr'] as Lang[]).map(l => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={cn(
+                    'flex-1 h-10 rounded-xl text-sm font-medium transition-all border',
+                    lang === l
+                      ? 'bg-ivory border-transparent text-obsidian'
+                      : 'bg-midnight border-border text-silver hover:text-ivory'
+                  )}
+                >
+                  {l === 'en' ? ws.langEn : ws.langFr}
+                </button>
+              ))}
+            </div>
+          </SettingsField>
+
+          <div className="pt-2">
+            <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />
           </div>
-        </SettingsField>
-
-        <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />
+        </div>
       </div>
     </Section>
   );
@@ -225,58 +225,64 @@ function WorkspaceTab() {
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
-      <div className="space-y-4 max-w-md">
-        <SettingsField label={s.studioName}>
-          <input
-            type="text"
-            value={studioName}
-            onChange={e => setStudioName(e.target.value)}
-            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
-            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
-          />
-        </SettingsField>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start w-full">
+        {/* Left Column - Info Card */}
+        <div className="md:col-span-1 rounded-2xl p-6 bg-midnight border border-border space-y-3">
+          <h4 className="text-sm font-semibold text-ivory">Studio Details</h4>
+          <p className="text-xs text-fog leading-relaxed">
+            Configure your global studio workspace variables. These settings apply to all active projects, invoices, and operations.
+          </p>
+        </div>
 
-        <SettingsField label={s.timezone}>
-          <select
-            value={timezone}
-            onChange={e => setTimezone(e.target.value)}
-            className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all appearance-none"
-            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
-          >
-            <option value="America/Montreal">Montreal (ET)</option>
-            <option value="America/Toronto">Toronto (ET)</option>
-            <option value="America/Vancouver">Vancouver (PT)</option>
-            <option value="Europe/Paris">Paris (CET)</option>
-            <option value="Europe/London">London (GMT)</option>
-            <option value="America/New_York">New York (ET)</option>
-          </select>
-        </SettingsField>
+        {/* Right Column - Form */}
+        <div className="md:col-span-2 space-y-4 w-full">
+          <SettingsField label={s.studioName}>
+            <input
+              type="text"
+              value={studioName}
+              onChange={e => setStudioName(e.target.value)}
+              className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all bg-midnight border border-border text-foreground"
+            />
+          </SettingsField>
 
-        <SettingsField label={s.language}>
-          <div className="flex gap-2">
-            {(['en', 'fr'] as Lang[]).map(l => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                className={cn(
-                  'flex-1 h-10 rounded-xl text-sm font-medium transition-all',
-                  lang === l
-                    ? 'text-obsidian'
-                    : 'text-silver hover:text-ivory'
-                )}
-                style={
-                  lang === l
-                    ? { backgroundColor: '#F5F1E8' }
-                    : { backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)' }
-                }
-              >
-                {l === 'en' ? s.langEn : s.langFr}
-              </button>
-            ))}
+          <SettingsField label={s.timezone}>
+            <select
+              value={timezone}
+              onChange={e => setTimezone(e.target.value)}
+              className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all appearance-none bg-midnight border border-border text-foreground"
+            >
+              <option value="America/Montreal">Montreal (ET)</option>
+              <option value="America/Toronto">Toronto (ET)</option>
+              <option value="America/Vancouver">Vancouver (PT)</option>
+              <option value="Europe/Paris">Paris (CET)</option>
+              <option value="Europe/London">London (GMT)</option>
+              <option value="America/New_York">New York (ET)</option>
+            </select>
+          </SettingsField>
+
+          <SettingsField label={s.language}>
+            <div className="flex gap-2">
+              {(['en', 'fr'] as Lang[]).map(l => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={cn(
+                    'flex-1 h-10 rounded-xl text-sm font-medium transition-all border',
+                    lang === l
+                      ? 'bg-ivory border-transparent text-obsidian'
+                      : 'bg-midnight border-border text-silver hover:text-ivory'
+                  )}
+                >
+                  {l === 'en' ? s.langEn : s.langFr}
+                </button>
+              ))}
+            </div>
+          </SettingsField>
+
+          <div className="pt-2">
+            <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />
           </div>
-        </SettingsField>
-
-        <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />
+        </div>
       </div>
     </Section>
   );
@@ -335,60 +341,66 @@ function TeamTab() {
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
-      {/* Invite bar */}
-      <div className="flex flex-col sm:flex-row gap-2 mb-6 max-w-md">
-        <input
-          type="email"
-          placeholder={s.invitePlaceholder}
-          value={inviteEmail}
-          onChange={e => setInviteEmail(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleInvite()}
-          className="flex-1 rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all placeholder:text-white/20"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
-        />
-        <button
-          onClick={handleInvite}
-          className="px-4 h-10 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] shrink-0"
-          style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
-        >
-          {invited ? <Check size={14} /> : s.inviteButton}
-        </button>
-      </div>
-
-      {/* Member list */}
-      <div className="space-y-2 max-w-lg">
-        {members.map(member => {
-          const initials = (member.name || '')
-            .split(' ')
-            .map((w: string) => w[0])
-            .join('')
-            .slice(0, 2)
-            .toUpperCase() || 'U';
-          return (
-            <div
-              key={member.id}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl"
-              style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start w-full">
+        {/* Left Column - Invite Form */}
+        <div className="md:col-span-1 rounded-2xl p-6 bg-midnight border border-border space-y-4">
+          <h4 className="text-sm font-semibold text-ivory">{s.inviteButton}</h4>
+          <p className="text-xs text-fog leading-relaxed">
+            Invite new collaborators to your studio. Invited users will receive an email with a secure registration link.
+          </p>
+          <div className="space-y-2">
+            <input
+              type="email"
+              placeholder={s.invitePlaceholder}
+              value={inviteEmail}
+              onChange={e => setInviteEmail(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleInvite()}
+              className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all placeholder:text-white/20 bg-obsidian border border-border text-foreground"
+            />
+            <button
+              onClick={handleInvite}
+              className="w-full h-10 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] flex items-center justify-center bg-ivory text-obsidian"
             >
+              {invited ? <Check size={14} /> : s.inviteButton}
+            </button>
+          </div>
+        </div>
+
+        {/* Right Column - Member List */}
+        <div className="md:col-span-2 space-y-2 w-full">
+          <h4 className="text-xs font-semibold uppercase tracking-widest text-fog px-1 mb-2">Team Members</h4>
+          {members.map(member => {
+            const initials = (member.name || '')
+              .split(' ')
+              .map((w: string) => w[0])
+              .join('')
+              .slice(0, 2)
+              .toUpperCase() || 'U';
+            return (
               <div
-                className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0"
-                style={{ backgroundColor: '#1A1F32', color: '#B8BDC7' }}
+                key={member.id}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-midnight border border-border"
               >
-                {initials}
+                <div
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0"
+                  style={{ backgroundColor: '#1A1F32', color: '#B8BDC7' }}
+                >
+                  {initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-ivory truncate">{member.name}</p>
+                  <p className="text-xs text-fog truncate">{member.email}</p>
+                </div>
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#8A9099' }}
+                >
+                  {roleLabels[member.role] ?? member.role}
+                </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-ivory truncate">{member.name}</p>
-                <p className="text-xs text-fog truncate">{member.email}</p>
-              </div>
-              <span
-                className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
-                style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#8A9099' }}
-              >
-                {roleLabels[member.role] ?? member.role}
-              </span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </Section>
   );
@@ -411,12 +423,11 @@ function NotificationsTab() {
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
-      <div className="space-y-2 max-w-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
         {prefs.map(pref => (
           <div
             key={pref.key}
-            className="flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-colors hover:bg-white/[0.02]"
-            style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+            className="flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-colors hover:bg-white/[0.02] bg-midnight border border-border"
             onClick={() => setEnabled(prev => ({ ...prev, [pref.key]: !prev[pref.key] }))}
           >
             <div className="flex-1 min-w-0">
@@ -458,45 +469,43 @@ function SecurityTab() {
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
-      <div className="space-y-6 max-w-md">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start w-full">
         {/* Change password */}
         <div
-          className="rounded-2xl p-5 space-y-3"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="rounded-2xl p-5 space-y-3 bg-midnight border border-border"
         >
           <p className="text-sm font-semibold text-ivory">{s.changePassword}</p>
           <SettingsField label={s.currentPassword}>
-            <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20" style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }} />
+            <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
           </SettingsField>
           <SettingsField label={s.newPassword}>
-            <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20" style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }} />
+            <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
           </SettingsField>
           <SettingsField label={s.confirmPassword}>
-            <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20" style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }} />
+            <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
           </SettingsField>
-          {pwError && <p className="text-xs" style={{ color: '#A86A6A' }}>{pwError}</p>}
-          <SaveButton label={pwSaved ? 'Updated.' : s.updatePassword} saved={pwSaved} onClick={handleUpdatePassword} />
+          {pwError && <p className="text-xs text-ember">{pwError}</p>}
+          <div className="pt-2">
+            <SaveButton label={pwSaved ? 'Updated.' : s.updatePassword} saved={pwSaved} onClick={handleUpdatePassword} />
+          </div>
         </div>
 
         {/* 2FA */}
         <div
-          className="rounded-2xl p-5 space-y-2"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="rounded-2xl p-5 space-y-2 bg-midnight border border-border"
         >
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-ivory">{s.twoFactor}</p>
             <span
-              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full"
-              style={{ backgroundColor: 'rgba(184,155,106,0.12)', color: '#B89B6A', border: '1px solid rgba(184,155,106,0.2)' }}
+              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-warm/10 text-warm border border-warm/20"
             >
               {s.comingSoon}
             </span>
           </div>
-          <p className="text-xs text-fog">{s.twoFactorDesc}</p>
+          <p className="text-xs text-fog leading-relaxed">{s.twoFactorDesc}</p>
           <button
             disabled
-            className="mt-2 h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed"
-            style={{ backgroundColor: '#1A1F32', color: '#B8BDC7', border: '1px solid rgba(255,255,255,0.08)' }}
+            className="mt-2 h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed bg-dusk text-silver border border-border"
           >
             {s.enable2fa}
           </button>
@@ -533,12 +542,12 @@ function SaveButton({ label, saved, onClick }: { label: string; saved: boolean; 
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 h-9 px-5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98]"
-      style={
+      className={cn(
+        "flex items-center gap-2 h-9 px-5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] border",
         saved
-          ? { backgroundColor: 'rgba(127,163,138,0.15)', color: '#7FA38A', border: '1px solid rgba(127,163,138,0.25)' }
-          : { backgroundColor: '#F5F1E8', color: '#0A0D14' }
-      }
+          ? "bg-sage/15 border-sage/20 text-sage"
+          : "bg-ivory border-transparent text-obsidian"
+      )}
     >
       {saved && <Check size={13} />}
       {label}
@@ -613,10 +622,10 @@ function PrivacyTab() {
 
   return (
     <Section title="Privacy & Data" subtitle="Manage your data and compliance settings.">
-      <div className="space-y-4 max-w-md">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start w-full">
+        {/* Left Column */}
         <div
-          className="rounded-2xl p-5 space-y-4"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="rounded-2xl p-5 space-y-4 bg-midnight border border-border"
         >
           <div>
             <p className="text-sm font-semibold text-ivory mb-0.5">Export your data</p>
@@ -625,41 +634,45 @@ function PrivacyTab() {
           <button
             onClick={handleExport}
             disabled={exporting || !workspaceId}
-            className="flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-medium transition-colors"
-            style={{ backgroundColor: exported ? 'rgba(127,163,138,0.15)' : 'rgba(255,255,255,0.05)', color: exported ? '#7FA38A' : '#B8BDC7', border: '1px solid rgba(255,255,255,0.08)' }}
+            className={cn(
+              "flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-medium transition-colors border",
+              exported
+                ? "bg-sage/15 border-sage/20 text-sage"
+                : "bg-dusk border-border text-silver"
+            )}
           >
             {exported ? <Check size={14} /> : <Download size={14} />}
             {exported ? 'Export downloaded' : exporting ? 'Preparing...' : 'Download JSON export'}
           </button>
         </div>
 
-        <div
-          className="rounded-2xl p-5 space-y-3"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
-        >
-          <p className="text-sm font-semibold text-ivory">Data retention</p>
-          <p className="text-xs text-fog leading-relaxed">
-            Your workspace data is retained indefinitely while your account is active.
-            Deleted records are permanently removed within 30 days.
-          </p>
-        </div>
-
-        <div
-          className="rounded-2xl p-5 space-y-3"
-          style={{ backgroundColor: 'rgba(168,106,106,0.05)', border: '1px solid rgba(168,106,106,0.2)' }}
-        >
-          <p className="text-sm font-semibold" style={{ color: '#A86A6A' }}>Delete workspace</p>
-          <p className="text-xs text-fog leading-relaxed">
-            Permanently delete your workspace and all associated data. This action cannot be undone.
-            Contact support to initiate account deletion.
-          </p>
-          <button
-            disabled
-            className="h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed"
-            style={{ backgroundColor: 'rgba(168,106,106,0.15)', color: '#A86A6A', border: '1px solid rgba(168,106,106,0.2)' }}
+        {/* Right Column */}
+        <div className="space-y-4 w-full">
+          <div
+            className="rounded-2xl p-5 space-y-3 bg-midnight border border-border"
           >
-            Request deletion
-          </button>
+            <p className="text-sm font-semibold text-ivory">Data retention</p>
+            <p className="text-xs text-fog leading-relaxed">
+              Your workspace data is retained indefinitely while your account is active.
+              Deleted records are permanently removed within 30 days.
+            </p>
+          </div>
+
+          <div
+            className="rounded-2xl p-5 space-y-3 bg-ember/5 border border-ember/20"
+          >
+            <p className="text-sm font-semibold text-ember">Delete workspace</p>
+            <p className="text-xs text-fog leading-relaxed">
+              Permanently delete your workspace and all associated data. This action cannot be undone.
+              Contact support to initiate account deletion.
+            </p>
+            <button
+              disabled
+              className="h-9 px-4 rounded-xl text-sm font-medium opacity-40 cursor-not-allowed bg-ember/15 text-ember border border-ember/20"
+            >
+              Request deletion
+            </button>
+          </div>
         </div>
       </div>
     </Section>
@@ -682,7 +695,7 @@ export default function AppSettings() {
   ];
 
   return (
-    <div className="max-w-3xl space-y-8">
+    <div className="max-w-7xl mx-auto w-full space-y-8">
       {/* Header */}
       <div>
         <TextAnimate text={s.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />

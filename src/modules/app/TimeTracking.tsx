@@ -189,8 +189,7 @@ export default function TimeTracking() {
         ] as Array<{ label: string; numericValue: number; format?: (n: number) => string; sub: string }>).map(kpi => (
           <div
             key={kpi.label}
-            className="rounded-xl p-4"
-            style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+            className="rounded-xl p-4 bg-midnight border border-border"
           >
             <p className="text-[10px] text-fog uppercase tracking-widest mb-1">{kpi.label}</p>
             <p className="text-2xl font-semibold text-ivory">
@@ -246,8 +245,7 @@ export default function TimeTracking() {
                   <span className="text-xs text-fog">{formatDuration(dayTotal)}</span>
                 </div>
                 <div
-                  className="rounded-xl overflow-hidden divide-y"
-                  style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.05)' }}
+                  className="rounded-xl overflow-hidden divide-y bg-midnight border border-border"
                 >
                   {dayEntries.map((entry: any) => (
                     <div key={entry._id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors group">

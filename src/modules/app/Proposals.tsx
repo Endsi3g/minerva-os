@@ -150,8 +150,7 @@ function ProposalForm({
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-2xl rounded-2xl flex flex-col max-h-[90vh]"
-        style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="w-full max-w-2xl rounded-2xl flex flex-col max-h-[90vh] bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-white/5">
@@ -163,23 +162,19 @@ function ProposalForm({
           {/* Title + client */}
           <div className="grid grid-cols-2 gap-3">
             <input value={title} onChange={e => setTitle(e.target.value)} placeholder={f.titlePlaceholder}
-              className="col-span-2 px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+              className="col-span-2 px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
             <select value={clientId} onChange={e => setClientId(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-              style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+              className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               <option value="">{f.selectClient}</option>
               {clients.map(c => <option key={c._id} value={c._id}>{c.company}</option>)}
             </select>
             <input type="number" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder={f.totalAmount}
-              className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+              className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
           </div>
 
           {/* Hermes AI Scoping Assistant */}
           <div 
-            className="rounded-xl border p-4 space-y-3"
-            style={{ backgroundColor: 'rgba(255,255,255,0.01)', borderColor: 'rgba(127,163,138,0.15)' }}
+            className="rounded-xl border p-4 space-y-3 bg-midnight border-sage/20"
           >
             <div className="flex items-center justify-between">
               <p className="text-[10px] text-sage uppercase tracking-widest font-semibold flex items-center gap-1.5">
@@ -192,8 +187,7 @@ function ProposalForm({
               onChange={e => setAiBrief(e.target.value)}
               placeholder="Enter general scoping details, budget requirements, and deliverables brief to draft all sections automatically..."
               rows={2}
-              className="w-full px-3 py-1.5 rounded-lg text-xs text-ivory placeholder:text-fog/50 outline-none resize-none"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+              className="w-full px-3 py-1.5 rounded-lg text-xs text-ivory placeholder:text-fog/50 outline-none resize-none bg-obsidian border border-border/40"
             />
             <div className="flex justify-end">
               <Button
@@ -270,8 +264,7 @@ function ProposalForm({
                 onChange={e => updateSection(s.type, e.target.value)}
                 rows={5}
                 placeholder={`Write ${sectionLabels[s.type]?.toLowerCase()}...`}
-                className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none bg-obsidian border border-border"
               />
             ))}
           </div>
@@ -429,8 +422,7 @@ export default function Proposals() {
             return (
               <div
                 key={proposal._id}
-                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-white/15"
-                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-white/15 bg-midnight border-border"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-ivory truncate">{proposal.title}</p>

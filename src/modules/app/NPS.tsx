@@ -125,8 +125,7 @@ function NPSForm({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl p-6 space-y-4"
-        style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -135,8 +134,7 @@ function NPSForm({
         </div>
         <div className="space-y-3">
           <select value={clientId} onChange={e => setClientId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-            style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
             <option value="">{f.clientPlaceholder}</option>
             {clients.map((c) => <option key={c._id} value={c._id}>{c.company}</option>)}
           </select>
@@ -163,8 +161,7 @@ function NPSForm({
           </div>
 
           <select value={trigger} onChange={e => setTrigger(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none"
-            style={{ background: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}>
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
             <option value="manual">{f.triggers.manual}</option>
             <option value="phase_complete">{f.triggers.phase_complete}</option>
             <option value="delivery">{f.triggers.delivery}</option>
@@ -172,11 +169,9 @@ function NPSForm({
           </select>
 
           <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder={f.reasonPlaceholder} rows={2}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none bg-obsidian border border-border" />
           <textarea value={suggestion} onChange={e => setSuggestion(e.target.value)} placeholder={f.suggestionPlaceholder} rows={2}
-            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none bg-obsidian border border-border" />
         </div>
         <div className="flex gap-2 pt-1">
           <button type="button" onClick={onClose} className="flex-1 py-2 text-xs text-fog hover:text-silver">{f.cancel}</button>
@@ -324,8 +319,7 @@ export default function NPSPage() {
             return (
               <div
                 key={r._id}
-                className="flex items-start sm:items-center gap-3 sm:gap-4 px-4 py-3 rounded-xl border flex-wrap sm:flex-nowrap"
-                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                className="flex items-start sm:items-center gap-3 sm:gap-4 px-4 py-3 rounded-xl border flex-wrap sm:flex-nowrap bg-midnight border-border"
               >
                 <div className={cn('text-2xl font-bold tabular-nums w-10 text-right', scoreColor(r.score))}>{r.score}</div>
                 <div className="flex-1 min-w-0">
