@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, RotateCcw, Palette, FileText, Video, File } from 'lucide-react';
+import { Check, RotateCcw, Palette, FileText, Video, File, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AnimatedNumber } from '@/components/ui/animated-number';
@@ -144,6 +144,18 @@ export default function Approvals() {
                           {new Date(approval.submittedDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
                         </p>
                       </div>
+
+                      {/* SLA badge */}
+                      {approval.sla_deadline && approval.status === 'pending' && (() => {
+                        const hoursLeft = Math.round((new Date(approval.sla_deadline).getTime() - Date.now()) / 3600000);
+                        const color = approval.sla_breached ? 'text-ember' : hoursLeft < 6 ? 'text-ember' : hoursLeft < 24 ? 'text-amber' : 'text-sage';
+                        return (
+                          <span className={cn('hidden sm:flex items-center gap-1 text-[10px] font-medium shrink-0', color)}>
+                            <Clock size={10} />
+                            {approval.sla_breached ? 'SLA breached' : `${hoursLeft}h`}
+                          </span>
+                        );
+                      })()}
 
                       {/* Type badge */}
                       <span className={cn('hidden sm:block text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0', type.class)}>

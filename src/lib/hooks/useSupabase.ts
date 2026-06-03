@@ -1186,3 +1186,368 @@ export function useUpdateUserProfile() {
     return data;
   };
 }
+
+// ── Phase 2.5 — Workflow Engine ───────────────────────────────────────────────
+
+export function mapWorkflow(db: any) {
+  if (!db) return null;
+  return {
+    id: db.id,
+    workspaceId: db.workspace_id,
+    name: db.name,
+    description: db.description,
+    isActive: db.is_active,
+    isTemplate: db.is_template,
+    triggerEvent: db.trigger_event,
+    triggerFilters: db.trigger_filters ?? {},
+    steps: (db.workflow_steps ?? []).map((s: any) => ({
+      id: s.id,
+      workflowId: s.workflow_id,
+      stepOrder: s.step_order,
+      stepType: s.step_type,
+      config: s.config ?? {},
+    })),
+    createdAt: db.created_at,
+    updatedAt: db.updated_at,
+  };
+}
+
+export function mapWorkflowRun(db: any) {
+  if (!db) return null;
+  return {
+    id: db.id,
+    workspaceId: db.workspace_id,
+    workflowId: db.workflow_id,
+    workflowName: db.workflows?.name,
+    triggerEvent: db.trigger_event,
+    entityType: db.entity_type,
+    entityId: db.entity_id,
+    status: db.status,
+    currentStep: db.current_step,
+    resumeAt: db.resume_at,
+    stepsLog: db.steps_log ?? [],
+    errorMessage: db.error_message,
+    startedAt: db.started_at,
+    completedAt: db.completed_at,
+  };
+}
+
+export function mapHandoff(db: any) {
+  if (!db) return null;
+  return {
+    id: db.id,
+    workspaceId: db.workspace_id,
+    projectId: db.project_id,
+    fromStage: db.from_stage,
+    toStage: db.to_stage,
+    status: db.status,
+    requiredFields: db.required_fields ?? [],
+    notes: db.notes,
+    signedOffBy: db.signed_off_by,
+    signedOffAt: db.signed_off_at,
+    createdAt: db.created_at,
+  };
+}
+
+export function mapProjectTemplate(db: any) {
+  if (!db) return null;
+  return {
+    id: db.id,
+    workspaceId: db.workspace_id,
+    name: db.name,
+    projectType: db.project_type,
+    description: db.description,
+    isBuiltin: db.is_builtin,
+    taskPacks: db.task_packs ?? [],
+    checklistItems: db.checklist_items ?? [],
+    requiredFields: db.required_fields ?? [],
+    slaDefaults: db.sla_defaults ?? {},
+    createdAt: db.created_at,
+  };
+}
+
+export function mapSLAPolicy(db: any) {
+  if (!db) return null;
+  return {
+    id: db.id,
+    workspaceId: db.workspace_id,
+    name: db.name,
+    responseTime: db.response_time,
+    resolutionTime: db.resolution_time,
+    priority: db.priority,
+  };
+}
+
+export function useWorkflows(workspaceId: string | null) {
+  const [workflows, setWorkflows] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+
+    async function fetch() {
+      const { data } = await supabase
+        .from('workflows')
+        .select('*, workflow_steps(*)')
+        .or(`workspace_id.eq.${workspaceId},workspace_id.is.null`)
+        .order('created_at', { ascending: false });
+      setWorkflows((data ?? []).map(mapWorkflow));
+    }
+    fetch();
+
+    const channel = supabase
+      .channel(`workflows-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'workflows' }, fetch)
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, [workspaceId]);
+
+  return workflows;
+}
+
+export function useWorkflowRuns(workspaceId: string | null, limit = 20) {
+  const [runs, setRuns] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+
+    async function fetch() {
+      const { data } = await supabase
+        .from('workflow_runs')
+        .select('*, workflows(name)')
+        .eq('workspace_id', workspaceId)
+        .order('started_at', { ascending: false })
+        .limit(limit);
+      setRuns((data ?? []).map(mapWorkflowRun));
+    }
+    fetch();
+
+    const channel = supabase
+      .channel(`workflow-runs-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'workflow_runs',
+        filter: `workspace_id=eq.${workspaceId}` }, fetch)
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, [workspaceId, limit]);
+
+  return runs;
+}
+
+export function useHandoffs(workspaceId: string | null, projectId?: string) {
+  const [handoffs, setHandoffs] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+
+    async function fetch() {
+      let q = supabase
+        .from('handoffs')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: false });
+      if (projectId) q = q.eq('project_id', projectId);
+      const { data } = await q;
+      setHandoffs((data ?? []).map(mapHandoff));
+    }
+    fetch();
+
+    const channel = supabase
+      .channel(`handoffs-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'handoffs',
+        filter: `workspace_id=eq.${workspaceId}` }, fetch)
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, [workspaceId, projectId]);
+
+  return handoffs;
+}
+
+export function useProjectTemplates() {
+  const [templates, setTemplates] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    async function fetch() {
+      const { data } = await supabase
+        .from('project_templates')
+        .select('*')
+        .is('workspace_id', null)
+        .order('created_at');
+      setTemplates((data ?? []).map(mapProjectTemplate));
+    }
+    fetch();
+  }, []);
+
+  return templates;
+}
+
+export function useSLAPolicies(workspaceId: string | null) {
+  const [policies, setPolicies] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+
+    async function fetch() {
+      const { data } = await supabase
+        .from('sla_policies')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('priority');
+      setPolicies((data ?? []).map(mapSLAPolicy));
+    }
+    fetch();
+  }, [workspaceId]);
+
+  return policies;
+}
+
+export function useProjectDependencies(workspaceId: string | null, projectId: string | null) {
+  const [deps, setDeps] = useState<{ tasks: any[]; approvals: any[]; invoices: any[]; deals: any[] } | null>(null);
+
+  useEffect(() => {
+    if (!workspaceId || !projectId) return;
+
+    async function fetch() {
+      const [tasksRes, approvalsRes, invoicesRes, dealsRes] = await Promise.all([
+        supabase.from('tasks').select('id,title,status,priority,assignee,due_date').eq('workspace_id', workspaceId).eq('project_id', projectId).order('due_date'),
+        supabase.from('approvals').select('id,name,status,type,sla_deadline,sla_breached').eq('workspace_id', workspaceId).eq('project_id', projectId),
+        supabase.from('invoices').select('id,invoice_number,amount,status,due_date').eq('workspace_id', workspaceId).eq('project_id', projectId),
+        supabase.from('deals').select('id,company,stage,value').eq('workspace_id', workspaceId),
+      ]);
+      setDeps({
+        tasks: tasksRes.data ?? [],
+        approvals: approvalsRes.data ?? [],
+        invoices: invoicesRes.data ?? [],
+        deals: dealsRes.data ?? [],
+      });
+    }
+    fetch();
+  }, [workspaceId, projectId]);
+
+  return deps;
+}
+
+export function useAddWorkflow() {
+  return async (args: { workspaceId: string; name: string; description?: string; triggerEvent: string; triggerFilters?: Record<string, unknown>; steps: Array<{ stepOrder: number; stepType: string; config: Record<string, unknown> }> }) => {
+    const { data, error } = await supabase
+      .from('workflows')
+      .insert({
+        workspace_id: args.workspaceId,
+        name: args.name,
+        description: args.description,
+        trigger_event: args.triggerEvent,
+        trigger_filters: args.triggerFilters ?? {},
+        is_active: true,
+        is_template: false,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    if (args.steps.length > 0) {
+      const { error: stepsError } = await supabase
+        .from('workflow_steps')
+        .insert(args.steps.map(s => ({
+          workflow_id: data.id,
+          step_order: s.stepOrder,
+          step_type: s.stepType,
+          config: s.config,
+        })));
+      if (stepsError) throw stepsError;
+    }
+
+    return mapWorkflow(data);
+  };
+}
+
+export function useUpdateWorkflow() {
+  return async (args: { id: string; name?: string; description?: string; isActive?: boolean; steps?: Array<{ stepOrder: number; stepType: string; config: Record<string, unknown> }> }) => {
+    const updates: any = {};
+    if (args.name !== undefined) updates.name = args.name;
+    if (args.description !== undefined) updates.description = args.description;
+    if (args.isActive !== undefined) updates.is_active = args.isActive;
+    updates.updated_at = new Date().toISOString();
+
+    const { error } = await supabase.from('workflows').update(updates).eq('id', args.id);
+    if (error) throw error;
+
+    if (args.steps) {
+      await supabase.from('workflow_steps').delete().eq('workflow_id', args.id);
+      if (args.steps.length > 0) {
+        await supabase.from('workflow_steps').insert(args.steps.map(s => ({
+          workflow_id: args.id,
+          step_order: s.stepOrder,
+          step_type: s.stepType,
+          config: s.config,
+        })));
+      }
+    }
+  };
+}
+
+export function useDeleteWorkflow() {
+  return async (id: string) => {
+    const { error } = await supabase.from('workflows').delete().eq('id', id);
+    if (error) throw error;
+  };
+}
+
+export function useAddHandoff() {
+  return async (args: { workspaceId: string; projectId: string; fromStage: string; toStage: string; requiredFields: Array<{ field: string; label: string; satisfied: boolean }> }) => {
+    const { data, error } = await supabase
+      .from('handoffs')
+      .insert({
+        workspace_id: args.workspaceId,
+        project_id: args.projectId,
+        from_stage: args.fromStage,
+        to_stage: args.toStage,
+        required_fields: args.requiredFields,
+        status: 'pending',
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return mapHandoff(data);
+  };
+}
+
+export function useUpdateHandoff() {
+  return async (args: { id: string; status?: string; requiredFields?: any[]; notes?: string; signedOffBy?: string }) => {
+    const updates: any = {};
+    if (args.status !== undefined) updates.status = args.status;
+    if (args.requiredFields !== undefined) updates.required_fields = args.requiredFields;
+    if (args.notes !== undefined) updates.notes = args.notes;
+    if (args.signedOffBy !== undefined) { updates.signed_off_by = args.signedOffBy; updates.signed_off_at = new Date().toISOString(); }
+
+    const { error } = await supabase.from('handoffs').update(updates).eq('id', args.id);
+    if (error) throw error;
+  };
+}
+
+export function useAddSLAPolicy() {
+  return async (args: { workspaceId: string; name: string; priority: string; responseTime: number; resolutionTime: number }) => {
+    const { data, error } = await supabase
+      .from('sla_policies')
+      .insert({ workspace_id: args.workspaceId, name: args.name, priority: args.priority, response_time: args.responseTime, resolution_time: args.resolutionTime })
+      .select().single();
+    if (error) throw error;
+    return mapSLAPolicy(data);
+  };
+}
+
+export function useUpdateSLAPolicy() {
+  return async (args: { id: string; name?: string; responseTime?: number; resolutionTime?: number }) => {
+    const updates: any = {};
+    if (args.name !== undefined) updates.name = args.name;
+    if (args.responseTime !== undefined) updates.response_time = args.responseTime;
+    if (args.resolutionTime !== undefined) updates.resolution_time = args.resolutionTime;
+    const { error } = await supabase.from('sla_policies').update(updates).eq('id', args.id);
+    if (error) throw error;
+  };
+}
+
+export function useDeleteSLAPolicy() {
+  return async (id: string) => {
+    const { error } = await supabase.from('sla_policies').delete().eq('id', id);
+    if (error) throw error;
+  };
+}

@@ -29,6 +29,7 @@ import {
   ChevronDown,
   HelpCircle,
   History,
+  GitPullRequest,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -111,6 +112,7 @@ const navGroups: NavGroup[] = [
     labelKey: 'opsGroup',
     icon: Settings,
     items: [
+      { href: '/app/workflows',      icon: GitPullRequest, labelKey: 'workflows' },
       { href: '/app/services',      icon: BookOpen,    labelKey: 'serviceCatalog' },
       { href: '/app/time-tracking', icon: Clock,       labelKey: 'timeTracking' },
       { href: '/app/tickets',       icon: Headphones,  labelKey: 'tickets' },

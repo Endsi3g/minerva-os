@@ -1,6 +1,9 @@
 {
   "framework": "nextjs",
   "regions": ["cdg1"],
+  "crons": [
+    { "path": "/api/workflow/tick", "schedule": "*/15 * * * *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { FolderKanban, CheckSquare, ClipboardCheck, DollarSign, AlertTriangle, X, ChevronRight, Flame, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
+import { FolderKanban, CheckSquare, ClipboardCheck, DollarSign, AlertTriangle, X, ChevronRight, Flame, RefreshCw, Sparkles, Loader2, GitPullRequest } from 'lucide-react';
 import { GettingStartedChecklist } from '@/components/minerva/GettingStartedChecklist';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWorkspaces, useProjects, useInvoices, useApprovals, useDeals, useTasks, useActivity } from '@/lib/hooks/useSupabase';
+import { useWorkspaces, useProjects, useInvoices, useApprovals, useDeals, useTasks, useActivity, useWorkflowRuns, useHandoffs } from '@/lib/hooks/useSupabase';
 import { AgentSuggestions } from '@/components/agents/AgentSuggestions';
 import { motion } from 'motion/react';
 import type { Translations } from '@/i18n';
@@ -568,6 +568,8 @@ export default function Dashboard() {
   const approvals = useApprovals(workspaceId);
   const deals = useDeals(workspaceId);
   const tasks = useTasks(workspaceId);
+  const workflowRuns = useWorkflowRuns(workspaceId ?? null, 50);
+  const handoffs = useHandoffs(workspaceId ?? null);
 
   const isLoading = workspaces === null || projects === null || invoices === null || approvals === null || deals === null || tasks === null;
 
@@ -585,11 +587,15 @@ export default function Dashboard() {
         .reduce((acc: any, i: any) => acc + i.amount, 0)
     : 0;
 
+  const activeWorkflowRunsCount = workflowRuns ? workflowRuns.filter((r: any) => r.status === 'running').length : 0;
+  const pendingHandoffsCount = handoffs ? handoffs.filter((h: any) => h.status === 'pending').length : 0;
+
   const kpis = [
     { label: d.kpis.activeProjects, numericValue: activeProjectsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage', spotlight: 'spotlight-sage' },
     { label: d.kpis.openTasks, numericValue: openTasksCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.openTasksDelta, icon: CheckSquare, color: 'text-warm', spotlight: 'spotlight-amber' },
     { label: d.kpis.pendingApprovals, numericValue: pendingApprovalsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.pendingApprovalsDelta, icon: ClipboardCheck, color: 'text-ember', spotlight: 'spotlight-rose' },
     { label: d.kpis.revenueMtd, numericValue: revenueMtd / 1000, format: (n: number) => `$${n.toFixed(1)}k`, delta: d.kpis.revenueMtdDelta, icon: DollarSign, color: 'text-silver', spotlight: 'spotlight-amber' },
+    { label: 'Active Workflows', numericValue: activeWorkflowRunsCount, format: (n: number) => String(Math.round(n)), delta: `${pendingHandoffsCount} handoffs pending`, icon: GitPullRequest, color: 'text-sage', spotlight: 'spotlight-sage' },
   ];
 
   const quickActions = [
@@ -709,7 +715,7 @@ export default function Dashboard() {
               )}
 
               {/* KPI Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {kpis.map((kpi, index) => (
                   <motion.div
                     key={kpi.label}

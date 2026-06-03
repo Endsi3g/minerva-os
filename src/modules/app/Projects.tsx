@@ -188,8 +188,8 @@ export default function Projects() {
   async function handleAdd() {
     if (!form.name.trim() || !form.clientId) return;
     const client = clients?.find((c: any) => c._id === form.clientId);
-    
-    await createProject({
+
+    const project = await createProject({
       workspaceId: workspaceId!,
       name: form.name.trim(),
       clientName: client?.company ?? '',
@@ -197,7 +197,21 @@ export default function Projects() {
       dueDate: form.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       budget: parseFloat(form.budget) || 0,
     });
-    
+
+    if (project?.id && workspaceId) {
+      fetch('/api/workflow/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'project_created',
+          entityType: 'project',
+          entityId: project.id,
+          workspaceId,
+          context: { projectId: project.id, projectName: project.name, clientName: client?.company ?? '' },
+        }),
+      }).catch(() => null);
+    }
+
     setSheetOpen(false);
     setForm(EMPTY_FORM);
   }
