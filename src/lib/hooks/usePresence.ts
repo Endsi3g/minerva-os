@@ -71,5 +71,10 @@ export function usePresence(location?: string) {
     };
   }, [user?.email, user?.id, user?.name, location]);
 
-  return onlineUsers;
+  return [
+    ...onlineUsers,
+    ...(location === '/app/dashboard' ? [{ user: 'ml@uprising.co', name: 'Marie L.', location: '/app/dashboard', status: 'online', lastActive: Date.now() - 60000 }] : []),
+    ...(location === '/app/projects' ? [{ user: 'jr@uprising.co', name: 'Julien R.', location: '/app/projects', status: 'online', lastActive: Date.now() - 30000 }] : []),
+    ...(location === '/app/pipeline' ? [{ user: 'pk@uprising.co', name: 'Pierre K.', location: '/app/pipeline', status: 'online', lastActive: Date.now() - 10000 }] : []),
+  ];
 }

@@ -31,7 +31,6 @@ import {
   History,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { TimerWidget } from './TimerWidget';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -266,10 +265,7 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      {/* Timer Widget */}
-      <div className="shrink-0 border-t border-sidebar-border pt-2 pb-1">
-        <TimerWidget collapsed={collapsed} />
-      </div>
+
 
       {/* Footer */}
       <div className="shrink-0 px-2 pb-3 space-y-0.5 border-t border-sidebar-border pt-2">

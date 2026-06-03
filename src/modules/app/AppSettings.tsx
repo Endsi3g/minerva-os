@@ -440,14 +440,20 @@ function SecurityTab() {
   const [pwError, setPwError] = useState('');
   const [pwSaved, setPwSaved] = useState(false);
 
-  function handleUpdatePassword() {
+  async function handleUpdatePassword() {
     if (!currentPw || !newPw || !confirmPw) { setPwError('All fields are required.'); return; }
     if (newPw !== confirmPw) { setPwError('New passwords do not match.'); return; }
     if (newPw.length < 8) { setPwError('Password must be at least 8 characters.'); return; }
     setPwError('');
-    setPwSaved(true);
-    setCurrentPw(''); setNewPw(''); setConfirmPw('');
-    setTimeout(() => setPwSaved(false), 2500);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPw });
+      if (error) throw error;
+      setPwSaved(true);
+      setCurrentPw(''); setNewPw(''); setConfirmPw('');
+      setTimeout(() => setPwSaved(false), 2500);
+    } catch (err: any) {
+      setPwError(err.message || 'Failed to update password.');
+    }
   }
 
   return (

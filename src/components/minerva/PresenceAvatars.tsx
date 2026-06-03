@@ -15,7 +15,9 @@ export function PresenceAvatars() {
   return (
     <div className="flex -space-x-2 overflow-hidden items-center mr-4">
       {activeUsers.map((presence: any) => {
-        const initials = presence.user.slice(0, 2).toUpperCase();
+        const initials = presence.name
+          ? presence.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+          : presence.user.slice(0, 2).toUpperCase();
         return (
           <Tooltip key={presence.user}>
             <TooltipTrigger asChild>
@@ -26,7 +28,7 @@ export function PresenceAvatars() {
               </Avatar>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">{presence.user} · {t.app.collaboration.presenceStatus}</p>
+              <p className="text-xs">{presence.name || presence.user} · {t.app.collaboration.presenceStatus}</p>
             </TooltipContent>
           </Tooltip>
         );

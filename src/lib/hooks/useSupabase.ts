@@ -193,7 +193,10 @@ export function useClients(workspaceId: string | undefined | null) {
   const [clients, setClients] = useState<any[] | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) { return; }
+    if (!workspaceId) {
+      setClients([]);
+      return;
+    }
     if (workspaceId === MOCK_WS_ID) {
       setClients(MOCK_CLIENTS.map(c => ({
         _id: c.id, id: c.id, workspaceId,
@@ -243,7 +246,10 @@ export function useProjects(workspaceId: string | undefined | null) {
   const [projects, setProjects] = useState<any[] | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) { return; }
+    if (!workspaceId) {
+      setProjects([]);
+      return;
+    }
     if (workspaceId === MOCK_WS_ID) {
       setProjects(MOCK_PROJECTS.map(p => ({
         _id: p.id, id: p.id, workspaceId,
@@ -302,7 +308,10 @@ export function useTasks(
   const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
-    if (!workspaceId) { return; }
+    if (!workspaceId) {
+      setTasks([]);
+      return;
+    }
     if (workspaceId === MOCK_WS_ID) {
       const filtered = projectId
         ? MOCK_TASKS.filter(t => t.projectId === projectId)
@@ -376,7 +385,10 @@ export function useDeals(workspaceId: string | undefined | null) {
   const [deals, setDeals] = useState<any[] | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) { return; }
+    if (!workspaceId) {
+      setDeals([]);
+      return;
+    }
     if (workspaceId === MOCK_WS_ID) {
       setDeals(MOCK_LEADS.map(l => ({
         _id: l.id, id: l.id, workspaceId,
@@ -431,7 +443,10 @@ export function useInvoices(
   const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
-    if (!workspaceId) { return; }
+    if (!workspaceId) {
+      setInvoices([]);
+      return;
+    }
     if (workspaceId === MOCK_WS_ID) {
       let mapped = MOCK_INVOICES.map(i => ({
         _id: i.id, id: i.id, workspaceId,
@@ -506,6 +521,7 @@ export function useRetainers(workspaceId: string | undefined | null) {
 
   useEffect(() => {
     if (!workspaceId) {
+      setRetainers([]);
       return;
     }
 
@@ -550,6 +566,7 @@ export function useFinances(workspaceId: string | undefined | null) {
 
   useEffect(() => {
     if (!workspaceId) {
+      setFinances([]);
       return;
     }
 
@@ -603,6 +620,11 @@ export function useApprovals(workspaceId?: string | undefined | null) {
       return;
     }
 
+    if (!workspaceId) {
+      setApprovals([]);
+      return;
+    }
+
     let active = true;
 
     async function fetchApprovals() {
@@ -644,6 +666,7 @@ export function useActivity(workspaceId: string | undefined | null) {
 
   useEffect(() => {
     if (!workspaceId) {
+      setActivity([]);
       return;
     }
 

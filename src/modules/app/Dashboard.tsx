@@ -178,8 +178,7 @@ function DailyBriefing({ context, labels }: {
   return (
     <Expandable expanded={expanded} onToggle={() => setExpanded(!expanded)}>
       <div
-        className="rounded-xl p-4 border relative group overflow-hidden transition-all duration-300"
-        style={{ background: 'linear-gradient(135deg, #111522 0%, #141926 100%)', borderColor: 'rgba(127,163,138,0.15)' }}
+        className="rounded-md p-4 border border-border relative group overflow-hidden transition-all duration-300 bg-card shadow-none"
       >
         <TextureOverlay texture="dots" opacity={0.12} />
         <div className="flex items-center justify-between mb-3 relative z-10">
@@ -291,7 +290,7 @@ function FirefighterView({ flags, dismissed, onDismiss, onNavigate, labels, work
   return (
     <div className="space-y-6">
       {/* Strategic Audit Trigger */}
-      <div className="rounded-xl border border-white/5 bg-midnight/35 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="rounded-md border border-border bg-card p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-none">
         <div>
           <h3 className="text-sm font-semibold text-ivory flex items-center gap-2">
             <Sparkles size={14} className="text-sage animate-pulse" />
@@ -305,7 +304,7 @@ function FirefighterView({ flags, dismissed, onDismiss, onNavigate, labels, work
           onClick={runAudit} 
           disabled={auditing || !workspaceId}
           size="sm"
-          className="shrink-0"
+          className="shrink-0 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-all px-4 h-9 text-xs font-semibold"
         >
           {auditing ? (
             <>
@@ -337,7 +336,7 @@ function FirefighterView({ flags, dismissed, onDismiss, onNavigate, labels, work
           className="grid grid-cols-1 lg:grid-cols-3 gap-5"
         >
           {/* Health Score Gauge */}
-          <div className="bg-card border border-border p-5 rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden">
+          <div className="bg-card border border-border p-5 rounded-md flex flex-col items-center justify-center text-center relative overflow-hidden">
             <div className="absolute top-2 right-2">
               <span className="text-[9px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded-full">AUDIT REPORT</span>
             </div>
@@ -369,7 +368,7 @@ function FirefighterView({ flags, dismissed, onDismiss, onNavigate, labels, work
           </div>
 
           {/* Strategic Findings list */}
-          <div className="lg:col-span-2 bg-card border border-border p-5 rounded-xl flex flex-col justify-between">
+          <div className="lg:col-span-2 bg-card border border-border p-5 rounded-md flex flex-col justify-between">
             <div>
               <h4 className="text-xs font-semibold text-ivory uppercase tracking-wider mb-3">Strategic Findings</h4>
               {auditResult.findings.length === 0 ? (
@@ -558,6 +557,12 @@ export default function Dashboard() {
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?._id;
 
+  useEffect(() => {
+    if (workspaces !== null && workspaces.length === 0) {
+      router.replace('/app/onboarding/discover');
+    }
+  }, [workspaces, router]);
+
   const projects = useProjects(workspaceId);
   const invoices = useInvoices(workspaceId);
   const approvals = useApprovals(workspaceId);
@@ -612,10 +617,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-7xl mx-auto w-full px-4">
       {/* Premium Dashboard Banner */}
       <motion.div
-        className="relative h-48 sm:h-56 w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl group"
+        className="relative h-48 sm:h-56 w-full rounded-md overflow-hidden border border-border group"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -709,7 +714,7 @@ export default function Dashboard() {
                     transition={{ delay: index * 0.1, duration: 0.4 }}
                   >
                     <ShiftCard
-                      className="glass-card border-white/10 bg-[#111522]"
+                      className="border border-border bg-card rounded-md shadow-none"
                       topContent={
                         <div className="flex items-center justify-between w-full">
                           <span className="text-[10px] sm:text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</span>
@@ -734,7 +739,7 @@ export default function Dashboard() {
 
               {/* Activity feed + quick actions */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 glass-card border-white/10 bg-midnight">
+                <Card className="lg:col-span-2 border border-border bg-card rounded-md shadow-none">
                   <CardHeader>
                     <CardTitle><TextAnimate text={d.recentActivity} type="fadeIn" className="text-sm font-bold text-ivory" /></CardTitle>
                   </CardHeader>
@@ -743,7 +748,7 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="glass-card border-white/10 bg-midnight">
+                <Card className="border border-border bg-card rounded-md shadow-none">
                   <CardHeader>
                     <CardTitle><TextAnimate text={d.quickActions} type="fadeIn" className="text-sm font-bold text-ivory" /></CardTitle>
                   </CardHeader>
@@ -752,7 +757,7 @@ export default function Dashboard() {
                       <button
                         key={action.label}
                         onClick={() => router.push(action.to)}
-                        className="w-full text-left text-sm px-3 py-2 rounded-lg text-silver hover:bg-white/5 hover:text-ivory transition-all duration-300 flex items-center justify-between group"
+                        className="w-full text-left text-xs py-3 border-b border-border text-silver hover:text-ivory transition-all duration-200 flex items-center justify-between group cursor-pointer"
                       >
                         {action.label}
                         <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />

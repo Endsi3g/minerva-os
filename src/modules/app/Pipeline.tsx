@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TextAnimate } from '@/components/ui/text-animate';
@@ -85,11 +86,18 @@ const EMPTY_FORM: NewDealForm = {
 };
 
 export default function Pipeline() {
+  const router = useRouter();
   const { t, lang } = useLang();
   const p = t.app.pipeline;
   
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?.id;
+
+  useEffect(() => {
+    if (workspaces !== null && workspaces.length === 0) {
+      router.replace('/app/onboarding/discover');
+    }
+  }, [workspaces, router]);
 
   const leads = useDeals(workspaceId);
   const addDeal = useAddDeal();
@@ -232,7 +240,12 @@ export default function Pipeline() {
               .replace('{{total}}', fmt(localLeads ? localLeads.reduce((s: number, l: any) => s + l.value, 0) : 0, lang))}
           </p>
         </div>
-        <Button size="sm" onClick={() => openSheet('new_lead')} id="btn-new-deal">
+        <Button 
+          size="sm" 
+          onClick={() => openSheet('new_lead')} 
+          id="btn-new-deal"
+          className="bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-all font-semibold px-4 h-9 text-xs"
+        >
           <Plus size={14} />
           {p.addDeal}
         </Button>
@@ -252,8 +265,8 @@ export default function Pipeline() {
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, stage.id)}
                 className={cn(
-                  'flex flex-col shrink-0 w-64 rounded-xl border p-3 gap-2 transition-colors',
-                  (STAGE_STYLE as any)[stage.id] ?? 'border-border bg-card/50'
+                  'flex flex-col shrink-0 w-64 rounded-md border p-3 gap-2 transition-colors',
+                  (STAGE_STYLE as any)[stage.id] ?? 'border-border bg-card/40'
                 )}
               >
                 {/* Column header */}

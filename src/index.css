@@ -12,24 +12,24 @@
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
 
   /* Named palette — use bg-obsidian, text-ivory, etc. */
-  --color-obsidian:   #0A0D14;
-  --color-midnight:   #111522;
-  --color-dusk:       #171C2A;
-  --color-ivory:      #F5F1E8;
-  --color-silver:     #B8BDC7;
-  --color-fog:        #9FA8B5;
+  --color-obsidian:   var(--obsidian);
+  --color-midnight:   var(--midnight);
+  --color-dusk:       var(--dusk);
+  --color-ivory:      var(--ivory);
+  --color-silver:     var(--silver);
+  --color-fog:        var(--fog);
   --color-sage:       #7FA38A;
   --color-warm:       #B89B6A;
   --color-ember:      #A86A6A;
   --color-brand-gray: #1A1A1A;
 
   /* Extended palette — light/dark editorial system */
-  --color-void:       #0A0D14;  /* outermost dark frame, always dark */
-  --color-near-black: #141413;  /* editorial foreground in light mode */
-  --color-parchment:  #F5F1E8;  /* warm ivory for text on dark surfaces */
-  --color-terracotta: #c96442;  /* brand accent — warm orange-red */
-  --color-clay:       #8B7355;  /* warm earthy brown for borders/accents */
-  --color-mist:       #D8DDE6;  /* cool light gray for accent highlights */
+  --color-void:       var(--void);  /* outermost dark frame */
+  --color-near-black: #030303;  /* editorial foreground in light mode */
+  --color-parchment:  #ffffff;  /* warm ivory for text on dark surfaces */
+  --color-terracotta: #000000;  /* brand accent — pure black */
+  --color-clay:       #676f7b;  /* slate grey */
+  --color-mist:       #e7eaf0;  /* hairline divider colour */
 
   /* Antigravity Tokens */
   --shadow-floating:    0 20px 40px rgba(0, 0, 0, 0.05);
@@ -76,68 +76,86 @@
 @layer base {
   /* ── CSS token values ─────────────────────────────────────────────────── */
   :root {
-    --background:               #f5f4ed;
-    --foreground:               #141413;
+    --background:               #ffffff;
+    --foreground:               #030303;
     --card:                     #ffffff;
-    --card-foreground:          #141413;
+    --card-foreground:          #030303;
     --popover:                  #ffffff;
-    --popover-foreground:       #141413;
-    --primary:                  #c96442;
+    --popover-foreground:       #030303;
+    --primary:                  #000000;
     --primary-foreground:       #ffffff;
-    --secondary:                #e8e6da;
-    --secondary-foreground:     #141413;
-    --muted:                    #e8e6da;
-    --muted-foreground:         #6b7280;
-    --accent:                   #e8e6da;
-    --accent-foreground:        #c96442;
-    --destructive:              #A86A6A;
+    --secondary:                #fefefe;
+    --secondary-foreground:     #1a1a1a;
+    --muted:                    #e7eaf0;
+    --muted-foreground:         #676f7b;
+    --accent:                   #e7eaf0;
+    --accent-foreground:        #000000;
+    --destructive:              #a86a6a;
     --destructive-foreground:   #ffffff;
-    --border:                   rgba(20, 20, 19, 0.1);
+    --border:                   #e7eaf0;
     --input:                    #ffffff;
-    --ring:                     rgba(201, 100, 66, 0.2);
-    --radius:                   1rem;
+    --ring:                     rgba(0, 0, 0, 0.1);
+    --radius:                   0.5rem;
+
+    /* RunwayML light variables */
+    --obsidian:                 #ffffff;
+    --midnight:                 #ffffff;
+    --dusk:                     #fefefe;
+    --ivory:                    #030303;
+    --silver:                   #404040;
+    --fog:                      #676f7b;
+    --void:                     #ffffff;
 
     /* Sidebar — warm gray */
-    --sidebar:                        #f0ede4;
-    --sidebar-foreground:             #2a2a28;
-    --sidebar-primary:                #c96442;
+    --sidebar:                        #fefefe;
+    --sidebar-foreground:             #1a1a1a;
+    --sidebar-primary:                #000000;
     --sidebar-primary-foreground:     #ffffff;
-    --sidebar-accent:                 rgba(201, 100, 66, 0.05);
-    --sidebar-accent-foreground:      #c96442;
-    --sidebar-border:                 rgba(20, 20, 19, 0.05);
-    --sidebar-ring:                   rgba(201, 100, 66, 0.2);
+    --sidebar-accent:                 #e7eaf0;
+    --sidebar-accent-foreground:      #000000;
+    --sidebar-border:                 #e7eaf0;
+    --sidebar-ring:                   rgba(0, 0, 0, 0.1);
   }
 
   /* ── Dark mode (Celestial Editorial Noir) ─────────────────────────────── */
   .dark {
-    --background:               #0A0D14;
-    --foreground:               #F5F1E8;
-    --card:                     #111522;
-    --card-foreground:          #F5F1E8;
-    --popover:                  #111522;
-    --popover-foreground:       #F5F1E8;
-    --primary:                  #F5F1E8;
-    --primary-foreground:       #0A0D14;
-    --secondary:                #171C2A;
-    --secondary-foreground:     #B8BDC7;
-    --muted:                    #171C2A;
-    --muted-foreground:         #9FA8B5;
-    --accent:                   #171C2A;
-    --accent-foreground:        #7FA38A;
-    --destructive:              #A86A6A;
-    --destructive-foreground:   #F5F1E8;
+    --background:               #030303;
+    --foreground:               #ffffff;
+    --card:                     #0a0a0a;
+    --card-foreground:          #ffffff;
+    --popover:                  #0a0a0a;
+    --popover-foreground:       #ffffff;
+    --primary:                  #ffffff;
+    --primary-foreground:       #000000;
+    --secondary:                #1a1a1a;
+    --secondary-foreground:     #e7eaf0;
+    --muted:                    #1a1a1a;
+    --muted-foreground:         #939393;
+    --accent:                   #1a1a1a;
+    --accent-foreground:        #ffffff;
+    --destructive:              #a86a6a;
+    --destructive-foreground:   #ffffff;
     --border:                   rgba(255, 255, 255, 0.08);
-    --input:                    #111522;
-    --ring:                     rgba(127, 163, 138, 0.3);
+    --input:                    #0a0a0a;
+    --ring:                     rgba(255, 255, 255, 0.15);
 
-    --sidebar:                        #0A0D14;
-    --sidebar-foreground:             #B8BDC7;
-    --sidebar-primary:                #F5F1E8;
-    --sidebar-primary-foreground:     #0A0D14;
-    --sidebar-accent:                 rgba(255, 255, 255, 0.05);
-    --sidebar-accent-foreground:      #7FA38A;
+    /* RunwayML dark variables */
+    --obsidian:                 #030303;
+    --midnight:                 #0a0a0a;
+    --dusk:                     #1a1a1a;
+    --ivory:                    #ffffff;
+    --silver:                   #e7eaf0;
+    --fog:                      #939393;
+    --void:                     #030303;
+
+    --sidebar:                        #030303;
+    --sidebar-foreground:             #e7eaf0;
+    --sidebar-primary:                #ffffff;
+    --sidebar-primary-foreground:     #000000;
+    --sidebar-accent:                 #1a1a1a;
+    --sidebar-accent-foreground:      #ffffff;
     --sidebar-border:                 rgba(255, 255, 255, 0.08);
-    --sidebar-ring:                   rgba(127, 163, 138, 0.3);
+    --sidebar-ring:                   rgba(255, 255, 255, 0.15);
   }
 
   body {

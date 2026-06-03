@@ -29,7 +29,7 @@ export function DealCard({ lead, onEdit, onDragStart }: DealCardProps) {
       draggable
       onDragStart={onDragStart}
       onClick={onEdit}
-      className="bg-card border-border rounded-xl p-4 space-y-3 cursor-pointer hover:border-white/15 hover:bg-dusk/40 transition-colors select-none active:opacity-50 shadow-none"
+      className="bg-card border border-border rounded-md p-4 space-y-3 cursor-pointer hover:bg-secondary/40 transition-all select-none active:opacity-50 shadow-none"
     >
       {/* Company + value */}
       <div className="flex items-start justify-between gap-2">
