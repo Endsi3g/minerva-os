@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validatePortalToken, logPortalActivity } from '@/lib/portal-auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS, MOCK_APPROVALS, MOCK_FILES, MOCK_INVOICES, MOCK_MILESTONES } from '@/lib/mock-data';
+import { MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS, MOCK_APPROVALS, MOCK_FILES, MOCK_INVOICES, MOCK_MILESTONES, MOCK_PROPOSALS } from '@/lib/mock-data';
 
 export async function GET(request: Request) {
   try {
@@ -40,6 +40,7 @@ export async function GET(request: Request) {
     let dbInvoices: any[] = [];
     let dbMilestones: any[] = [];
     let dbTickets: any[] = [];
+    let dbProposals: any[] = [];
 
     let isMock = true;
 
@@ -167,6 +168,17 @@ export async function GET(request: Request) {
           );
         }
 
+        if (scopes.includes('proposals')) {
+          fetches.push(
+            supabaseAdmin
+              .from('proposals')
+              .select('*')
+              .eq('client_id', clientId)
+              .order('created_at', { ascending: false })
+              .then(({ data }) => { dbProposals = data || []; })
+          );
+        }
+
         await Promise.all(fetches);
       } catch (e) {
         console.warn('Failed to query scoped tables from Supabase, falling back to mock:', e);
@@ -226,6 +238,10 @@ export async function GET(request: Request) {
       }
 
       dbTickets = [];
+
+      if (scopes.includes('proposals')) {
+        dbProposals = MOCK_PROPOSALS.filter(p => p.client_id === clientId);
+      }
     }
 
     // 5. Map data to the format used in frontend
@@ -271,6 +287,16 @@ export async function GET(request: Request) {
       clientId: t.client_id,
     }));
 
+    const mappedProposals = dbProposals.map(p => ({
+      ...p,
+      _id: p.id,
+      clientId: p.client_id || p.clientId,
+      totalAmount: p.total_amount,
+      validUntil: p.valid_until,
+      signedBy: p.signed_by,
+      signedAt: p.signed_at,
+    }));
+
     // Log page accessed event (only once, we could restrict this to once per session, but simple log is fine)
     await logPortalActivity({
       workspaceId,
@@ -295,6 +321,7 @@ export async function GET(request: Request) {
       invoices: mappedInvoices,
       milestones: mappedMilestones,
       tickets: mappedTickets,
+      proposals: mappedProposals,
       scopes,
     });
   } catch (err: any) {

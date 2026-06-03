@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase';
 
 interface CommentSectionProps {
   targetId: string;
-  targetType: 'approval' | 'task';
+  targetType: 'approval' | 'task' | 'invoice' | 'proposal';
   token?: string;
 }
 

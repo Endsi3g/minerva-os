@@ -1,4 +1,4 @@
-import type { Lead, Client, Project, Task, Approval, FileAsset, Invoice, Retainer, Milestone, ClientPortalToken } from './types';
+import type { Lead, Client, Project, Task, Approval, FileAsset, Invoice, Retainer, Milestone, ClientPortalToken, DecisionEntry, PortalNotification, DocumentFolder } from './types';
 
 
 export const MOCK_LEADS: Lead[] = [
@@ -88,17 +88,17 @@ export const MOCK_APPROVALS: Approval[] = [
   { id: 'a6', name: 'IA sitemap deck',          type: 'document', project: 'Website Redesign',       client: 'Solara Health',     submittedBy: 'TL', submittedDate: '2026-06-06', status: 'approved' },
 ];
 
-export const MOCK_FILES: FileAsset[] = [
-  { id: 'f1',  name: 'logo-suite-v3.zip',            type: 'archive',  size: '14.2 MB', project: 'Brand Identity Refresh', uploadedBy: 'JR', uploadedDate: '2026-06-09' },
-  { id: 'f2',  name: 'brand-guidelines.pdf',          type: 'document', size: '4.8 MB',  project: 'Brand Identity Refresh', uploadedBy: 'US', uploadedDate: '2026-06-05' },
-  { id: 'f3',  name: 'hero-video-30s.mp4',            type: 'video',    size: '182 MB',  project: 'Campaign: Q3 Launch',    uploadedBy: 'US', uploadedDate: '2026-06-08' },
-  { id: 'f4',  name: 'social-templates.figma',        type: 'document', size: '6.1 MB',  project: 'Campaign: Q3 Launch',    uploadedBy: 'PK', uploadedDate: '2026-06-04' },
-  { id: 'f5',  name: 'homepage-mockup.png',           type: 'image',    size: '3.4 MB',  project: 'Website Redesign',       uploadedBy: 'JR', uploadedDate: '2026-06-03' },
-  { id: 'f6',  name: 'component-library.figma',       type: 'document', size: '9.7 MB',  project: 'Website Redesign',       uploadedBy: 'AK', uploadedDate: '2026-06-01' },
-  { id: 'f7',  name: 'motion-kit-looping.zip',        type: 'archive',  size: '224 MB',  project: 'Motion System V2',       uploadedBy: 'ML', uploadedDate: '2026-06-10' },
-  { id: 'f8',  name: 'motion-preview.mp4',            type: 'video',    size: '48 MB',   project: 'Motion System V2',       uploadedBy: 'ML', uploadedDate: '2026-06-09' },
-  { id: 'f9',  name: 'annual-report-2025.pdf',        type: 'document', size: '11.2 MB', project: 'Annual Report 2025',     uploadedBy: 'JR', uploadedDate: '2026-04-28' },
-  { id: 'f10', name: 'ia-sitemap.pdf',                type: 'document', size: '1.8 MB',  project: 'Website Redesign',       uploadedBy: 'TL', uploadedDate: '2026-06-06' },
+export const MOCK_FILES: (FileAsset & { folder: DocumentFolder })[] = [
+  { id: 'f1',  name: 'logo-suite-v3.zip',            type: 'archive',  size: '14.2 MB', project: 'Brand Identity Refresh', uploadedBy: 'JR', uploadedDate: '2026-06-09', folder: 'deliverables_assets' },
+  { id: 'f2',  name: 'brand-guidelines.pdf',          type: 'document', size: '4.8 MB',  project: 'Brand Identity Refresh', uploadedBy: 'US', uploadedDate: '2026-06-05', folder: 'references_briefs' },
+  { id: 'f3',  name: 'hero-video-30s.mp4',            type: 'video',    size: '182 MB',  project: 'Campaign: Q3 Launch',    uploadedBy: 'US', uploadedDate: '2026-06-08', folder: 'deliverables_assets' },
+  { id: 'f4',  name: 'social-templates.figma',        type: 'document', size: '6.1 MB',  project: 'Campaign: Q3 Launch',    uploadedBy: 'PK', uploadedDate: '2026-06-04', folder: 'deliverables_assets' },
+  { id: 'f5',  name: 'homepage-mockup.png',           type: 'image',    size: '3.4 MB',  project: 'Website Redesign',       uploadedBy: 'JR', uploadedDate: '2026-06-03', folder: 'deliverables_assets' },
+  { id: 'f6',  name: 'component-library.figma',       type: 'document', size: '9.7 MB',  project: 'Website Redesign',       uploadedBy: 'AK', uploadedDate: '2026-06-01', folder: 'references_briefs' },
+  { id: 'f7',  name: 'motion-kit-looping.zip',        type: 'archive',  size: '224 MB',  project: 'Motion System V2',       uploadedBy: 'ML', uploadedDate: '2026-06-10', folder: 'deliverables_assets' },
+  { id: 'f8',  name: 'motion-preview.mp4',            type: 'video',    size: '48 MB',   project: 'Motion System V2',       uploadedBy: 'ML', uploadedDate: '2026-06-09', folder: 'deliverables_assets' },
+  { id: 'f9',  name: 'annual-report-2025.pdf',        type: 'document', size: '11.2 MB', project: 'Annual Report 2025',     uploadedBy: 'JR', uploadedDate: '2026-04-28', folder: 'invoices_finance' },
+  { id: 'f10', name: 'ia-sitemap.pdf',                type: 'document', size: '1.8 MB',  project: 'Website Redesign',       uploadedBy: 'TL', uploadedDate: '2026-06-06', folder: 'references_briefs' },
 ];
 
 // ── Phase 4 — Billing ─────────────────────────────────────────────────────────
@@ -321,6 +321,25 @@ export const MOCK_PORTAL_TOKENS: ClientPortalToken[] = [
   { token: 'demo-stratum', clientId: 'c1', clientName: 'Stratum Labs',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices'] },
   { token: 'demo-volta',   clientId: 'c2', clientName: 'Volta Interactive', expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices', 'reports'] },
   { token: 'demo-solara',  clientId: 'c8', clientName: 'Solara Health',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices'] },
+];
+
+// ── V2.7 — Decision Journal ───────────────────────────────────────────────────
+
+export const MOCK_DECISIONS: DecisionEntry[] = [
+  { id: 'dec1', workspaceId: 'mock-workspace-123', clientId: 'c1', objectType: 'approval', objectId: 'a5', objectName: 'Annual Report layout', decision: 'approved', decidedBy: 'Stratum Labs', timestamp: '2026-06-10T14:30:00Z' },
+  { id: 'dec2', workspaceId: 'mock-workspace-123', clientId: 'c1', objectType: 'approval', objectId: 'a1', objectName: 'Logo Suite v3', decision: 'revision', note: 'Please refine the wordmark weight.', decidedBy: 'Stratum Labs', timestamp: '2026-06-08T09:15:00Z' },
+  { id: 'dec3', workspaceId: 'mock-workspace-123', clientId: 'c1', objectType: 'invoice', objectId: 'inv1', objectName: 'INV-2026-041', decision: 'paid', decidedBy: 'system', timestamp: '2026-05-12T11:00:00Z' },
+  { id: 'dec4', workspaceId: 'mock-workspace-123', clientId: 'c2', objectType: 'proposal', objectId: 'prop-demo-volta', objectName: 'Q4 Campaign Production & Ads', decision: 'signed', decidedBy: 'Camille Laurent', timestamp: '2026-05-15T10:00:00Z' },
+  { id: 'dec5', workspaceId: 'mock-workspace-123', clientId: 'c2', objectType: 'approval', objectId: 'a2', objectName: 'Hero Video 30s cut', decision: 'approved', decidedBy: 'Volta Interactive', timestamp: '2026-05-20T16:00:00Z' },
+];
+
+// ── V2.7 — Portal Notifications ───────────────────────────────────────────────
+
+export const MOCK_PORTAL_NOTIFICATIONS: PortalNotification[] = [
+  { id: 'pn1', clientId: 'c1', workspaceId: 'mock-workspace-123', type: 'approval_action', title: 'New deliverable ready', message: 'Logo Suite v3 is ready for your review.', read: false, targetPath: 'deliverables', createdAt: '2026-06-11T08:00:00Z' },
+  { id: 'pn2', clientId: 'c1', workspaceId: 'mock-workspace-123', type: 'file_upload', title: 'New file uploaded', message: 'Brand guidelines PDF has been added to your document centre.', read: false, targetPath: 'files', createdAt: '2026-06-05T16:00:00Z' },
+  { id: 'pn3', clientId: 'c1', workspaceId: 'mock-workspace-123', type: 'invoice_update', title: 'Invoice issued', message: 'INV-2026-041 has been issued and is due on May 15.', read: true, targetPath: 'invoices', createdAt: '2026-05-01T09:00:00Z' },
+  { id: 'pn4', clientId: 'c2', workspaceId: 'mock-workspace-123', type: 'comment', title: 'New comment', message: 'Uprising Studio commented on Hero Video 30s cut.', read: false, targetPath: 'deliverables', createdAt: '2026-06-10T12:00:00Z' },
 ];
 
 export const MOCK_PROPOSALS = [
