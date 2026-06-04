@@ -291,6 +291,14 @@ function WorkspaceTab() {
     });
   }
 
+  const [cnameCopied, setCnameCopied] = useState(false);
+  function handleCopyCname() {
+    navigator.clipboard.writeText(s.dnsCnameValue).then(() => {
+      setCnameCopied(true);
+      setTimeout(() => setCnameCopied(false), 2000);
+    });
+  }
+
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start w-full">
@@ -410,6 +418,26 @@ function WorkspaceTab() {
                 </button>
               </div>
               <p className="text-[10px] text-fog mt-1">{s.domainHint}</p>
+              {customDomain && (
+                <div className="mt-3 rounded-xl border border-white/6 p-4 space-y-3 bg-obsidian">
+                  <p className="text-[11px] font-semibold text-silver">{s.dnsSetupTitle}</p>
+                  <p className="text-[11px] text-fog leading-relaxed">{s.dnsSetupDesc}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 rounded-lg px-3 py-2 border border-white/8 bg-midnight">
+                      <p className="text-[9px] text-fog uppercase tracking-widest mb-0.5">{s.dnsCnameLabel}</p>
+                      <code className="text-xs text-silver">{s.dnsCnameValue}</code>
+                    </div>
+                    <button
+                      onClick={handleCopyCname}
+                      className="flex items-center gap-1.5 h-[52px] px-3 rounded-xl border border-white/8 text-[11px] text-silver hover:text-ivory transition-colors"
+                    >
+                      {cnameCopied ? <Check size={11} className="text-sage" /> : <Copy size={11} />}
+                      {cnameCopied ? s.dnsCopied : s.dnsCopy}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-fog">{s.dnsNote}</p>
+                </div>
+              )}
             </SettingsField>
           </div>
         </div>

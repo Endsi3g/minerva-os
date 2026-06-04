@@ -36,7 +36,8 @@ export async function POST(request: Request) {
       }
       proposalId = body.proposalId;
       status = body.action === 'sign' ? 'signed' : 'declined';
-      signedBy = portalClientName;
+      // Prefer explicit signer name from modal; fall back to portal client name
+      signedBy = body.signerName?.trim() || portalClientName;
     } else {
       const { token: propToken, status: s, signedBy: sb } = body;
       if (!propToken || !s) return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
