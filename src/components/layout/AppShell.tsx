@@ -19,7 +19,9 @@ import {
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface SidebarContextType {
   collapsed: boolean;
@@ -121,6 +123,14 @@ function MobileBottomNav() {
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
+  const router = useRouter();
+  const { workspace, isLoading: workspaceLoading } = useWorkspace();
+
+  useEffect(() => {
+    if (!workspaceLoading && workspace && workspace.onboardingComplete === false) {
+      router.push('/onboarding');
+    }
+  }, [workspaceLoading, workspace, router]);
 
   return (
     <div className="flex h-screen bg-void p-2 gap-2 overflow-hidden relative">

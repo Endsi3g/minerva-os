@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { ThemeProvider, useTheme } from '@/theme';
 import { LangProvider } from '@/i18n';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { WorkspaceProvider } from '@/contexts/WorkspaceContext';
 import { Toaster } from '@/components/ui/sonner';
 
 function ToastWithTheme() {
@@ -34,8 +35,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider>
       <LangProvider>
         <AuthProvider>
-          {children}
-          <ToastWithTheme />
+          <WorkspaceProvider>
+            {children}
+            <ToastWithTheme />
+          </WorkspaceProvider>
         </AuthProvider>
       </LangProvider>
     </ThemeProvider>

@@ -556,6 +556,48 @@ export interface TeamScorecard {
   members: TeamMemberScorecard[];
 }
 
+// ── Multi-Tier System ─────────────────────────────────────────────────────────
+
+export type WorkspaceTier = 'starter' | 'growth' | 'scale';
+
+export type AgencyType =
+  | 'branding'
+  | 'paid_media'
+  | 'content'
+  | 'dev_shop'
+  | 'full_service'
+  | 'fractional_team';
+
+export type FeatureKey =
+  | 'pipeline'
+  | 'proposals'
+  | 'finance_hub'
+  | 'intelligence'
+  | 'workflows'
+  | 'resources'
+  | 'scorecards'
+  | 'nps'
+  | 'marketplace'
+  | 'knowledge'
+  | 'expenses'
+  | 'profitability'
+  | 'time_tracking'
+  | 'reports'
+  | 'agent_ops'
+  | 'support_hub';
+
+export interface WorkspaceProfile {
+  id: string;
+  name: string;
+  tier: WorkspaceTier;
+  agencyType: AgencyType | null;
+  onboardingComplete: boolean;
+  teamSize: string | null;
+  priorityGoals: string[];
+  setupKitApplied: boolean;
+  logoUrl?: string;
+}
+
 // ── V3.0 — Marketplace ────────────────────────────────────────────────────────
 
 export type MarketplaceItemType = 'template' | 'automation' | 'view' | 'playbook';
