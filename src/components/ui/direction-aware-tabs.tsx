@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState } from "react"
+import { ReactNode, useMemo, useState, useEffect, useRef } from "react"
 import { AnimatePresence, motion, MotionConfig } from "motion/react"
 import useMeasure from "react-use-measure"
 
@@ -18,6 +18,10 @@ interface OgImageSectionProps {
   /** Inner tab/bubble radius — should be outer radius minus container padding (~3px) */
   roundedInner?: string
   onChange?: () => void
+  /** Controlled active tab id — makes the component controlled */
+  activeTab?: number
+  /** Called when the user clicks a tab (used in controlled mode) */
+  onTabChange?: (id: number) => void
 }
 
 function DirectionAwareTabs({
@@ -26,11 +30,23 @@ function DirectionAwareTabs({
   rounded,
   roundedInner,
   onChange,
+  activeTab: controlledTab,
+  onTabChange,
 }: OgImageSectionProps) {
-  const [activeTab, setActiveTab] = useState(0)
+  const isControlled = controlledTab !== undefined
+  const [internalTab, setInternalTab] = useState(0)
+  const activeTab = isControlled ? controlledTab : internalTab
+  const prevTabRef = useRef(activeTab)
   const [direction, setDirection] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [ref, bounds] = useMeasure()
+
+  useEffect(() => {
+    if (isControlled && controlledTab !== prevTabRef.current) {
+      setDirection(controlledTab > prevTabRef.current ? 1 : -1)
+      prevTabRef.current = controlledTab
+    }
+  }, [controlledTab, isControlled])
 
   const content = useMemo(() => {
     const activeTabContent = tabs.find((tab) => tab.id === activeTab)?.content
@@ -41,8 +57,13 @@ function DirectionAwareTabs({
     if (newTabId !== activeTab && !isAnimating) {
       const newDirection = newTabId > activeTab ? 1 : -1
       setDirection(newDirection)
-      setActiveTab(newTabId)
-      onChange ? onChange() : null
+      prevTabRef.current = newTabId
+      if (isControlled) {
+        onTabChange?.(newTabId)
+      } else {
+        setInternalTab(newTabId)
+      }
+      onChange?.()
     }
   }
 
