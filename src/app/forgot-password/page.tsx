@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { Circle, ArrowLeft, Mail } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useLang } from '@/i18n';
+import { toast } from 'sonner';
 
 export default function ForgotPasswordPage() {
   const { t } = useLang();
@@ -19,15 +20,19 @@ export default function ForgotPasswordPage() {
     if (!email) { setError(fp.errorEmail); return; }
     setError('');
     setLoading(true);
+    const toastId = toast.loading(fp.toastLoading || 'Sending reset link...');
     try {
       const supabase = createClient();
       const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       });
       if (err) throw err;
+      toast.success(fp.successTitle, { id: toastId });
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : fp.errorFailed);
+      const errMsg = err instanceof Error ? err.message : fp.errorFailed;
+      setError(errMsg);
+      toast.error(errMsg, { id: toastId });
     } finally {
       setLoading(false);
     }

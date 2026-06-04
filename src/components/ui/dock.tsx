@@ -103,7 +103,7 @@ function Dock({ className, children }: DockProps) {
           className
         )}
         // Event handler for mouse movement within the dock
-        onMouseMove={(e) => {
+        onMouseMove={(e: React.MouseEvent<HTMLDivElement>) => {
           mouseX.set(e.pageX) // Update the mouseX motion value to the current mouse position
           if (!isZooming.current) {
             // Only set hovered if not zooming
@@ -281,7 +281,7 @@ function DockCard({ children, id }: DockCardProps) {
   }, [])
 
   // Calculate the distance from the mouse position to the center of the card
-  const distance = useTransform(dock.mouseX, (val) => {
+  const distance = useTransform(dock.mouseX, (val: number) => {
     const bounds = cardRef.current?.getBoundingClientRect() ?? {
       x: 0,
       width: 0,

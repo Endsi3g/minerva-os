@@ -25,17 +25,20 @@ export default function ResetPasswordPage() {
     if (password.length < 8) { setError(rp.errorLength); return; }
     setError('');
     setLoading(true);
+    const toastId = toast.loading(rp.toastLoading || 'Updating password...');
     try {
       const supabase = createClient();
       const { error: err } = await supabase.auth.updateUser({ password });
       if (err) throw err;
-      toast.success(rp.toastSuccess, { description: rp.toastSuccessDesc });
+      toast.success(rp.toastSuccess, { id: toastId, description: rp.toastSuccessDesc });
       router.push('/login');
     } catch (err) {
       const msg = err instanceof Error ? err.message : rp.errorExpired;
-      setError(msg.includes('session') || msg.includes('token') || msg.includes('expired')
+      const finalMsg = msg.includes('session') || msg.includes('token') || msg.includes('expired')
         ? rp.errorExpired
-        : msg);
+        : msg;
+      setError(finalMsg);
+      toast.error(finalMsg, { id: toastId });
     } finally {
       setLoading(false);
     }

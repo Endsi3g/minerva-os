@@ -44,13 +44,16 @@ export default function Login() {
     }
     setError('');
     setIsLoading(true);
+    const toastId = toast.loading(l.toastLoading || 'Signing in...');
     try {
       await login(email, password);
-      toast.success('Welcome back', { description: 'Signed in to Minerva OS.', duration: 3000 });
+      toast.success('Welcome back', { id: toastId, description: 'Signed in to Minerva OS.', duration: 3000 });
       const next = searchParams?.get('next') ?? '/app/dashboard';
       router.push(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : l.errorFailed);
+      const errMsg = err instanceof Error ? err.message : l.errorFailed;
+      setError(errMsg);
+      toast.error(errMsg, { id: toastId });
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +66,6 @@ export default function Login() {
       <div className="relative hidden w-[52%] flex-col items-center justify-center px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
-          style={{ filter: 'saturate(0.08) contrast(1.05) brightness(0.88)' }}
           autoPlay
           muted
           loop
@@ -71,7 +73,10 @@ export default function Login() {
         >
           <source src={BG_VIDEO} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20 z-0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/20 z-0" />
+        
+        {/* Glassmorphic overlay panel */}
+        <div className="absolute inset-0 bg-[#0A0D14]/40 backdrop-blur-sm z-0" />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
@@ -198,10 +203,10 @@ function FeatureItem({ text }: { text: string }) {
     <div
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 w-full',
-        'bg-[#1A1A1A] text-white',
+        'bg-[#111522]/40 backdrop-blur-md text-[#B8BDC7] border border-white/5',
       )}
     >
-      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 bg-white/10 text-white/40">
+      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 bg-white/5 text-[#8A9099]">
         ·
       </span>
       <span className="text-sm font-medium">{text}</span>

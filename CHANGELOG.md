@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [3.3.0] — 2026-06-04
+
+### Added
+- **AI Agent Builder**: Full custom agent creation with goal descriptions, custom rules, system instructions, and RAG knowledge tables.
+- **Plan-Locked Custom API Keys**: Enabled custom OpenAI and Anthropic API key storage (backed by Supabase/localStorage) restricted to Growth and Scale plan tiers.
+- **Relevance AI Sidebar Redesign**: Rebuilt from scratch with workspace selection, workforce groups, active agents list, and dynamic actions/credits progress card in footer.
+- **Cosmic Welcome Dashboard**: Restructured dashboard with pixel-art space welcome banner, floating shortcuts, and orbital concentric "Recent" agent cards.
+- **Supabase Realtime Synchronization**: Created migration `20260604000003_realtime_publications.sql` enabling full replica identity and adding core database tables to `supabase_realtime` publication.
+
+### Changed
+- Reorganized codebase structure: extracted inline sub-components (such as `AgentOrbit` and `CreateAgentModal`) from `AgentsList.tsx` and `AgentBuilder.tsx` to dedicated components in `src/components/agents/`.
+- Pruned unused states and variables across the agent list and builder modules.
+
+---
+
 ## [1.8.1] — 2026-06-03
 
 ### Changed

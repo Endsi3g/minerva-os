@@ -1,513 +1,433 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import {
-  Command,
-  TrendingUp,
-  Layers,
-  BarChart2,
-  Activity,
-  Settings2,
-  GitBranch,
-  Users,
-  FolderKanban,
-  CheckSquare,
-  ClipboardCheck,
-  FileBox,
-  Settings,
-  LogOut,
-  User,
-  WalletCards,
-  Sparkles,
-  Clock,
-  BookOpen,
-  FileSignature,
-  Headphones,
-  CalendarRange,
-  History,
-  GitPullRequest,
+  Home,
   ShoppingBag,
-  Award,
+  Activity,
+  MessageSquare,
+  Bot,
+  Wrench,
+  Network,
+  Database,
+  MoreHorizontal,
+  BarChart2,
+  Key,
+  Settings,
+  Hammer,
+  Users,
+  HelpCircle,
   ChevronDown,
-  Lock,
-  ChevronsUpDown,
-  Check,
+  ChevronRight,
   Plus,
+  CheckCircle,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { NavLink } from '@/components/ui/nav-link';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { NewWorkspaceModal } from '@/components/minerva/NewWorkspaceModal';
-import { useTier } from '@/lib/hooks/useTier';
-import type { FeatureKey } from '@/lib/types';
 import { useSidebar } from './AppShell';
-import { UpgradeModal, TIER_BADGE_COLORS } from '@/components/minerva/UpgradeModal';
-import { FEATURE_MIN_TIER } from '@/lib/tier';
-
-interface NavItem {
-  href: string;
-  icon: React.ElementType;
-  labelKey: keyof ReturnType<typeof useLang>['t']['app']['sidebar'];
-  featureKey?: FeatureKey;
-}
-
-interface Space {
-  key: string;
-  labelKey: keyof ReturnType<typeof useLang>['t']['app']['sidebar'];
-  icon: React.ElementType;
-  color: string;
-  items: NavItem[];
-}
-
-const spaces: Space[] = [
-  {
-    key: 'home',
-    labelKey: 'homeSpace',
-    icon: Command,
-    color: '#7FA38A',
-    items: [
-      { href: '/app/command',   icon: Command,   labelKey: 'command' },
-      { href: '/app/dashboard', icon: BarChart2, labelKey: 'dashboard' },
-    ],
-  },
-  {
-    key: 'revenue',
-    labelKey: 'revenueSpace',
-    icon: TrendingUp,
-    color: '#B89B6A',
-    items: [
-      { href: '/app/clients',   icon: Users,         labelKey: 'clients' },
-      { href: '/app/pipeline',  icon: GitBranch,     labelKey: 'pipeline' },
-      { href: '/app/proposals', icon: FileSignature, labelKey: 'proposals' },
-    ],
-  },
-  {
-    key: 'delivery',
-    labelKey: 'deliverySpace',
-    icon: Layers,
-    color: '#B8BDC7',
-    items: [
-      { href: '/app/projects',      icon: FolderKanban,   labelKey: 'projects' },
-      { href: '/app/tasks',         icon: CheckSquare,    labelKey: 'tasks' },
-      { href: '/app/approvals',     icon: ClipboardCheck, labelKey: 'approvals' },
-      { href: '/app/files',         icon: FileBox,        labelKey: 'files' },
-      { href: '/app/workflows',     icon: GitPullRequest, labelKey: 'workflows',    featureKey: 'workflows' },
-      { href: '/app/time-tracking', icon: Clock,          labelKey: 'timeTracking', featureKey: 'time_tracking' },
-      { href: '/app/resources',     icon: CalendarRange,  labelKey: 'resources',    featureKey: 'resources' },
-    ],
-  },
-  {
-    key: 'finance',
-    labelKey: 'financeSpace',
-    icon: BarChart2,
-    color: '#D8DDE6',
-    items: [
-      { href: '/app/finance-hub', icon: WalletCards, labelKey: 'financeHub', featureKey: 'finance_hub' },
-    ],
-  },
-  {
-    key: 'intelligence',
-    labelKey: 'intelligenceSpace',
-    icon: Activity,
-    color: '#8A9099',
-    items: [
-      { href: '/app/intelligence', icon: Sparkles, labelKey: 'intelligenceHub', featureKey: 'intelligence' },
-    ],
-  },
-  {
-    key: 'admin',
-    labelKey: 'adminSpace',
-    icon: Settings2,
-    color: '#8A9099',
-    items: [
-      { href: '/app/settings',    icon: Settings,   labelKey: 'settings' },
-      { href: '/app/support-hub', icon: Headphones,  labelKey: 'supportHub',      featureKey: 'support_hub' },
-      { href: '/app/services',    icon: BookOpen,    labelKey: 'serviceCatalog' },
-      { href: '/app/marketplace', icon: ShoppingBag, labelKey: 'marketplace',     featureKey: 'marketplace' },
-      { href: '/app/scorecards',  icon: Award,       labelKey: 'scorecards',      featureKey: 'scorecards' },
-      { href: '/app/changelog',   icon: History,     labelKey: 'changelog' },
-    ],
-  },
-];
-
-
-function LockedNavItem({
-  item,
-  collapsed,
-  onUpgradeClick,
-}: {
-  item: NavItem;
-  collapsed: boolean;
-  onUpgradeClick: (key: FeatureKey) => void;
-}) {
-  const { t } = useLang();
-  const sidebar = t.app.sidebar;
-  const requiredTier = item.featureKey ? FEATURE_MIN_TIER[item.featureKey] : 'growth';
-  const tierStyle = TIER_BADGE_COLORS[requiredTier];
-  const hint = item.featureKey ? ((t.tier.hints as Record<string, string>)[item.featureKey] ?? '') : '';
-
-  function handleClick() {
-    if (item.featureKey) onUpgradeClick(item.featureKey);
-  }
-
-  if (collapsed) {
-    return (
-      <button
-        type="button"
-        onClick={handleClick}
-        title={hint}
-        className="w-full flex items-center justify-center rounded-lg p-2 transition-colors min-h-[36px] opacity-35 hover:opacity-55 cursor-pointer"
-      >
-        <Lock size={13} className="shrink-0 text-fog" />
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      title={hint}
-      className="w-full flex items-center gap-2.5 rounded-lg pl-5 pr-3 py-1.5 transition-colors min-h-[34px] opacity-40 hover:opacity-60 cursor-pointer"
-    >
-      <item.icon size={14} className="shrink-0 text-fog" />
-      <span className="truncate text-[13px] text-fog flex-1 text-left">{sidebar[item.labelKey]}</span>
-      <span
-        className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize shrink-0"
-        style={tierStyle}
-      >
-        {requiredTier}
-      </span>
-    </button>
-  );
-}
-
-function SpaceGroup({
-  space,
-  collapsed,
-  sidebar,
-}: {
-  space: Space;
-  collapsed: boolean;
-  sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'];
-}) {
-  const pathname = usePathname();
-  const { isFeatureVisible } = useTier();
-  const [upgradeKey, setUpgradeKey] = useState<FeatureKey | null>(null);
-
-  const visibleItems = space.items.filter(
-    item => !item.featureKey || isFeatureVisible(item.featureKey)
-  );
-
-  const lockedItems = space.items.filter(
-    item => item.featureKey && !isFeatureVisible(item.featureKey)
-  );
-
-  const isSpaceActive = visibleItems.some(
-    item => pathname === item.href || pathname.startsWith(item.href + '/')
-  );
-
-  if (visibleItems.length === 0 && lockedItems.length === 0) return null;
-
-  const [open, setOpen] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return isSpaceActive;
-    const saved = localStorage.getItem(`sidebar_space_${space.key}`);
-    return saved !== null ? (JSON.parse(saved) as boolean) : isSpaceActive;
-  });
-
-  useEffect(() => {
-    if (isSpaceActive) setOpen(true);
-  }, [isSpaceActive]);
-
-  function toggle() {
-    setOpen(v => {
-      const next = !v;
-      localStorage.setItem(`sidebar_space_${space.key}`, JSON.stringify(next));
-      return next;
-    });
-  }
-
-  if (collapsed) {
-    return (
-      <>
-        <div className="space-y-0.5">
-          {visibleItems.map(item => (
-            <NavLink
-              key={item.href}
-              href={item.href}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center justify-center rounded-lg p-2 text-sm transition-colors min-h-[36px]',
-                  isActive
-                    ? 'bg-white/10 text-ivory'
-                    : 'text-fog hover:bg-white/5 hover:text-silver'
-                )
-              }
-            >
-              <item.icon size={15} className="shrink-0" />
-            </NavLink>
-          ))}
-          {lockedItems.map(item => (
-            <LockedNavItem
-              key={item.href}
-              item={item}
-              collapsed
-              onUpgradeClick={setUpgradeKey}
-            />
-          ))}
-        </div>
-        <UpgradeModal featureKey={upgradeKey} open={upgradeKey !== null} onClose={() => setUpgradeKey(null)} />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div className="space-y-0.5">
-        <button
-          type="button"
-          onClick={toggle}
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-widest transition-colors hover:bg-white/5 cursor-pointer"
-          style={{ color: isSpaceActive ? space.color : '#8A9099' }}
-        >
-          <space.icon size={10} className="shrink-0" />
-          <span className="flex-1 text-left">{sidebar[space.labelKey]}</span>
-          <ChevronDown
-            size={9}
-            className={cn('transition-transform duration-200', !open && '-rotate-90')}
-          />
-        </button>
-
-        <AnimatePresence initial={false}>
-          {open && (
-            <motion.div
-              key={space.key}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              className="overflow-hidden"
-            >
-              {visibleItems.map(item => (
-                <NavLink
-                  key={item.href}
-                  href={item.href}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-2.5 rounded-lg pl-5 pr-3 py-1.5 text-sm transition-colors min-h-[34px]',
-                      isActive
-                        ? 'text-ivory bg-white/8'
-                        : 'text-fog hover:text-silver hover:bg-white/5'
-                    )
-                  }
-                >
-                  <item.icon size={14} className="shrink-0" />
-                  <span className="truncate text-[13px]">{sidebar[item.labelKey]}</span>
-                </NavLink>
-              ))}
-              {lockedItems.map(item => (
-                <LockedNavItem
-                  key={item.href}
-                  item={item}
-                  collapsed={false}
-                  onUpgradeClick={setUpgradeKey}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      <UpgradeModal featureKey={upgradeKey} open={upgradeKey !== null} onClose={() => setUpgradeKey(null)} />
-    </>
-  );
-}
-
-function WorkspaceSwitcher({ collapsed }: { collapsed: boolean }) {
-  const { workspace, workspaces, switchWorkspace } = useWorkspace();
-  const { t } = useLang();
-  const ws = t.app.workspace;
-  const [newOpen, setNewOpen] = useState(false);
-
-  function initials(name: string) {
-    return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  }
-
-  return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className={cn(
-              'w-full flex items-center rounded-lg px-2 py-1.5 transition-colors hover:bg-white/5 group',
-              collapsed ? 'justify-center' : 'gap-2'
-            )}
-          >
-            {workspace?.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={workspace.logoUrl}
-                alt={workspace.name}
-                className="h-6 w-6 rounded-md object-cover shrink-0"
-              />
-            ) : (
-              <div
-                className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 text-[10px] font-bold text-obsidian"
-                style={{ backgroundColor: workspace?.brandColor ?? '#F5F1E8' }}
-              >
-                {workspace ? initials(workspace.name || 'M') : 'M'}
-              </div>
-            )}
-            {!collapsed && (
-              <>
-                <span className="text-xs font-semibold text-ivory tracking-wide flex-1 truncate text-left">
-                  {workspace?.name ?? 'Workspace'}
-                </span>
-                <ChevronsUpDown size={11} className="shrink-0 text-fog group-hover:text-silver transition-colors" />
-              </>
-            )}
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start" className="w-52">
-          {workspaces.map(w => (
-            <DropdownMenuItem
-              key={w.id}
-              onClick={() => switchWorkspace(w.id)}
-              className="flex items-center gap-2"
-            >
-              <div
-                className="h-5 w-5 rounded flex items-center justify-center shrink-0 text-[9px] font-bold text-obsidian"
-                style={{ backgroundColor: w.brandColor ?? '#F5F1E8' }}
-              >
-                {initials(w.name || 'W')}
-              </div>
-              <span className="flex-1 truncate">{w.name}</span>
-              <span
-                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize"
-                style={TIER_BADGE_COLORS[w.tier]}
-              >
-                {w.tier}
-              </span>
-              {w.id === workspace?.id && <Check size={12} className="text-sage shrink-0" />}
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setNewOpen(true)} className="flex items-center gap-2">
-            <Plus size={13} />
-            <span>{ws.switcher.new}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <NewWorkspaceModal open={newOpen} onClose={() => setNewOpen(false)} />
-    </>
-  );
-}
+import { useTier } from '@/lib/hooks/useTier';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
-  const { t } = useLang();
-  const { user, logout } = useAuth();
-  const { workspace } = useWorkspace();
-  const { tier } = useTier();
   const router = useRouter();
+  const pathname = usePathname();
+  const { collapsed, toggle } = useSidebar();
+  const { t } = useLang();
+  const { logout } = useAuth();
+  const { workspace, workspaces, switchWorkspace } = useWorkspace();
+  const { tier } = useTier();
   const sidebar = t.app.sidebar;
 
-  const initials = user?.name
-    ? user.name
+  const [newWorkspaceOpen, setNewWorkspaceOpen] = useState(false);
+  const [workforceOpen, setWorkforceOpen] = useState(true);
+  const [accountOpen, setAccountOpen] = useState(true);
+
+  const workspaceInitials = workspace?.name
+    ? workspace.name
         .split(' ')
         .map((w: string) => w[0])
         .join('')
         .slice(0, 2)
         .toUpperCase()
-    : 'US';
+    : 'AM';
 
   async function handleSignOut() {
     await logout();
     router.push('/login');
   }
 
+  // Check if any link in "More" popover is active
+  const isMoreActive = [
+    '/app/proposals',
+    '/app/billing',
+    '/app/time-tracking',
+    '/app/expenses',
+    '/app/nps',
+    '/app/changelog',
+    '/app/services',
+  ].some(href => pathname === href || pathname.startsWith(href + '/'));
+
+  // Define sidebar menu items mapping Relevance AI sidebar
+  const mainNavItems = [
+    { href: '/app/dashboard', label: 'Home', icon: Home },
+    { href: '/app/marketplace', label: 'Marketplace', icon: ShoppingBag },
+    { href: '/app/tasks', label: 'Tasks', icon: Activity },
+    { href: '/app/copilot', label: 'Chat', icon: MessageSquare },
+  ];
+
+  const workforceItems = [
+    { href: '/app/agents', label: 'Agents', icon: Bot, hasDropdown: true },
+    { href: '/app/agent-ops', label: 'Tools', icon: Wrench },
+    { href: '/app/resources', label: 'Workforce', icon: Network },
+    { href: '/app/knowledge', label: 'Knowledge', icon: Database },
+  ];
+
+  const accountItems = [
+    { href: '/app/finance-hub', label: 'Analytics', icon: BarChart2 },
+    { href: '/app/settings', label: 'Integrations & API Keys', icon: Key },
+  ];
+
+  const bottomItems = [
+    { href: '/app/settings', label: 'Settings', icon: Settings },
+    { href: '/app/workflows', label: 'Relevance builders', icon: Hammer },
+    { href: '/app/clients', label: 'Community', icon: Users },
+    { href: '/app/support-hub', label: 'Ask for help', icon: HelpCircle },
+  ];
+
+  // Dynamic values for footer card
+  const isStarter = tier === 'starter';
+  const isGrowth = tier === 'growth';
+
+  const planName = isStarter ? 'FREE PLAN' : isGrowth ? 'GROWTH PLAN' : 'SCALE PLAN';
+  const actionText = isStarter
+    ? '169 remaining /200'
+    : isGrowth
+    ? '8,450 remaining /10K'
+    : 'Unlimited Actions';
+  const creditText = isStarter
+    ? '681 remaining /1K'
+    : isGrowth
+    ? '42.5K remaining /50K'
+    : 'Unlimited Credits';
+  const actionPct = isStarter ? 84.5 : isGrowth ? 84.5 : 100;
+  const creditPct = isStarter ? 68.1 : isGrowth ? 85 : 100;
+
   return (
     <aside
       className={cn(
-        'shrink-0 flex flex-col bg-void rounded-2xl overflow-hidden transition-all duration-300',
-        collapsed ? 'w-14' : 'w-56'
+        'shrink-0 flex flex-col bg-[#0A0D14] border-r border-white/5 transition-all duration-300 select-none h-screen',
+        collapsed ? 'w-14' : 'w-[230px]'
       )}
     >
-      {/* Workspace Switcher */}
-      <div className="shrink-0 px-2 pt-3 pb-1">
-        <WorkspaceSwitcher collapsed={collapsed} />
+      {/* Workspace Header */}
+      <div className="shrink-0 p-3 flex items-center justify-between border-b border-white/5 h-[64px]">
+        {collapsed ? (
+          <button
+            onClick={() => toggle()}
+            className="p-1 hover:bg-white/5 rounded-md text-fog hover:text-silver transition-colors cursor-pointer mx-auto"
+            title="Expand Sidebar"
+          >
+            <PanelLeftOpen size={16} />
+          </button>
+        ) : (
+          <div className="flex items-center justify-between w-full">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 hover:bg-white/5 p-1 rounded-md transition-colors cursor-pointer text-left max-w-[150px] group">
+                  <div
+                    className="h-7 w-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white bg-blue-600 shadow-md group-hover:opacity-90"
+                    style={{ backgroundColor: workspace?.brandColor ?? '#4F46E5' }}
+                  >
+                    {workspaceInitials}
+                  </div>
+                  <div className="min-w-0 flex-1 leading-none">
+                    <p className="text-[12px] font-bold text-ivory truncate">{workspace?.name ?? 'AS Mobbin'}</p>
+                    <p className="text-[9px] text-fog truncate mt-0.5">{workspace?.name ?? 'AS Mobbin'}</p>
+                  </div>
+                  <ChevronDown size={11} className="text-fog shrink-0 transition-transform group-hover:text-silver ml-1" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="bottom" align="start" className="w-52 bg-[#111522] border-white/5 text-silver z-50">
+                <DropdownMenuLabel className="text-xs text-ivory font-semibold px-2 py-1">Workspaces</DropdownMenuLabel>
+                {workspaces.map(w => (
+                  <DropdownMenuItem
+                    key={w.id}
+                    onClick={() => switchWorkspace(w.id)}
+                    className="flex items-center gap-2 hover:bg-white/5 focus:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer"
+                  >
+                    <div
+                      className="h-5 w-5 rounded flex items-center justify-center shrink-0 text-[9px] font-bold text-obsidian"
+                      style={{ backgroundColor: w.brandColor ?? '#F5F1E8' }}
+                    >
+                      {w.name.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <span className="flex-1 truncate">{w.name}</span>
+                    {w.id === workspace?.id && <CheckCircle size={10} className="text-[#7FA38A] shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuItem onClick={() => setNewWorkspaceOpen(true)} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                  <Plus size={12} />
+                  <span>New Workspace</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuItem onClick={() => router.push('/app/profile')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                  <Bot size={12} />
+                  <span>{sidebar.profile}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 hover:bg-white/5 text-xs text-ember hover:text-ember cursor-pointer">
+                  <LogOut size={12} />
+                  <span>{sidebar.signOut}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Sidebar toggle button */}
+            <button
+              onClick={() => toggle()}
+              className="p-1 hover:bg-white/5 rounded-md text-fog hover:text-silver transition-colors cursor-pointer"
+              title="Collapse Sidebar"
+            >
+              <PanelLeftClose size={14} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-2 space-y-3 py-2 min-h-0">
-        {spaces.map(space => (
-          <SpaceGroup
-            key={space.key}
-            space={space}
-            collapsed={collapsed}
-            sidebar={sidebar}
-          />
-        ))}
+      {/* Navigation List */}
+      <nav className="flex-1 overflow-y-auto px-2 py-3.5 space-y-4 scrollbar-thin">
+        
+        {/* General Items */}
+        <div className="space-y-0.5">
+          {mainNavItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
+                  isActive
+                    ? 'text-ivory bg-white/8 font-semibold'
+                    : 'text-silver hover:text-ivory hover:bg-white/4'
+                )}
+              >
+                <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                {!collapsed && <span>{item.label}</span>}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Workforce Section */}
+        <div className="space-y-0.5">
+          {!collapsed && (
+            <button
+              onClick={() => setWorkforceOpen(!workforceOpen)}
+              className="w-full flex items-center justify-between px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-fog hover:text-silver cursor-pointer"
+            >
+              <span>Workforce</span>
+              <ChevronDown
+                size={10}
+                className={cn('transition-transform duration-200', !workforceOpen && '-rotate-90')}
+              />
+            </button>
+          )}
+
+          {(workforceOpen || collapsed) && (
+            <div className="space-y-0.5">
+              {workforceItems.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
+                      isActive
+                        ? 'text-ivory bg-white/8 font-semibold'
+                        : 'text-silver hover:text-ivory hover:bg-white/4'
+                    )}
+                  >
+                    <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                    {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                    {!collapsed && item.hasDropdown && (
+                      <ChevronRight size={10} className="text-fog" />
+                    )}
+                  </Link>
+                );
+              })}
+
+              {/* More Popover for remaining modules */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors text-silver hover:text-ivory hover:bg-white/4 cursor-pointer',
+                      isMoreActive && 'text-ivory bg-white/8'
+                    )}
+                  >
+                    <MoreHorizontal size={14} className={isMoreActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                    {!collapsed && <span className="flex-1 text-left">More</span>}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="w-48 bg-[#111522] border-white/5 text-silver z-50">
+                  <DropdownMenuLabel className="text-[10px] text-fog font-bold uppercase tracking-wider px-2.5 py-1">More Modules</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/5" />
+                  <DropdownMenuItem onClick={() => router.push('/app/proposals')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                    <span>Proposals</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/app/time-tracking')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                    <span>Time Tracking</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/app/expenses')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                    <span>Expenses</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/app/nps')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                    <span>NPS Responses</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/app/changelog')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                    <span>Changelog</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/app/services')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                    <span>Services</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/app/billing')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                    <span>Billing / Subscriptions</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
+
+        {/* Account Section */}
+        <div className="space-y-0.5">
+          {!collapsed && (
+            <button
+              onClick={() => setAccountOpen(!accountOpen)}
+              className="w-full flex items-center justify-between px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-fog hover:text-silver cursor-pointer"
+            >
+              <span>Account</span>
+              <ChevronDown
+                size={10}
+                className={cn('transition-transform duration-200', !accountOpen && '-rotate-90')}
+              />
+            </button>
+          )}
+
+          {(accountOpen || collapsed) && (
+            <div className="space-y-0.5">
+              {accountItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
+                      isActive
+                        ? 'text-ivory bg-white/8 font-semibold'
+                        : 'text-silver hover:text-ivory hover:bg-white/4'
+                    )}
+                  >
+                    <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom items */}
+        <div className="pt-2 border-t border-white/5 space-y-0.5">
+          {bottomItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
+                  isActive
+                    ? 'text-ivory bg-white/8 font-semibold'
+                    : 'text-silver hover:text-ivory hover:bg-white/4'
+                )}
+              >
+                <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                {!collapsed && <span className="truncate">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
-      {/* Footer */}
-      <div className="shrink-0 px-2 pb-3 space-y-0.5 border-t border-sidebar-border pt-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                'w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-ivory min-h-[44px]',
-                collapsed && 'justify-center px-2'
-              )}
-            >
-              <Avatar className="h-6 w-6 shrink-0">
-                <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
-              </Avatar>
-              {!collapsed && (
-                <div className="flex flex-col items-start min-w-0 flex-1">
-                  <span className="text-xs font-medium text-ivory truncate w-full">
-                    {user?.name ?? 'Uprising Studio'}
-                  </span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] text-fog">
-                      {user?.role ?? 'Admin'}
-                    </span>
-                    {workspace?.tier && (
-                      <span
-                        className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize"
-                        style={TIER_BADGE_COLORS[tier]}
-                      >
-                        {tier}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="end" className="w-48">
-            <DropdownMenuItem onClick={() => router.push('/app/settings')}>
-              <User size={14} />
-              {sidebar.profile}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-ember">
-              <LogOut size={14} />
-              {sidebar.signOut}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {/* Footer Plan Card */}
+      {!collapsed && (
+        <div className="shrink-0 p-3 border-t border-white/5 bg-white/[0.01]">
+          <div className="border border-white/5 rounded-lg p-2.5 space-y-2 bg-[#111522]/50">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-ivory tracking-wide uppercase">{planName}</span>
+            </div>
+
+            {/* Actions Progress */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[8px] text-fog">
+                <span>Actions</span>
+                <span className="font-semibold text-silver">{actionText}</span>
+              </div>
+              <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                <div
+                  className="bg-[#7FA38A] h-full rounded-full transition-all duration-300"
+                  style={{ width: `${actionPct}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Credits Progress */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[8px] text-fog">
+                <span>Credits</span>
+                <span className="font-semibold text-silver">{creditText}</span>
+              </div>
+              <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                <div
+                  className="bg-[#7FA38A] h-full rounded-full transition-all duration-300"
+                  style={{ width: `${creditPct}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1 text-[8px] text-fog border-t border-white/5 mt-1">
+              <button
+                onClick={() => router.push('/app/billing')}
+                className="hover:text-ivory font-bold hover:underline transition-all cursor-pointer flex items-center gap-0.5"
+              >
+                Manage plan <ChevronRight size={8} />
+              </button>
+              <span>Resets in 22 days</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <NewWorkspaceModal open={newWorkspaceOpen} onClose={() => setNewWorkspaceOpen(false)} />
     </aside>
   );
 }

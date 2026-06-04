@@ -132,44 +132,44 @@
     --sidebar-ring:                   rgba(0, 0, 0, 0.1);
   }
 
-  /* ── Dark mode (Celestial Editorial Noir) ─────────────────────────────── */
+  /* ── Dark mode (Framer-inspired Dark Canvas) ───────────────────────────── */
   .dark {
-    --background:               #030303;
+    --background:               #090909;
     --foreground:               #ffffff;
-    --card:                     #0a0a0a;
+    --card:                     #141414;
     --card-foreground:          #ffffff;
-    --popover:                  #0a0a0a;
+    --popover:                  #141414;
     --popover-foreground:       #ffffff;
     --primary:                  #ffffff;
     --primary-foreground:       #000000;
-    --secondary:                #1a1a1a;
+    --secondary:                #1c1c1c;
     --secondary-foreground:     #e7eaf0;
-    --muted:                    #1a1a1a;
-    --muted-foreground:         #939393;
-    --accent:                   #1a1a1a;
+    --muted:                    #1c1c1c;
+    --muted-foreground:         #999999;
+    --accent:                   #1c1c1c;
     --accent-foreground:        #ffffff;
     --destructive:              #a86a6a;
     --destructive-foreground:   #ffffff;
-    --border:                   rgba(255, 255, 255, 0.08);
-    --input:                    #0a0a0a;
+    --border:                   #262626;
+    --input:                    #141414;
     --ring:                     rgba(255, 255, 255, 0.15);
 
-    /* RunwayML dark variables */
-    --obsidian:                 #030303;
-    --midnight:                 #0a0a0a;
-    --dusk:                     #1a1a1a;
+    /* Minerva dark variables (Framer-aligned) */
+    --obsidian:                 #090909;
+    --midnight:                 #141414;
+    --dusk:                     #1c1c1c;
     --ivory:                    #ffffff;
     --silver:                   #e7eaf0;
-    --fog:                      #939393;
-    --void:                     #030303;
+    --fog:                      #999999;
+    --void:                     #090909;
 
-    --sidebar:                        #030303;
+    --sidebar:                        #090909;
     --sidebar-foreground:             #e7eaf0;
     --sidebar-primary:                #ffffff;
     --sidebar-primary-foreground:     #000000;
-    --sidebar-accent:                 #1a1a1a;
+    --sidebar-accent:                 #1c1c1c;
     --sidebar-accent-foreground:      #ffffff;
-    --sidebar-border:                 rgba(255, 255, 255, 0.08);
+    --sidebar-border:                 #262626;
     --sidebar-ring:                   rgba(255, 255, 255, 0.15);
   }
 

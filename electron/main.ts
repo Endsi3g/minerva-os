@@ -44,7 +44,7 @@ function createWindow() {
     show: false,
   });
 
-  mainWindow.loadURL(`${APP_URL}/welcome`);
+  mainWindow.loadURL(APP_URL);
 
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();

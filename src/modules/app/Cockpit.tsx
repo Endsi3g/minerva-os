@@ -8,6 +8,8 @@ import {
 import Link from 'next/link';
 import { useLang } from '@/i18n';
 import { useWorkspaces, useClients, useProjects, useTasks, useApprovals, useInvoices, useRetainers } from '@/lib/hooks/useSupabase';
+import { useTier } from '@/lib/hooks/useTier';
+import { cn } from '@/lib/utils';
 import { computePortfolioHealth } from '@/lib/health-scores';
 import { HealthScoreRing } from '@/components/minerva/HealthScoreRing';
 import { MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS, MOCK_APPROVALS, MOCK_INVOICES, MOCK_RETAINERS } from '@/lib/mock-data';
@@ -44,6 +46,7 @@ function KpiCard({ label, value, sub, color = '#F5F1E8' }: { label: string; valu
 
 export default function Cockpit() {
   const { t } = useLang();
+  const { tier } = useTier();
   const ck = t.app.cockpit;
   const hs = t.app.healthScores;
 
@@ -108,6 +111,13 @@ export default function Cockpit() {
     return wins.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
   }, [invoices, projects, ck]);
 
+  const urgentTasks = useMemo(() => {
+    return tasks
+      .filter(t => t.status !== 'done')
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .slice(0, 5);
+  }, [tasks]);
+
   const alertIcons: Record<string, React.ElementType> = { critical: AlertTriangle, warning: AlertCircle, info: Info };
   const alertColors: Record<string, string> = { critical: '#A86A6A', warning: '#B89B6A', info: '#8A9099' };
 
@@ -141,24 +151,41 @@ export default function Cockpit() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div
-            className="rounded-[14px] border p-4 flex items-center gap-4"
-            style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
-          >
-            <HealthScoreRing score={portfolio?.overall ?? 0} size={52} />
-            <div>
-              <p className="text-[11px]" style={{ color: '#8A9099' }}>{ck.portfolioScore}</p>
-              <p className="text-xs mt-0.5" style={{ color: scoreColor(portfolio?.overall ?? 0) }}>
-                {hs.trend[portfolio?.trend ?? 'stable']}
-              </p>
-            </div>
-          </div>
-          <KpiCard
-            label={t.app.cockpit.sections.alerts}
-            value={<AnimatedNumber value={portfolio?.summary.critical ?? 0} />}
-            sub={portfolio?.summary.critical ? `${portfolio.summary.atRisk} at risk` : 'All healthy'}
-            color={portfolio?.summary.critical ? '#A86A6A' : '#7FA38A'}
-          />
+          {tier === 'starter' ? (
+            <>
+              <KpiCard
+                label={t.portal.overview.stats.activeProjects}
+                value={<AnimatedNumber value={projects.filter(p => p.status === 'active').length} />}
+                sub={`${projects.length} total`}
+              />
+              <KpiCard
+                label={t.portal.overview.stats.pendingApprovals}
+                value={<AnimatedNumber value={approvals.filter(a => a.status === 'pending').length} />}
+                sub={avgApprovalDays > 0 ? `${avgApprovalDays}d avg. age` : 'All resolved'}
+              />
+            </>
+          ) : (
+            <>
+              <div
+                className="rounded-[14px] border p-4 flex items-center gap-4"
+                style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+              >
+                <HealthScoreRing score={portfolio?.overall ?? 0} size={52} />
+                <div>
+                  <p className="text-[11px]" style={{ color: '#8A9099' }}>{ck.portfolioScore}</p>
+                  <p className="text-xs mt-0.5" style={{ color: scoreColor(portfolio?.overall ?? 0) }}>
+                    {hs.trend[portfolio?.trend ?? 'stable']}
+                  </p>
+                </div>
+              </div>
+              <KpiCard
+                label={t.app.cockpit.sections.alerts}
+                value={<AnimatedNumber value={portfolio?.summary.critical ?? 0} />}
+                sub={portfolio?.summary.critical ? `${portfolio.summary.atRisk} at risk` : 'All healthy'}
+                color={portfolio?.summary.critical ? '#A86A6A' : '#7FA38A'}
+              />
+            </>
+          )}
           <KpiCard
             label="On-time delivery"
             value={`${onTimeRate}%`}
@@ -174,97 +201,137 @@ export default function Cockpit() {
       )}
 
       {/* Critical Alerts */}
-      <section>
-        <SectionTitle>{ck.sections.alerts}</SectionTitle>
-        {!portfolio?.alerts.length ? (
-          <div
-            className="rounded-[14px] border p-6 flex items-center gap-3"
-            style={{ backgroundColor: 'rgba(127,163,138,0.04)', borderColor: 'rgba(127,163,138,0.15)' }}
-          >
-            <CheckCircle2 size={16} style={{ color: '#7FA38A' }} />
-            <p className="text-sm" style={{ color: '#8A9099' }}>{ck.noAlerts}</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {portfolio.alerts.slice(0, 6).map((alert: HealthAlert) => {
-              const Icon = alertIcons[alert.severity] ?? Info;
-              const color = alertColors[alert.severity] ?? '#8A9099';
-              return (
-                <motion.div
-                  key={alert.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="rounded-[12px] border flex items-center gap-3 px-4 py-3"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: `${color}30` }}
-                >
-                  <Icon size={14} style={{ color, flexShrink: 0 }} />
-                  <p className="text-sm flex-1" style={{ color: '#F5F1E8' }}>{alert.message}</p>
-                  <Link href={alert.link}>
-                    <ChevronRight size={14} style={{ color: '#8A9099' }} />
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      {tier !== 'starter' && (
+        <section>
+          <SectionTitle>{ck.sections.alerts}</SectionTitle>
+          {!portfolio?.alerts.length ? (
+            <div
+              className="rounded-[14px] border p-6 flex items-center gap-3"
+              style={{ backgroundColor: 'rgba(127,163,138,0.04)', borderColor: 'rgba(127,163,138,0.15)' }}
+            >
+              <CheckCircle2 size={16} style={{ color: '#7FA38A' }} />
+              <p className="text-sm" style={{ color: '#8A9099' }}>{ck.noAlerts}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {portfolio.alerts.slice(0, 6).map((alert: HealthAlert) => {
+                const Icon = alertIcons[alert.severity] ?? Info;
+                const color = alertColors[alert.severity] ?? '#8A9099';
+                return (
+                  <motion.div
+                    key={alert.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="rounded-[12px] border flex items-center gap-3 px-4 py-3"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: `${color}30` }}
+                  >
+                    <Icon size={14} style={{ color, flexShrink: 0 }} />
+                    <p className="text-sm flex-1" style={{ color: '#F5F1E8' }}>{alert.message}</p>
+                    <Link href={alert.link}>
+                      <ChevronRight size={14} style={{ color: '#8A9099' }} />
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Portfolio Health */}
-      <section>
-        <SectionTitle>{ck.sections.health}</SectionTitle>
-        {!portfolio?.clients.length ? (
-          <p className="text-sm" style={{ color: '#8A9099' }}>{ck.allHealthy}</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {portfolio.clients.map((c, i) => {
-              const TrendIcon = trendIcon(c.trend);
-              return (
-                <motion.div
-                  key={c.clientId}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="rounded-[14px] border p-4 space-y-3"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
-                      style={{ backgroundColor: `${scoreColor(c.overall)}20`, color: scoreColor(c.overall) }}
-                    >
-                      {c.clientName.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate" style={{ color: '#F5F1E8' }}>{c.clientName}</p>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <TrendIcon size={10} style={{ color: trendColor(c.trend) }} />
-                        <span className="text-[10px]" style={{ color: trendColor(c.trend) }}>{hs.trend[c.trend]}</span>
+      {tier !== 'starter' && (
+        <section>
+          <SectionTitle>{ck.sections.health}</SectionTitle>
+          {!portfolio?.clients.length ? (
+            <p className="text-sm" style={{ color: '#8A9099' }}>{ck.allHealthy}</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {portfolio.clients.map((c, i) => {
+                const TrendIcon = trendIcon(c.trend);
+                return (
+                  <motion.div
+                    key={c.clientId}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="rounded-[14px] border p-4 space-y-3"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
+                        style={{ backgroundColor: `${scoreColor(c.overall)}20`, color: scoreColor(c.overall) }}
+                      >
+                        {c.clientName.slice(0, 2).toUpperCase()}
                       </div>
-                    </div>
-                    <HealthScoreRing score={c.overall} size={40} strokeWidth={4} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                    {(Object.keys(c.dimensions) as Array<keyof typeof c.dimensions>).map(dim => (
-                      <div key={dim}>
-                        <div className="flex justify-between mb-0.5">
-                          <span className="text-[9px]" style={{ color: '#8A9099' }}>{hs.dimensions[dim]}</span>
-                          <span className="text-[9px]" style={{ color: scoreColor(c.dimensions[dim]) }}>{c.dimensions[dim]}</span>
-                        </div>
-                        <div className="h-0.5 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${c.dimensions[dim]}%`, backgroundColor: scoreColor(c.dimensions[dim]) }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate" style={{ color: '#F5F1E8' }}>{c.clientName}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <TrendIcon size={10} style={{ color: trendColor(c.trend) }} />
+                          <span className="text-[10px]" style={{ color: trendColor(c.trend) }}>{hs.trend[c.trend]}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                      <HealthScoreRing score={c.overall} size={40} strokeWidth={4} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                      {(Object.keys(c.dimensions) as Array<keyof typeof c.dimensions>).map(dim => (
+                        <div key={dim}>
+                          <div className="flex justify-between mb-0.5">
+                            <span className="text-[9px]" style={{ color: '#8A9099' }}>{hs.dimensions[dim]}</span>
+                            <span className="text-[9px]" style={{ color: scoreColor(c.dimensions[dim]) }}>{c.dimensions[dim]}</span>
+                          </div>
+                          <div className="h-0.5 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${c.dimensions[dim]}%`, backgroundColor: scoreColor(c.dimensions[dim]) }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Delivery + Wins */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={cn("grid grid-cols-1 gap-6", tier === 'starter' ? "md:grid-cols-3" : "md:grid-cols-2")}>
+        {/* Urgent Tasks (Starter only) */}
+        {tier === 'starter' && (
+          <section>
+            <SectionTitle>{ck.sections.urgentTasks}</SectionTitle>
+            {!urgentTasks.length ? (
+              <div
+                className="rounded-[14px] border p-5 flex items-center gap-3"
+                style={{ backgroundColor: 'rgba(127,163,138,0.04)', borderColor: 'rgba(127,163,138,0.15)' }}
+              >
+                <CheckCircle2 size={16} style={{ color: '#7FA38A' }} />
+                <p className="text-sm" style={{ color: '#8A9099' }}>All tasks completed</p>
+              </div>
+            ) : (
+              <div
+                className="rounded-[14px] border divide-y"
+                style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', '--tw-divide-opacity': '1' } as React.CSSProperties}
+              >
+                {urgentTasks.map((task) => (
+                  <div key={task.id} className="flex items-center gap-3 px-4 py-2.5">
+                    <div
+                      className="h-1.5 w-1.5 rounded-full shrink-0"
+                      style={{
+                        backgroundColor: task.priority === 'urgent' ? '#A86A6A' : task.priority === 'high' ? '#B89B6A' : '#8A9099'
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate" style={{ color: '#F5F1E8' }}>{task.title}</p>
+                      <p className="text-[10px]" style={{ color: '#8A9099' }}>{task.project}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Delivery Health */}
         <section>
           <SectionTitle>{ck.sections.delivery}</SectionTitle>

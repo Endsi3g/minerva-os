@@ -363,7 +363,13 @@ export function OnboardingWizard() {
     );
   }
 
-  function handleComplete() {
+  async function handleComplete() {
+    if (user) {
+      await supabase
+        .from('user_profiles')
+        .update({ onboarding_complete: true })
+        .eq('user_id', user.id);
+    }
     router.push('/app/dashboard');
   }
 

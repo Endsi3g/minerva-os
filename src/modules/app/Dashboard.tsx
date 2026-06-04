@@ -1,109 +1,130 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { FolderKanban, CheckSquare, ClipboardCheck, DollarSign, AlertTriangle, X, ChevronRight, Flame, RefreshCw, Sparkles, Loader2, GitPullRequest } from 'lucide-react';
+import {
+  Sparkles,
+  Plus,
+  ExternalLink,
+  Phone,
+  Network,
+  Bot,
+  Wrench,
+  Database,
+  Globe,
+  Search,
+  MessageSquare,
+  Users,
+  HelpCircle,
+  ArrowRight,
+  Activity,
+  Key,
+  Hammer,
+} from 'lucide-react';
 import { GettingStartedChecklist } from '@/components/minerva/GettingStartedChecklist';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWorkspaces, useProjects, useInvoices, useApprovals, useDeals, useTasks, useActivity, useWorkflowRuns, useHandoffs } from '@/lib/hooks/useSupabase';
+import { useWorkspaces, useProjects, useInvoices, useApprovals, useDeals, useTasks, useActivity } from '@/lib/hooks/useSupabase';
 import { AgentSuggestions } from '@/components/agents/AgentSuggestions';
-import { motion } from 'motion/react';
-import type { Translations } from '@/i18n';
-import { ShiftCard } from '@/components/ui/shift-card';
-import { Expandable, ExpandableTrigger, ExpandableContent } from '@/components/ui/expandable';
+import { motion, AnimatePresence } from 'motion/react';
 import { TextureOverlay } from '@/components/ui/texture-overlay';
-import { AnimatedNumber } from '@/components/ui/animated-number';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { TextAnimate } from '@/components/ui/text-animate';
-import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from 'recharts';
 
-/* ── Risk flag computation ───────────────────────────────────────────────── */
-
-interface RiskFlag {
-  id: string;
-  message: string;
-  link: string;
-  severity: 'high' | 'medium';
+/* ── Types ───────────────────────────────────────────────────────────────── */
+interface RecentPageItem {
+  title: string;
+  path: string;
+  timestamp: number;
 }
 
-function computeRiskFlags(t: Translations, data: { projects: any[], invoices: any[], approvals: any[], deals: any[] }): RiskFlag[] {
-  const today = new Date();
-  const flags: RiskFlag[] = [];
-  const r = t.app.common.risks;
+const MOCK_RECENT_AGENTS = [
+  { id: 'ux-research-insights', name: 'UX Research Insights Agent', edited: 'Edited 7m ago', color: 'bg-indigo-600', initials: 'UX', icons: [Globe, Search, MessageSquare] },
+  { id: 'ux-competitor-benchmark', name: 'UX Competitor Benchmark Analyst', edited: 'Edited 1h ago', color: 'bg-emerald-600', initials: 'CB', icons: [Activity, Wrench, Key] },
+  { id: 'rellie-recruiter', name: 'Rellie, The Relevance Recruiter', edited: 'Edited 8h ago', color: 'bg-purple-600', initials: 'RL', icons: [Users, Bot, Database] },
+  { id: 'recruitmer', name: 'Recruitmer', edited: 'Edited 1d ago', color: 'bg-pink-600', initials: 'RM', icons: [Hammer, HelpCircle, Activity] },
+];
 
-  data.projects.forEach(p => {
-    if (p.status === 'active' && new Date(p.dueDate) < today) {
-      flags.push({
-        id: `proj-${p._id}`,
-        message: r.pastDue.replace('{{name}}', p.name),
-        link: '/app/projects',
-        severity: 'high',
-      });
-    }
-  });
+function AgentOrbit({ avatarColor = 'bg-blue-500', name = 'A', icons = [] }: { avatarColor?: string, name?: string, icons?: any[] }) {
+  return (
+    <div className="relative w-24 h-24 flex items-center justify-center select-none mx-auto mb-3">
+      {/* Outer orbit circle */}
+      <div className="absolute w-20 h-20 rounded-full border border-white/5 animate-[spin_40s_linear_infinite]" />
+      
+      {/* Inner dashed orbit circle */}
+      <div className="absolute w-14 h-14 rounded-full border border-dashed border-[#7FA38A]/10 animate-[spin_20s_linear_infinite]" />
 
-  const overdueInvoices = data.invoices.filter(i => i.status === 'overdue');
-  if (overdueInvoices.length > 0) {
-    flags.push({
-      id: 'invoices-overdue',
-      message: (overdueInvoices.length > 1 ? r.invoicesOverduePlural : r.invoicesOverdue)
-        .replace('{{count}}', String(overdueInvoices.length)),
-      link: '/app/billing',
-      severity: 'high',
-    });
-  }
+      {/* Floating mini icons on outer orbit */}
+      {icons.map((Icon: any, idx: number) => {
+        const angle = (idx * 360) / icons.length;
+        const radius = 40; // perimeter placement
+        const x = Math.cos((angle * Math.PI) / 180) * radius;
+        const y = Math.sin((angle * Math.PI) / 180) * radius;
+        
+        return (
+          <div
+            key={idx}
+            className="absolute h-4 w-4 rounded-full bg-[#171C2A] border border-white/10 flex items-center justify-center shadow-md"
+            style={{
+              transform: `translate(${x}px, ${y}px)`,
+            }}
+          >
+            <Icon size={8} className="text-[#7FA38A]" />
+          </div>
+        );
+      })}
 
-  data.approvals.forEach(a => {
-    if (a.status === 'pending') {
-      const days = Math.floor((today.getTime() - new Date(a.submittedDate).getTime()) / (1000 * 60 * 60 * 24));
-      if (days > 5) {
-        flags.push({
-          id: `approval-${a._id}`,
-          message: r.pendingLong.replace('{{name}}', a.name).replace('{{days}}', String(days)),
-          link: '/app/approvals',
-          severity: 'medium',
-        });
-      }
-    }
-  });
-
-  data.deals.forEach(l => {
-    if (!['won', 'lost'].includes(l.stage)) {
-      const daysInStage = Math.floor((today.getTime() - new Date(l.lastContact).getTime()) / (1000 * 60 * 60 * 24));
-      if (daysInStage > 14) {
-        flags.push({
-          id: `lead-${l._id}`,
-          message: r.staleLead
-            .replace('{{company}}', l.company)
-            .replace('{{stage}}', t.app.pipeline.stages[l.stage as keyof typeof t.app.pipeline.stages] || l.stage)
-            .replace('{{days}}', String(daysInStage)),
-          link: '/app/pipeline',
-          severity: 'medium',
-        });
-      }
-    }
-  });
-
-  return flags;
+      {/* Central avatar bubble */}
+      <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md z-10 border border-white/10", avatarColor)}>
+        {name}
+      </div>
+    </div>
+  );
 }
+
+const TOP_PERFORMERS = [
+  { name: 'Kael', role: 'Owner', capacity: 85, onTimeRate: 98, openTasks: 3, avatar: 'K' },
+  { name: 'Jane Studio', role: 'Designer', capacity: 92, onTimeRate: 100, openTasks: 2, avatar: 'JS' },
+  { name: 'Alex', role: 'Developer', capacity: 70, onTimeRate: 90, openTasks: 5, avatar: 'A' },
+];
+
+const TIME_TRACKED_DATA = [
+  { date: 'Jan 25', unbilled: 0.5, billed: 4 },
+  { date: 'Jan 27', unbilled: 1.2, billed: 6 },
+  { date: 'Jan 29', unbilled: 0, billed: 3.5 },
+  { date: 'Jan 31', unbilled: 2, billed: 5 },
+  { date: 'Feb 02', unbilled: 1.5, billed: 6.2 },
+  { date: 'Feb 04', unbilled: 0.8, billed: 4.8 },
+  { date: 'Feb 06', unbilled: 3.2, billed: 1.5 },
+  { date: 'Feb 08', unbilled: 2.1, billed: 5.5 },
+];
+
 
 /* ── Activity Feed ────────────────────────────────────────────────────────── */
-
 function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspaceId: any }) {
   const activity = useActivity(workspaceId);
 
   if (activity === null) {
     return (
-      <div className="space-y-3">
-        {[1, 2, 3].map(i => (
+      <div className="space-y-4">
+        {[1, 2, 3, 4].map(i => (
           <div key={i} className="flex items-start gap-3">
-            <Skeleton className="h-7 w-7 rounded-full shrink-0 mt-0.5" />
+            <Skeleton className="h-6 w-6 rounded-full shrink-0 mt-0.5" />
             <div className="space-y-1.5 flex-1">
               <Skeleton className="h-3 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-2 w-1/4" />
             </div>
           </div>
         ))}
@@ -118,18 +139,17 @@ function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspa
   }
 
   return (
-    <div className="space-y-4">
-      {activity.map((a: any) => (
-        <div key={a._id} className="flex items-start gap-3">
-          <div className="h-7 w-7 rounded-full bg-dusk border border-white/5 flex items-center justify-center shrink-0 text-[10px] text-silver font-medium mt-0.5">
-            {a.user[0]}
-          </div>
+    <div className="relative border-l border-white/5 pl-4 ml-2.5 space-y-5">
+      {activity.slice(0, 10).map((a: any) => (
+        <div key={a._id} className="relative">
+          {/* Dot */}
+          <div className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full border border-white/10 bg-[#7FA38A]" />
           <div className="flex-1 min-w-0">
             <p className="text-xs text-silver leading-relaxed">
-              <span className="font-medium text-ivory">{a.user}</span> {a.action} <span className="font-medium text-ivory">{a.targetName}</span>
+              <span className="font-semibold text-ivory">{a.user}</span> {a.action} <span className="text-ivory font-medium">{a.targetName}</span>
             </p>
             <p className="text-[10px] text-fog mt-0.5">
-              {new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date(a.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
         </div>
@@ -139,7 +159,6 @@ function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspa
 }
 
 /* ── AI Daily Briefing ────────────────────────────────────────────────────── */
-
 function DailyBriefing({ context, labels }: {
   context: string;
   labels: { title: string; loading: string; error: string; refresh: string };
@@ -147,7 +166,6 @@ function DailyBriefing({ context, labels }: {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -157,7 +175,7 @@ function DailyBriefing({ context, labels }: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: 'Generate a concise daily briefing for this agency workspace. Highlight the top 3 priorities for today, any risks, and one positive trend. Be direct and actionable.' }],
+          messages: [{ role: 'user', content: 'Generate a dense, bulleted strategic advice list based on this context. Prefix each point with a middot (·). Make it extremely actionable.' }],
           context,
         }),
       });
@@ -176,383 +194,86 @@ function DailyBriefing({ context, labels }: {
   }, [context, load]);
 
   return (
-    <Expandable expanded={expanded} onToggle={() => setExpanded(!expanded)}>
-      <div
-        className="rounded-md p-4 border border-border relative group overflow-hidden transition-all duration-300 bg-card shadow-none"
-      >
-        <TextureOverlay texture="dots" opacity={0.12} />
-        <div className="flex items-center justify-between mb-3 relative z-10">
-          <ExpandableTrigger className="flex items-center gap-2 flex-1 text-left focus:outline-none select-none">
-            <Sparkles size={13} className="text-sage" />
-            <span className="text-xs font-medium text-sage uppercase tracking-widest">{labels.title}</span>
-            <span className="text-[9px] text-fog lowercase bg-sage/5 border border-sage/10 px-1.5 py-0.5 rounded-full ml-2">
-              {expanded ? 'Click to collapse' : 'Click to expand'}
-            </span>
-          </ExpandableTrigger>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              load();
-            }}
-            disabled={loading}
-            className="text-fog hover:text-silver transition-colors relative z-20"
-          >
-            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-          </button>
+    <div className="rounded-xl border border-white/5 bg-[#111522] p-5 relative overflow-hidden">
+      <TextureOverlay texture="dots" opacity={0.08} />
+      <div className="flex items-center justify-between mb-3 relative z-10">
+        <div className="flex items-center gap-1.5">
+          <Sparkles size={14} className="text-[#B89B6A] animate-pulse" />
+          <span className="text-xs font-semibold text-ivory uppercase tracking-wider">{labels.title}</span>
         </div>
-        
-        <div className="relative z-10">
-          {loading && !content && (
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-4/5" />
-              <Skeleton className="h-3 w-3/5" />
-              <p className="text-[11px] text-fog mt-2">{labels.loading}</p>
-            </div>
-          )}
-          {err && !loading && (
-            <p className="text-[11px] text-fog">{labels.error}</p>
-          )}
-          {content && !loading && (
-            <>
-              {/* Collapsed view snippet */}
-              {!expanded && (
-                <ExpandableTrigger className="text-left w-full focus:outline-none">
-                  <p className="text-xs text-silver leading-relaxed line-clamp-2 cursor-pointer hover:text-ivory transition-colors">
-                    {content}
-                  </p>
-                </ExpandableTrigger>
-              )}
-
-              {/* Expanded full details */}
-              <ExpandableContent preset="fade">
-                <p className="text-xs text-silver leading-relaxed whitespace-pre-wrap mt-2 border-t border-white/5 pt-3">
-                  {content}
-                </p>
-              </ExpandableContent>
-            </>
-          )}
-        </div>
-      </div>
-    </Expandable>
-  );
-}
-
-/* ── Firefighter View ─────────────────────────────────────────────────────── */
-
-interface AuditFinding {
-  title: string;
-  description: string;
-  severity: 'high' | 'medium';
-  impact: string;
-}
-
-interface AuditResult {
-  healthScore: number;
-  findings: AuditFinding[];
-  recommendations: string;
-}
-
-function FirefighterView({ flags, dismissed, onDismiss, onNavigate, labels, workspaceId }: {
-  flags: RiskFlag[];
-  dismissed: string[];
-  onDismiss: (id: string) => void;
-  onNavigate: (link: string) => void;
-  labels: { allClear: string; allClearSub: string };
-  workspaceId: string;
-}) {
-  const active = flags.filter(f => !dismissed.includes(f.id));
-  const [auditing, setAuditing] = useState(false);
-  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
-
-  const runAudit = async () => {
-    if (!workspaceId || auditing) return;
-    setAuditing(true);
-    try {
-      const res = await fetch('/api/ai/audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workspaceId }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setAuditResult(data);
-    } catch (err) {
-      console.error('Audit failed:', err);
-    } finally {
-      setAuditing(false);
-    }
-  };
-
-  const high = active.filter(f => f.severity === 'high');
-  const medium = active.filter(f => f.severity === 'medium');
-
-  return (
-    <div className="space-y-6">
-      {/* Strategic Audit Trigger */}
-      <div className="rounded-md border border-border bg-card p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-none">
-        <div>
-          <h3 className="text-sm font-semibold text-ivory flex items-center gap-2">
-            <Sparkles size={14} className="text-sage animate-pulse" />
-            AI Strategic Audit
-          </h3>
-          <p className="text-xs text-fog mt-0.5">
-            Run a deep operational audit of projects, financial logs, and backlog capacity.
-          </p>
-        </div>
-        <Button 
-          onClick={runAudit} 
-          disabled={auditing || !workspaceId}
-          size="sm"
-          className="shrink-0 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-all px-4 h-9 text-xs font-semibold"
+        <button
+          onClick={load}
+          disabled={loading}
+          className="text-fog hover:text-silver transition-colors cursor-pointer"
         >
-          {auditing ? (
-            <>
-              <Loader2 size={13} className="mr-1.5 animate-spin" />
-              Auditing...
-            </>
-          ) : (
-            <>
-              <Sparkles size={13} className="mr-1.5" />
-              Run Strategic Audit
-            </>
-          )}
-        </Button>
+          <RefreshCwIcon className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
+        </button>
       </div>
 
-      {/* Auditing State */}
-      {auditing && (
-        <div className="rounded-xl border border-white/5 bg-midnight/20 p-8 flex flex-col items-center justify-center text-center gap-3">
-          <Loader2 size={24} className="animate-spin text-sage" />
-          <p className="text-xs text-silver italic animate-pulse">Hermes is reviewing project budget consumption, timeline health, and client receivables...</p>
-        </div>
-      )}
-
-      {/* Audit Results View */}
-      {auditResult && !auditing && (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-5"
-        >
-          {/* Health Score Gauge */}
-          <div className="bg-card border border-border p-5 rounded-md flex flex-col items-center justify-center text-center relative overflow-hidden">
-            <div className="absolute top-2 right-2">
-              <span className="text-[9px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded-full">AUDIT REPORT</span>
-            </div>
-            
-            <div className="relative h-24 w-24 flex items-center justify-center mb-3">
-              <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <path
-                  className="text-white/5"
-                  strokeWidth="3"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <motion.path
-                  initial={{ strokeDasharray: "0 100" }}
-                  animate={{ strokeDasharray: `${auditResult.healthScore} 100` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  className="text-sage"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <span className="text-2xl font-bold font-mono text-ivory tracking-tighter">{auditResult.healthScore}</span>
-            </div>
-            <p className="text-[10px] text-fog uppercase tracking-widest font-medium">Workspace Health Score</p>
+      <div className="relative z-10 min-h-[60px]">
+        {loading && (
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-full bg-white/5" />
+            <Skeleton className="h-3 w-5/6 bg-white/5" />
+            <Skeleton className="h-3 w-2/3 bg-white/5" />
           </div>
-
-          {/* Strategic Findings list */}
-          <div className="lg:col-span-2 bg-card border border-border p-5 rounded-md flex flex-col justify-between">
-            <div>
-              <h4 className="text-xs font-semibold text-ivory uppercase tracking-wider mb-3">Strategic Findings</h4>
-              {auditResult.findings.length === 0 ? (
-                <p className="text-xs text-fog italic py-4">No strategic issues detected. Your workspace operational margins are well protected.</p>
-              ) : (
-                <div className="space-y-3">
-                  {auditResult.findings.map((f, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/3 border border-white/5">
-                      <span className={cn(
-                        "text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full shrink-0",
-                        f.severity === 'high' ? "text-ember bg-ember/10" : "text-warm bg-warm/10"
-                      )}>
-                        {f.severity}
-                      </span>
-                      <div className="space-y-0.5">
-                        <p className="text-xs font-medium text-ivory">{f.title}</p>
-                        <p className="text-[11px] text-silver leading-relaxed">{f.description}</p>
-                        <p className="text-[10px] text-fog italic"><span className="text-warm font-semibold">Impact:</span> {f.impact}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Recommendations Brief */}
-            {auditResult.recommendations && (
-              <div className="mt-4 pt-4 border-t border-white/5">
-                <p className="text-[10px] text-fog uppercase tracking-widest font-medium mb-1 flex items-center gap-1">
-                  <Sparkles size={10} className="text-warm" />
-                  Hermes Executive Recommendations
-                </p>
-                <p className="text-xs text-silver leading-relaxed italic">
-                  "{auditResult.recommendations}"
-                </p>
-              </div>
-            )}
+        )}
+        {err && !loading && (
+          <p className="text-xs text-ember">{labels.error}</p>
+        )}
+        {content && !loading && (
+          <div className="text-xs text-silver leading-relaxed whitespace-pre-wrap font-sans">
+            {content}
           </div>
-        </motion.div>
-      )}
-
-      {/* Static Alerts view */}
-      {!auditing && (
-        <>
-          {active.length === 0 && !auditResult ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-sage/10 flex items-center justify-center">
-                <Flame size={20} className="text-sage" />
-              </div>
-              <p className="text-sm text-silver font-medium">{labels.allClear}</p>
-              <p className="text-xs text-fog">{labels.allClearSub}</p>
-            </div>
-          ) : (
-            <div className="space-y-6 pt-2">
-              {high.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-[10px] text-ember uppercase tracking-widest font-medium">Critical Alerts · {high.length}</p>
-                  {high.map(flag => (
-                    <FlagCard key={flag.id} flag={flag} onDismiss={onDismiss} onNavigate={onNavigate} />
-                  ))}
-                </div>
-              )}
-              {medium.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-[10px] text-warm uppercase tracking-widest font-medium">Attention Required · {medium.length}</p>
-                  {medium.map(flag => (
-                    <FlagCard key={flag.id} flag={flag} onDismiss={onDismiss} onNavigate={onNavigate} />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }
 
-function FlagCard({ flag, onDismiss, onNavigate }: {
-  flag: RiskFlag;
-  onDismiss: (id: string) => void;
-  onNavigate: (link: string) => void;
-}) {
+function RefreshCwIcon({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        'flex items-center gap-3 px-4 py-3 rounded-xl border text-sm',
-        flag.severity === 'high'
-          ? 'bg-ember/5 border-ember/20 text-ember'
-          : 'bg-warm/5 border-warm/15 text-warm'
-      )}
-    >
-      <AlertTriangle size={13} className="shrink-0" />
-      <button
-        className="flex-1 text-left hover:opacity-80 transition-opacity"
-        onClick={() => onNavigate(flag.link)}
-      >
-        {flag.message}
-      </button>
-      <button
-        onClick={() => onDismiss(flag.id)}
-        className="opacity-50 hover:opacity-100 transition-opacity shrink-0"
-      >
-        <X size={13} />
-      </button>
-    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+    </svg>
   );
 }
 
-/* ── Dashboard ────────────────────────────────────────────────────────────── */
-
+/* ── Skeletons ────────────────────────────────────────────────────────────── */
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6 w-full animate-pulse">
-      {/* Greeting skeleton */}
+    <div className="space-y-6 w-full animate-pulse px-4 py-6 max-w-[1400px] mx-auto">
+      {/* Banner */}
+      <Skeleton className="h-44 w-full rounded-xl bg-white/5" />
+      {/* Greeting */}
       <div className="space-y-2">
-        <Skeleton className="h-9 w-64 bg-white/5" />
-        <Skeleton className="h-4 w-48 bg-white/5" />
+        <Skeleton className="h-8 w-64 bg-white/5" />
+        <Skeleton className="h-4 w-96 bg-white/5" />
       </div>
-
-      {/* Tab bar skeleton */}
-      <div className="flex gap-4 border-b border-white/5 pb-2">
-        <Skeleton className="h-4 w-16 bg-white/5" />
-        <Skeleton className="h-4 w-24 bg-white/5" />
-      </div>
-
-      {/* Daily Briefing skeleton */}
-      <div className="rounded-xl p-4 border border-white/5 bg-card space-y-3">
-        <Skeleton className="h-4 w-28 bg-white/5" />
-        <div className="space-y-2">
-          <Skeleton className="h-3 w-full bg-white/5" />
-          <Skeleton className="h-3 w-5/6 bg-white/5" />
-          <Skeleton className="h-3 w-4/5 bg-white/5" />
-        </div>
-      </div>
-
-      {/* KPI Cards skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-white/5 bg-card p-4 space-y-4">
-            <div className="flex justify-between items-center">
-              <Skeleton className="h-3 w-20 bg-white/5" />
-              <Skeleton className="h-4 w-4 bg-white/5" />
-            </div>
-            <Skeleton className="h-7 w-16 bg-white/5" />
-            <Skeleton className="h-3 w-24 bg-white/5" />
-          </div>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => (
+          <Skeleton key={i} className="h-20 rounded-xl bg-white/5" />
         ))}
       </div>
-
-      {/* Grid skeleton for Activity feed & Quick actions */}
+      {/* Main layout grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-xl border border-white/5 bg-card p-5 space-y-4">
-          <Skeleton className="h-4 w-28 bg-white/5" />
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex gap-3">
-                <Skeleton className="h-7 w-7 rounded-full bg-white/5 shrink-0" />
-                <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-3 w-3/4 bg-white/5" />
-                  <Skeleton className="h-2 w-1/4 bg-white/5" />
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="lg:col-span-2 space-y-6">
+          <Skeleton className="h-60 rounded-xl bg-white/5" />
+          <Skeleton className="h-80 rounded-xl bg-white/5" />
         </div>
-        
-        <div className="rounded-xl border border-white/5 bg-card p-5 space-y-4">
-          <Skeleton className="h-4 w-24 bg-white/5" />
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full bg-white/5" />
-            ))}
-          </div>
-        </div>
+        <Skeleton className="h-full min-h-[500px] rounded-xl bg-white/5" />
       </div>
     </div>
   );
 }
 
+/* ── Dashboard Restructure ────────────────────────────────────────────────── */
 export default function Dashboard() {
   const router = useRouter();
   const { t } = useLang();
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?._id;
@@ -568,8 +289,6 @@ export default function Dashboard() {
   const approvals = useApprovals(workspaceId);
   const deals = useDeals(workspaceId);
   const tasks = useTasks(workspaceId);
-  const workflowRuns = useWorkflowRuns(workspaceId ?? null, 50);
-  const handoffs = useHandoffs(workspaceId ?? null);
 
   const isLoading = workspaces === null || projects === null || invoices === null || approvals === null || deals === null || tasks === null;
 
@@ -578,234 +297,429 @@ export default function Dashboard() {
   const greeting = hour < 12 ? d.greetingMorning : hour < 18 ? d.greetingAfternoon : d.greetingEvening;
   const displayName = user?.name ?? 'Uprising Studio';
 
+  /* ── State for local tasks completion ── */
+  const [localTasks, setLocalTasks] = useState<any[]>([]);
+  useEffect(() => {
+    if (tasks) {
+      // Filter to keep only active, non-completed tasks
+      setLocalTasks(tasks.filter((tsk: any) => tsk.status !== 'done'));
+    }
+  }, [tasks]);
+
+  const handleToggleTask = async (taskId: string, title: string) => {
+    setLocalTasks(prev => prev.filter(t => t.id !== taskId && t._id !== taskId));
+    toast.success(`Task "${title}" completed!`);
+    try {
+      await supabase.from('tasks').update({ status: 'done' }).eq('id', taskId);
+    } catch (err) {
+      console.error('Failed to update task:', err);
+    }
+  };
+
+  /* ── Recent pages state & hook ── */
+  const [recentPages, setRecentPages] = useState<RecentPageItem[]>([]);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const key = 'minerva_recent_pages';
+      let pages = JSON.parse(localStorage.getItem(key) || '[]');
+      if (pages.length === 0) {
+        pages = [
+          { title: 'Brand Identity', path: '/app/projects', timestamp: Date.now() - 3600000 },
+          { title: 'Active CRM Pipeline', path: '/app/pipeline', timestamp: Date.now() - 7200000 },
+          { title: 'Workspace Settings', path: '/app/settings', timestamp: Date.now() - 86400000 },
+        ];
+        localStorage.setItem(key, JSON.stringify(pages));
+      }
+      setRecentPages(pages);
+
+      // Track current page visit
+      const currentItem = {
+        title: 'Dashboard',
+        path: '/app/dashboard',
+        timestamp: Date.now()
+      };
+      const updated = [currentItem, ...pages.filter((p: any) => p.path !== '/app/dashboard')].slice(0, 4);
+      localStorage.setItem(key, JSON.stringify(updated));
+    }
+  }, []);
+
+  /* ── Financial calculations for Bonsai KPI strip ── */
+  const financialMetrics = useMemo(() => {
+    if (!invoices) return { outstanding: 0, overdue: 0, paidPending: 0, otherIncome: 460 };
+    const outstanding = invoices.filter((i: any) => i.status === 'sent').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const overdue = invoices.filter((i: any) => i.status === 'overdue').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const paidPending = invoices.filter((i: any) => ['paid', 'sent'].includes(i.status)).reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    return { outstanding, overdue, paidPending, otherIncome: 460 };
+  }, [invoices]);
+
   const activeProjectsCount = projects ? projects.filter((p: any) => p.status === 'active').length : 0;
-  const openTasksCount = tasks ? tasks.filter((tsk: any) => tsk.status !== 'done').length : 0;
   const pendingApprovalsCount = approvals ? approvals.filter((a: any) => a.status === 'pending').length : 0;
-  const revenueMtd = invoices
-    ? invoices
-        .filter((i: any) => i.status === 'paid' && new Date(i.date).getMonth() === new Date().getMonth())
-        .reduce((acc: any, i: any) => acc + i.amount, 0)
-    : 0;
-
-  const activeWorkflowRunsCount = workflowRuns ? workflowRuns.filter((r: any) => r.status === 'running').length : 0;
-  const pendingHandoffsCount = handoffs ? handoffs.filter((h: any) => h.status === 'pending').length : 0;
-
-  const kpis = [
-    { label: d.kpis.activeProjects, numericValue: activeProjectsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.activeProjectsDelta, icon: FolderKanban, color: 'text-sage', spotlight: 'spotlight-sage' },
-    { label: d.kpis.openTasks, numericValue: openTasksCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.openTasksDelta, icon: CheckSquare, color: 'text-warm', spotlight: 'spotlight-amber' },
-    { label: d.kpis.pendingApprovals, numericValue: pendingApprovalsCount, format: (n: number) => String(Math.round(n)), delta: d.kpis.pendingApprovalsDelta, icon: ClipboardCheck, color: 'text-ember', spotlight: 'spotlight-rose' },
-    { label: d.kpis.revenueMtd, numericValue: revenueMtd / 1000, format: (n: number) => `$${n.toFixed(1)}k`, delta: d.kpis.revenueMtdDelta, icon: DollarSign, color: 'text-silver', spotlight: 'spotlight-amber' },
-    { label: 'Active Workflows', numericValue: activeWorkflowRunsCount, format: (n: number) => String(Math.round(n)), delta: `${pendingHandoffsCount} handoffs pending`, icon: GitPullRequest, color: 'text-sage', spotlight: 'spotlight-sage' },
-  ];
-
-  const quickActions = [
-    { label: d.newProject, to: '/app/projects' },
-    { label: d.addClient, to: '/app/clients' },
-    { label: d.addDeal, to: '/app/pipeline' },
-    { label: d.sendInvoice, to: '/app/billing' },
-  ];
-
-  const allFlags = computeRiskFlags(t, {
-    projects: projects || [],
-    invoices: invoices || [],
-    approvals: approvals || [],
-    deals: deals || []
-  });
-  const [dismissed, setDismissed] = useState<string[]>([]);
-  const activeFlags = allFlags.filter(f => !dismissed.includes(f.id));
 
   const briefingContext = workspaceId
-    ? `Active projects: ${activeProjectsCount}. Open tasks: ${openTasksCount}. Pending approvals: ${pendingApprovalsCount}. Revenue MTD: $${(revenueMtd / 1000).toFixed(1)}k. Active risk flags: ${activeFlags.length} (${activeFlags.filter(f => f.severity === 'high').length} critical, ${activeFlags.filter(f => f.severity === 'medium').length} medium).`
+    ? `Active projects: ${activeProjectsCount}. Open tasks: ${localTasks.length}. Pending approvals: ${pendingApprovalsCount}. Outstanding invoices: $${financialMetrics.outstanding}. Overdue invoices: $${financialMetrics.overdue}.`
     : '';
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  };
 
   if (isLoading) {
     return <DashboardSkeleton />;
   }
 
   return (
-    <div className="space-y-6 w-full px-4">
-      {/* Premium Dashboard Banner */}
+    <div className="space-y-6 w-full px-6 py-6 max-w-[1400px] mx-auto select-none">
+      
+      {/* Relevance AI Style Welcome Banner */}
       <motion.div
-        className="relative h-48 sm:h-56 w-full rounded-md overflow-hidden border border-border group"
+        className="relative h-48 w-full rounded-xl overflow-hidden border border-white/5 shadow-lg bg-gradient-to-r from-[#0C1222] via-[#0A0D14] to-[#121A30] flex flex-col items-center justify-center p-6 select-none"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       >
-        {/* Background Video with smooth zoom-in on hover */}
+        {/* Banner Star Video Background */}
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+          className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
           src="/dashboard-banner.mp4"
         />
-        {/* Dark Vignette & Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent z-10" />
-        <div className="absolute inset-0 bg-radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, rgba(10, 13, 20, 0.6) 100%) z-10" />
+        
+        {/* Banner Title */}
+        <div className="relative z-20 text-center mb-5 mt-2">
+          <h2 className="text-2xl font-bold tracking-tight text-ivory font-sans">
+            Welcome to Relevance AI {workspace ? `· ${workspace.name}` : ''}
+          </h2>
+        </div>
 
-        {/* Content over the banner */}
-        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 z-20 flex flex-col justify-end h-full">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="space-y-1.5"
+        {/* Floating rounded bar container */}
+        <div className="relative z-20 bg-[#F5F1E8] text-[#0A0D14] rounded-full px-8 py-2.5 flex items-center justify-between gap-6 shadow-xl max-w-md w-full border border-black/10">
+          <button
+            onClick={() => router.push('/app/copilot')}
+            className="flex flex-col items-center gap-0.5 hover:scale-105 transition-transform cursor-pointer"
           >
-            <span className="text-[10px] font-semibold tracking-[0.2em] text-[#7FA38A] bg-[#7FA38A]/10 border border-[#7FA38A]/20 px-2.5 py-0.5 rounded-full backdrop-blur-md self-start inline-block">
-              Uprising Studio
-            </span>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-serif italic">
-              Workspace Core
-            </h2>
-          </motion.div>
+            <Phone size={13} className="text-[#0A0D14]" />
+            <span className="text-[9px] font-bold">Phone</span>
+          </button>
+          
+          <button
+            onClick={() => router.push('/app/resources')}
+            className="flex flex-col items-center gap-0.5 hover:scale-105 transition-transform cursor-pointer"
+          >
+            <Network size={13} className="text-[#0A0D14]" />
+            <span className="text-[9px] font-bold">Workforce</span>
+          </button>
+
+          {/* Centered highlighted Agent button */}
+          <div className="relative -mt-6 flex flex-col items-center group">
+            <button
+              onClick={() => router.push('/app/agents')}
+              className="h-11 w-11 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center shadow-md hover:scale-110 transition-transform cursor-pointer relative"
+            >
+              <div className="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center text-[#A855F7] animate-pulse">
+                <Bot size={16} />
+              </div>
+            </button>
+            <span className="text-[9px] font-extrabold text-[#0A0D14] mt-0.5">Agent</span>
+          </div>
+
+          <button
+            onClick={() => router.push('/app/agent-ops')}
+            className="flex flex-col items-center gap-0.5 hover:scale-105 transition-transform cursor-pointer"
+          >
+            <Wrench size={13} className="text-[#0A0D14]" />
+            <span className="text-[9px] font-bold">Tool</span>
+          </button>
+
+          <button
+            onClick={() => router.push('/app/knowledge')}
+            className="flex flex-col items-center gap-0.5 hover:scale-105 transition-transform cursor-pointer"
+          >
+            <Database size={13} className="text-[#0A0D14]" />
+            <span className="text-[9px] font-bold">Knowledge</span>
+          </button>
         </div>
       </motion.div>
 
-      {/* Greeting */}
+      {/* Greeting Messages */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-1"
       >
-        <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-3xl font-bold text-ivory font-serif italic" />
-        <p className="text-sm text-silver mt-1">{d.subtitle}</p>
+        <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-2xl font-semibold text-ivory tracking-tight" />
+        <p className="text-xs text-fog max-w-2xl leading-relaxed">
+          Welcome {displayName}, your statistics for today are here. Here's what you can do to be better today...
+        </p>
       </motion.div>
 
-      <DirectionAwareTabs tabs={[
-        {
-          id: 0,
-          label: d.tabOverview,
-          content: (
-            <div className="space-y-6 pt-4">
-              {/* Getting Started checklist — shown until all 5 steps complete */}
-              <GettingStartedChecklist />
+      {/* Bonsai-Style Top KPI Analytics Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Outstanding', value: financialMetrics.outstanding, color: 'text-silver' },
+          { label: 'Overdue', value: financialMetrics.overdue, color: 'text-ember' },
+          { label: 'Paid & Pending', value: financialMetrics.paidPending, color: 'text-[#B89B6A]' },
+          { label: 'Other Income', value: financialMetrics.otherIncome, color: 'text-[#7FA38A]', isSuccess: true }
+        ].map((kpi, idx) => (
+          <motion.div
+            key={kpi.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05, duration: 0.4 }}
+            className="bg-[#111522] border border-white/5 rounded-xl p-4.5 flex flex-col gap-1 shadow-sm"
+          >
+            <span className="text-[10px] uppercase font-semibold tracking-wider text-fog">{kpi.label}</span>
+            <span className={cn("text-xl font-bold tracking-tight", kpi.isSuccess ? 'text-[#7FA38A]' : 'text-ivory')}>
+              {formatCurrency(kpi.value)}
+            </span>
+          </motion.div>
+        ))}
+      </div>
 
-              {/* AI Daily Briefing */}
-              {workspaceId && (
-                <DailyBriefing
-                  context={briefingContext}
-                  labels={{
-                     title: d.briefingTitle,
-                     loading: d.briefingLoading,
-                     error: d.briefingError,
-                     refresh: d.briefingRefresh,
-                  }}
-                />
-              )}
-
-              {/* Agent Suggestions */}
-              {workspaceId && <AgentSuggestions workspaceId={workspaceId} />}
-
-              {/* Inline risk flags (compact) */}
-              {activeFlags.length > 0 && (
-                <div className="space-y-2">
-                  {activeFlags.slice(0, 3).map(flag => (
-                    <FlagCard
-                      key={flag.id}
-                      flag={flag}
-                      onDismiss={id => setDismissed(prev => [...prev, id])}
-                      onNavigate={link => router.push(link)}
-                    />
-                  ))}
-                  {activeFlags.length > 3 && (
-                    <p className="text-xs text-fog pl-1">+{activeFlags.length - 3} more alerts &middot; see Firefighter tab</p>
-                  )}
+      {/* Main Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        {/* Left Column (2/3 width) */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Upcoming & Overdue Tasks */}
+          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Upcoming & Overdue Tasks</CardTitle>
+              <button
+                onClick={() => router.push('/app/tasks')}
+                className="h-6 w-6 rounded-full border border-white/10 flex items-center justify-center text-fog hover:text-silver hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <Plus size={12} />
+              </button>
+            </CardHeader>
+            <CardContent>
+              {localTasks.length === 0 ? (
+                <div className="text-center py-6 text-xs text-fog">All tasks completed</div>
+              ) : (
+                <div className="divide-y divide-white/5 space-y-2">
+                  <AnimatePresence initial={false}>
+                    {localTasks.slice(0, 5).map(task => (
+                      <motion.div
+                        key={task.id || task._id}
+                        initial={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center justify-between py-2 pt-2.5"
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={false}
+                            onChange={() => handleToggleTask(task.id || task._id, task.title)}
+                            className="h-3.5 w-3.5 rounded border-white/10 bg-transparent text-[#7FA38A] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-ivory truncate">{task.title}</p>
+                            <p className="text-[10px] text-fog mt-0.5">{task.project}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-[10px] text-fog">
+                            {new Date(task.dueDate || task.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                          </span>
+                          <span className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            task.priority === 'urgent' ? 'bg-ember' : task.priority === 'high' ? 'bg-warm' : 'bg-fog'
+                          )} />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               )}
+            </CardContent>
+          </Card>
 
-              {/* KPI Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                {kpis.map((kpi, index) => (
-                  <motion.div
-                    key={kpi.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1, duration: 0.4 }}
-                  >
-                    <ShiftCard
-                      className={cn("border border-border rounded-md shadow-card", kpi.spotlight)}
-                      topContent={
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[10px] sm:text-xs font-bold text-fog uppercase tracking-wider">{kpi.label}</span>
-                          <kpi.icon size={14} className={cn(kpi.color, "opacity-70")} />
-                        </div>
-                      }
-                      middleContent={
-                        <div className="w-full text-left">
-                          <p className="text-lg sm:text-xl md:text-2xl font-bold text-ivory tracking-tight truncate">
-                            <AnimatedNumber value={kpi.numericValue} format={kpi.format} stiffness={80} damping={18} mass={0.5} />
-                          </p>
-                          <p className="text-[9px] sm:text-[10px] text-silver mt-1 flex items-center gap-1 font-medium">
-                            <span className="text-sage">{kpi.delta.split(' ')[0]}</span>
-                            <span className="truncate">{kpi.delta.split(' ').slice(1).join(' ')}</span>
-                          </p>
-                        </div>
-                      }
+          {/* Time Tracked Chart */}
+          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Time Tracked</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={TIME_TRACKED_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis
+                      dataKey="date"
+                      stroke="#8A9099"
+                      fontSize={9}
+                      tickLine={false}
+                      axisLine={false}
                     />
-                  </motion.div>
+                    <YAxis
+                      stroke="#8A9099"
+                      fontSize={9}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#171C2A', borderColor: 'rgba(255,255,255,0.06)', borderRadius: '8px' }}
+                      labelStyle={{ fontSize: '10px', color: '#F5F1E8', fontWeight: 600 }}
+                      itemStyle={{ fontSize: '10px', color: '#B8BDC7' }}
+                    />
+                    <Bar dataKey="billed" stackId="a" fill="#7FA38A" radius={[2, 2, 0, 0]} barSize={12} />
+                    <Bar dataKey="unbilled" stackId="a" fill="#B89B6A" radius={[2, 2, 0, 0]} barSize={12} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Bottom Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-white/5">
+                {[
+                  { label: 'Unbilled Hours', value: '08:01:16' },
+                  { label: 'Unbilled Amount', value: '$160.42', isAmount: true },
+                  { label: 'Billed Hours', value: '01:00:07' },
+                  { label: 'Billed Amount', value: '$20.04', isAmount: true }
+                ].map((item) => (
+                  <div key={item.label} className="space-y-0.5">
+                    <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">{item.label}</span>
+                    <span className="text-sm font-bold text-ivory">{item.value}</span>
+                  </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Activity feed + quick actions */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border border-border bg-card rounded-md shadow-none">
-                  <CardHeader>
-                    <CardTitle><TextAnimate text={d.recentActivity} type="fadeIn" className="text-sm font-bold text-ivory" /></CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ActivityFeed emptyLabel={d.activityEmpty} workspaceId={workspaceId} />
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-border bg-card rounded-md shadow-none">
-                  <CardHeader>
-                    <CardTitle><TextAnimate text={d.quickActions} type="fadeIn" className="text-sm font-bold text-ivory" /></CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {quickActions.map(action => (
-                      <button
-                        key={action.label}
-                        onClick={() => router.push(action.to)}
-                        className="w-full text-left text-xs py-3 border-b border-border text-silver hover:text-ivory transition-all duration-200 flex items-center justify-between group cursor-pointer"
-                      >
-                        {action.label}
-                        <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-                      </button>
-                    ))}
-                  </CardContent>
-                </Card>
+          {/* Recently Visited Pages */}
+          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+            <CardHeader>
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Recently Visited Pages</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {recentPages.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => router.push(item.path)}
+                    className="p-3 bg-white/2 border border-white/5 rounded-xl hover:bg-white/4 text-left transition-colors cursor-pointer group flex flex-col justify-between h-20"
+                  >
+                    <span className="text-xs font-semibold text-ivory group-hover:text-white transition-colors">{item.title}</span>
+                    <span className="text-[10px] text-fog flex items-center gap-1 justify-between w-full mt-2">
+                      <span>{item.path}</span>
+                      <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </span>
+                  </button>
+                ))}
               </div>
-            </div>
-          ),
-        },
-        {
-          id: 1,
-          label: (
-            <span className="flex items-center gap-1.5">
-              <Flame size={11} className={activeFlags.length > 0 ? 'text-ember' : 'text-fog'} />
-              {d.tabFirefighter}
-              {activeFlags.length > 0 && (
-                <span className="px-1.5 py-0.5 bg-ember/15 text-ember text-[9px] rounded-full">
-                  {activeFlags.length}
-                </span>
-              )}
-            </span>
-          ),
-          content: (
-            <div className="pt-4">
-              <FirefighterView
-                flags={allFlags}
-                dismissed={dismissed}
-                onDismiss={id => setDismissed(prev => [...prev, id])}
-                onNavigate={link => router.push(link)}
-                labels={{ allClear: d.allClear, allClearSub: d.allClearSub }}
-                workspaceId={workspaceId}
-              />
-            </div>
-          ),
-        },
-      ]} />
+            </CardContent>
+          </Card>
+
+          {/* Relevance AI style Recent Agents strip */}
+          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none relative overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Recent</CardTitle>
+              <button
+                onClick={() => router.push('/app/agents')}
+                className="text-[10px] font-bold text-[#7FA38A] hover:underline flex items-center gap-0.5 cursor-pointer"
+              >
+                <span>View all</span>
+                <ArrowRight size={10} />
+              </button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {MOCK_RECENT_AGENTS.map((agent) => (
+                  <button
+                    key={agent.id}
+                    onClick={() => router.push(`/app/agents/${agent.id}`)}
+                    className="p-4 bg-white/2 border border-white/5 rounded-xl hover:bg-white/4 text-center transition-all cursor-pointer group flex flex-col justify-between h-44 shadow-sm"
+                  >
+                    <AgentOrbit avatarColor={agent.color} name={agent.initials} icons={agent.icons} />
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] font-bold text-ivory block truncate group-hover:text-[#7FA38A] transition-colors">{agent.name}</span>
+                      <span className="text-[9px] text-fog block">{agent.edited}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Top Performers / Top Board */}
+          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+            <CardHeader>
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Top Board / Performers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {TOP_PERFORMERS.map((perf, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-7 w-7 rounded-full bg-dusk border border-white/5 flex items-center justify-center text-[10px] font-bold text-[#7FA38A]">
+                        {perf.avatar}
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-ivory">{perf.name}</p>
+                        <p className="text-[10px] text-fog">{perf.role}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-6">
+                      <div className="text-right">
+                        <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">On-Time</span>
+                        <span className="text-xs font-bold text-[#7FA38A]">{perf.onTimeRate}%</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">Capacity</span>
+                        <span className="text-xs font-bold text-[#B89B6A]">{perf.capacity}%</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">Open Tasks</span>
+                        <span className="text-xs font-bold text-silver">{perf.openTasks}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* Right Column (1/3 width) */}
+        <div className="space-y-6">
+          
+          {/* AI Reviews & Suggestions */}
+          {workspaceId && (
+            <DailyBriefing
+              context={briefingContext}
+              labels={{
+                title: 'AI Reviews & Suggestions',
+                loading: d.briefingLoading,
+                error: d.briefingError,
+                refresh: d.briefingRefresh,
+              }}
+            />
+          )}
+
+          {workspaceId && <AgentSuggestions workspaceId={workspaceId} />}
+
+          {/* Activity Feed */}
+          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+            <CardHeader>
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Activity Feed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ActivityFeed emptyLabel={d.activityEmpty} workspaceId={workspaceId} />
+            </CardContent>
+          </Card>
+
+          {/* Getting Started Checklist */}
+          <GettingStartedChecklist />
+
+        </div>
+
+      </div>
+
     </div>
   );
 }

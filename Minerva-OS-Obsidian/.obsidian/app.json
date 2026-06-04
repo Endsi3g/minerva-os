@@ -1,0 +1,13 @@
+{
+  "attachmentFolderPath": "00_Meta/Attachments",
+  "newFileFolderPath": "root",
+  "newLinkFormat": "shortest",
+  "useMarkdownLinks": false,
+  "showUnsupportedFiles": false,
+  "userIgnoreFilters": [
+    "50_Archive/**",
+    "00_Meta/Attachments/**",
+    "00_Meta/Templates/**",
+    "**/.git/**"
+  ]
+}

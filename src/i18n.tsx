@@ -195,6 +195,7 @@ const translations = {
       creating: 'Creating account...',
       toastSuccess: 'Account created',
       toastSuccessDesc: 'Welcome to Minerva OS. Your workspace is ready.',
+      toastLoading: 'Creating account...',
     },
     forgotPassword: {
       heading: 'Reset your password',
@@ -210,6 +211,7 @@ const translations = {
       backToLogin: 'Back to sign in',
       errorEmail: 'Please enter your email address.',
       errorFailed: 'Something went wrong. Please try again.',
+      toastLoading: 'Sending reset link...',
     },
     resetPassword: {
       heading: 'Choose a new password',
@@ -225,6 +227,7 @@ const translations = {
       errorExpired: 'This reset link is invalid or has expired. Please request a new one.',
       toastSuccess: 'Password updated',
       toastSuccessDesc: 'Your new password is active. Please sign in.',
+      toastLoading: 'Updating password...',
     },
     login: {
       leftHeading: 'Welcome back.',
@@ -248,6 +251,7 @@ const translations = {
       footerLink: 'Create account',
       errorRequired: 'Please enter your email and password.',
       errorFailed: 'Sign in failed. Please try again.',
+      toastLoading: 'Signing in...',
     },
     verifyEmail: {
       heading: 'Check your inbox',
@@ -1343,6 +1347,7 @@ const translations = {
           delivery: 'Delivery Health',
           capacity: 'Team Capacity',
           wins: 'Recent Wins',
+          urgentTasks: 'Urgent Tasks',
         },
         noAlerts: 'No critical alerts.',
         noWins: 'No recent wins to report.',
@@ -1722,11 +1727,23 @@ const translations = {
     },
     onboarding: {
       stepLabel: 'Step {{current}} of {{total}}',
-      steps: ['Your Agency', 'Agency Type', 'Team Size', 'Your Goals', 'Ready to Launch'] as string[],
+      steps: ['Discovery', 'Your Agency', 'Agency Type', 'Team Size', 'Your Goals', 'Kit Preview', 'Choose Plan', 'Get Started'] as string[],
       skip: 'Skip setup',
       back: 'Back',
       continue: 'Continue',
       step1: {
+        heading: 'How did you find us?',
+        subheading: 'This helps us understand where our community comes from.',
+        options: [
+          { value: 'social', label: 'Social media', desc: 'Instagram, TikTok, LinkedIn, X' },
+          { value: 'colleague', label: 'Colleague or teammate', desc: 'Recommended by someone at work' },
+          { value: 'affiliate', label: 'Affiliate or influencer', desc: 'Via a partner, creator or affiliate link' },
+          { value: 'search', label: 'Google search', desc: 'Found it through organic search' },
+          { value: 'event', label: 'Event or conference', desc: 'Meetup, webinar or tradeshow' },
+          { value: 'other', label: 'Other', desc: 'Something else entirely' },
+        ] as { value: string; label: string; desc: string }[],
+      },
+      step2: {
         heading: 'Name your agency',
         subheading: 'This is how your workspace appears to clients.',
         agencyNameLabel: 'Agency name',
@@ -1734,7 +1751,7 @@ const translations = {
         logoLabel: 'Logo (optional)',
         logoHint: 'PNG or JPG · Max 2 MB',
       },
-      step2: {
+      step3: {
         heading: 'What kind of agency are you?',
         subheading: 'We will pre-configure your workspace to match how you work.',
         types: {
@@ -1746,7 +1763,7 @@ const translations = {
           fractional_team:{ label: 'Fractional Team', desc: 'Advisory, embedded or part-time services' },
         } as Record<string, { label: string; desc: string }>,
       },
-      step3: {
+      step4: {
         heading: 'How large is your team?',
         subheading: 'This determines which features are available from day one.',
         options: [
@@ -1761,7 +1778,7 @@ const translations = {
           scale:   'Scale · Enterprise capabilities',
         },
       },
-      step4: {
+      step5: {
         heading: 'What matters most right now?',
         subheading: 'Pick up to 3 priorities. Your setup kit will be tuned accordingly.',
         maxSelection: 'Select up to 3',
@@ -1774,7 +1791,7 @@ const translations = {
           { value: 'team_ops',  label: 'Team Ops',         desc: 'Workflows, capacity, time' },
         ] as { value: string; label: string; desc: string }[],
       },
-      step5: {
+      step6: {
         heading: 'Your {{agencyType}} kit is ready',
         subheading: 'Here is what we are pre-loading into your workspace.',
         launching: 'Launching workspace...',
@@ -1786,6 +1803,79 @@ const translations = {
           dashboard: 'Dashboard tuned to your priorities',
         },
       },
+      step7: {
+        heading: 'Choose your plan',
+        subheading: 'Start with a 14-day free trial. Cancel anytime.',
+        monthly: 'Monthly',
+        annual: 'Annual',
+        annualSave: 'Save 20%',
+        perMonth: '/mo',
+        perYear: '/yr',
+        popular: 'Most popular',
+        startTrial: 'Start free trial',
+        contactUs: 'Contact us',
+        skipPlan: 'Continue with free trial',
+        plans: {
+          starter: {
+            name: 'Starter',
+            price: 29,
+            annualPrice: 278,
+            desc: 'For solo founders and small teams',
+            features: [
+              'Up to 5 team members',
+              'CRM + Client management',
+              'Projects + Tasks',
+              'Client Portal',
+              'Basic billing',
+              'Email support',
+            ] as string[],
+          },
+          growth: {
+            name: 'Growth',
+            price: 79,
+            annualPrice: 758,
+            desc: 'For growing agencies',
+            features: [
+              'Up to 25 team members',
+              'Everything in Starter',
+              'Pipeline + Proposals',
+              'Finance Hub',
+              'Workflow automation',
+              'Profitability reports',
+              'Priority support',
+            ] as string[],
+          },
+          scale: {
+            name: 'Scale',
+            price: 199,
+            annualPrice: 1910,
+            desc: 'For established agencies',
+            features: [
+              'Unlimited team members',
+              'Everything in Growth',
+              'Intelligence Hub + AI Ops',
+              'Advanced reporting + NPS',
+              'Multi-workspace',
+              'White-label branding',
+              'API access',
+              'Dedicated support',
+            ] as string[],
+          },
+        },
+      },
+      step8: {
+        heading: 'Start exploring Minerva',
+        subheading: 'Try these key features to get the most out of your workspace.',
+        actions: [
+          { value: 'create_project', label: 'Create your first project', desc: 'Set up a project, assign tasks and track progress.', href: '/app/projects' },
+          { value: 'add_client', label: 'Add a client', desc: 'Import your first client and send them a portal invite.', href: '/app/clients' },
+          { value: 'explore_dashboard', label: 'Explore the dashboard', desc: 'See your KPIs, delivery health and quick actions.', href: '/app/dashboard' },
+        ] as { value: string; label: string; desc: string; href: string }[],
+        launchCta: 'Launch Minerva',
+        laterCta: 'I will explore later',
+      },
+      toastSaving: 'Configuring workspace...',
+      toastSuccess: 'Workspace configured successfully!',
     },
     tier: {
       starter: 'Starter',
@@ -1878,6 +1968,11 @@ const translations = {
           governance:      'Audit & Governance',
         },
       },
+    },
+    notFound: {
+      heading: 'Page not found',
+      subheading: 'The page you are looking for does not exist or has been moved.',
+      backHome: 'Back to Dashboard',
     },
   },
   fr: {
@@ -2072,6 +2167,7 @@ const translations = {
       creating: 'Création du compte...',
       toastSuccess: 'Compte créé',
       toastSuccessDesc: 'Bienvenue sur Minerva OS. Votre espace est prêt.',
+      toastLoading: 'Création du compte...',
     },
     forgotPassword: {
       heading: 'Réinitialiser votre mot de passe',
@@ -2087,6 +2183,7 @@ const translations = {
       backToLogin: 'Retour à la connexion',
       errorEmail: 'Veuillez entrer votre adresse email.',
       errorFailed: 'Une erreur s\'est produite. Veuillez réessayer.',
+      toastLoading: 'Envoi du lien de réinitialisation...',
     },
     resetPassword: {
       heading: 'Choisir un nouveau mot de passe',
@@ -2102,6 +2199,7 @@ const translations = {
       errorExpired: 'Ce lien de réinitialisation est invalide ou expiré. Veuillez en demander un nouveau.',
       toastSuccess: 'Mot de passe mis à jour',
       toastSuccessDesc: 'Votre nouveau mot de passe est actif. Veuillez vous connecter.',
+      toastLoading: 'Mise à jour du mot de passe...',
     },
     login: {
       leftHeading: 'Bon retour.',
@@ -2125,6 +2223,7 @@ const translations = {
       footerLink: 'Créer un compte',
       errorRequired: 'Veuillez entrer votre courriel et mot de passe.',
       errorFailed: 'La connexion a échoué. Veuillez réessayer.',
+      toastLoading: 'Connexion en cours...',
     },
     verifyEmail: {
       heading: 'Vérifiez votre boite mail',
@@ -3220,6 +3319,7 @@ const translations = {
           delivery: 'Santé de la livraison',
           capacity: 'Capacité équipe',
           wins: 'Victoires récentes',
+          urgentTasks: 'Tâches urgentes',
         },
         noAlerts: 'Aucune alerte critique.',
         noWins: 'Aucune victoire récente.',
@@ -3599,11 +3699,23 @@ const translations = {
     },
     onboarding: {
       stepLabel: 'Etape {{current}} sur {{total}}',
-      steps: ['Votre agence', 'Type d\'agence', 'Taille d\'equipe', 'Vos priorites', 'Pret a lancer'] as string[],
+      steps: ['Decouverte', 'Votre agence', 'Type d\'agence', 'Taille d\'equipe', 'Vos priorites', 'Kit', 'Choisir un plan', 'Commencer'] as string[],
       skip: 'Ignorer',
       back: 'Retour',
       continue: 'Continuer',
       step1: {
+        heading: 'Comment nous avez-vous trouve ?',
+        subheading: 'Cela nous aide a comprendre d\'ou vient notre communaute.',
+        options: [
+          { value: 'social', label: 'Reseaux sociaux', desc: 'Instagram, TikTok, LinkedIn, X' },
+          { value: 'colleague', label: 'Collegue ou equipier', desc: 'Recommande par quelqu\'un au travail' },
+          { value: 'affiliate', label: 'Affilie ou influenceur', desc: 'Via un partenaire, createur ou lien affilie' },
+          { value: 'search', label: 'Recherche Google', desc: 'Trouve via une recherche organique' },
+          { value: 'event', label: 'Evenement ou conference', desc: 'Meetup, webinaire ou salon' },
+          { value: 'other', label: 'Autre', desc: 'Quelque chose d\'autre' },
+        ] as { value: string; label: string; desc: string }[],
+      },
+      step2: {
         heading: 'Nommez votre agence',
         subheading: 'C\'est ainsi que votre espace de travail apparait aux clients.',
         agencyNameLabel: 'Nom de l\'agence',
@@ -3611,7 +3723,7 @@ const translations = {
         logoLabel: 'Logo (optionnel)',
         logoHint: 'PNG ou JPG · Max 2 Mo',
       },
-      step2: {
+      step3: {
         heading: 'Quel type d\'agence etes-vous ?',
         subheading: 'Nous preconfigurerons votre espace de travail selon votre metier.',
         types: {
@@ -3623,7 +3735,7 @@ const translations = {
           fractional_team: { label: 'Equipe Fractionnee', desc: 'Services de conseil, integres ou a temps partiel' },
         } as Record<string, { label: string; desc: string }>,
       },
-      step3: {
+      step4: {
         heading: 'Quelle est la taille de votre equipe ?',
         subheading: 'Cela determine les fonctionnalites disponibles des le premier jour.',
         options: [
@@ -3638,7 +3750,7 @@ const translations = {
           scale:   'Scale · Capacites enterprise',
         },
       },
-      step4: {
+      step5: {
         heading: 'Quelle est votre priorite principale ?',
         subheading: 'Choisissez jusqu\'a 3 priorites. Votre kit sera configure en consequence.',
         maxSelection: 'Selectionnez jusqu\'a 3',
@@ -3651,7 +3763,7 @@ const translations = {
           { value: 'team_ops',  label: 'Operations Equipe', desc: 'Workflows, capacite, temps' },
         ] as { value: string; label: string; desc: string }[],
       },
-      step5: {
+      step6: {
         heading: 'Votre kit {{agencyType}} est pret',
         subheading: 'Voici ce que nous chargeons dans votre espace de travail.',
         launching: 'Lancement de l\'espace de travail...',
@@ -3663,6 +3775,79 @@ const translations = {
           dashboard: 'Tableau de bord adapte a vos priorites',
         },
       },
+      step7: {
+        heading: 'Choisissez votre plan',
+        subheading: 'Commencez avec un essai gratuit de 14 jours. Annulez a tout moment.',
+        monthly: 'Mensuel',
+        annual: 'Annuel',
+        annualSave: 'Economisez 20%',
+        perMonth: '/mois',
+        perYear: '/an',
+        popular: 'Le plus populaire',
+        startTrial: 'Commencer l\'essai gratuit',
+        contactUs: 'Nous contacter',
+        skipPlan: 'Continuer avec l\'essai gratuit',
+        plans: {
+          starter: {
+            name: 'Starter',
+            price: 29,
+            annualPrice: 278,
+            desc: 'Pour les fondateurs solo et petites equipes',
+            features: [
+              'Jusqu\'a 5 membres',
+              'CRM + Gestion clients',
+              'Projets + Taches',
+              'Portail Client',
+              'Facturation basique',
+              'Support par email',
+            ] as string[],
+          },
+          growth: {
+            name: 'Growth',
+            price: 79,
+            annualPrice: 758,
+            desc: 'Pour les agences en croissance',
+            features: [
+              'Jusqu\'a 25 membres',
+              'Tout dans Starter',
+              'Pipeline + Propositions',
+              'Finance Hub',
+              'Automatisation workflows',
+              'Rapports de rentabilite',
+              'Support prioritaire',
+            ] as string[],
+          },
+          scale: {
+            name: 'Scale',
+            price: 199,
+            annualPrice: 1910,
+            desc: 'Pour les agences etablies',
+            features: [
+              'Membres illimites',
+              'Tout dans Growth',
+              'Intelligence Hub + IA',
+              'Reporting avance + NPS',
+              'Multi-espace',
+              'Marque blanche',
+              'Acces API',
+              'Support dedie',
+            ] as string[],
+          },
+        },
+      },
+      step8: {
+        heading: 'Commencez a explorer Minerva',
+        subheading: 'Essayez ces fonctionnalites cles pour tirer le meilleur de votre espace.',
+        actions: [
+          { value: 'create_project', label: 'Creez votre premier projet', desc: 'Configurez un projet, assignez des taches et suivez la progression.', href: '/app/projects' },
+          { value: 'add_client', label: 'Ajoutez un client', desc: 'Importez votre premier client et envoyez-lui une invitation au portail.', href: '/app/clients' },
+          { value: 'explore_dashboard', label: 'Explorez le tableau de bord', desc: 'Consultez vos KPIs, la sante de livraison et les actions rapides.', href: '/app/dashboard' },
+        ] as { value: string; label: string; desc: string; href: string }[],
+        launchCta: 'Lancer Minerva',
+        laterCta: 'J\'explorerai plus tard',
+      },
+      toastSaving: 'Configuration de l\'espace...',
+      toastSuccess: 'Espace configuré avec succès !',
     },
     tier: {
       starter: 'Starter',
@@ -3755,6 +3940,11 @@ const translations = {
           governance:      'Audit et gouvernance',
         },
       },
+    },
+    notFound: {
+      heading: 'Page non trouvée',
+      subheading: 'La page que vous recherchez n\'existe pas ou a été déplacée.',
+      backHome: 'Retour au tableau de bord',
     },
   },
 };

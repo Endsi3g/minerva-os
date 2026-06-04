@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Chrome, Github, Eye, EyeOff, Circle } from 'lucide-react';
+import { Eye, EyeOff, Circle } from 'lucide-react';
+import { Google, Github } from '@thesvg/react';
 import { toast } from 'sonner';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
@@ -49,14 +50,17 @@ export default function SignUp() {
     }
     setError('');
     setIsLoading(true);
+    const toastId = toast.loading(s.toastLoading || 'Creating account...');
     try {
       const redirectTo = `${window.location.origin}/auth/callback?next=/onboarding/discover`;
       await signup(firstName, lastName, email, password, redirectTo);
       sessionStorage.setItem('minerva_signup_email', email);
-      toast.success(s.toastSuccess, { description: s.toastSuccessDesc });
+      toast.success(s.toastSuccess, { id: toastId, description: s.toastSuccessDesc });
       router.push('/verify-email');
     } catch (err) {
-      setError(err instanceof Error ? err.message : s.errorFailed);
+      const errMsg = err instanceof Error ? err.message : s.errorFailed;
+      setError(errMsg);
+      toast.error(errMsg, { id: toastId });
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +72,6 @@ export default function SignUp() {
       <div className="relative hidden w-[52%] flex-col items-center justify-center px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
-          style={{ filter: 'saturate(0.08) contrast(1.05) brightness(0.88)' }}
           autoPlay
           muted
           loop
@@ -76,6 +79,9 @@ export default function SignUp() {
         >
           <source src={BG_VIDEO} type="video/mp4" />
         </video>
+        
+        {/* Glassmorphic overlay panel */}
+        <div className="absolute inset-0 bg-[#0A0D14]/40 backdrop-blur-sm z-0" />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
@@ -125,8 +131,8 @@ export default function SignUp() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <SocialButton icon={<Chrome size={17} />} label={s.google} />
-            <SocialButton icon={<Github size={17} />} label={s.github} />
+            <SocialButton icon={<Google className="h-[17px] w-[17px]" />} label={s.google} />
+            <SocialButton icon={<Github className="h-[17px] w-[17px]" />} label={s.github} />
           </div>
 
           <div className="relative flex items-center justify-center w-full">
@@ -219,14 +225,14 @@ function StepItem({ number, text, active = false }: { number: number; text: stri
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 w-full',
         active
-          ? 'bg-white text-black border border-white'
-          : 'bg-[#1A1A1A] text-white border-none',
+          ? 'bg-[#F5F1E8] text-[#0A0D14] font-medium shadow-[0_4px_20px_rgba(245,241,232,0.15)]'
+          : 'bg-[#111522]/40 backdrop-blur-md text-[#B8BDC7] border border-white/5',
       )}
     >
       <span
         className={cn(
           'w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0',
-          active ? 'bg-black text-white' : 'bg-white/10 text-white/40',
+          active ? 'bg-[#0A0D14] text-[#F5F1E8]' : 'bg-white/5 text-[#8A9099]',
         )}
       >
         {number}
