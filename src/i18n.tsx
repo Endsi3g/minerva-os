@@ -364,6 +364,13 @@ const translations = {
         financeSpace: 'Finance',
         pulseSpace: 'Pulse',
         studioSpace: 'Studio',
+        homeSpace: 'Home',
+        revenueSpace: 'Revenue',
+        intelligenceSpace: 'Intelligence',
+        adminSpace: 'Admin',
+        financeHub: 'Finance',
+        intelligenceHub: 'Intelligence',
+        supportHub: 'Support',
       },
       support: {
         title: 'Help & Support',
@@ -1365,6 +1372,35 @@ const translations = {
         avgCapacity: 'Avg. capacity',
         noData: 'No scorecard data available.',
       },
+      financeHub: {
+        title: 'Finance',
+        subtitle: 'Billing, expenses, profitability and tax ledger in one place.',
+        tabs: {
+          billing: 'Billing',
+          expenses: 'Expenses',
+          profitability: 'Profitability',
+          ledger: 'Ledger',
+        },
+      },
+      intelligence: {
+        title: 'Intelligence',
+        subtitle: 'Reports, health scores, NPS signal and agent operations.',
+        tabs: {
+          reports: 'Reports',
+          health: 'Health',
+          nps: 'NPS',
+          agentOps: 'Agent Ops',
+        },
+      },
+      supportHub: {
+        title: 'Support & Knowledge',
+        subtitle: 'Tickets, knowledge base and help resources in one context.',
+        tabs: {
+          tickets: 'Tickets',
+          knowledge: 'Knowledge',
+          help: 'Help',
+        },
+      },
     },
     portal: {
       common: {
@@ -1971,6 +2007,13 @@ const translations = {
         financeSpace: 'Finance',
         pulseSpace: 'Pulse',
         studioSpace: 'Studio',
+        homeSpace: 'Accueil',
+        revenueSpace: 'Revenus',
+        intelligenceSpace: 'Intelligence',
+        adminSpace: 'Admin',
+        financeHub: 'Finance',
+        intelligenceHub: 'Intelligence',
+        supportHub: 'Support',
       },
       support: {
         title: 'Aide et Support',
@@ -2971,6 +3014,35 @@ const translations = {
         teamScore: 'Score livraison équipe',
         avgCapacity: 'Capacité moy.',
         noData: 'Aucune donnée disponible.',
+      },
+      financeHub: {
+        title: 'Finance',
+        subtitle: 'Facturation, dépenses, rentabilité et grand livre en un seul endroit.',
+        tabs: {
+          billing: 'Facturation',
+          expenses: 'Dépenses',
+          profitability: 'Rentabilité',
+          ledger: 'Grand livre',
+        },
+      },
+      intelligence: {
+        title: 'Intelligence',
+        subtitle: "Rapports, scores de santé, signal NPS et opérations d'agents.",
+        tabs: {
+          reports: 'Rapports',
+          health: 'Santé',
+          nps: 'NPS',
+          agentOps: 'Agent Ops',
+        },
+      },
+      supportHub: {
+        title: 'Support et Connaissance',
+        subtitle: 'Tickets, base de connaissances et aide dans un seul contexte.',
+        tabs: {
+          tickets: 'Tickets',
+          knowledge: 'Connaissances',
+          help: 'Aide',
+        },
       },
     },
     portal: {

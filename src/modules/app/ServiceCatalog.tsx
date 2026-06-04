@@ -7,8 +7,9 @@ import { TextAnimate } from '@/components/ui/text-animate';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+import Fulfillment from './Fulfillment';
 
-type Tab = 'services' | 'packages';
+type Tab = 'services' | 'packages' | 'fulfillment';
 
 const CATEGORY_COLORS: Record<string, string> = {
   SEO: 'text-sage bg-sage/10',
@@ -172,15 +173,17 @@ export default function ServiceCatalog() {
             {sc.subtitle.replace('{{count}}', String(services.length)).replace('{{packages}}', String(packages.length))}
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowForm(true)}>
-          <Plus size={14} />
-          {tab === 'services' ? sc.addService : sc.addPackage}
-        </Button>
+        {tab !== 'fulfillment' && (
+          <Button size="sm" onClick={() => setShowForm(true)}>
+            <Plus size={14} />
+            {tab === 'services' ? sc.addService : sc.addPackage}
+          </Button>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-white/5 mb-6">
-        {([['services', sc.tabServices], ['packages', sc.tabPackages]] as [Tab, string][]).map(([key, label]) => (
+        {([['services', sc.tabServices], ['packages', sc.tabPackages], ['fulfillment', 'Fulfillment']] as [Tab, string][]).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -281,6 +284,8 @@ export default function ServiceCatalog() {
           )}
         </div>
       )}
+
+      {tab === 'fulfillment' && <Fulfillment />}
     </>
   );
 }

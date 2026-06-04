@@ -14,28 +14,21 @@ import {
   CheckSquare,
   ClipboardCheck,
   FileBox,
-  Receipt,
   Settings,
   LogOut,
   User,
-  CalendarCheck,
-  PackageCheck,
   WalletCards,
   Sparkles,
   Clock,
   BookOpen,
   FileSignature,
-  CreditCard,
   Headphones,
-  Star,
   CalendarRange,
-  HelpCircle,
   History,
   GitPullRequest,
   ShoppingBag,
   Award,
   ChevronDown,
-  TrendingDown,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -68,8 +61,8 @@ interface Space {
 
 const spaces: Space[] = [
   {
-    key: 'command',
-    labelKey: 'commandSpace',
+    key: 'home',
+    labelKey: 'homeSpace',
     icon: Command,
     color: '#7FA38A',
     items: [
@@ -78,15 +71,14 @@ const spaces: Space[] = [
     ],
   },
   {
-    key: 'growth',
-    labelKey: 'growthSpace',
+    key: 'revenue',
+    labelKey: 'revenueSpace',
     icon: TrendingUp,
     color: '#B89B6A',
     items: [
-      { href: '/app/pipeline',   icon: GitBranch,     labelKey: 'pipeline' },
-      { href: '/app/clients',    icon: Users,         labelKey: 'clients' },
-      { href: '/app/proposals',  icon: FileSignature, labelKey: 'proposals' },
-      { href: '/app/call-preps', icon: CalendarCheck, labelKey: 'callPreps' },
+      { href: '/app/clients',   icon: Users,         labelKey: 'clients' },
+      { href: '/app/pipeline',  icon: GitBranch,     labelKey: 'pipeline' },
+      { href: '/app/proposals', icon: FileSignature, labelKey: 'proposals' },
     ],
   },
   {
@@ -95,12 +87,13 @@ const spaces: Space[] = [
     icon: Layers,
     color: '#B8BDC7',
     items: [
-      { href: '/app/projects',    icon: FolderKanban,   labelKey: 'projects' },
-      { href: '/app/tasks',       icon: CheckSquare,    labelKey: 'tasks' },
-      { href: '/app/approvals',   icon: ClipboardCheck, labelKey: 'approvals' },
-      { href: '/app/files',       icon: FileBox,        labelKey: 'files' },
-      { href: '/app/workflows',   icon: GitPullRequest, labelKey: 'workflows' },
-      { href: '/app/fulfillment', icon: PackageCheck,   labelKey: 'fulfillment' },
+      { href: '/app/projects',      icon: FolderKanban,   labelKey: 'projects' },
+      { href: '/app/tasks',         icon: CheckSquare,    labelKey: 'tasks' },
+      { href: '/app/approvals',     icon: ClipboardCheck, labelKey: 'approvals' },
+      { href: '/app/files',         icon: FileBox,        labelKey: 'files' },
+      { href: '/app/workflows',     icon: GitPullRequest, labelKey: 'workflows' },
+      { href: '/app/time-tracking', icon: Clock,          labelKey: 'timeTracking' },
+      { href: '/app/resources',     icon: CalendarRange,  labelKey: 'resources' },
     ],
   },
   {
@@ -109,38 +102,30 @@ const spaces: Space[] = [
     icon: BarChart2,
     color: '#D8DDE6',
     items: [
-      { href: '/app/billing',       icon: Receipt,      labelKey: 'billing' },
-      { href: '/app/finance',       icon: WalletCards,  labelKey: 'finance' },
-      { href: '/app/profitability', icon: TrendingDown, labelKey: 'profitability' },
-      { href: '/app/expenses',      icon: CreditCard,   labelKey: 'expenses' },
+      { href: '/app/finance-hub', icon: WalletCards, labelKey: 'financeHub' },
     ],
   },
   {
-    key: 'pulse',
-    labelKey: 'pulseSpace',
+    key: 'intelligence',
+    labelKey: 'intelligenceSpace',
     icon: Activity,
     color: '#8A9099',
     items: [
-      { href: '/app/nps',     icon: Star,      labelKey: 'nps' },
-      { href: '/app/tickets', icon: Headphones, labelKey: 'tickets' },
-      { href: '/app/reports', icon: BarChart2,  labelKey: 'reports' },
-      { href: '/app/support', icon: HelpCircle, labelKey: 'support' },
+      { href: '/app/intelligence', icon: Sparkles, labelKey: 'intelligenceHub' },
     ],
   },
   {
-    key: 'studio',
-    labelKey: 'studioSpace',
+    key: 'admin',
+    labelKey: 'adminSpace',
     icon: Settings2,
     color: '#8A9099',
     items: [
-      { href: '/app/time-tracking', icon: Clock,        labelKey: 'timeTracking' },
-      { href: '/app/resources',     icon: CalendarRange, labelKey: 'resources' },
-      { href: '/app/services',      icon: BookOpen,     labelKey: 'serviceCatalog' },
-      { href: '/app/knowledge',     icon: Sparkles,     labelKey: 'knowledge' },
-      { href: '/app/agent-ops',     icon: Sparkles,     labelKey: 'agentOps' },
-      { href: '/app/marketplace',   icon: ShoppingBag,  labelKey: 'marketplace' },
-      { href: '/app/scorecards',    icon: Award,        labelKey: 'scorecards' },
-      { href: '/app/changelog',     icon: History,      labelKey: 'changelog' },
+      { href: '/app/settings',    icon: Settings,   labelKey: 'settings' },
+      { href: '/app/support-hub', icon: Headphones, labelKey: 'supportHub' },
+      { href: '/app/services',    icon: BookOpen,   labelKey: 'serviceCatalog' },
+      { href: '/app/marketplace', icon: ShoppingBag, labelKey: 'marketplace' },
+      { href: '/app/scorecards',  icon: Award,       labelKey: 'scorecards' },
+      { href: '/app/changelog',   icon: History,     labelKey: 'changelog' },
     ],
   },
 ];
@@ -307,22 +292,6 @@ export function AppSidebar() {
 
       {/* Footer */}
       <div className="shrink-0 px-2 pb-3 space-y-0.5 border-t border-sidebar-border pt-2">
-        <NavLink
-          href="/app/settings"
-          className={({ isActive }) =>
-            cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors min-h-[44px]',
-              collapsed && 'justify-center px-2',
-              isActive
-                ? 'bg-sidebar-accent text-ivory'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-ivory'
-            )
-          }
-        >
-          <Settings size={16} className="shrink-0" />
-          {!collapsed && <span>{sidebar.settings}</span>}
-        </NavLink>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
