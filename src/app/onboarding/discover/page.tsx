@@ -1,5 +1,5 @@
-import { DiscoveryOnboarding } from '@/components/minerva/DiscoveryOnboarding';
+import { redirect } from 'next/navigation';
 
 export default function DiscoverPage() {
-  return <DiscoveryOnboarding />;
+  redirect('/onboarding');
 }

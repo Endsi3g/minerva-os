@@ -43,12 +43,16 @@ import {
 import { NavLink } from '@/components/ui/nav-link';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useTier } from '@/lib/hooks/useTier';
+import type { FeatureKey } from '@/lib/types';
 import { useSidebar } from './AppShell';
 
 interface NavItem {
   href: string;
   icon: React.ElementType;
   labelKey: keyof ReturnType<typeof useLang>['t']['app']['sidebar'];
+  featureKey?: FeatureKey;
 }
 
 interface Space {
@@ -91,9 +95,9 @@ const spaces: Space[] = [
       { href: '/app/tasks',         icon: CheckSquare,    labelKey: 'tasks' },
       { href: '/app/approvals',     icon: ClipboardCheck, labelKey: 'approvals' },
       { href: '/app/files',         icon: FileBox,        labelKey: 'files' },
-      { href: '/app/workflows',     icon: GitPullRequest, labelKey: 'workflows' },
-      { href: '/app/time-tracking', icon: Clock,          labelKey: 'timeTracking' },
-      { href: '/app/resources',     icon: CalendarRange,  labelKey: 'resources' },
+      { href: '/app/workflows',     icon: GitPullRequest, labelKey: 'workflows',    featureKey: 'workflows' },
+      { href: '/app/time-tracking', icon: Clock,          labelKey: 'timeTracking', featureKey: 'time_tracking' },
+      { href: '/app/resources',     icon: CalendarRange,  labelKey: 'resources',    featureKey: 'resources' },
     ],
   },
   {
@@ -102,7 +106,7 @@ const spaces: Space[] = [
     icon: BarChart2,
     color: '#D8DDE6',
     items: [
-      { href: '/app/finance-hub', icon: WalletCards, labelKey: 'financeHub' },
+      { href: '/app/finance-hub', icon: WalletCards, labelKey: 'financeHub', featureKey: 'finance_hub' },
     ],
   },
   {
@@ -111,7 +115,7 @@ const spaces: Space[] = [
     icon: Activity,
     color: '#8A9099',
     items: [
-      { href: '/app/intelligence', icon: Sparkles, labelKey: 'intelligenceHub' },
+      { href: '/app/intelligence', icon: Sparkles, labelKey: 'intelligenceHub', featureKey: 'intelligence' },
     ],
   },
   {
@@ -121,14 +125,20 @@ const spaces: Space[] = [
     color: '#8A9099',
     items: [
       { href: '/app/settings',    icon: Settings,   labelKey: 'settings' },
-      { href: '/app/support-hub', icon: Headphones, labelKey: 'supportHub' },
-      { href: '/app/services',    icon: BookOpen,   labelKey: 'serviceCatalog' },
-      { href: '/app/marketplace', icon: ShoppingBag, labelKey: 'marketplace' },
-      { href: '/app/scorecards',  icon: Award,       labelKey: 'scorecards' },
+      { href: '/app/support-hub', icon: Headphones,  labelKey: 'supportHub',      featureKey: 'support_hub' },
+      { href: '/app/services',    icon: BookOpen,    labelKey: 'serviceCatalog' },
+      { href: '/app/marketplace', icon: ShoppingBag, labelKey: 'marketplace',     featureKey: 'marketplace' },
+      { href: '/app/scorecards',  icon: Award,       labelKey: 'scorecards',      featureKey: 'scorecards' },
       { href: '/app/changelog',   icon: History,     labelKey: 'changelog' },
     ],
   },
 ];
+
+const TIER_COLORS: Record<string, { bg: string; text: string }> = {
+  starter: { bg: 'rgba(127,163,138,0.15)', text: '#7FA38A' },
+  growth:  { bg: 'rgba(184,155,106,0.15)', text: '#B89B6A' },
+  scale:   { bg: 'rgba(184,189,199,0.15)', text: '#B8BDC7' },
+};
 
 function SpaceGroup({
   space,
@@ -140,9 +150,17 @@ function SpaceGroup({
   sidebar: ReturnType<typeof useLang>['t']['app']['sidebar'];
 }) {
   const pathname = usePathname();
-  const isSpaceActive = space.items.some(
+  const { isFeatureVisible } = useTier();
+
+  const visibleItems = space.items.filter(
+    item => !item.featureKey || isFeatureVisible(item.featureKey)
+  );
+
+  const isSpaceActive = visibleItems.some(
     item => pathname === item.href || pathname.startsWith(item.href + '/')
   );
+
+  if (visibleItems.length === 0) return null;
 
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return isSpaceActive;
@@ -165,7 +183,7 @@ function SpaceGroup({
   if (collapsed) {
     return (
       <div className="space-y-0.5">
-        {space.items.map(item => (
+        {visibleItems.map(item => (
           <NavLink
             key={item.href}
             href={item.href}
@@ -211,7 +229,7 @@ function SpaceGroup({
             transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
             className="overflow-hidden"
           >
-            {space.items.map(item => (
+            {visibleItems.map(item => (
               <NavLink
                 key={item.href}
                 href={item.href}
@@ -239,6 +257,8 @@ export function AppSidebar() {
   const { collapsed } = useSidebar();
   const { t } = useLang();
   const { user, logout } = useAuth();
+  const { workspace } = useWorkspace();
+  const { tier } = useTier();
   const router = useRouter();
   const sidebar = t.app.sidebar;
 
@@ -308,9 +328,19 @@ export function AppSidebar() {
                   <span className="text-xs font-medium text-ivory truncate w-full">
                     {user?.name ?? 'Uprising Studio'}
                   </span>
-                  <span className="text-[10px] text-fog truncate w-full">
-                    {user?.role ?? 'Admin'}
-                  </span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] text-fog">
+                      {user?.role ?? 'Admin'}
+                    </span>
+                    {workspace?.tier && (
+                      <span
+                        className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize"
+                        style={TIER_COLORS[tier]}
+                      >
+                        {tier}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </button>

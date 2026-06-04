@@ -35,7 +35,15 @@ function initMockDb() {
   }
 
   mockDb = {
-    workspaces: [{ id: 'mock-workspace-123', name: 'Minerva OS Workspace', slug: 'minerva', owner_user_id: 'demo-user-01' }],
+    workspaces: [{
+      id: 'mock-workspace-123',
+      name: 'Minerva OS Workspace',
+      slug: 'minerva',
+      owner_user_id: 'demo-user-01',
+      workspace_tier: 'scale',
+      agency_type: 'full_service',
+      setup_kit_applied: true,
+    }],
     user_profiles: [
       {
         id: 'demo-user-01',
@@ -43,7 +51,8 @@ function initMockDb() {
         email: 'demo@uprising.studio',
         name: 'Demo User',
         role: 'owner',
-        workspace_id: 'mock-workspace-123'
+        workspace_id: 'mock-workspace-123',
+        onboarding_complete: true,
       }
     ],
     time_entries: [],
