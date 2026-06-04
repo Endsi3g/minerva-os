@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth/requireAuth';
+
+const SYSTEM_PROMPT = `You are Hermes, the senior strategic proposal writer of Minerva OS. Your goal is to draft a professional, client-ready project proposal based on a scoping brief.
+
+Output MUST be valid JSON only, conforming to this exact schema:
+{
+  "intro": "Professional introductory paragraph — positioning the studio, acknowledging the client challenge, stating the engagement intent.",
+  "scope": "Bullet-pointed list of deliverables, ownership responsibilities, and explicit exclusions.",
+  "timeline": "Phase-by-phase milestone plan with estimated durations and review gates.",
+  "pricing": "Structured fee breakdown: line items, milestone payment schedule, deposit requirements.",
+  "terms": "Payment terms, IP transfer conditions, revision policy, and cancellation clause."
+}
+
+Rules:
+· Never use em dashes.
+· Be direct, editorial, and professional.
+· Tailor scope and timeline to the specific service type.
+· If a budget is provided, structure pricing to fit within it.
+· All sections should be substantive — minimum 3 bullet points for scope, 3 phases for timeline.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,54 +27,60 @@ export async function POST(req: NextRequest) {
     if (authError) return authError;
     void user;
 
-    const { brief, clientCompany } = (await req.json()) as { brief: string; clientCompany?: string };
-    if (!brief) {
-      return NextResponse.json({ error: 'brief is required' }, { status: 400 });
-    }
+    const { brief, clientCompany, serviceType, budget, workspaceId } = (await req.json()) as {
+      brief?: string;
+      clientCompany?: string;
+      serviceType?: string;
+      budget?: number;
+      workspaceId?: string;
+    };
 
     const company = clientCompany || 'Client Partner';
+    const service = serviceType || 'creative services';
+    const budgetLine = budget ? `\nBudget: $${budget.toLocaleString()} USD` : '';
+    const briefLine = brief ? `\nAdditional brief: ${brief}` : '';
 
-    // 1. Check for API key and handle fallback if missing
     if (!process.env.ANTHROPIC_API_KEY) {
-      const draftIntro = `Uprising Studio is pleased to submit this strategic partnership proposal to ${company}. Our goal is to address your core operational requirements by delivering custom, top-tier engineering and design solutions. This document details our planned execution, scope, and milestones.`;
-      const draftScope = `Based on your brief: "${brief}", Uprising Studio will deliver:\n· Premium high-fidelity UI/UX design mockups in Figma\n· Component library structured for responsiveness and theme alignment\n· Complete assets handoff, documentation guidelines, and brand system assets`;
-      const draftTimeline = `Project timeline (target 4-6 weeks):\n· Phase 1 (Week 1-2): Strategy alignment, discovery workshop, and interactive wireframes\n· Phase 2 (Week 3-4): Component design, high-fidelity layouts, and prototyping\n· Phase 3 (Week 5): Review iterations and refinement loops\n· Phase 4 (Week 6): Final assets handoff, guideline reports, and setup support`;
-      const draftPricing = `Estimated Fee Structure:\n· Initial mobilization deposit: 50% ($7,500 USD)\n· Final deliverable sign-off: 50% ($7,500 USD)\n· Total Estimated Budget: $15,000 USD`;
-
       return NextResponse.json({
-        intro: draftIntro,
-        scope: draftScope,
-        timeline: draftTimeline,
-        pricing: draftPricing
+        intro: `Uprising Studio is pleased to submit this ${service} proposal to ${company}. We are positioned to deliver a focused, high-quality engagement that addresses your objectives directly.`,
+        scope: `· Full ${service} delivery from strategy through execution\n· Weekly progress check-ins and revision rounds\n· Final asset handoff with documentation`,
+        timeline: `· Phase 1 (Week 1-2): Discovery and strategy alignment\n· Phase 2 (Week 3-5): Production and review cycles\n· Phase 3 (Week 6): Final delivery and handoff`,
+        pricing: budget
+          ? `· Project investment: $${budget.toLocaleString()} USD\n· Deposit: 50% on kickoff\n· Balance: 50% on final delivery`
+          : `· Project investment: $12,000 USD\n· Deposit: 50% on kickoff ($6,000)\n· Balance: 50% on delivery ($6,000)`,
+        terms: `Payment is due within 30 days of invoice. All work remains the property of the studio until payment is received in full. The client receives full IP rights upon final payment. Up to two rounds of revisions are included per phase.`,
       });
     }
 
-    // 2. Invoke Anthropic Claude for JSON response
+    // Fetch workspace context for prompt caching
+    let workspaceContext = '';
+    if (workspaceId) {
+      try {
+        const supabase = await createClient();
+        const { data: ws } = await supabase
+          .from('workspaces')
+          .select('name')
+          .eq('id', workspaceId)
+          .maybeSingle();
+        if (ws?.name) workspaceContext = `\nAgency: ${ws.name}`;
+      } catch { /* non-critical */ }
+    }
+
     const client = new Anthropic();
-    const systemPrompt = `You are Hermes, the senior strategic proposal writer of Minerva OS. Your goal is to draft a professional project proposal based on a scoping brief.
-    
-Output MUST be valid JSON only, conforming to the exact schema:
-{
-  "intro": "A professional introductory paragraph establishing Uprising Studio's strategy for the client.",
-  "scope": "Bullet points listing detailed, premium deliverables and scope of services.",
-  "timeline": "Milestones timeline detailing project phases, weeks, and review schedules.",
-  "pricing": "Structured fee breakdown, milestone payments, and deposit schedules."
-}
+    const userMessage = `Service type: ${service}${budgetLine}${briefLine}
+Client company: ${company}${workspaceContext}
 
-Personality: direct, editorial, direct, professional. Never use em dashes.
-Address the client company name if provided. Make the scope and timeline match the specific details of the scoping brief.`;
-
-    const userMessage = `Scoping Brief: ${brief}
-Client Company Name: ${company}`;
+Generate the complete proposal now.`;
 
     const response = await client.messages.create({
       model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
-      max_tokens: 1536,
+      max_tokens: 2048,
       system: [
         {
           type: 'text',
-          text: systemPrompt,
-        }
+          text: SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' },
+        },
       ],
       messages: [{ role: 'user', content: userMessage }],
     });
@@ -63,26 +88,25 @@ Client Company Name: ${company}`;
     const block = response.content[0];
     const rawText = block.type === 'text' ? block.text : '';
 
-    // Parse JSON
-    let parsed: { intro: string; scope: string; timeline: string; pricing: string };
+    let parsed: { intro: string; scope: string; timeline: string; pricing: string; terms: string };
     try {
       const startIdx = rawText.indexOf('{');
       const endIdx = rawText.lastIndexOf('}');
       const jsonText = startIdx !== -1 && endIdx !== -1 ? rawText.substring(startIdx, endIdx + 1) : rawText;
       parsed = JSON.parse(jsonText);
-    } catch (parseErr) {
-      console.error('Failed to parse Claude JSON proposal response. Raw response:', rawText);
-      throw new Error('Invalid JSON payload returned by AI agent.');
+    } catch {
+      throw new Error('Invalid JSON from AI agent.');
     }
 
     return NextResponse.json({
       intro: parsed.intro || '',
       scope: parsed.scope || '',
       timeline: parsed.timeline || '',
-      pricing: parsed.pricing || ''
+      pricing: parsed.pricing || '',
+      terms: parsed.terms || 'Payment due within 30 days of invoice. All work remains the property of the studio until payment is received in full.',
     });
   } catch (err) {
-    console.error('[AI Proposal Draft API Error]:', err);
+    console.error('[Proposal Draft API Error]:', err);
     return NextResponse.json({ error: 'Failed to draft proposal.' }, { status: 500 });
   }
 }
