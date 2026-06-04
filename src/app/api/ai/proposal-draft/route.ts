@@ -79,7 +79,6 @@ Generate the complete proposal now.`;
         {
           type: 'text',
           text: SYSTEM_PROMPT,
-          // @ts-expect-error — cache_control is valid in the Anthropic API
           cache_control: { type: 'ephemeral' },
         },
       ],
