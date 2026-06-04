@@ -21,16 +21,16 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 
 **6-space navigation** (consolidated from 29 fragmented routes):
 
-| Space | Route | What lives here |
+| Space | Primary route | What lives here |
 |---|---|---|
-| Home | `/app/command` `/app/dashboard` | Operating review cockpit, portfolio health scores, role dashboard |
-| Revenue | `/app/clients` `/app/pipeline` `/app/proposals` | CRM, pipeline, proposals — Call Preps as a tab inside Clients |
-| Delivery | `/app/projects` `/app/tasks` `/app/approvals` `/app/files` `/app/workflows` `/app/time-tracking` `/app/resources` | Full project execution surface |
-| Finance | `/app/finance-hub` | Billing · Expenses · Profitability · Ledger in one tabbed view |
-| Intelligence | `/app/intelligence` | Reports · Health scores · NPS signal · Agent Ops in one tabbed view |
-| Admin | `/app/settings` `/app/support-hub` `/app/services` `/app/marketplace` `/app/scorecards` `/app/changelog` | Settings, Support & Knowledge hub, Operations Catalog (Services + Fulfillment tab), Marketplace, Scorecards |
+| Home | `/app/command` | Operating review cockpit, portfolio health scores, role dashboard |
+| Revenue | `/app/clients` | CRM, pipeline, proposals — Call Preps as tab inside Clients |
+| Delivery | `/app/projects` | Projects, tasks, approvals, files, workflows, time tracking, resources |
+| Finance | `/app/finance-hub` | Billing · Expenses · Profitability · Tax Ledger — one tabbed view |
+| Intelligence | `/app/intelligence` | Reports · Health scores · NPS signal · Agent Ops — one tabbed view |
+| Admin | `/app/settings` | Settings, Support & Knowledge, Operations Catalog, Marketplace, Scorecards |
 
-**Core modules:**
+**App modules:**
 - Split-screen signup + login: cinematic video left, form right
 - Fully bilingual EN / FR via custom `useLang()` context — zero hardcoded copy
 - Dark mode enforced (Celestial Editorial Noir design system)
@@ -38,19 +38,83 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 - Sentry error monitoring + PostHog product analytics
 - PWA support + Electron desktop shell
 - Dev service worker auto-cleanup to prevent stale cache issues
-- Secure Client Portal: email validation gate, token verification, scope enforcement, and audit activity logging
-- API-driven routes: server-side Next.js endpoints using `supabaseAdmin` service role
-- Proposal Viewer: clients view, sign, or decline proposals with real-time agency notifications
-- Client Portal: Decision Journal, Notifications, Shareable Reports, Timeline, AI Copilot (Claude)
 - Collapsible sidebar with 6 spaces — state persisted in localStorage
-- Support & Knowledge hub: tickets, knowledge base, and FAQ in one context
-- Operations Catalog: services, packages, and fulfillment templates unified
-- Marketplace: built-in + workspace-custom templates, automations, views, and playbooks
-- Team Scorecards: delivery quality and capacity metrics per team member
-- Portfolio Health Scores: per-client and per-project health with 4 dimensions (delivery, financial, engagement, risk)
-- Workflow Analytics: execution stats, success rate, time saved, daily series
 - Premium animation layer: `AnimatedNumber`, `TextAnimate`, `DirectionAwareTabs`
 - Fully responsive: all modules audited for mobile (375px), tablet (768px), and desktop (1440px)
+
+**Finance Hub** (`/app/finance-hub`):
+- Billing: invoice creation, retainer tracking, status management
+- Expenses: team and project expense logging with categories
+- Profitability: project margin, cashflow forecast, disputed invoices
+- Ledger: tax and VAT ledger with export
+
+**Intelligence Hub** (`/app/intelligence`):
+- Reports: overview, profitability, and time reporting with role-based views (Executive, Finance, PM, Delivery)
+- Health Scores: per-client and per-project health across 4 dimensions (delivery, financial, engagement, risk) with animated SVG ring gauges
+- NPS: satisfaction gauge + individual response tracking
+- Agent Ops: AI agent activity terminal and logs
+
+**Support & Knowledge Hub** (`/app/support-hub`):
+- Tickets: issue tracking with status and priority
+- Knowledge Base: article library with categories and search
+- Help: FAQ accordion and contact form
+
+**Operations Catalog** (`/app/services`):
+- Services: productised service definitions with pricing
+- Packages: bundled service packages
+- Fulfillment: delivery templates and task scaffolding
+
+**Marketplace** (`/app/marketplace`):
+- Built-in templates, automations, views, and playbooks
+- Workspace-custom items with install tracking and usage counts
+
+**Team Scorecards** (`/app/scorecards`):
+- Per-member delivery score, capacity %, task completion rate, on-time rate
+- Period selector: week / month / quarter
+- Team-level KPI ring + capacity bar
+
+**Cockpit** (`/app/command`):
+- Portfolio health ring with critical alert feed
+- Revenue, delivery, and capacity KPIs
+- Per-client health cards with dimension breakdown bars
+- Recent wins and approval aging
+
+**Workflow Analytics** (embedded in Workflows):
+- Execution stats: total runs, success rate, avg duration
+- Time saved estimate, daily series chart
+- Top workflows and trigger breakdown
+
+### Client Portal (`/portal/[token]`)
+
+Secure, token-gated portal for client stakeholders and reviewers.
+
+| Route | Content |
+|---|---|
+| `/portal/[token]` | Overview: project stats, pending decisions, upcoming deadlines, monthly summary |
+| `/portal/[token]/deliverables` | Approvals with choice polls, comments, status badges |
+| `/portal/[token]/files` | Document centre with folder navigation (Proposals, Deliverables, Invoices, References) |
+| `/portal/[token]/invoices` | Invoice list with inline comment threads |
+| `/portal/[token]/proposals` | Proposal viewer with sign / decline CTA |
+| `/portal/[token]/journal` | Chronological decision journal (approvals, proposals, invoices) |
+| `/portal/[token]/timeline` | Activity timeline with stagger animations |
+| `/portal/[token]/reports` | KPI snapshot with shareable URL |
+| `/portal/[token]/tickets` | Support ticket submission |
+| `/portal/[token]/nps` | Satisfaction survey |
+| `/portal/[token]/settings` | Notification preferences (instant / daily / weekly) |
+
+**Portal features:**
+- Token scopes: view, approve, download, upload, billing, proposals, reports
+- Activity audit log on every action (download, approval, comment)
+- API-driven: server-side routes using `supabaseAdmin` — no direct DB access from browser
+- AI Copilot: floating Claude-powered assistant with full portal context + prompt caching
+- Monthly AI summary generated per client with `cache_control: ephemeral`
+- Notification bell: unread count badge, mark-all-read, instant / digest delivery via Resend
+
+### Public shareable reports (`/reports/[shareToken]`)
+
+- Agency generates a snapshot URL from the portal
+- Public read-only viewer — no auth required
+- "Powered by Minerva" footer, no share button
 
 ### Desktop (Electron 42)
 
@@ -88,6 +152,8 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 | Auth | Supabase Auth — email/password, PKCE reset flow |
 | Styling | Tailwind CSS v4 + shadcn/ui + Cult UI (Minerva design tokens) |
 | Animation | motion/react (Framer Motion v11+) · AnimatedNumber · TextAnimate · DirectionAwareTabs |
+| AI | Anthropic SDK · claude-sonnet-4-6 · prompt caching |
+| Email | Resend (portal notifications + digests) |
 | Notifications | Sonner v2 |
 | Monitoring | Sentry + PostHog |
 | Deployment | Vercel (web) · EAS (mobile) · GitHub Actions (desktop) |
@@ -100,12 +166,16 @@ Dark-first editorial aesthetic. No neon, no generic SaaS gradients.
 |---|---|---|
 | `obsidian` | `#0A0D14` | Page background |
 | `midnight` | `#111522` | Cards, inputs |
+| `dusk` | `#171C2A` | Elevated surfaces |
 | `ivory` | `#F5F1E8` | Primary text, CTA |
 | `silver` | `#B8BDC7` | Secondary text |
 | `fog` | `#8A9099` | Metadata, tertiary |
+| `mist` | `#D8DDE6` | Accent highlights |
 | `sage` | `#7FA38A` | Success, active |
 | `amber` | `#B89B6A` | Warning |
 | `rose` | `#A86A6A` | Error, danger |
+
+Typography: **Playfair Display** for display headings · **Inter** for all UI text.
 
 ---
 
@@ -115,14 +185,15 @@ Dark-first editorial aesthetic. No neon, no generic SaaS gradients.
 # 1. Clone and install
 git clone https://github.com/Endsi3g/minerva-os.git
 cd minerva-os
-npm ci
+pnpm install
 
 # 2. Copy env vars
 cp .env.example .env.local
-# Fill in NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, etc.
+# Fill in NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+# ANTHROPIC_API_KEY, RESEND_API_KEY, etc.
 
 # 3. Start Next.js
-npm run dev
+pnpm dev
 
 # 4. Mobile (separate terminal)
 cd minerva-mobile
@@ -174,7 +245,7 @@ See **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions covering:
 |---|---|---|
 | `v3.1.0` | 2026-06-04 | Module consolidation — 6-space nav (Home/Revenue/Delivery/Finance/Intelligence/Admin), Finance Hub, Intelligence Hub, Support & Knowledge Hub, Call Preps tab in Clients, Fulfillment tab in Services |
 | `v3.0.0` | 2026-06-04 | Minerva OS as central system — Cockpit operating review, portfolio health scores, workflow analytics, marketplace, team scorecards, DB migration |
-| `v2.7.0` | 2026-06-04 | Client Portal V2 — Decision Journal, Notifications, Shareable Reports, Timeline, AI Copilot (Claude) |
+| `v2.7.0` | 2026-06-04 | Client Portal V2 — Decision Journal, notification bell, shareable reports, activity timeline, AI Copilot (Claude), monthly summaries |
 | `v2.3.0` | 2026-06-02 | Collapsible sidebar groups, Support and Changelog pages, AnimatedNumber / TextAnimate / DirectionAwareTabs animation layer, full responsive audit |
 | `v2.2.0` | 2026-06-01 | Secure Client Portal email gate, token scopes, activity logging, API-driven proposal viewer |
 | `v2.1.0` | 2026-06-01 | Expo 54 upgrade, Sentry wrap, pnpm migration, dev SW cleanup |
@@ -193,7 +264,7 @@ git push origin v3.1.0
 
 ```bash
 # Playwright end-to-end (web)
-npm run test:audit
+pnpm test:audit
 
 # Individual test files
 npx playwright test tests/audit/01-auth.spec.ts
@@ -201,7 +272,7 @@ npx playwright test tests/audit/11-crud-flows.spec.ts
 npx playwright test tests/audit/15-i18n-complete.spec.ts
 
 # View report
-npm run test:audit:report
+pnpm test:audit:report
 ```
 
 ---
@@ -214,4 +285,5 @@ npm run test:audit:report
 - No `overflow-hidden + maxHeight` for animated panels — use `translateY` slides
 - Commit messages in English, code comments in English, UI copy bilingual (EN/FR)
 - Left column of auth pages: centered content (`justify-center`) over video background
+- Web uses **pnpm** — do not use npm at the root
 - Mobile uses **pnpm** — do not use npm in `minerva-mobile/`
