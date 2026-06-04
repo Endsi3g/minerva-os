@@ -51,9 +51,14 @@ export function NewWorkspaceModal({ open, onClose }: Props) {
         name: name.trim(),
         slug: slugify(name.trim()),
         owner_user_id: user.id,
-        workspace_tier: 'starter',
-        agency_type: agencyType,
-        setup_kit_applied: false,
+        settings: {
+          currency: 'USD',
+          language: 'en',
+          timezone: 'America/New_York',
+          workspace_tier: 'starter',
+          agency_type: agencyType,
+          setup_kit_applied: false,
+        }
       });
       await supabase.from('user_profiles').insert({
         id: crypto.randomUUID(),

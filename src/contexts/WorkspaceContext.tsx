@@ -43,18 +43,18 @@ function setCachedActiveId(id: string) {
 }
 
 function mapWorkspace(ws: any, onboardingComplete: boolean): WorkspaceProfile {
-  const tier: WorkspaceTier = (ws.workspace_tier as WorkspaceTier) ?? 'scale';
+  const tier: WorkspaceTier = (ws.workspace_tier ?? ws.settings?.workspace_tier as WorkspaceTier) ?? 'scale';
   const brandColor = ws.branding?.primaryColor ?? ws.settings?.brand_color ?? undefined;
   const customDomain = ws.settings?.custom_domain ?? undefined;
   return {
     id: ws.id ?? '',
     name: ws.name ?? '',
     tier,
-    agencyType: (ws.agency_type as AgencyType) ?? null,
+    agencyType: (ws.agency_type ?? ws.settings?.agency_type as AgencyType) ?? null,
     onboardingComplete,
-    teamSize: ws.team_size ?? null,
-    priorityGoals: ws.priority_goals ?? [],
-    setupKitApplied: ws.setup_kit_applied ?? true,
+    teamSize: ws.team_size ?? ws.settings?.team_size ?? null,
+    priorityGoals: ws.priority_goals ?? ws.settings?.priority_goals ?? [],
+    setupKitApplied: ws.setup_kit_applied ?? ws.settings?.setup_kit_applied ?? true,
     logoUrl: ws.logo_url ?? undefined,
     brandColor,
     customDomain,

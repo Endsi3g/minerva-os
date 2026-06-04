@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import useMeasure from 'react-use-measure';
 import {
   Palette, Target, FileText, Code2, Layers, Users,
   CheckCircle2, ArrowLeft, ArrowRight, Rocket,
@@ -58,6 +59,7 @@ export function AgencySetupWizard() {
     billingCycle: 'monthly',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [measureRef, { height }] = useMeasure();
 
   function patch(updates: Partial<WizardState>) {
     setState(prev => ({ ...prev, ...updates }));
@@ -89,7 +91,7 @@ export function AgencySetupWizard() {
       // 1. Fetch or create a default workspace
       const { data: ws } = await supabase
         .from('workspaces')
-        .select('id')
+        .select('id, settings')
         .limit(1)
         .maybeSingle();
 
@@ -103,7 +105,12 @@ export function AgencySetupWizard() {
             name: 'My Agency',
             slug,
             owner_user_id: user.id,
-            workspace_tier: 'scale',
+            settings: {
+              currency: 'USD',
+              language: 'en',
+              timezone: 'America/New_York',
+              workspace_tier: 'scale',
+            }
           })
           .select('id')
           .single();
@@ -143,19 +150,23 @@ export function AgencySetupWizard() {
 
       const { data: ws } = await supabase
         .from('workspaces')
-        .select('id')
+        .select('id, settings')
         .limit(1)
         .maybeSingle();
 
       let workspaceId = ws?.id;
 
       if (workspaceId) {
+        const currentSettings = ws?.settings || {};
         await supabase.from('workspaces').update({
-          workspace_tier: tier,
-          agency_type: state.agencyType,
-          team_size: state.teamSize,
-          priority_goals: state.goals,
           name: state.agencyName || undefined,
+          settings: {
+            ...currentSettings,
+            workspace_tier: tier,
+            agency_type: state.agencyType,
+            team_size: state.teamSize,
+            priority_goals: state.goals,
+          }
         }).eq('id', workspaceId);
       } else {
         const name = state.agencyName || 'My Agency';
@@ -166,10 +177,15 @@ export function AgencySetupWizard() {
             name,
             slug,
             owner_user_id: user.id,
-            workspace_tier: tier,
-            agency_type: state.agencyType,
-            team_size: state.teamSize,
-            priority_goals: state.goals,
+            settings: {
+              currency: 'USD',
+              language: 'en',
+              timezone: 'America/New_York',
+              workspace_tier: tier,
+              agency_type: state.agencyType,
+              team_size: state.teamSize,
+              priority_goals: state.goals,
+            }
           })
           .select('id')
           .single();
@@ -250,26 +266,32 @@ export function AgencySetupWizard() {
       </div>
 
       {/* Step content */}
-      <div className="w-full max-w-lg">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -12 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {step === 1 && <StepDiscovery ob={ob} state={state} patch={patch} />}
-            {step === 2 && <StepAgencyName ob={ob} state={state} patch={patch} fileInputRef={fileInputRef} />}
-            {step === 3 && <StepAgencyType ob={ob} state={state} patch={patch} />}
-            {step === 4 && <StepTeamSize ob={ob} state={state} patch={patch} derivedTier={derivedTier} />}
-            {step === 5 && <StepGoals ob={ob} state={state} toggleGoal={toggleGoal} />}
-            {step === 6 && <StepKitPreview ob={ob} state={state} isSubmitting={isSubmitting} />}
-            {step === 7 && <StepChoosePlan ob={ob} state={state} patch={patch} />}
-            {step === 8 && <StepGetStarted ob={ob} isSubmitting={isSubmitting} handleSubmit={handleSubmit} />}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      <motion.div
+        animate={{ height: height > 0 ? height : 'auto' }}
+        className="w-full max-w-lg overflow-hidden relative"
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div ref={measureRef}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, scale: 0.98, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: -8 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {step === 1 && <StepDiscovery ob={ob} state={state} patch={patch} />}
+              {step === 2 && <StepAgencyName ob={ob} state={state} patch={patch} fileInputRef={fileInputRef} />}
+              {step === 3 && <StepAgencyType ob={ob} state={state} patch={patch} />}
+              {step === 4 && <StepTeamSize ob={ob} state={state} patch={patch} derivedTier={derivedTier} />}
+              {step === 5 && <StepGoals ob={ob} state={state} toggleGoal={toggleGoal} />}
+              {step === 6 && <StepKitPreview ob={ob} state={state} isSubmitting={isSubmitting} />}
+              {step === 7 && <StepChoosePlan ob={ob} state={state} patch={patch} />}
+              {step === 8 && <StepGetStarted ob={ob} isSubmitting={isSubmitting} handleSubmit={handleSubmit} />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </motion.div>
 
 
       {/* Navigation */}
