@@ -365,6 +365,19 @@ export function OnboardingWizard() {
 
   async function handleComplete() {
     if (user) {
+      const { data: onb } = await supabase
+        .from('onboarding_responses')
+        .select('team_size')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (onb?.team_size && workspaceId) {
+        await supabase
+          .from('workspaces')
+          .update({ team_size: onb.team_size })
+          .eq('id', workspaceId);
+      }
+
       await supabase
         .from('user_profiles')
         .update({ onboarding_complete: true })

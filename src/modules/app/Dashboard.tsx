@@ -268,6 +268,320 @@ function DashboardSkeleton() {
   );
 }
 
+const SMB_TEAM_SIZES = ['solo', '2-5', '6-15'];
+
+/* ── SMB Action Queue ─────────────────────────────────────────────────────── */
+function SMBActionQueue({
+  approvals, invoices, deals, labels,
+}: {
+  approvals: any[] | null;
+  invoices: any[] | null;
+  deals: any[] | null;
+  labels: any;
+}) {
+  const router = useRouter();
+  const now = Date.now();
+
+  const items: { key: string; label: string; href: string; color: string }[] = [];
+
+  if (approvals) {
+    approvals
+      .filter((a: any) => a.status === 'pending')
+      .forEach((a: any) => {
+        const submittedAt = a.submitted_at ? new Date(a.submitted_at).getTime() : now;
+        const days = Math.floor((now - submittedAt) / 86400000);
+        if (days >= 2) {
+          items.push({
+            key: a.id || a._id,
+            label: labels.approvalAlert.replace('{{days}}', String(days)),
+            href: '/app/approvals',
+            color: '#B89B6A',
+          });
+        }
+      });
+  }
+
+  if (invoices) {
+    invoices
+      .filter((i: any) => i.status === 'overdue')
+      .forEach((i: any) => {
+        const dueAt = i.due_date ? new Date(i.due_date).getTime() : now;
+        const days = Math.floor((now - dueAt) / 86400000);
+        items.push({
+          key: i.id || i._id,
+          label: labels.invoiceAlert.replace('{{days}}', String(Math.max(0, days))),
+          href: '/app/billing',
+          color: '#A86A6A',
+        });
+      });
+  }
+
+  if (deals) {
+    deals
+      .filter((d: any) => d.stage === 'proposal')
+      .forEach((d: any) => {
+        const updatedAt = d.updated_at ? new Date(d.updated_at).getTime() : now;
+        const days = Math.floor((now - updatedAt) / 86400000);
+        if (days >= 5) {
+          items.push({
+            key: d.id || d._id,
+            label: labels.proposalAlert.replace('{{days}}', String(days)),
+            href: '/app/pipeline',
+            color: '#8A9099',
+          });
+        }
+      });
+  }
+
+  return (
+    <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{labels.actionQueueTitle}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-xs text-fog py-2">{labels.actionQueueEmpty}</p>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {items.map(item => (
+              <button
+                key={item.key}
+                onClick={() => router.push(item.href)}
+                className="flex items-center gap-3 text-left hover:bg-white/3 rounded-lg px-2 py-1.5 transition-colors cursor-pointer group"
+              >
+                <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                <span className="text-xs text-silver group-hover:text-ivory transition-colors">{item.label}</span>
+                <ArrowRight size={10} className="ml-auto text-fog opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── SMB Revenue Snapshot ─────────────────────────────────────────────────── */
+function SMBRevenueSnapshot({
+  invoices, labels, onDetails, formatCurrency,
+}: {
+  invoices: any[] | null;
+  labels: any;
+  onDetails: () => void;
+  formatCurrency: (v: number) => string;
+}) {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+  const collected = invoices
+    ? invoices.filter((i: any) => i.status === 'paid' && new Date(i.paid_date || i.updated_at || 0).getTime() >= startOfMonth)
+        .reduce((s: number, i: any) => s + (i.amount || 0), 0)
+    : 0;
+
+  const outstanding = invoices
+    ? invoices.filter((i: any) => ['sent', 'overdue'].includes(i.status))
+        .reduce((s: number, i: any) => s + (i.amount || 0), 0)
+    : 0;
+
+  const nextInvoice = invoices
+    ? invoices
+        .filter((i: any) => i.status === 'sent' && i.due_date)
+        .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0]
+    : null;
+
+  const metrics = [
+    { label: labels.revenueCollected, value: formatCurrency(collected), color: '#7FA38A' },
+    { label: labels.revenueOutstanding, value: formatCurrency(outstanding), color: '#B89B6A' },
+    {
+      label: labels.revenueNextInvoice,
+      value: nextInvoice
+        ? `${formatCurrency(nextInvoice.amount || 0)} · ${new Date(nextInvoice.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
+        : '—',
+      color: '#B8BDC7',
+    },
+  ];
+
+  return (
+    <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{labels.revenueTitle}</CardTitle>
+        <button onClick={onDetails} className="text-[10px] text-fog hover:text-silver transition-colors cursor-pointer flex items-center gap-0.5">
+          {labels.revenueViewDetails} <ArrowRight size={9} />
+        </button>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-3 gap-4">
+          {metrics.map(m => (
+            <div key={m.label} className="flex flex-col gap-1">
+              <span className="text-[9px] uppercase font-semibold tracking-wider text-fog">{m.label}</span>
+              <span className="text-sm font-bold" style={{ color: m.color }}>{m.value}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── SMB Active Projects ──────────────────────────────────────────────────── */
+function SMBActiveProjects({ projects, labels }: { projects: any[] | null; labels: any }) {
+  const router = useRouter();
+  const now = Date.now();
+
+  if (!projects) return null;
+
+  const active = projects.filter((p: any) => p.status === 'active').slice(0, 5);
+
+  return (
+    <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{labels.projectsTitle}</CardTitle>
+        <button
+          onClick={() => router.push('/app/projects')}
+          className="text-[10px] font-bold text-sage hover:underline flex items-center gap-0.5 cursor-pointer"
+        >
+          {labels.projectsViewAll} <ArrowRight size={10} />
+        </button>
+      </CardHeader>
+      <CardContent>
+        {active.length === 0 ? (
+          <p className="text-xs text-fog py-2">{labels.projectsEmpty}</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {active.map((p: any) => {
+              const dueDate = p.dueDate || p.due_date;
+              const isOverdue = dueDate && new Date(dueDate).getTime() < now;
+              return (
+                <button
+                  key={p.id || p._id}
+                  onClick={() => router.push('/app/projects')}
+                  className="flex items-center justify-between text-left hover:bg-white/3 rounded-lg px-2 py-2 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-1.5 w-1.5 rounded-full bg-sage shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-ivory truncate group-hover:text-white">{p.name}</p>
+                      <p className="text-[10px] text-fog mt-0.5">{p.clientName || p.client_name || ''}</p>
+                    </div>
+                  </div>
+                  {dueDate && (
+                    <span className={cn('text-[10px] shrink-0 ml-2', isOverdue ? 'text-rose font-semibold' : 'text-fog')}>
+                      {new Date(dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── SMB Dashboard Layout ─────────────────────────────────────────────────── */
+function SMBDashboard({
+  user, workspace, workspaceId, projects, invoices, approvals, deals,
+  localTasks, handleToggleTask, formatCurrency,
+}: {
+  user: any; workspace: any; workspaceId: any;
+  projects: any; invoices: any; approvals: any; deals: any;
+  localTasks: any[]; handleToggleTask: (id: string, title: string) => void;
+  formatCurrency: (v: number) => string;
+}) {
+  const router = useRouter();
+  const { t } = useLang();
+  const d = t.app.dashboard;
+  const s = t.smb.dashboard;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? d.greetingMorning : hour < 18 ? d.greetingAfternoon : d.greetingEvening;
+  const displayName = user?.name ?? workspace?.name ?? 'Studio';
+
+  return (
+    <div className="space-y-6 w-full px-6 py-6 max-w-[1200px] mx-auto select-none">
+      {/* Greeting */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-2xl font-semibold text-ivory tracking-tight" />
+      </motion.div>
+
+      {/* Top row: action queue + revenue snapshot */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.4 }}>
+          <SMBActionQueue approvals={approvals} invoices={invoices} deals={deals} labels={s} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }}>
+          <SMBRevenueSnapshot invoices={invoices} labels={s} onDetails={() => router.push('/app/finance-hub')} formatCurrency={formatCurrency} />
+        </motion.div>
+      </div>
+
+      {/* Active projects + right sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 space-y-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.4 }}>
+            <SMBActiveProjects projects={projects} labels={s} />
+          </motion.div>
+
+          {/* Open tasks */}
+          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Open Tasks</CardTitle>
+              <button onClick={() => router.push('/app/tasks')} className="h-6 w-6 rounded-full border border-white/10 flex items-center justify-center text-fog hover:text-silver hover:bg-white/5 transition-colors cursor-pointer">
+                <Plus size={12} />
+              </button>
+            </CardHeader>
+            <CardContent>
+              {localTasks.length === 0 ? (
+                <div className="text-center py-6 text-xs text-fog">All tasks completed</div>
+              ) : (
+                <div className="divide-y divide-white/5 space-y-2">
+                  <AnimatePresence initial={false}>
+                    {localTasks.slice(0, 5).map(task => (
+                      <motion.div
+                        key={task.id || task._id}
+                        initial={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center justify-between py-2 pt-2.5"
+                      >
+                        <div className="flex items-center gap-3">
+                          <input type="checkbox" checked={false} onChange={() => handleToggleTask(task.id || task._id, task.title)}
+                            className="h-3.5 w-3.5 rounded border-white/10 bg-transparent text-sage focus:ring-0 cursor-pointer" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-ivory truncate">{task.title}</p>
+                            <p className="text-[10px] text-fog mt-0.5">{task.project}</p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-fog shrink-0">
+                          {new Date(task.dueDate || task.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right sidebar */}
+        <div className="space-y-6">
+          <GettingStartedChecklist />
+          {workspaceId && (
+            <DailyBriefing
+              context={`Active projects: ${projects?.filter((p: any) => p.status === 'active').length ?? 0}. Open tasks: ${localTasks.length}. Pending approvals: ${approvals?.filter((a: any) => a.status === 'pending').length ?? 0}. Outstanding invoices: $${invoices?.filter((i: any) => i.status !== 'paid').reduce((s: number, i: any) => s + (i.amount || 0), 0) ?? 0}.`}
+              labels={{ title: 'AI Reviews & Suggestions', loading: d.briefingLoading, error: d.briefingError, refresh: d.briefingRefresh }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Dashboard Restructure ────────────────────────────────────────────────── */
 export default function Dashboard() {
   const router = useRouter();
@@ -363,8 +677,27 @@ export default function Dashboard() {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
   };
 
+  const isSMB = SMB_TEAM_SIZES.includes(workspace?.teamSize ?? '');
+
   if (isLoading) {
     return <DashboardSkeleton />;
+  }
+
+  if (isSMB) {
+    return (
+      <SMBDashboard
+        user={user}
+        workspace={workspace}
+        workspaceId={workspaceId}
+        projects={projects}
+        invoices={invoices}
+        approvals={approvals}
+        deals={deals}
+        localTasks={localTasks}
+        handleToggleTask={handleToggleTask}
+        formatCurrency={formatCurrency}
+      />
+    );
   }
 
   return (
