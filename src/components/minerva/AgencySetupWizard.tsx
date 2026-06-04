@@ -11,7 +11,7 @@ import {
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { supabase } from '@/lib/supabase';
+
 import { deriveTier } from '@/lib/tier';
 import { applySetupKit } from '@/lib/setup-kits';
 import type { AgencyType } from '@/lib/types';
@@ -88,47 +88,18 @@ export function AgencySetupWizard() {
     try {
       if (!user) return;
 
-      // 1. Fetch or create a default workspace
-      const { data: ws } = await supabase
-        .from('workspaces')
-        .select('id, settings')
-        .limit(1)
-        .maybeSingle();
+      const res = await fetch('/api/workspace/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skip: true, tier: 'scale' }),
+      });
 
-      let workspaceId = ws?.id;
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
 
-      if (!workspaceId) {
-        const slug = `agency-${Math.random().toString(36).substring(2, 6)}`;
-        const { data: newWs, error: wsError } = await supabase
-          .from('workspaces')
-          .insert({
-            name: 'My Agency',
-            slug,
-            owner_user_id: user.id,
-            settings: {
-              currency: 'USD',
-              language: 'en',
-              timezone: 'America/New_York',
-              workspace_tier: 'scale',
-            }
-          })
-          .select('id')
-          .single();
-
-        if (wsError) throw wsError;
-        workspaceId = newWs.id;
-      }
-
-      // 2. Link user profile to workspace and mark onboarding completed
-      await supabase.from('user_profiles').update({
-        onboarding_completed: true,
-        workspace_id: workspaceId,
-      }).eq('user_id', user.id);
-
-      // 3. Update local context state
       setWorkspaceProfile({
         onboardingComplete: true,
-        id: workspaceId,
+        id: json.workspaceId,
         tier: 'scale',
       });
 
@@ -148,56 +119,22 @@ export function AgencySetupWizard() {
     try {
       const tier = deriveTier(state.teamSize ?? '1-5');
 
-      const { data: ws } = await supabase
-        .from('workspaces')
-        .select('id, settings')
-        .limit(1)
-        .maybeSingle();
+      const res = await fetch('/api/workspace/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agencyName: state.agencyName || undefined,
+          agencyType: state.agencyType,
+          teamSize: state.teamSize,
+          goals: state.goals,
+          tier,
+        }),
+      });
 
-      let workspaceId = ws?.id;
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
 
-      if (workspaceId) {
-        const currentSettings = ws?.settings || {};
-        await supabase.from('workspaces').update({
-          name: state.agencyName || undefined,
-          settings: {
-            ...currentSettings,
-            workspace_tier: tier,
-            agency_type: state.agencyType,
-            team_size: state.teamSize,
-            priority_goals: state.goals,
-          }
-        }).eq('id', workspaceId);
-      } else {
-        const name = state.agencyName || 'My Agency';
-        const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
-        const { data: newWs, error: insertError } = await supabase
-          .from('workspaces')
-          .insert({
-            name,
-            slug,
-            owner_user_id: user.id,
-            settings: {
-              currency: 'USD',
-              language: 'en',
-              timezone: 'America/New_York',
-              workspace_tier: tier,
-              agency_type: state.agencyType,
-              team_size: state.teamSize,
-              priority_goals: state.goals,
-            }
-          })
-          .select('id')
-          .single();
-
-        if (insertError) throw insertError;
-        workspaceId = newWs.id;
-      }
-
-      await supabase.from('user_profiles').update({
-        onboarding_completed: true,
-        workspace_id: workspaceId,
-      }).eq('user_id', user.id);
+      const workspaceId: string = json.workspaceId;
 
       if (state.agencyType) {
         await applySetupKit(workspaceId, state.agencyType, tier);
@@ -217,7 +154,7 @@ export function AgencySetupWizard() {
       toast.success(ob.toastSuccess || 'Workspace configured!', { id: toastId });
       router.push('/app/dashboard');
     } catch (err) {
-      console.error('Onboarding submit error', err);
+      console.error('Onboarding submit error', err instanceof Error ? err.message : err);
       toast.error('Failed to configure workspace.', { id: toastId });
       setIsSubmitting(false);
     }
