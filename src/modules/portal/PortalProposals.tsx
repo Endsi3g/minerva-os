@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FileSignature, Check, ChevronDown, ChevronUp, MessageSquare, X } from 'lucide-react';
 import { usePortalData } from './usePortalData';
@@ -44,7 +44,7 @@ function SignatureModal({ proposal, onConfirm, onCancel, labels, signing }: Sign
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        onClick={e => e.stopPropagation()}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
         className="w-full max-w-md rounded-2xl border overflow-hidden"
         style={{ backgroundColor: '#111522', borderColor: 'rgba(255,255,255,0.08)' }}
       >
@@ -85,7 +85,7 @@ function SignatureModal({ proposal, onConfirm, onCancel, labels, signing }: Sign
               onChange={e => setName(e.target.value)}
               placeholder={m.namePlaceholder}
               className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
-              style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8', focusRingColor: 'rgba(127,163,138,0.4)' }}
+              style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
               onKeyDown={e => e.key === 'Enter' && handleSign()}
             />
           </div>
