@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Check, Download } from 'lucide-react';
+import { Check, Download, Minus } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,11 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs';
 import { TextAnimate } from '@/components/ui/text-animate';
+import { useTier } from '@/lib/hooks/useTier';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { UpgradeModal, TIER_BADGE_COLORS } from '@/components/minerva/UpgradeModal';
+import { isFeatureVisibleForTier } from '@/lib/tier';
+import type { FeatureKey, WorkspaceTier } from '@/lib/types';
 
 /* ── Sub-sections ────────────────────────────────────────────────────────── */
 
@@ -679,6 +684,147 @@ function PrivacyTab() {
   );
 }
 
+/* ── Plan tab ────────────────────────────────────────────────────────────── */
+
+const FEATURE_GROUPS: { label: string; keys: FeatureKey[] }[] = [
+  { label: 'Revenue',      keys: ['pipeline', 'proposals'] },
+  { label: 'Delivery',     keys: ['workflows', 'time_tracking', 'resources'] },
+  { label: 'Finance',      keys: ['finance_hub', 'expenses', 'profitability'] },
+  { label: 'Intelligence', keys: ['intelligence', 'reports', 'scorecards', 'nps', 'knowledge'] },
+  { label: 'Admin',        keys: ['support_hub', 'marketplace', 'agent_ops'] },
+];
+
+const TIERS: WorkspaceTier[] = ['starter', 'growth', 'scale'];
+
+const NEXT_TIER: Record<WorkspaceTier, WorkspaceTier | null> = {
+  starter: 'growth',
+  growth: 'scale',
+  scale: null,
+};
+
+function PlanTab() {
+  const { t } = useLang();
+  const { tier } = useTier();
+  const { workspace } = useWorkspace();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  const u = t.upgrade;
+  const next = NEXT_TIER[tier];
+  const tierColors = TIER_BADGE_COLORS[tier];
+  const upgradeFeatureKey: FeatureKey = next === 'scale' ? 'agent_ops' : 'intelligence';
+
+  return (
+    <div className="space-y-8 w-full">
+      {/* Current plan card */}
+      <div
+        className="rounded-2xl p-6 flex flex-col gap-4"
+        style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+      >
+        <p className="text-xs text-fog uppercase tracking-widest">{u.plan.current}</p>
+        <div className="flex items-center gap-3">
+          <span
+            className="text-sm font-semibold px-3 py-1.5 rounded-full capitalize"
+            style={tierColors}
+          >
+            {tier}
+          </span>
+          {workspace?.teamSize && (
+            <span className="text-sm text-silver">{workspace.teamSize} people</span>
+          )}
+          {workspace?.agencyType && (
+            <span className="text-sm text-fog capitalize">{workspace.agencyType.replace('_', ' ')}</span>
+          )}
+        </div>
+        {next && (
+          <button
+            onClick={() => setUpgradeOpen(true)}
+            className="self-start h-9 px-5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-95"
+            style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
+          >
+            {u.plan.upgrade.replace('{tier}', next)}
+          </button>
+        )}
+      </div>
+
+      {/* Feature comparison table */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ border: '1px solid rgba(255,255,255,0.07)' }}
+      >
+        {/* Header row */}
+        <div
+          className="grid grid-cols-4 px-5 py-3 text-[11px] font-semibold uppercase tracking-widest"
+          style={{ backgroundColor: '#0E1119', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <span className="text-fog">Feature</span>
+          {TIERS.map(t => (
+            <span
+              key={t}
+              className="text-center capitalize"
+              style={{ color: tier === t ? TIER_BADGE_COLORS[t].color : '#8A9099' }}
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+
+        {FEATURE_GROUPS.map((group, gi) => (
+          <div key={group.label}>
+            {/* Group header */}
+            <div
+              className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-fog"
+              style={{
+                backgroundColor: '#0E1119',
+                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                borderTop: gi > 0 ? '1px solid rgba(255,255,255,0.04)' : undefined,
+              }}
+            >
+              {group.label}
+            </div>
+            {group.keys.map((key, ki) => (
+              <div
+                key={key}
+                className="grid grid-cols-4 px-5 py-3 text-sm items-center"
+                style={{
+                  backgroundColor: ki % 2 === 0 ? '#111522' : '#0E1119',
+                  borderBottom: '1px solid rgba(255,255,255,0.04)',
+                }}
+              >
+                <span className="text-silver text-[13px]">
+                  {(u.plan.featureLabels as Record<string, string>)[key]}
+                </span>
+                {TIERS.map(t => {
+                  const included = isFeatureVisibleForTier(key, t);
+                  return (
+                    <div key={t} className="flex justify-center">
+                      {included ? (
+                        <Check
+                          size={14}
+                          style={{ color: tier === t ? TIER_BADGE_COLORS[t].color : '#7FA38A' }}
+                        />
+                      ) : (
+                        <Minus size={14} className="text-fog opacity-30" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {next && (
+        <UpgradeModal
+          featureKey={upgradeFeatureKey}
+          open={upgradeOpen}
+          onClose={() => setUpgradeOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
 /* ── Main page ───────────────────────────────────────────────────────────── */
 
 export default function AppSettings() {
@@ -692,6 +838,7 @@ export default function AppSettings() {
     { id: 3, label: s.tabs.notifications, content: <NotificationsTab /> },
     { id: 4, label: s.tabs.security,      content: <SecurityTab /> },
     { id: 5, label: 'Privacy',            content: <PrivacyTab /> },
+    { id: 6, label: s.tabs.plan,          content: <PlanTab /> },
   ];
 
   return (

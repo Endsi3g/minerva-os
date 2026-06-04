@@ -1,5 +1,6 @@
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { isFeatureVisibleForTier } from '@/lib/tier';
+import { isFeatureVisibleForTier, FEATURE_MIN_TIER } from '@/lib/tier';
+import { useLang } from '@/i18n';
 import type { FeatureKey, WorkspaceTier, AgencyType } from '@/lib/types';
 
 export interface TierHook {
@@ -7,29 +8,12 @@ export interface TierHook {
   agencyType: AgencyType | null;
   isFeatureVisible: (key: FeatureKey) => boolean;
   getUnlockHint: (key: FeatureKey) => string | null;
+  getRequiredTier: (key: FeatureKey) => WorkspaceTier;
 }
-
-const UNLOCK_HINTS: Record<FeatureKey, string> = {
-  pipeline:      'Upgrade to Growth to unlock Pipeline analytics.',
-  proposals:     'Proposals unlock on the Growth plan.',
-  finance_hub:   'Finance Hub unlocks on Growth. Track margins, expenses and profitability.',
-  intelligence:  'Intelligence Hub becomes available on the Growth plan.',
-  workflows:     'Automated workflows unlock on the Growth plan.',
-  resources:     'Resource planning unlocks on Growth for larger teams.',
-  scorecards:    'Team Scorecards unlock on the Growth plan.',
-  nps:           'NPS tracking is available on the Growth plan.',
-  marketplace:   'The Marketplace unlocks on the Growth plan.',
-  knowledge:     'Knowledge Base is available on the Growth plan.',
-  expenses:      'Expense tracking unlocks on the Growth plan.',
-  profitability: 'Profitability reports unlock on the Growth plan.',
-  time_tracking: 'Time Tracking unlocks on the Growth plan.',
-  reports:       'Advanced Reports unlock on the Growth plan.',
-  support_hub:   'Support Hub unlocks on the Growth plan.',
-  agent_ops:     'Agent Ops is a Scale plan feature for large agencies.',
-};
 
 export function useTier(): TierHook {
   const { workspace, isLoading } = useWorkspace();
+  const { t } = useLang();
 
   // While loading, default to 'scale' so no features flash-disappear
   const tier: WorkspaceTier = isLoading ? 'scale' : (workspace?.tier ?? 'scale');
@@ -39,10 +23,14 @@ export function useTier(): TierHook {
     return isFeatureVisibleForTier(key, tier);
   }
 
-  function getUnlockHint(key: FeatureKey): string | null {
-    if (isFeatureVisible(key)) return null;
-    return UNLOCK_HINTS[key] ?? null;
+  function getRequiredTier(key: FeatureKey): WorkspaceTier {
+    return FEATURE_MIN_TIER[key];
   }
 
-  return { tier, agencyType, isFeatureVisible, getUnlockHint };
+  function getUnlockHint(key: FeatureKey): string | null {
+    if (isFeatureVisible(key)) return null;
+    return (t.tier.hints as Record<string, string>)[key] ?? null;
+  }
+
+  return { tier, agencyType, isFeatureVisible, getUnlockHint, getRequiredTier };
 }
