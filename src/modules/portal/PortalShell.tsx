@@ -1,15 +1,15 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import { usePortalData } from './usePortalData';
-import { NavLink } from '@/components/ui/nav-link';
 import { useLang } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import PortalEmailGate from './PortalEmailGate';
 import PortalExpired from './PortalExpired';
 import PortalNotificationBell from './PortalNotificationBell';
 import PortalCopilot from './PortalCopilot';
+import { supabase } from '@/lib/supabase';
 
 function PortalLoadingSkeleton() {
   return (
@@ -59,6 +59,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
   const {
     clientName,
+    workspaceId,
     isValid,
     loading,
     needsVerification,
@@ -66,6 +67,21 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     scopes,
     refresh,
   } = usePortalData();
+
+  const [wsLogo, setWsLogo] = useState<string | undefined>();
+  const [wsBrandColor, setWsBrandColor] = useState<string | undefined>();
+  const [wsName, setWsName] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    supabase.from('workspaces').select('name, logo_url, settings, branding').eq('id', workspaceId).maybeSingle().then(({ data }) => {
+      if (data) {
+        setWsName(data.name ?? undefined);
+        setWsLogo(data.logo_url ?? undefined);
+        setWsBrandColor(data.branding?.primaryColor ?? data.settings?.brand_color ?? undefined);
+      }
+    });
+  }, [workspaceId]);
 
   const PORTAL_TABS = [
     { label: t.app.sidebar.dashboard,        path: '',             scope: null },
@@ -105,8 +121,14 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
   const visibleTabs = PORTAL_TABS.filter(tab => !tab.scope || scopes.includes(tab.scope));
 
+  const accentColor = wsBrandColor ?? '#7FA38A';
+  const wsInitials = (wsName ?? 'M').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif" }}>
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif", '--portal-accent': accentColor } as React.CSSProperties}
+    >
       {/* Sticky header */}
       <header
         className="sticky top-0 z-50"
@@ -121,14 +143,19 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           <div className="h-14 flex items-center gap-3">
             {/* Brand mark */}
             <div className="flex items-center gap-2.5 shrink-0">
-              <div
-                className="h-6 w-6 rounded-md flex items-center justify-center shrink-0"
-                style={{ backgroundColor: '#F5F1E8' }}
-              >
-                <span className="text-[10px] font-bold" style={{ color: '#0A0D14' }}>M</span>
-              </div>
+              {wsLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={wsLogo} alt={wsName ?? 'Logo'} className="h-6 w-6 rounded-md object-cover shrink-0" />
+              ) : (
+                <div
+                  className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 text-[10px] font-bold"
+                  style={{ backgroundColor: accentColor, color: '#0A0D14' }}
+                >
+                  {wsInitials}
+                </div>
+              )}
               <span className="text-sm font-semibold tracking-wide" style={{ color: '#F5F1E8' }}>
-                Minerva
+                {wsName ?? 'Minerva'}
               </span>
             </div>
 
@@ -173,22 +200,24 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
           {/* Tab bar */}
           <div className="flex gap-0 -mb-px overflow-x-auto scrollbar-none">
-            {visibleTabs.map(tab => (
-              <NavLink
-                key={tab.path}
-                href={tab.path === '' ? `/portal/${token}` : `/portal/${token}/${tab.path}`}
-                end={tab.path === ''}
-                className={({ isActive }) =>
-                  `px-4 py-2.5 text-sm border-b-2 transition-colors duration-200 whitespace-nowrap ${
-                    isActive
-                      ? 'border-[#7FA38A] text-[#F5F1E8] font-medium'
-                      : 'border-transparent text-[#8A9099] hover:text-[#B8BDC7]'
-                  }`
-                }
-              >
-                {tab.label}
-              </NavLink>
-            ))}
+            {visibleTabs.map(tab => {
+              const href = tab.path === '' ? `/portal/${token}` : `/portal/${token}/${tab.path}`;
+              const isActive = tab.path === ''
+                ? pathname === `/portal/${token}` || pathname === `/portal/${token}/`
+                : !!pathname?.endsWith(`/${tab.path}`);
+              return (
+                <Link
+                  key={tab.path}
+                  href={href}
+                  className={`px-4 py-2.5 text-sm border-b-2 transition-colors duration-200 whitespace-nowrap ${
+                    isActive ? 'text-[#F5F1E8] font-medium' : 'border-transparent text-[#8A9099] hover:text-[#B8BDC7]'
+                  }`}
+                  style={isActive ? { borderColor: accentColor } : {}}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </header>

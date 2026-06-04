@@ -584,7 +584,11 @@ export type FeatureKey =
   | 'time_tracking'
   | 'reports'
   | 'agent_ops'
-  | 'support_hub';
+  | 'support_hub'
+  | 'multi_workspace'
+  | 'white_label'
+  | 'api_access'
+  | 'governance';
 
 export interface WorkspaceProfile {
   id: string;
@@ -596,6 +600,18 @@ export interface WorkspaceProfile {
   priorityGoals: string[];
   setupKitApplied: boolean;
   logoUrl?: string;
+  brandColor?: string;
+  customDomain?: string;
+}
+
+export interface ApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  scopes: string[];
+  createdAt: string;
+  lastUsedAt: string | null;
+  revokedAt: string | null;
 }
 
 // ── V3.0 — Marketplace ────────────────────────────────────────────────────────
