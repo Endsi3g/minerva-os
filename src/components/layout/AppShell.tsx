@@ -9,13 +9,13 @@ import { BottomBlur } from '@/components/ui/edge-blur';
 import { DynamicIsland } from './DynamicIsland';
 import Link from 'next/link';
 import {
-  LayoutDashboard,
-  FolderKanban,
-  CheckSquare,
+  Command,
+  TrendingUp,
+  Layers,
+  BarChart2,
+  Activity,
   Search,
   Menu,
-  Users,
-  Receipt,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -38,11 +38,11 @@ export const useSidebar = () => useContext(SidebarContext);
 export const useChat = () => useContext(ChatContext);
 
 const MOBILE_NAV_ITEMS = [
-  { href: '/app/dashboard', icon: LayoutDashboard, label: 'Home' },
-  { href: '/app/projects', icon: FolderKanban, label: 'Projects' },
-  { href: '/app/tasks', icon: CheckSquare, label: 'Tasks' },
-  { href: '/app/clients', icon: Users, label: 'Clients' },
-  { href: '/app/billing', icon: Receipt, label: 'Billing' },
+  { href: '/app/command',  icon: Command,    label: 'Command' },
+  { href: '/app/pipeline', icon: TrendingUp, label: 'Growth' },
+  { href: '/app/projects', icon: Layers,     label: 'Delivery' },
+  { href: '/app/billing',  icon: BarChart2,  label: 'Finance' },
+  { href: '/app/nps',      icon: Activity,   label: 'Pulse' },
 ];
 
 function MobileBottomNav() {

@@ -465,3 +465,117 @@ export interface PortfolioClient {
   avgMargin: number;
 }
 
+// ── V3.0 — Health Scores ──────────────────────────────────────────────────────
+
+export type HealthDimension = 'delivery' | 'financial' | 'engagement' | 'risk';
+
+export interface HealthAlert {
+  id: string;
+  severity: 'critical' | 'warning' | 'info';
+  message: string;
+  entityType: 'client' | 'project' | 'portfolio';
+  entityId: string;
+  link: string;
+}
+
+export interface HealthScore {
+  overall: number;
+  dimensions: Record<HealthDimension, number>;
+  trend: 'up' | 'down' | 'stable';
+  alerts: HealthAlert[];
+  lastUpdated: string;
+}
+
+export interface ClientHealthScore extends HealthScore {
+  clientId: string;
+  clientName: string;
+}
+
+export interface ProjectHealthScore extends HealthScore {
+  projectId: string;
+  projectName: string;
+  clientName: string;
+}
+
+export interface PortfolioHealth {
+  overall: number;
+  trend: 'up' | 'down' | 'stable';
+  clients: ClientHealthScore[];
+  projects: ProjectHealthScore[];
+  summary: { healthy: number; atRisk: number; critical: number };
+  alerts: HealthAlert[];
+}
+
+// ── V3.0 — Automation Analytics ───────────────────────────────────────────────
+
+export interface WorkflowAnalyticsSummary {
+  workflowId: string;
+  workflowName: string;
+  totalRuns: number;
+  successRate: number;
+  avgDurationMs: number;
+  lastRunAt: string;
+  timeSavedMinutes: number;
+}
+
+export interface AutomationAnalyticsSnapshot {
+  period: 'day' | 'week' | 'month';
+  periodLabel: string;
+  totalExecutions: number;
+  successfulExecutions: number;
+  failedExecutions: number;
+  totalTimeSavedMinutes: number;
+  avgSuccessRate: number;
+  topWorkflows: WorkflowAnalyticsSummary[];
+  triggerBreakdown: Record<string, number>;
+  dailySeries: Array<{ date: string; executions: number; failures: number }>;
+}
+
+// ── V3.0 — Reports by Role ─────────────────────────────────────────────────────
+
+export type ReportRole = 'executive' | 'finance' | 'project_manager' | 'delivery';
+
+// ── V3.0 — Team Scorecards ─────────────────────────────────────────────────────
+
+export interface TeamMemberScorecard {
+  userId: string;
+  name: string;
+  role: string;
+  deliveryScore: number;
+  capacityPct: number;
+  taskCompletionRate: number;
+  onTimeRate: number;
+  openTasks: number;
+  overdueCount: number;
+}
+
+export interface TeamScorecard {
+  period: string;
+  teamDeliveryScore: number;
+  avgCapacityPct: number;
+  members: TeamMemberScorecard[];
+}
+
+// ── V3.0 — Marketplace ────────────────────────────────────────────────────────
+
+export type MarketplaceItemType = 'template' | 'automation' | 'view' | 'playbook';
+export type MarketplaceCategory =
+  | 'onboarding'
+  | 'delivery'
+  | 'finance'
+  | 'communication'
+  | 'reporting'
+  | 'operations';
+
+export interface MarketplaceItem {
+  id: string;
+  type: MarketplaceItemType;
+  name: string;
+  description: string;
+  category: MarketplaceCategory;
+  tags: string[];
+  usageCount: number;
+  isBuiltIn: boolean;
+  createdBy: string;
+}
+

@@ -1,4 +1,4 @@
-import type { Lead, Client, Project, Task, Approval, FileAsset, Invoice, Retainer, Milestone, ClientPortalToken, DecisionEntry, PortalNotification, DocumentFolder } from './types';
+import type { Lead, Client, Project, Task, Approval, FileAsset, Invoice, Retainer, Milestone, ClientPortalToken, DecisionEntry, PortalNotification, DocumentFolder, MarketplaceItem } from './types';
 
 
 export const MOCK_LEADS: Lead[] = [
@@ -381,3 +381,18 @@ export const MOCK_PROPOSALS = [
   }
 ];
 
+
+
+// V3.0 — Marketplace
+export const MOCK_MARKETPLACE_ITEMS: MarketplaceItem[] = [
+  { id: 'm1', type: 'template', name: 'Web Design Kickoff', description: 'Full project template with tasks, milestones, and approval flows for web design projects.', category: 'onboarding', tags: ['web', 'design'], usageCount: 142, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm2', type: 'template', name: 'Brand Identity Project', description: 'Logo, guidelines, and asset delivery template with client approval checkpoints.', category: 'delivery', tags: ['branding', 'design'], usageCount: 98, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm3', type: 'automation', name: 'Invoice Overdue Alert', description: 'Automatically notifies the finance team when an invoice becomes overdue by 3+ days.', category: 'finance', tags: ['invoice', 'alert'], usageCount: 217, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm4', type: 'automation', name: 'Proposal Signed Kickoff', description: 'When a proposal is signed, automatically creates a project and assigns the onboarding checklist.', category: 'onboarding', tags: ['proposal', 'project'], usageCount: 189, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm5', type: 'automation', name: 'Task Overdue Escalation', description: 'Escalates overdue tasks to the PM after 48h with no update.', category: 'delivery', tags: ['tasks', 'escalation'], usageCount: 156, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm6', type: 'view', name: 'Client Health Dashboard', description: 'Portfolio-wide view showing health scores, invoice status, and project progress per client.', category: 'reporting', tags: ['health', 'dashboard'], usageCount: 73, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm7', type: 'view', name: 'Weekly Delivery Standup', description: 'Filtered view of tasks due this week grouped by project and assignee.', category: 'delivery', tags: ['standup', 'tasks'], usageCount: 91, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm8', type: 'playbook', name: 'Client Onboarding', description: 'Step-by-step onboarding process: discovery call, brief intake, contract signature, project setup.', category: 'onboarding', tags: ['onboarding', 'checklist'], usageCount: 134, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm9', type: 'playbook', name: 'Scope Change Management', description: 'Protocol for handling scope creep: detection, impact assessment, client communication, approval.', category: 'delivery', tags: ['scope', 'change'], usageCount: 67, isBuiltIn: true, createdBy: 'Minerva' },
+  { id: 'm10', type: 'playbook', name: 'Monthly Finance Review', description: 'Structured process for monthly P&L review, invoice reconciliation, and cash forecast update.', category: 'finance', tags: ['finance', 'review'], usageCount: 45, isBuiltIn: true, createdBy: 'Minerva' },
+];
