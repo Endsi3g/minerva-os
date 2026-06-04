@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { UpgradeBanner } from '@/components/minerva/UpgradeBanner';
 import { Plus, LayoutGrid, GanttChartSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TextAnimate } from '@/components/ui/text-animate';
@@ -249,6 +250,8 @@ export default function Projects() {
           </Button>
         </div>
       </div>
+
+      <UpgradeBanner featureKey="workflows" show={(projects?.length ?? 0) >= 3} />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

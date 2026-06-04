@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { UpgradeBanner } from '@/components/minerva/UpgradeBanner';
 import { useRouter } from 'next/navigation';
 import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -250,6 +251,8 @@ export default function Pipeline() {
           {p.addDeal}
         </Button>
       </div>
+
+      <UpgradeBanner featureKey="intelligence" show={(localLeads?.length ?? 0) >= 5} />
 
       {isLoading ? (
         <KanbanSkeleton />

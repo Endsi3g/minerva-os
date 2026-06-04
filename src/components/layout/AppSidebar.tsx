@@ -29,6 +29,7 @@ import {
   ShoppingBag,
   Award,
   ChevronDown,
+  Lock,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,8 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useTier } from '@/lib/hooks/useTier';
 import type { FeatureKey } from '@/lib/types';
 import { useSidebar } from './AppShell';
+import { UpgradeModal, TIER_BADGE_COLORS } from '@/components/minerva/UpgradeModal';
+import { FEATURE_MIN_TIER } from '@/lib/tier';
 
 interface NavItem {
   href: string;
@@ -134,11 +137,57 @@ const spaces: Space[] = [
   },
 ];
 
-const TIER_COLORS: Record<string, { backgroundColor: string; color: string }> = {
-  starter: { backgroundColor: 'rgba(127,163,138,0.15)', color: '#7FA38A' },
-  growth:  { backgroundColor: 'rgba(184,155,106,0.15)', color: '#B89B6A' },
-  scale:   { backgroundColor: 'rgba(184,189,199,0.15)', color: '#B8BDC7' },
-};
+
+function LockedNavItem({
+  item,
+  collapsed,
+  onUpgradeClick,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  onUpgradeClick: (key: FeatureKey) => void;
+}) {
+  const { t } = useLang();
+  const sidebar = t.app.sidebar;
+  const requiredTier = item.featureKey ? FEATURE_MIN_TIER[item.featureKey] : 'growth';
+  const tierStyle = TIER_BADGE_COLORS[requiredTier];
+  const hint = item.featureKey ? ((t.tier.hints as Record<string, string>)[item.featureKey] ?? '') : '';
+
+  function handleClick() {
+    if (item.featureKey) onUpgradeClick(item.featureKey);
+  }
+
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        title={hint}
+        className="w-full flex items-center justify-center rounded-lg p-2 transition-colors min-h-[36px] opacity-35 hover:opacity-55 cursor-pointer"
+      >
+        <Lock size={13} className="shrink-0 text-fog" />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      title={hint}
+      className="w-full flex items-center gap-2.5 rounded-lg pl-5 pr-3 py-1.5 transition-colors min-h-[34px] opacity-40 hover:opacity-60 cursor-pointer"
+    >
+      <item.icon size={14} className="shrink-0 text-fog" />
+      <span className="truncate text-[13px] text-fog flex-1 text-left">{sidebar[item.labelKey]}</span>
+      <span
+        className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize shrink-0"
+        style={tierStyle}
+      >
+        {requiredTier}
+      </span>
+    </button>
+  );
+}
 
 function SpaceGroup({
   space,
@@ -151,16 +200,21 @@ function SpaceGroup({
 }) {
   const pathname = usePathname();
   const { isFeatureVisible } = useTier();
+  const [upgradeKey, setUpgradeKey] = useState<FeatureKey | null>(null);
 
   const visibleItems = space.items.filter(
     item => !item.featureKey || isFeatureVisible(item.featureKey)
+  );
+
+  const lockedItems = space.items.filter(
+    item => item.featureKey && !isFeatureVisible(item.featureKey)
   );
 
   const isSpaceActive = visibleItems.some(
     item => pathname === item.href || pathname.startsWith(item.href + '/')
   );
 
-  if (visibleItems.length === 0) return null;
+  if (visibleItems.length === 0 && lockedItems.length === 0) return null;
 
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return isSpaceActive;
@@ -182,74 +236,96 @@ function SpaceGroup({
 
   if (collapsed) {
     return (
-      <div className="space-y-0.5">
-        {visibleItems.map(item => (
-          <NavLink
-            key={item.href}
-            href={item.href}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center justify-center rounded-lg p-2 text-sm transition-colors min-h-[36px]',
-                isActive
-                  ? 'bg-white/10 text-ivory'
-                  : 'text-fog hover:bg-white/5 hover:text-silver'
-              )
-            }
-          >
-            <item.icon size={15} className="shrink-0" />
-          </NavLink>
-        ))}
-      </div>
+      <>
+        <div className="space-y-0.5">
+          {visibleItems.map(item => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center justify-center rounded-lg p-2 text-sm transition-colors min-h-[36px]',
+                  isActive
+                    ? 'bg-white/10 text-ivory'
+                    : 'text-fog hover:bg-white/5 hover:text-silver'
+                )
+              }
+            >
+              <item.icon size={15} className="shrink-0" />
+            </NavLink>
+          ))}
+          {lockedItems.map(item => (
+            <LockedNavItem
+              key={item.href}
+              item={item}
+              collapsed
+              onUpgradeClick={setUpgradeKey}
+            />
+          ))}
+        </div>
+        <UpgradeModal featureKey={upgradeKey} open={upgradeKey !== null} onClose={() => setUpgradeKey(null)} />
+      </>
     );
   }
 
   return (
-    <div className="space-y-0.5">
-      <button
-        type="button"
-        onClick={toggle}
-        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-widest transition-colors hover:bg-white/5 cursor-pointer"
-        style={{ color: isSpaceActive ? space.color : '#8A9099' }}
-      >
-        <space.icon size={10} className="shrink-0" />
-        <span className="flex-1 text-left">{sidebar[space.labelKey]}</span>
-        <ChevronDown
-          size={9}
-          className={cn('transition-transform duration-200', !open && '-rotate-90')}
-        />
-      </button>
+    <>
+      <div className="space-y-0.5">
+        <button
+          type="button"
+          onClick={toggle}
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-widest transition-colors hover:bg-white/5 cursor-pointer"
+          style={{ color: isSpaceActive ? space.color : '#8A9099' }}
+        >
+          <space.icon size={10} className="shrink-0" />
+          <span className="flex-1 text-left">{sidebar[space.labelKey]}</span>
+          <ChevronDown
+            size={9}
+            className={cn('transition-transform duration-200', !open && '-rotate-90')}
+          />
+        </button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key={space.key}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-            className="overflow-hidden"
-          >
-            {visibleItems.map(item => (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-2.5 rounded-lg pl-5 pr-3 py-1.5 text-sm transition-colors min-h-[34px]',
-                    isActive
-                      ? 'text-ivory bg-white/8'
-                      : 'text-fog hover:text-silver hover:bg-white/5'
-                  )
-                }
-              >
-                <item.icon size={14} className="shrink-0" />
-                <span className="truncate text-[13px]">{sidebar[item.labelKey]}</span>
-              </NavLink>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key={space.key}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              className="overflow-hidden"
+            >
+              {visibleItems.map(item => (
+                <NavLink
+                  key={item.href}
+                  href={item.href}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-2.5 rounded-lg pl-5 pr-3 py-1.5 text-sm transition-colors min-h-[34px]',
+                      isActive
+                        ? 'text-ivory bg-white/8'
+                        : 'text-fog hover:text-silver hover:bg-white/5'
+                    )
+                  }
+                >
+                  <item.icon size={14} className="shrink-0" />
+                  <span className="truncate text-[13px]">{sidebar[item.labelKey]}</span>
+                </NavLink>
+              ))}
+              {lockedItems.map(item => (
+                <LockedNavItem
+                  key={item.href}
+                  item={item}
+                  collapsed={false}
+                  onUpgradeClick={setUpgradeKey}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <UpgradeModal featureKey={upgradeKey} open={upgradeKey !== null} onClose={() => setUpgradeKey(null)} />
+    </>
   );
 }
 
@@ -335,7 +411,7 @@ export function AppSidebar() {
                     {workspace?.tier && (
                       <span
                         className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize"
-                        style={TIER_COLORS[tier]}
+                        style={TIER_BADGE_COLORS[tier]}
                       >
                         {tier}
                       </span>
