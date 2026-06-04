@@ -1,5 +1,5 @@
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { isFeatureVisibleForTier, FEATURE_MIN_TIER } from '@/lib/tier';
+import { isFeatureVisibleForTier } from '@/lib/tier';
 import type { FeatureKey, WorkspaceTier, AgencyType } from '@/lib/types';
 
 export interface TierHook {

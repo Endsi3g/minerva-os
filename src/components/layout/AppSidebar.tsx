@@ -134,10 +134,10 @@ const spaces: Space[] = [
   },
 ];
 
-const TIER_COLORS: Record<string, { bg: string; text: string }> = {
-  starter: { bg: 'rgba(127,163,138,0.15)', text: '#7FA38A' },
-  growth:  { bg: 'rgba(184,155,106,0.15)', text: '#B89B6A' },
-  scale:   { bg: 'rgba(184,189,199,0.15)', text: '#B8BDC7' },
+const TIER_COLORS: Record<string, { backgroundColor: string; color: string }> = {
+  starter: { backgroundColor: 'rgba(127,163,138,0.15)', color: '#7FA38A' },
+  growth:  { backgroundColor: 'rgba(184,155,106,0.15)', color: '#B89B6A' },
+  scale:   { backgroundColor: 'rgba(184,189,199,0.15)', color: '#B8BDC7' },
 };
 
 function SpaceGroup({
