@@ -1,24 +1,11 @@
 'use client';
-import { useState } from 'react';
-import { FileText, GitPullRequest, LayoutDashboard, BookOpen, Search, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileText, GitPullRequest, LayoutDashboard, BookOpen, Search, CheckCircle2, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLang } from '@/i18n';
+import { supabase } from '@/lib/supabase';
+import { useWorkspaces } from '@/lib/hooks/useSupabase';
 import type { MarketplaceItem, MarketplaceItemType } from '@/lib/types';
-
-/* ── Mock data ───────────────────────────────────────────────────────────── */
-
-const MOCK_MARKETPLACE: MarketplaceItem[] = [
-  { id: 'm1', type: 'template', name: 'Web Design Kickoff', description: 'Full project template with tasks, milestones, and approval flows for web design projects.', category: 'onboarding', tags: ['web', 'design', 'project'], usageCount: 142, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm2', type: 'template', name: 'Brand Identity Project', description: 'Logo, guidelines, and asset delivery template with client approval checkpoints.', category: 'delivery', tags: ['branding', 'design'], usageCount: 98, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm3', type: 'automation', name: 'Invoice Overdue Alert', description: 'Automatically notifies the finance team when an invoice becomes overdue by 3+ days.', category: 'finance', tags: ['invoice', 'alert', 'finance'], usageCount: 217, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm4', type: 'automation', name: 'Proposal Signed Kickoff', description: 'When a proposal is signed, automatically creates a project and assigns the onboarding checklist.', category: 'onboarding', tags: ['proposal', 'automation', 'project'], usageCount: 189, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm5', type: 'automation', name: 'Task Overdue Escalation', description: 'Escalates overdue tasks to the project manager after 48 hours with no update.', category: 'delivery', tags: ['tasks', 'escalation'], usageCount: 156, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm6', type: 'view', name: 'Client Health Dashboard', description: 'A portfolio-wide view showing health scores, invoice status, and project progress per client.', category: 'reporting', tags: ['health', 'client', 'dashboard'], usageCount: 73, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm7', type: 'view', name: 'Weekly Delivery Standup', description: 'Filtered view of tasks due this week grouped by project and assignee.', category: 'delivery', tags: ['standup', 'tasks', 'weekly'], usageCount: 91, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm8', type: 'playbook', name: 'Client Onboarding', description: 'Step-by-step onboarding process: discovery call, brief intake, contract signature, project setup.', category: 'onboarding', tags: ['onboarding', 'checklist', 'client'], usageCount: 134, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm9', type: 'playbook', name: 'Scope Change Management', description: 'Protocol for handling scope creep: detection, impact assessment, client communication, approval.', category: 'delivery', tags: ['scope', 'change', 'protocol'], usageCount: 67, isBuiltIn: true, createdBy: 'Minerva' },
-  { id: 'm10', type: 'playbook', name: 'Monthly Finance Review', description: 'Structured process for monthly P&L review, invoice reconciliation, and cash forecast update.', category: 'finance', tags: ['finance', 'monthly', 'review'], usageCount: 45, isBuiltIn: true, createdBy: 'Minerva' },
-];
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -38,12 +25,28 @@ const TYPE_BADGE: Record<MarketplaceItemType, { bg: string; color: string }> = {
 
 const FILTER_TYPES: Array<'all' | MarketplaceItemType> = ['all', 'template', 'automation', 'view', 'playbook'];
 
+function mapDbItem(row: any): MarketplaceItem {
+  return {
+    id: row.id,
+    type: row.type as MarketplaceItemType,
+    name: row.name,
+    description: row.description,
+    category: row.category,
+    tags: row.tags ?? [],
+    usageCount: row.use_count ?? 0,
+    isBuiltIn: row.is_built_in ?? false,
+    createdBy: row.created_by ?? 'Minerva',
+  };
+}
+
 /* ── MarketplaceCard ─────────────────────────────────────────────────────── */
 
-function MarketplaceCard({ item, installed, onInstall, t }: {
+function MarketplaceCard({ item, installed, installing, onInstall, onUninstall, t }: {
   item: MarketplaceItem;
   installed: boolean;
+  installing: boolean;
   onInstall: () => void;
+  onUninstall: () => void;
   t: ReturnType<typeof useLang>['t'];
 }) {
   const m = t.app.marketplace;
@@ -65,7 +68,7 @@ function MarketplaceCard({ item, installed, onInstall, t }: {
         fontFamily: "'Inter', sans-serif",
       }}
     >
-      {/* Top row: icon + badges */}
+      {/* Top row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ padding: 6, borderRadius: 8, backgroundColor: badge.bg }}>
@@ -90,7 +93,7 @@ function MarketplaceCard({ item, installed, onInstall, t }: {
         </p>
       </div>
 
-      {/* Footer: category + usage + install */}
+      {/* Footer */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 11, color: '#8A9099', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '2px 7px', textTransform: 'capitalize' }}>
@@ -101,21 +104,25 @@ function MarketplaceCard({ item, installed, onInstall, t }: {
           </span>
         </div>
         <button
-          onClick={onInstall}
+          onClick={installed ? onUninstall : onInstall}
+          disabled={installing}
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
             fontSize: 12, fontWeight: 500, padding: '5px 12px', borderRadius: 8,
-            cursor: installed ? 'default' : 'pointer',
+            cursor: installing ? 'wait' : 'pointer',
             border: `1px solid ${installed ? 'rgba(127,163,138,0.30)' : 'rgba(255,255,255,0.10)'}`,
             backgroundColor: installed ? 'rgba(127,163,138,0.10)' : 'transparent',
             color: installed ? '#7FA38A' : '#B8BDC7',
+            opacity: installing ? 0.6 : 1,
             transition: 'all 0.2s ease',
           }}
-          onMouseEnter={e => { if (!installed) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(127,163,138,0.10)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(127,163,138,0.30)'; (e.currentTarget as HTMLButtonElement).style.color = '#7FA38A'; } }}
-          onMouseLeave={e => { if (!installed) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.10)'; (e.currentTarget as HTMLButtonElement).style.color = '#B8BDC7'; } }}
         >
-          {installed && <CheckCircle2 size={12} />}
-          {installed ? m.installed : m.install}
+          {installing
+            ? <Loader2 size={11} style={{ animation: 'spin 1s linear infinite' }} />
+            : installed
+              ? <CheckCircle2 size={12} />
+              : null}
+          {installing ? m.installing : installed ? m.installed : m.install}
         </button>
       </div>
     </motion.div>
@@ -127,24 +134,92 @@ function MarketplaceCard({ item, installed, onInstall, t }: {
 export default function Marketplace() {
   const { t } = useLang();
   const m = t.app.marketplace;
+
+  const workspaces = useWorkspaces();
+  const workspaceId = (workspaces as any[])?.[0]?._id ?? null;
+
+  const [items, setItems] = useState<MarketplaceItem[]>([]);
+  const [installedIds, setInstalledIds] = useState<Set<string>>(new Set());
+  const [installingId, setInstallingId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<'all' | MarketplaceItemType>('all');
   const [search, setSearch] = useState('');
-  const [installed, setInstalled] = useState<Set<string>>(new Set());
 
-  const filtered = MOCK_MARKETPLACE.filter(item => {
+  // Load marketplace items and installs
+  useEffect(() => {
+    let active = true;
+    supabase.from('marketplace_items').select('*').then(({ data }) => {
+      if (active && data && data.length > 0) {
+        setItems(data.map(mapDbItem));
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    let active = true;
+    supabase.from('workspace_installs').select('item_id').eq('workspace_id', workspaceId).then(({ data }) => {
+      if (active && data) {
+        setInstalledIds(new Set(data.map((r: any) => r.item_id)));
+      }
+    });
+    return () => { active = false; };
+  }, [workspaceId]);
+
+  async function handleInstall(item: MarketplaceItem) {
+    if (!workspaceId || installingId) return;
+    setInstallingId(item.id);
+    try {
+      const now = new Date().toISOString();
+      await supabase.from('workspace_installs').insert({
+        id: `install-${item.id}-${workspaceId}`,
+        workspace_id: workspaceId,
+        item_id: item.id,
+        item_name: item.name,
+        item_type: item.type,
+        installed_at: now,
+      });
+      if (item.type === 'automation') {
+        await supabase.from('workflows').insert({
+          workspace_id: workspaceId,
+          name: item.name,
+          description: item.description,
+          status: 'active',
+          trigger: 'manual',
+          created_at: now,
+        });
+      }
+      setInstalledIds(prev => new Set([...prev, item.id]));
+    } finally {
+      setInstallingId(null);
+    }
+  }
+
+  async function handleUninstall(item: MarketplaceItem) {
+    if (!workspaceId || installingId) return;
+    setInstallingId(item.id);
+    try {
+      await supabase
+        .from('workspace_installs')
+        .delete()
+        .eq('item_id', item.id)
+        .eq('workspace_id', workspaceId);
+      setInstalledIds(prev => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    } finally {
+      setInstallingId(null);
+    }
+  }
+
+  const filtered = items.filter(item => {
     const matchesType = activeType === 'all' || item.type === activeType;
     const q = search.toLowerCase();
     const matchesSearch = !q || item.name.toLowerCase().includes(q) || item.description.toLowerCase().includes(q) || item.tags.some(tag => tag.includes(q));
     return matchesType && matchesSearch;
   });
-
-  function toggleInstall(id: string) {
-    setInstalled(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
 
   return (
     <div style={{ padding: '32px 32px 48px', fontFamily: "'Inter', sans-serif", minHeight: '100vh' }}>
@@ -202,7 +277,14 @@ export default function Marketplace() {
               key={item.id}
               variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.23, 1, 0.32, 1] } } }}
             >
-              <MarketplaceCard item={item} installed={installed.has(item.id)} onInstall={() => toggleInstall(item.id)} t={t} />
+              <MarketplaceCard
+                item={item}
+                installed={installedIds.has(item.id)}
+                installing={installingId === item.id}
+                onInstall={() => handleInstall(item)}
+                onUninstall={() => handleUninstall(item)}
+                t={t}
+              />
             </motion.div>
           ))}
         </motion.div>

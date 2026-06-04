@@ -30,6 +30,9 @@ import {
   Award,
   ChevronDown,
   Lock,
+  ChevronsUpDown,
+  Check,
+  Plus,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -45,6 +48,7 @@ import { NavLink } from '@/components/ui/nav-link';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { NewWorkspaceModal } from '@/components/minerva/NewWorkspaceModal';
 import { useTier } from '@/lib/hooks/useTier';
 import type { FeatureKey } from '@/lib/types';
 import { useSidebar } from './AppShell';
@@ -329,6 +333,86 @@ function SpaceGroup({
   );
 }
 
+function WorkspaceSwitcher({ collapsed }: { collapsed: boolean }) {
+  const { workspace, workspaces, switchWorkspace } = useWorkspace();
+  const { t } = useLang();
+  const ws = t.app.workspace;
+  const [newOpen, setNewOpen] = useState(false);
+
+  function initials(name: string) {
+    return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className={cn(
+              'w-full flex items-center rounded-lg px-2 py-1.5 transition-colors hover:bg-white/5 group',
+              collapsed ? 'justify-center' : 'gap-2'
+            )}
+          >
+            {workspace?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={workspace.logoUrl}
+                alt={workspace.name}
+                className="h-6 w-6 rounded-md object-cover shrink-0"
+              />
+            ) : (
+              <div
+                className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 text-[10px] font-bold text-obsidian"
+                style={{ backgroundColor: workspace?.brandColor ?? '#F5F1E8' }}
+              >
+                {workspace ? initials(workspace.name || 'M') : 'M'}
+              </div>
+            )}
+            {!collapsed && (
+              <>
+                <span className="text-xs font-semibold text-ivory tracking-wide flex-1 truncate text-left">
+                  {workspace?.name ?? 'Workspace'}
+                </span>
+                <ChevronsUpDown size={11} className="shrink-0 text-fog group-hover:text-silver transition-colors" />
+              </>
+            )}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start" className="w-52">
+          {workspaces.map(w => (
+            <DropdownMenuItem
+              key={w.id}
+              onClick={() => switchWorkspace(w.id)}
+              className="flex items-center gap-2"
+            >
+              <div
+                className="h-5 w-5 rounded flex items-center justify-center shrink-0 text-[9px] font-bold text-obsidian"
+                style={{ backgroundColor: w.brandColor ?? '#F5F1E8' }}
+              >
+                {initials(w.name || 'W')}
+              </div>
+              <span className="flex-1 truncate">{w.name}</span>
+              <span
+                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize"
+                style={TIER_BADGE_COLORS[w.tier]}
+              >
+                {w.tier}
+              </span>
+              {w.id === workspace?.id && <Check size={12} className="text-sage shrink-0" />}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setNewOpen(true)} className="flex items-center gap-2">
+            <Plus size={13} />
+            <span>{ws.switcher.new}</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <NewWorkspaceModal open={newOpen} onClose={() => setNewOpen(false)} />
+    </>
+  );
+}
+
 export function AppSidebar() {
   const { collapsed } = useSidebar();
   const { t } = useLang();
@@ -359,19 +443,9 @@ export function AppSidebar() {
         collapsed ? 'w-14' : 'w-56'
       )}
     >
-      {/* Brand */}
-      <div
-        className={cn(
-          'flex items-center pt-5 pb-4 px-4 shrink-0',
-          collapsed ? 'justify-center px-2' : 'gap-2.5'
-        )}
-      >
-        <div className="h-6 w-6 rounded-md bg-ivory flex items-center justify-center shrink-0">
-          <span className="text-[10px] font-bold text-obsidian">M</span>
-        </div>
-        {!collapsed && (
-          <span className="text-sm font-semibold text-ivory tracking-wide">Minerva</span>
-        )}
+      {/* Workspace Switcher */}
+      <div className="shrink-0 px-2 pt-3 pb-1">
+        <WorkspaceSwitcher collapsed={collapsed} />
       </div>
 
       {/* Nav */}

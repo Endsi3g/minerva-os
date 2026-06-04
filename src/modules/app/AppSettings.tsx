@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Check, Download, Minus } from 'lucide-react';
+import { Check, Copy, Download, Minus } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -11,8 +11,9 @@ import { TextAnimate } from '@/components/ui/text-animate';
 import { useTier } from '@/lib/hooks/useTier';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { UpgradeModal, TIER_BADGE_COLORS } from '@/components/minerva/UpgradeModal';
+import { LockedFeaturePage } from '@/components/minerva/LockedFeaturePage';
 import { isFeatureVisibleForTier } from '@/lib/tier';
-import type { FeatureKey, WorkspaceTier } from '@/lib/types';
+import type { ApiKey, FeatureKey, WorkspaceTier } from '@/lib/types';
 
 /* ── Sub-sections ────────────────────────────────────────────────────────── */
 
@@ -189,43 +190,105 @@ function ProfileTab() {
   );
 }
 
+const BRAND_PRESETS = [
+  { color: '#7FA38A', name: 'Sage' },
+  { color: '#B89B6A', name: 'Amber' },
+  { color: '#6A8AB8', name: 'Blue' },
+  { color: '#9B8AB8', name: 'Mauve' },
+  { color: '#8A9099', name: 'Slate' },
+];
+
 function WorkspaceTab() {
   const { t, setLang, lang } = useLang();
   const s = t.app.settings.workspace;
-  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const { workspace, setWorkspaceProfile } = useWorkspace();
+
+  const [wsRow, setWsRow] = useState<any>(null);
   const [studioName, setStudioName] = useState('Uprising Studio');
   const [timezone, setTimezone] = useState('America/Montreal');
   const [saved, setSaved] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [brandColor, setBrandColor] = useState(workspace?.brandColor ?? '#7FA38A');
+  const [customDomain, setCustomDomain] = useState(workspace?.customDomain ?? '');
+  const [domainCopied, setDomainCopied] = useState(false);
 
   useEffect(() => {
-    supabase.from('workspaces').select('*').then(({ data }) => {
-      if (data && data.length > 0) {
-        setWorkspaces(data.map(w => ({ ...w, _id: w.id })));
-        setStudioName(data[0].name ?? 'Uprising Studio');
-        setTimezone(data[0].settings?.timezone ?? 'America/Montreal');
+    if (!workspace?.id) return;
+    supabase.from('workspaces').select('*').eq('id', workspace.id).maybeSingle().then(({ data }) => {
+      if (data) {
+        setWsRow(data);
+        setStudioName(data.name ?? 'Uprising Studio');
+        setTimezone(data.settings?.timezone ?? 'America/Montreal');
+        setBrandColor(data.branding?.primaryColor ?? data.settings?.brand_color ?? '#7FA38A');
+        setCustomDomain(data.settings?.custom_domain ?? '');
       }
     });
-  }, []);
-
-  const workspaceId = workspaces[0]?._id;
-  const currentWorkspace = workspaces[0];
+  }, [workspace?.id]);
 
   async function handleSave() {
-    if (workspaceId && currentWorkspace) {
+    if (wsRow?.id) {
       await supabase
         .from('workspaces')
         .update({
           name: studioName,
           settings: {
-            ...currentWorkspace.settings,
+            ...wsRow.settings,
             timezone,
             language: lang,
+            brand_color: brandColor,
+            custom_domain: customDomain,
           },
         })
-        .eq('id', workspaceId);
+        .eq('id', wsRow.id);
+      setWorkspaceProfile({ name: studioName, brandColor, customDomain: customDomain || undefined });
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !wsRow?.id) return;
+    try {
+      setLogoUploading(true);
+      const ext = file.name.split('.').pop();
+      const fileName = `workspace-${wsRow.id}.${ext}`;
+      const { error } = await supabase.storage.from('avatars').upload(fileName, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      await supabase.from('workspaces').update({ logo_url: publicUrl }).eq('id', wsRow.id);
+      setWorkspaceProfile({ logoUrl: publicUrl });
+    } catch (err) {
+      console.error('Logo upload error', err);
+    } finally {
+      setLogoUploading(false);
+    }
+  }
+
+  async function handleColorSelect(color: string) {
+    setBrandColor(color);
+    if (wsRow?.id) {
+      await supabase.from('workspaces').update({
+        settings: { ...wsRow.settings, brand_color: color },
+      }).eq('id', wsRow.id);
+      setWorkspaceProfile({ brandColor: color });
+    }
+  }
+
+  async function handleDomainBlur() {
+    if (!wsRow?.id) return;
+    await supabase.from('workspaces').update({
+      settings: { ...wsRow.settings, custom_domain: customDomain },
+    }).eq('id', wsRow.id);
+    setWorkspaceProfile({ customDomain: customDomain || undefined });
+  }
+
+  function handleCopyDomain() {
+    if (!customDomain) return;
+    navigator.clipboard.writeText(customDomain).then(() => {
+      setDomainCopied(true);
+      setTimeout(() => setDomainCopied(false), 2000);
+    });
   }
 
   return (
@@ -237,6 +300,12 @@ function WorkspaceTab() {
           <p className="text-xs text-fog leading-relaxed">
             Configure your global studio workspace variables. These settings apply to all active projects, invoices, and operations.
           </p>
+          {workspace?.logoUrl && (
+            <div className="pt-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={workspace.logoUrl} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />
+            </div>
+          )}
         </div>
 
         {/* Right Column - Form */}
@@ -287,6 +356,62 @@ function WorkspaceTab() {
           <div className="pt-2">
             <SaveButton label={saved ? s.saved : s.saveChanges} saved={saved} onClick={handleSave} />
           </div>
+
+          {/* Branding */}
+          <div className="pt-4 border-t border-border space-y-4">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-fog">{s.brandingHeading}</h4>
+
+            <SettingsField label="Logo">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                disabled={logoUploading}
+                className="text-xs text-silver file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ivory file:text-obsidian hover:file:opacity-90 file:cursor-pointer disabled:opacity-50"
+              />
+              {logoUploading && <p className="text-xs text-fog mt-1">Uploading...</p>}
+            </SettingsField>
+
+            <SettingsField label={s.brandColor}>
+              <div className="flex gap-2 mt-0.5">
+                {BRAND_PRESETS.map(p => (
+                  <button
+                    key={p.color}
+                    title={p.name}
+                    onClick={() => handleColorSelect(p.color)}
+                    className="h-6 w-6 rounded-full transition-all"
+                    style={{
+                      backgroundColor: p.color,
+                      outline: brandColor === p.color ? `2px solid ${p.color}` : 'none',
+                      outlineOffset: brandColor === p.color ? '2px' : '0',
+                    }}
+                  />
+                ))}
+              </div>
+            </SettingsField>
+
+            <SettingsField label={s.customDomain}>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customDomain}
+                  onChange={e => setCustomDomain(e.target.value)}
+                  onBlur={handleDomainBlur}
+                  placeholder="portal.myagency.com"
+                  className="flex-1 rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all placeholder:text-white/20 bg-midnight border border-border text-foreground"
+                />
+                <button
+                  onClick={handleCopyDomain}
+                  disabled={!customDomain}
+                  className="h-10 px-3 rounded-xl border border-border text-xs text-silver hover:text-ivory transition-colors disabled:opacity-40 flex items-center gap-1.5"
+                >
+                  <Copy size={12} />
+                  {domainCopied ? s.copied : s.copyDomain}
+                </button>
+              </div>
+              <p className="text-[10px] text-fog mt-1">{s.domainHint}</p>
+            </SettingsField>
+          </div>
         </div>
       </div>
     </Section>
@@ -295,34 +420,22 @@ function WorkspaceTab() {
 
 function TeamTab() {
   const { t } = useLang();
+  const { user } = useAuth();
+  const { workspace } = useWorkspace();
   const s = t.app.settings.team;
   const roleLabels = s.roles as Record<string, string>;
   const [inviteEmail, setInviteEmail] = useState('');
   const [invited, setInvited] = useState(false);
-
-  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [members, setMembers] = useState<any[]>([]);
 
-  useEffect(() => {
-    supabase.from('workspaces').select('id').limit(1).then(({ data }) => {
-      if (data && data.length > 0) {
-        setWorkspaceId(data[0].id);
-      }
-    });
-  }, []);
+  const workspaceId = workspace?.id || null;
+  const isOwner = user?.role === 'owner';
 
   useEffect(() => {
     if (!workspaceId) return;
-    async function fetchMembers() {
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('workspace_id', workspaceId);
-      if (data) {
-        setMembers(data);
-      }
-    }
-    fetchMembers();
+    supabase.from('user_profiles').select('*').eq('workspace_id', workspaceId).then(({ data }) => {
+      if (data) setMembers(data);
+    });
   }, [workspaceId]);
 
   async function handleInvite() {
@@ -343,6 +456,13 @@ function TeamTab() {
       console.error('Failed to send invite:', err);
     }
   }
+
+  async function handleRoleChange(memberId: string, newRole: string) {
+    await supabase.from('user_profiles').update({ role: newRole }).eq('id', memberId);
+    setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m));
+  }
+
+  const ROLE_OPTIONS = ['owner', 'strategist', 'project_manager', 'designer', 'developer', 'finance'];
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
@@ -381,6 +501,7 @@ function TeamTab() {
               .join('')
               .slice(0, 2)
               .toUpperCase() || 'U';
+            const isSelf = member.user_id === user?.id || member.email === user?.email;
             return (
               <div
                 key={member.id}
@@ -396,12 +517,25 @@ function TeamTab() {
                   <p className="text-sm font-medium text-ivory truncate">{member.name}</p>
                   <p className="text-xs text-fog truncate">{member.email}</p>
                 </div>
-                <span
-                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
-                  style={{ backgroundColor: 'var(--muted)', color: 'var(--fog)' }}
-                >
-                  {roleLabels[member.role] ?? member.role}
-                </span>
+                {isOwner && !isSelf ? (
+                  <select
+                    value={member.role}
+                    onChange={e => handleRoleChange(member.id, e.target.value)}
+                    className="text-[11px] font-semibold px-2 py-1 rounded-lg appearance-none bg-dusk border border-border text-silver focus:outline-none cursor-pointer"
+                    title={s.changeRole}
+                  >
+                    {ROLE_OPTIONS.map(r => (
+                      <option key={r} value={r}>{roleLabels[r] ?? r}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span
+                    className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
+                    style={{ backgroundColor: 'var(--muted)', color: 'var(--fog)' }}
+                  >
+                    {roleLabels[member.role] ?? member.role}
+                  </span>
+                )}
               </div>
             );
           })}
@@ -684,6 +818,321 @@ function PrivacyTab() {
   );
 }
 
+/* ── API tab ─────────────────────────────────────────────────────────────── */
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins  = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days  = Math.floor(diff / 86400000);
+  if (mins < 60)  return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  return `${days} day${days !== 1 ? 's' : ''} ago`;
+}
+
+function ApiTab() {
+  const { t } = useLang();
+  const { isFeatureVisible } = useTier();
+  const { workspace } = useWorkspace();
+  const s = t.app.settings.api;
+
+  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [keyName, setKeyName] = useState('');
+  const [scope, setScope] = useState<'read' | 'write'>('read');
+  const [newKey, setNewKey] = useState<string | null>(null);
+  const [keyCopied, setKeyCopied] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    if (!workspace?.id) return;
+    supabase.from('api_keys').select('*').eq('workspace_id', workspace.id).then(({ data }) => {
+      if (data) setKeys(data.map((k: any) => ({
+        id: k.id,
+        name: k.name,
+        keyPrefix: k.key_prefix,
+        scopes: k.scopes,
+        createdAt: k.created_at,
+        lastUsedAt: k.last_used_at,
+        revokedAt: k.revoked_at,
+      })));
+    });
+  }, [workspace?.id]);
+
+  if (!isFeatureVisible('api_access')) return <LockedFeaturePage featureKey="api_access" />;
+
+  async function handleGenerate() {
+    if (!keyName.trim() || !workspace?.id) return;
+    setGenerating(true);
+    const rand = Array.from(crypto.getRandomValues(new Uint8Array(12))).map(b => b.toString(16).padStart(2, '0')).join('');
+    const fullKey = `mk_live_${rand}`;
+    const prefix = fullKey.slice(0, 16);
+    const id = crypto.randomUUID();
+    await supabase.from('api_keys').insert({
+      id,
+      workspace_id: workspace.id,
+      name: keyName.trim(),
+      key_prefix: prefix,
+      scopes: scope === 'write' ? ['read', 'write'] : ['read'],
+      created_at: new Date().toISOString(),
+      last_used_at: null,
+      revoked_at: null,
+    });
+    setKeys(prev => [...prev, {
+      id, name: keyName.trim(), keyPrefix: prefix,
+      scopes: scope === 'write' ? ['read', 'write'] : ['read'],
+      createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null,
+    }]);
+    setNewKey(fullKey);
+    setKeyName('');
+    setGenerating(false);
+  }
+
+  async function handleRevoke(keyId: string) {
+    const now = new Date().toISOString();
+    await supabase.from('api_keys').update({ revoked_at: now }).eq('id', keyId);
+    setKeys(prev => prev.map(k => k.id === keyId ? { ...k, revokedAt: now } : k));
+  }
+
+  function handleCopyKey() {
+    if (!newKey) return;
+    navigator.clipboard.writeText(newKey).then(() => {
+      setKeyCopied(true);
+      setTimeout(() => setKeyCopied(false), 2000);
+    });
+  }
+
+  return (
+    <Section title={s.heading} subtitle={s.subtitle}>
+      <div className="w-full space-y-4">
+        <div className="flex justify-end">
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="h-9 px-4 rounded-xl text-sm font-medium bg-ivory text-obsidian hover:opacity-90 active:scale-[0.98] transition-all"
+          >
+            {s.generate}
+          </button>
+        </div>
+
+        {keys.length === 0 ? (
+          <p className="text-sm text-fog text-center py-8">{s.noKeys}</p>
+        ) : (
+          <div className="rounded-xl overflow-hidden border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ backgroundColor: '#0E1119', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-fog">Name</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-fog">Key</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-fog">{s.created}</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-fog">{s.lastUsed}</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {keys.map((k, i) => (
+                  <tr
+                    key={k.id}
+                    style={{
+                      backgroundColor: i % 2 === 0 ? '#111522' : '#0E1119',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      opacity: k.revokedAt ? 0.45 : 1,
+                    }}
+                  >
+                    <td className="px-4 py-3 text-silver">
+                      <span>{k.name}</span>
+                      {k.revokedAt && (
+                        <span className="ml-2 text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full bg-rose/10 text-rose border border-rose/20">{s.revoked}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-fog">{k.keyPrefix}&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</td>
+                    <td className="px-4 py-3 text-xs text-fog">{relativeTime(k.createdAt)}</td>
+                    <td className="px-4 py-3 text-xs text-fog">{k.lastUsedAt ? relativeTime(k.lastUsedAt) : s.never}</td>
+                    <td className="px-4 py-3 text-right">
+                      {!k.revokedAt && (
+                        <button
+                          onClick={() => handleRevoke(k.id)}
+                          className="text-xs text-fog hover:text-rose transition-colors"
+                        >
+                          {s.revoke}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Generate key sheet */}
+      {sheetOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="flex-1 bg-black/50" onClick={() => { if (!newKey) setSheetOpen(false); }} />
+          <div className="w-80 h-full bg-midnight border-l border-white/8 flex flex-col">
+            <div className="px-5 pt-6 pb-4 border-b border-white/8 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-ivory">{newKey ? s.keyWarning : s.generate}</h3>
+              {newKey && (
+                <button onClick={() => { setSheetOpen(false); setNewKey(null); }} className="text-fog hover:text-silver text-xs">Close</button>
+              )}
+            </div>
+            {newKey ? (
+              <div className="flex-1 px-5 py-5 space-y-4">
+                <p className="text-xs text-amber leading-relaxed">{s.keyWarning}</p>
+                <div className="rounded-xl bg-obsidian border border-border px-3 py-3">
+                  <p className="font-mono text-xs text-sage break-all">{newKey}</p>
+                </div>
+                <button
+                  onClick={handleCopyKey}
+                  className="w-full h-9 rounded-xl text-sm font-medium bg-ivory text-obsidian hover:opacity-90 flex items-center justify-center gap-2"
+                >
+                  <Copy size={13} />
+                  {keyCopied ? 'Copied!' : s.copyKey}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex-1 px-5 py-5 space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-silver">{s.keyName}</label>
+                    <input
+                      type="text"
+                      value={keyName}
+                      onChange={e => setKeyName(e.target.value)}
+                      placeholder={t.app.settings.api.keyNamePlaceholder ?? ''}
+                      className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-ivory"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-silver">Scope</label>
+                    <div className="flex flex-col gap-2">
+                      {(['read', 'write'] as const).map(v => (
+                        <label key={v} className="flex items-center gap-2.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="scope"
+                            value={v}
+                            checked={scope === v}
+                            onChange={() => setScope(v)}
+                            className="accent-sage"
+                          />
+                          <span className="text-sm text-silver">{s.scopes[v]}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="px-5 pb-6 flex gap-2">
+                  <button
+                    onClick={() => setSheetOpen(false)}
+                    className="flex-1 h-10 rounded-xl text-sm font-medium border border-border text-silver hover:text-ivory transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleGenerate}
+                    disabled={!keyName.trim() || generating}
+                    className="flex-1 h-10 rounded-xl text-sm font-medium bg-ivory text-obsidian hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {generating ? '...' : s.generate}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </Section>
+  );
+}
+
+/* ── Audit tab ───────────────────────────────────────────────────────────── */
+
+function AuditTab() {
+  const { t } = useLang();
+  const { isFeatureVisible } = useTier();
+  const { workspace } = useWorkspace();
+  const s = t.app.settings.audit;
+
+  const [period, setPeriod] = useState(30);
+  const [events, setEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!workspace?.id) return;
+    supabase
+      .from('activity')
+      .select('*')
+      .eq('workspace_id', workspace.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setEvents(data); });
+  }, [workspace?.id]);
+
+  if (!isFeatureVisible('governance')) return <LockedFeaturePage featureKey="governance" />;
+
+  const cutoff = Date.now() - period * 86400000;
+  const filtered = events.filter(e => new Date(e.created_at).getTime() >= cutoff);
+
+  function initials(name: string) {
+    return name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  return (
+    <Section title={s.heading} subtitle={s.subtitle}>
+      <div className="w-full space-y-4">
+        {/* Period filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-fog">{s.filter}:</span>
+          {([7, 30, 90] as const).map(d => (
+            <button
+              key={d}
+              onClick={() => setPeriod(d)}
+              className={cn(
+                'h-7 px-3 rounded-full text-xs font-medium transition-all border',
+                period === d
+                  ? 'bg-ivory text-obsidian border-transparent'
+                  : 'border-border text-fog hover:text-silver'
+              )}
+            >
+              {s.periods[`p${d}` as keyof typeof s.periods]}
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <p className="text-sm text-fog text-center py-8">{s.noEvents}</p>
+        ) : (
+          <div className="space-y-1">
+            {filtered.map(event => (
+              <div
+                key={event.id}
+                className="flex items-start gap-3 px-4 py-3 rounded-xl bg-midnight border border-border"
+              >
+                <div
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5"
+                  style={{ backgroundColor: 'var(--dusk)', color: 'var(--silver)' }}
+                >
+                  {initials(event.username || 'U')}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-ivory">
+                    <span className="text-silver">{event.username}</span>
+                    {' '}
+                    <span className="text-fog">{event.action_name}</span>
+                    {event.target_name && (
+                      <> <span className="text-silver">{event.target_name}</span></>
+                    )}
+                  </p>
+                </div>
+                <span className="text-[11px] text-fog shrink-0 mt-0.5">{relativeTime(event.created_at)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
 /* ── Plan tab ────────────────────────────────────────────────────────────── */
 
 const FEATURE_GROUPS: { label: string; keys: FeatureKey[] }[] = [
@@ -839,6 +1288,8 @@ export default function AppSettings() {
     { id: 4, label: s.tabs.security,      content: <SecurityTab /> },
     { id: 5, label: 'Privacy',            content: <PrivacyTab /> },
     { id: 6, label: s.tabs.plan,          content: <PlanTab /> },
+    { id: 7, label: s.tabs.api,           content: <ApiTab /> },
+    { id: 8, label: s.tabs.audit,         content: <AuditTab /> },
   ];
 
   return (

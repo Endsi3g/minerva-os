@@ -35,15 +35,30 @@ function initMockDb() {
   }
 
   mockDb = {
-    workspaces: [{
-      id: 'mock-workspace-123',
-      name: 'Minerva OS Workspace',
-      slug: 'minerva',
-      owner_user_id: 'demo-user-01',
-      workspace_tier: 'scale',
-      agency_type: 'full_service',
-      setup_kit_applied: true,
-    }],
+    workspaces: [
+      {
+        id: 'mock-workspace-123',
+        name: 'Uprising Studio',
+        slug: 'uprising',
+        owner_user_id: 'demo-user-01',
+        workspace_tier: 'scale',
+        agency_type: 'full_service',
+        setup_kit_applied: true,
+        settings: { currency: 'USD', language: 'en', timezone: 'America/New_York' },
+        branding: { primaryColor: '#7FA38A', theme: 'dark' },
+      },
+      {
+        id: 'mock-workspace-456',
+        name: 'Spin-off Studio',
+        slug: 'spinoff',
+        owner_user_id: 'demo-user-01',
+        workspace_tier: 'growth',
+        agency_type: 'content',
+        setup_kit_applied: true,
+        settings: { currency: 'USD', language: 'en', timezone: 'America/New_York' },
+        branding: { primaryColor: '#B89B6A', theme: 'dark' },
+      },
+    ],
     user_profiles: [
       {
         id: 'demo-user-01',
@@ -141,7 +156,35 @@ function initMockDb() {
     })),
     nps_responses: [],
     knowledge_base: [],
-    email_drafts: []
+    email_drafts: [],
+    marketplace_items: [
+      { id: 'mp-auto-1', name: 'Client Onboarding Flow', description: 'Automate your client onboarding with welcome emails, task creation and portal access.', type: 'automation', category: 'onboarding', tags: ['onboarding', 'email', 'tasks'], is_built_in: true, created_by: 'Minerva', use_count: 1240 },
+      { id: 'mp-auto-2', name: 'Invoice Follow-up', description: 'Send automatic reminders for overdue invoices at 7, 14 and 30 day intervals.', type: 'automation', category: 'finance', tags: ['billing', 'invoices', 'reminders'], is_built_in: true, created_by: 'Minerva', use_count: 980 },
+      { id: 'mp-auto-3', name: 'Project Kickoff', description: 'Create a full project scaffold with tasks, milestones and a client portal brief on project creation.', type: 'automation', category: 'delivery', tags: ['projects', 'kickoff', 'tasks'], is_built_in: true, created_by: 'Minerva', use_count: 760 },
+      { id: 'mp-auto-4', name: 'Team Standup', description: 'Daily async standup prompts sent to team members with responses compiled into a summary.', type: 'automation', category: 'operations', tags: ['team', 'standup', 'daily'], is_built_in: true, created_by: 'Minerva', use_count: 530 },
+      { id: 'mp-tmpl-1', name: 'Brand Brief Template', description: 'Structured brief for brand identity projects covering positioning, audience and visual direction.', type: 'template', category: 'delivery', tags: ['brand', 'brief', 'creative'], is_built_in: true, created_by: 'Minerva', use_count: 1480 },
+      { id: 'mp-tmpl-2', name: 'Proposal Template', description: 'Professional agency proposal with scope, timeline, pricing and terms sections.', type: 'template', category: 'onboarding', tags: ['proposal', 'sales', 'scope'], is_built_in: true, created_by: 'Minerva', use_count: 2100 },
+      { id: 'mp-tmpl-3', name: 'Monthly Report', description: 'Executive-ready monthly performance report with KPIs, delivery highlights and next steps.', type: 'template', category: 'reporting', tags: ['report', 'kpi', 'monthly'], is_built_in: true, created_by: 'Minerva', use_count: 870 },
+      { id: 'mp-tmpl-4', name: 'Creative Brief', description: 'Comprehensive creative brief for campaigns and content projects with objectives and references.', type: 'template', category: 'delivery', tags: ['creative', 'brief', 'campaign'], is_built_in: true, created_by: 'Minerva', use_count: 1100 },
+      { id: 'mp-view-1', name: 'Pipeline Overview', description: 'A consolidated view of all deals, stages and forecasted revenue at a glance.', type: 'view', category: 'reporting', tags: ['pipeline', 'crm', 'revenue'], is_built_in: true, created_by: 'Minerva', use_count: 640 },
+      { id: 'mp-view-2', name: 'Budget Tracker', description: 'Real-time budget vs actual tracker across all active projects.', type: 'view', category: 'finance', tags: ['budget', 'finance', 'projects'], is_built_in: true, created_by: 'Minerva', use_count: 420 },
+      { id: 'mp-play-1', name: 'Client Health Audit', description: 'Step-by-step playbook to assess client health, flag risks and plan proactive outreach.', type: 'playbook', category: 'operations', tags: ['health', 'clients', 'risk'], is_built_in: true, created_by: 'Minerva', use_count: 390 },
+      { id: 'mp-play-2', name: 'Delivery Retrospective', description: 'Post-project retrospective playbook with team reflection prompts and improvement actions.', type: 'playbook', category: 'delivery', tags: ['retro', 'delivery', 'team'], is_built_in: true, created_by: 'Minerva', use_count: 310 },
+    ],
+    workspace_installs: [],
+    api_keys: [
+      { id: 'ak-1', workspace_id: 'mock-workspace-123', name: 'Production Integration', key_prefix: 'mk_live_a3f2b891c4d5', scopes: ['read'], created_at: '2026-05-01T00:00:00Z', last_used_at: '2026-06-01T10:23:00Z', revoked_at: null },
+    ],
+    activity: [
+      { id: 'act-1', workspace_id: 'mock-workspace-123', username: 'Demo User', action_name: 'created project', target_name: 'Q3 Brand Campaign', created_at: '2026-06-03T10:23:00Z' },
+      { id: 'act-2', workspace_id: 'mock-workspace-123', username: 'Demo User', action_name: 'updated invoice', target_name: 'INV-0042', created_at: '2026-06-02T15:44:00Z' },
+      { id: 'act-3', workspace_id: 'mock-workspace-123', username: 'Demo User', action_name: 'approved deliverable', target_name: 'Homepage Wireframes', created_at: '2026-06-01T09:15:00Z' },
+      { id: 'act-4', workspace_id: 'mock-workspace-123', username: 'Demo User', action_name: 'invited member', target_name: 'alice@agency.com', created_at: '2026-05-30T14:00:00Z' },
+      { id: 'act-5', workspace_id: 'mock-workspace-123', username: 'Demo User', action_name: 'changed role', target_name: 'Alice Dupont → Project Manager', created_at: '2026-05-28T11:30:00Z' },
+      { id: 'act-6', workspace_id: 'mock-workspace-123', username: 'Demo User', action_name: 'exported data', target_name: 'workspace export', created_at: '2026-05-25T16:05:00Z' },
+      { id: 'act-7', workspace_id: 'mock-workspace-123', username: 'Demo User', action_name: 'installed automation', target_name: 'Client Onboarding Flow', created_at: '2026-05-20T09:45:00Z' },
+      { id: 'act-8', workspace_id: 'mock-workspace-123', username: 'Demo User', action_name: 'updated settings', target_name: 'workspace branding', created_at: '2026-05-15T13:20:00Z' },
+    ],
   };
 
   saveMockDb();

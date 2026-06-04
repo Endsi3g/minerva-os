@@ -23,6 +23,10 @@ import {
   BarChart,
   Headphones,
   Settings2,
+  Layers,
+  Palette,
+  Key,
+  Shield,
   ArrowRight,
   Check,
 } from 'lucide-react';
@@ -48,8 +52,12 @@ export const FEATURE_ICONS: Record<FeatureKey, React.ElementType> = {
   profitability: TrendingUp,
   time_tracking: Clock,
   reports:       BarChart,
-  support_hub:   Headphones,
-  agent_ops:     Settings2,
+  support_hub:     Headphones,
+  agent_ops:       Settings2,
+  multi_workspace: Layers,
+  white_label:     Palette,
+  api_access:      Key,
+  governance:      Shield,
 };
 
 export const TIER_BADGE_COLORS: Record<WorkspaceTier, { backgroundColor: string; color: string }> = {
