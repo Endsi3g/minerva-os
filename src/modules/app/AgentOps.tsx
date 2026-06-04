@@ -14,7 +14,7 @@ import {
   TerminalAnimationCommandBar,
   TerminalAnimationOutput,
 } from '@/components/ui/terminal-animation';
-import { Sparkles, History, Activity, Edit3, CheckCircle, HelpCircle } from 'lucide-react';
+import { Sparkles, History, Activity, Edit3, CheckCircle, HelpCircle, Play, TrendingUp, FolderKanban, DollarSign, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TEMPLATES = [
@@ -38,13 +38,52 @@ const PROMPT_TEMPLATES = [
   }
 ];
 
+const MODULE_AGENTS = [
+  {
+    id: 'crm-agent',
+    name: 'CRM Agent',
+    role: 'Pipeline Intelligence',
+    description: 'Scores leads, detects stalling deals, and surfaces pipeline health alerts before opportunities slip.',
+    icon: TrendingUp,
+    color: 'bg-blue-600',
+    endpoint: '/api/agents/crm',
+    action: 'crm_agent_run',
+    alertAction: 'crm_agent_alert',
+  },
+  {
+    id: 'pm-agent',
+    name: 'PM Agent',
+    role: 'Project Intelligence',
+    description: 'Detects scope drift, predicts delays, and flags blocked tasks before they stall delivery.',
+    icon: FolderKanban,
+    color: 'bg-purple-600',
+    endpoint: '/api/agents/pm',
+    action: 'pm_agent_run',
+    alertAction: 'pm_agent_alert',
+  },
+  {
+    id: 'finance-agent',
+    name: 'Finance Agent',
+    role: 'Financial Intelligence',
+    description: 'Monitors overdue invoices, retainer renewals, and cash flow anomalies in real time.',
+    icon: DollarSign,
+    color: 'bg-emerald-600',
+    endpoint: '/api/agents/finance',
+    action: 'finance_agent_run',
+    alertAction: 'finance_agent_alert',
+  },
+];
+
 export default function AgentOps() {
   const [agents, setAgents] = useState<any[]>([]);
   const [audit, setAudit] = useState<any[]>([]);
+  const [agentAlerts, setAgentAlerts] = useState<any[]>([]);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [editingAgent, setEditingAgent] = useState<any | null>(null);
   const [editedInstructions, setEditedInstructions] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [runningAgent, setRunningAgent] = useState<string | null>(null);
+  const [lastRuns, setLastRuns] = useState<Record<string, string>>({});
 
   const terminalTabs = useMemo(() => [
     {
@@ -63,17 +102,72 @@ export default function AgentOps() {
     const wid = wsRes.data?.[0]?.id;
     if (!wid) return;
     setWorkspaceId(wid);
-    const [agRes, auRes] = await Promise.all([
+    const [agRes, auRes, alertRes] = await Promise.all([
       supabase.from('agents').select('*').eq('workspace_id', wid),
       supabase.from('agent_audit').select('*').eq('workspace_id', wid).order('timestamp', { ascending: false }).limit(20),
+      supabase
+        .from('agent_audit')
+        .select('details, action, timestamp')
+        .eq('workspace_id', wid)
+        .in('action', ['crm_agent_alert', 'pm_agent_alert', 'finance_agent_alert'])
+        .gte('timestamp', new Date(Date.now() - 86400000).toISOString())
+        .order('timestamp', { ascending: false })
+        .limit(15),
     ]);
     setAgents(agRes.data ?? []);
     setAudit(auRes.data ?? []);
+    setAgentAlerts(alertRes.data ?? []);
+
+    // Compute last run times per agent
+    const runs: Record<string, string> = {};
+    for (const mod of MODULE_AGENTS) {
+      const row = (auRes.data ?? []).find((r: any) => r.action === mod.action);
+      if (row) runs[mod.id] = row.timestamp;
+    }
+    setLastRuns(runs);
   }
 
   useEffect(() => {
     loadData();
   }, []);
+
+  async function runAgent(mod: typeof MODULE_AGENTS[0]) {
+    if (!workspaceId || runningAgent) return;
+    setRunningAgent(mod.id);
+    try {
+      await fetch(mod.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId }),
+      });
+      await loadData();
+    } catch (err) {
+      console.error(`[${mod.name}] run error:`, err);
+    } finally {
+      setRunningAgent(null);
+    }
+  }
+
+  async function runAllAgents() {
+    if (!workspaceId || runningAgent) return;
+    setRunningAgent('all');
+    try {
+      await Promise.all(
+        MODULE_AGENTS.map(mod =>
+          fetch(mod.endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ workspaceId }),
+          })
+        )
+      );
+      await loadData();
+    } catch (err) {
+      console.error('[Run all agents]', err);
+    } finally {
+      setRunningAgent(null);
+    }
+  }
 
   const openEditor = (agent: any) => {
     setEditingAgent(agent);
@@ -132,7 +226,120 @@ export default function AgentOps() {
         </div>
       </header>
 
-      {/* Agents Status Grid */}
+      {/* v4 Module Agents */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-xs uppercase tracking-wider font-semibold text-ivory">Module Agents</p>
+            <p className="text-[11px] text-fog mt-0.5">AI agents running autonomously across your core modules</p>
+          </div>
+          <Button
+            size="sm"
+            onClick={runAllAgents}
+            disabled={!!runningAgent}
+            className="flex items-center gap-2 text-xs bg-ivory text-midnight hover:bg-ivory/90 rounded-lg px-4 disabled:opacity-50"
+          >
+            <Play size={11} className={runningAgent === 'all' ? 'animate-pulse' : ''} />
+            {runningAgent === 'all' ? 'Running...' : 'Run All'}
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {MODULE_AGENTS.map(mod => {
+            const Icon = mod.icon;
+            const alertsForAgent = agentAlerts.filter((a: any) => a.action === mod.alertAction);
+            const roseCount = alertsForAgent.filter((a: any) => a.details?.severity === 'rose').length;
+            const amberCount = alertsForAgent.filter((a: any) => a.details?.severity === 'amber').length;
+            const lastRan = lastRuns[mod.id];
+
+            return (
+              <motion.div key={mod.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="bg-midnight border-white/8 relative overflow-hidden">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', mod.color)}>
+                          <Icon size={14} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-ivory">{mod.name}</p>
+                          <p className="text-[9px] uppercase tracking-wider text-fog font-medium">{mod.role}</p>
+                        </div>
+                      </div>
+                      <div className={cn('w-1.5 h-1.5 rounded-full mt-1', lastRan ? 'bg-sage' : 'bg-silver/30')} />
+                    </div>
+                    <p className="text-[11px] text-silver leading-relaxed">{mod.description}</p>
+                    {alertsForAgent.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        {roseCount > 0 && (
+                          <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-rose/10 text-rose border border-rose/20">
+                            <AlertTriangle size={8} /> {roseCount} critical
+                          </span>
+                        )}
+                        {amberCount > 0 && (
+                          <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-amber/10 text-amber border border-amber/20">
+                            <AlertTriangle size={8} /> {amberCount} warning
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                      <span className="text-[9px] text-fog">
+                        {lastRan ? `Last run ${new Date(lastRan).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Never run'}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => runAgent(mod)}
+                        disabled={!!runningAgent}
+                        className="h-6 px-2 text-[10px] text-silver hover:text-ivory border border-white/5 hover:bg-white/5 rounded-md flex items-center gap-1 disabled:opacity-40"
+                      >
+                        <Play size={8} className={runningAgent === mod.id ? 'animate-pulse' : ''} />
+                        {runningAgent === mod.id ? 'Running' : 'Run'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Recent Agent Alerts */}
+        {agentAlerts.length > 0 && (
+          <Card className="bg-midnight border-white/8 mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-semibold text-ivory flex items-center gap-2">
+                <AlertTriangle size={13} className="text-amber" />
+                Recent Agent Alerts
+                <span className="ml-auto text-[9px] text-fog font-normal">Last 24h</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-1.5">
+                {agentAlerts.slice(0, 8).map((row: any, i: number) => {
+                  const d = row.details ?? {};
+                  const dotColor = d.severity === 'rose' ? '#A86A6A' : d.severity === 'amber' ? '#B89B6A' : '#8A9099';
+                  return (
+                    <div key={i} className="flex items-start gap-2.5 py-1.5 border-b border-white/4 last:border-0">
+                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: dotColor }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-ivory truncate">{d.title || d.description}</p>
+                        {d.description && d.title && (
+                          <p className="text-[10px] text-fog mt-0.5 truncate">{d.description}</p>
+                        )}
+                      </div>
+                      <span className="text-[9px] text-fog shrink-0">{new Date(row.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </section>
+
+      {/* Custom Agents Status Grid */}
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {agents.map((agent: any, index: number) => (
           <motion.div

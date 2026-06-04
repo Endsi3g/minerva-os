@@ -272,15 +272,85 @@ const SMB_TEAM_SIZES = ['solo', '2-5', '6-15'];
 
 /* ── SMB Action Queue ─────────────────────────────────────────────────────── */
 function SMBActionQueue({
-  approvals, invoices, deals, labels,
+  approvals, invoices, deals, labels, workspaceId,
 }: {
   approvals: any[] | null;
   invoices: any[] | null;
   deals: any[] | null;
   labels: any;
+  workspaceId: string | undefined;
 }) {
   const router = useRouter();
   const now = Date.now();
+  const [agentAlerts, setAgentAlerts] = useState<{ key: string; label: string; href: string; color: string }[]>([]);
+  const [runningAgents, setRunningAgents] = useState(false);
+  const [lastRanAt, setLastRanAt] = useState<string | null>(null);
+
+  // Load most recent agent alerts from the last 24 hours
+  useEffect(() => {
+    if (!workspaceId) return;
+    const since = new Date(Date.now() - 86400000).toISOString();
+    supabase
+      .from('agent_audit')
+      .select('details, action, timestamp')
+      .eq('workspace_id', workspaceId)
+      .in('action', ['crm_agent_alert', 'pm_agent_alert', 'finance_agent_alert'])
+      .gte('timestamp', since)
+      .order('timestamp', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (!data) return;
+        const severityColor = (s: string) =>
+          s === 'rose' ? '#A86A6A' : s === 'amber' ? '#B89B6A' : '#8A9099';
+        const mapped = data.map((row: any) => ({
+          key: `agent-${row.timestamp}-${row.details?.entity_id || Math.random()}`,
+          label: row.details?.title || row.details?.description || 'Agent alert',
+          href: row.details?.href || '/app/agents',
+          color: severityColor(row.details?.severity || 'info'),
+        }));
+        setAgentAlerts(mapped);
+        // Find most recent run timestamp
+        const run = data[0];
+        if (run) setLastRanAt(run.timestamp);
+      });
+  }, [workspaceId]);
+
+  async function runAllAgents() {
+    if (!workspaceId || runningAgents) return;
+    setRunningAgents(true);
+    try {
+      await Promise.all([
+        fetch('/api/agents/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId }) }),
+        fetch('/api/agents/pm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId }) }),
+        fetch('/api/agents/finance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId }) }),
+      ]);
+      // Reload alerts after run
+      const since = new Date(Date.now() - 300000).toISOString(); // last 5 min
+      const { data } = await supabase
+        .from('agent_audit')
+        .select('details, action, timestamp')
+        .eq('workspace_id', workspaceId)
+        .in('action', ['crm_agent_alert', 'pm_agent_alert', 'finance_agent_alert'])
+        .gte('timestamp', since)
+        .order('timestamp', { ascending: false })
+        .limit(10);
+      if (data) {
+        const severityColor = (s: string) =>
+          s === 'rose' ? '#A86A6A' : s === 'amber' ? '#B89B6A' : '#8A9099';
+        setAgentAlerts(data.map((row: any) => ({
+          key: `agent-${row.timestamp}-${row.details?.entity_id || Math.random()}`,
+          label: row.details?.title || 'Agent alert',
+          href: row.details?.href || '/app/agents',
+          color: severityColor(row.details?.severity || 'info'),
+        })));
+        if (data[0]) setLastRanAt(data[0].timestamp);
+      }
+    } catch (err) {
+      console.error('[Run agents]', err);
+    } finally {
+      setRunningAgents(false);
+    }
+  }
 
   const items: { key: string; label: string; href: string; color: string }[] = [];
 
@@ -333,17 +403,30 @@ function SMBActionQueue({
       });
   }
 
+  // Merge: agent alerts first, then manual checks (deduplicate by href+label)
+  const allItems = [...agentAlerts, ...items];
+
   return (
     <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
       <CardHeader className="pb-3">
-        <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{labels.actionQueueTitle}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{labels.actionQueueTitle}</CardTitle>
+          <button
+            onClick={runAllAgents}
+            disabled={runningAgents}
+            className="flex items-center gap-1.5 text-[10px] text-fog hover:text-silver transition-colors cursor-pointer disabled:opacity-40"
+          >
+            <Sparkles size={10} className={runningAgents ? 'animate-pulse' : ''} />
+            {runningAgents ? 'Analysing...' : lastRanAt ? `AI scan · ${new Date(lastRanAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Run AI scan'}
+          </button>
+        </div>
       </CardHeader>
       <CardContent>
-        {items.length === 0 ? (
+        {allItems.length === 0 ? (
           <p className="text-xs text-fog py-2">{labels.actionQueueEmpty}</p>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {items.map(item => (
+            {allItems.map(item => (
               <button
                 key={item.key}
                 onClick={() => router.push(item.href)}
@@ -511,7 +594,7 @@ function SMBDashboard({
       {/* Top row: action queue + revenue snapshot */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.4 }}>
-          <SMBActionQueue approvals={approvals} invoices={invoices} deals={deals} labels={s} />
+          <SMBActionQueue approvals={approvals} invoices={invoices} deals={deals} labels={s} workspaceId={workspaceId} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }}>
           <SMBRevenueSnapshot invoices={invoices} labels={s} onDetails={() => router.push('/app/finance-hub')} formatCurrency={formatCurrency} />
