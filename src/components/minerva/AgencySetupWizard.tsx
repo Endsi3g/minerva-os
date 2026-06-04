@@ -84,15 +84,51 @@ export function AgencySetupWizard() {
   async function handleSkip() {
     const toastId = toast.loading('Skipping setup...');
     try {
-      setWorkspaceProfile({ onboardingComplete: true });
-      if (user) {
-        await supabase.from('user_profiles').update({
-          onboarding_completed: true,
-        }).eq('user_id', user.id);
+      if (!user) return;
+
+      // 1. Fetch or create a default workspace
+      const { data: ws } = await supabase
+        .from('workspaces')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+
+      let workspaceId = ws?.id;
+
+      if (!workspaceId) {
+        const slug = `agency-${Math.random().toString(36).substring(2, 6)}`;
+        const { data: newWs, error: wsError } = await supabase
+          .from('workspaces')
+          .insert({
+            name: 'My Agency',
+            slug,
+            owner_user_id: user.id,
+            workspace_tier: 'scale',
+          })
+          .select('id')
+          .single();
+
+        if (wsError) throw wsError;
+        workspaceId = newWs.id;
       }
+
+      // 2. Link user profile to workspace and mark onboarding completed
+      await supabase.from('user_profiles').update({
+        onboarding_completed: true,
+        workspace_id: workspaceId,
+      }).eq('user_id', user.id);
+
+      // 3. Update local context state
+      setWorkspaceProfile({
+        onboardingComplete: true,
+        id: workspaceId,
+        tier: 'scale',
+      });
+
       toast.success('Setup skipped', { id: toastId });
       router.push('/app/dashboard');
     } catch (err) {
+      console.error('Failed to skip setup:', err);
       toast.error('Failed to skip setup.', { id: toastId });
     }
   }
@@ -111,18 +147,40 @@ export function AgencySetupWizard() {
         .limit(1)
         .maybeSingle();
 
-      const workspaceId = ws?.id ?? 'mock-workspace-123';
+      let workspaceId = ws?.id;
 
-      await supabase.from('workspaces').update({
-        workspace_tier: tier,
-        agency_type: state.agencyType,
-        team_size: state.teamSize,
-        priority_goals: state.goals,
-        name: state.agencyName || undefined,
-      }).eq('id', workspaceId);
+      if (workspaceId) {
+        await supabase.from('workspaces').update({
+          workspace_tier: tier,
+          agency_type: state.agencyType,
+          team_size: state.teamSize,
+          priority_goals: state.goals,
+          name: state.agencyName || undefined,
+        }).eq('id', workspaceId);
+      } else {
+        const name = state.agencyName || 'My Agency';
+        const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
+        const { data: newWs, error: insertError } = await supabase
+          .from('workspaces')
+          .insert({
+            name,
+            slug,
+            owner_user_id: user.id,
+            workspace_tier: tier,
+            agency_type: state.agencyType,
+            team_size: state.teamSize,
+            priority_goals: state.goals,
+          })
+          .select('id')
+          .single();
+
+        if (insertError) throw insertError;
+        workspaceId = newWs.id;
+      }
 
       await supabase.from('user_profiles').update({
         onboarding_completed: true,
+        workspace_id: workspaceId,
       }).eq('user_id', user.id);
 
       if (state.agencyType) {
@@ -137,6 +195,7 @@ export function AgencySetupWizard() {
         priorityGoals: state.goals,
         setupKitApplied: true,
         name: state.agencyName,
+        id: workspaceId,
       });
 
       toast.success(ob.toastSuccess || 'Workspace configured!', { id: toastId });
@@ -195,10 +254,10 @@ export function AgencySetupWizard() {
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -12 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             {step === 1 && <StepDiscovery ob={ob} state={state} patch={patch} />}
             {step === 2 && <StepAgencyName ob={ob} state={state} patch={patch} fileInputRef={fileInputRef} />}
@@ -211,6 +270,7 @@ export function AgencySetupWizard() {
           </motion.div>
         </AnimatePresence>
       </div>
+
 
       {/* Navigation */}
       <div className="w-full max-w-lg mt-8 flex items-center justify-between">
