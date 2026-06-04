@@ -67,7 +67,7 @@ function initMockDb() {
         name: 'Demo User',
         role: 'owner',
         workspace_id: 'mock-workspace-123',
-        onboarding_complete: true,
+        onboarding_completed: true,
       }
     ],
     time_entries: [],

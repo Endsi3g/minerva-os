@@ -87,7 +87,7 @@ export function AgencySetupWizard() {
       setWorkspaceProfile({ onboardingComplete: true });
       if (user) {
         await supabase.from('user_profiles').update({
-          onboarding_complete: true,
+          onboarding_completed: true,
         }).eq('user_id', user.id);
       }
       toast.success('Setup skipped', { id: toastId });
@@ -122,7 +122,7 @@ export function AgencySetupWizard() {
       }).eq('id', workspaceId);
 
       await supabase.from('user_profiles').update({
-        onboarding_complete: true,
+        onboarding_completed: true,
       }).eq('user_id', user.id);
 
       if (state.agencyType) {

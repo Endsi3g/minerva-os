@@ -81,10 +81,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     try {
       const [wsResult, profileResult] = await Promise.all([
         supabase.from('workspaces').select('*'),
-        supabase.from('user_profiles').select('onboarding_complete').eq('user_id', user.id).maybeSingle(),
+        supabase.from('user_profiles').select('onboarding_completed').eq('user_id', user.id).maybeSingle(),
       ]);
 
-      const onboardingComplete = profileResult.data?.onboarding_complete ?? true;
+      const onboardingComplete = profileResult.data?.onboarding_completed ?? true;
       const wsRows = wsResult.data ?? [];
 
       if (wsRows.length > 0) {
@@ -100,7 +100,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         setWorkspaces([]);
         setWorkspace({
           id: '', name: '', tier: 'scale', agencyType: null,
-          onboardingComplete: profileResult.data?.onboarding_complete ?? false,
+          onboardingComplete: profileResult.data?.onboarding_completed ?? false,
           teamSize: null, priorityGoals: [], setupKitApplied: false,
         });
       }
