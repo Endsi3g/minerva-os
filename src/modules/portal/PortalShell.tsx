@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import { usePortalData } from './usePortalData';
@@ -8,6 +8,8 @@ import { useLang } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import PortalEmailGate from './PortalEmailGate';
 import PortalExpired from './PortalExpired';
+import PortalNotificationBell from './PortalNotificationBell';
+import PortalCopilot from './PortalCopilot';
 
 function PortalLoadingSkeleton() {
   return (
@@ -66,12 +68,16 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   } = usePortalData();
 
   const PORTAL_TABS = [
-    { label: t.app.sidebar.dashboard,     path: '',             scope: null },
-    { label: t.app.sidebar.approvals,     path: 'deliverables', scope: 'approvals' },
-    { label: t.app.sidebar.files,         path: 'files',        scope: 'files' },
-    { label: t.app.sidebar.billing,       path: 'invoices',     scope: 'invoices' },
-    { label: t.app.sidebar.tickets,       path: 'tickets',      scope: 'tickets' },
-    { label: t.app.sidebar.nps,           path: 'nps',          scope: 'nps' },
+    { label: t.app.sidebar.dashboard,        path: '',             scope: null },
+    { label: t.app.sidebar.approvals,        path: 'deliverables', scope: 'approvals' },
+    { label: t.portal.proposals.tabLabel,    path: 'proposals',    scope: 'proposals' },
+    { label: t.app.sidebar.files,            path: 'files',        scope: 'files' },
+    { label: t.app.sidebar.billing,          path: 'invoices',     scope: 'invoices' },
+    { label: t.portal.reports.tabLabel,      path: 'reports',      scope: 'reports' },
+    { label: t.portal.journal.tabLabel,      path: 'journal',      scope: null },
+    { label: t.portal.timeline.tabLabel,     path: 'timeline',     scope: null },
+    { label: t.app.sidebar.tickets,          path: 'tickets',      scope: 'tickets' },
+    { label: t.app.sidebar.nps,              path: 'nps',          scope: 'nps' },
   ];
 
   // Block unauthorized direct URL access
@@ -97,7 +103,6 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   }
   if (!isValid) return <PortalExpired />;
 
-  // Filter tabs by scope
   const visibleTabs = PORTAL_TABS.filter(tab => !tab.scope || scopes.includes(tab.scope));
 
   return (
@@ -144,6 +149,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
             <div className="flex-1" />
 
+            {/* Notification bell */}
+            {token && <PortalNotificationBell token={token} />}
+
             {/* Language Toggle */}
             <Button
               variant="ghost"
@@ -164,14 +172,14 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           </div>
 
           {/* Tab bar */}
-          <div className="flex gap-0 -mb-px">
+          <div className="flex gap-0 -mb-px overflow-x-auto scrollbar-none">
             {visibleTabs.map(tab => (
               <NavLink
-                key={tab.label}
+                key={tab.path}
                 href={tab.path === '' ? `/portal/${token}` : `/portal/${token}/${tab.path}`}
                 end={tab.path === ''}
                 className={({ isActive }) =>
-                  `px-4 py-2.5 text-sm border-b-2 transition-colors duration-200 ${
+                  `px-4 py-2.5 text-sm border-b-2 transition-colors duration-200 whitespace-nowrap ${
                     isActive
                       ? 'border-[#7FA38A] text-[#F5F1E8] font-medium'
                       : 'border-transparent text-[#8A9099] hover:text-[#B8BDC7]'
@@ -189,7 +197,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <main className="max-w-5xl mx-auto px-5 py-10">
         {children}
       </main>
+
+      {/* Copilot — floating, outside main */}
+      <PortalCopilot />
     </div>
   );
 }
-

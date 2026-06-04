@@ -75,6 +75,7 @@ export function usePortalData() {
     invoices: portalData?.invoices ?? [],
     milestones: portalData?.milestones ?? [],
     tickets: portalData?.tickets ?? [],
+    proposals: portalData?.proposals ?? [],
     scopes: portalData?.scopes ?? [],
     refresh,
   };

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Palette, FileText, Video, File, Check, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import type { ApprovalStatus, DeliverableType } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { CommentSection } from '@/components/minerva/CommentSection';
 import { ChoicePoll } from '@/components/ui/choice-poll';
+import { mapApprovalStatus, PORTAL_STATUS_DISPLAY } from './portalStatusMap';
 
 function DeliverableRow({
   approval,
@@ -33,17 +34,7 @@ function DeliverableRow({
     document: { label: common.types.document, icon: File,     class: 'text-[#D8DDE6] bg-[#D8DDE6]/10' },
   };
 
-  const STATUS_LABEL: Record<ApprovalStatus, string> = {
-    pending:  pd.status.pending,
-    approved: pd.status.approved,
-    revision: pd.status.revision,
-  };
-
-  const STATUS_COLOR: Record<ApprovalStatus, string> = {
-    pending:  'text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20',
-    approved: 'text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20',
-    revision: 'text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20',
-  };
+  const ps = t.portal.status;
 
   const type = TYPE_CONFIG[approval.type as DeliverableType] || TYPE_CONFIG.document;
   const TypeIcon = type.icon;
@@ -70,9 +61,25 @@ function DeliverableRow({
         </div>
 
         {/* Status badge */}
-        <span className={cn('hidden sm:block text-[10px] font-medium px-2 py-1 rounded-full border shrink-0', STATUS_COLOR[approval.status as ApprovalStatus])}>
-          {STATUS_LABEL[approval.status as ApprovalStatus]}
-        </span>
+        {(() => {
+          const displayStatus = mapApprovalStatus(approval.status as ApprovalStatus);
+          const sc = PORTAL_STATUS_DISPLAY[displayStatus];
+          const labelMap: Record<string, string> = {
+            pending_client: ps.pendingClient,
+            approved: ps.approved,
+            changes_requested: ps.changesRequested,
+            in_production: ps.inProduction,
+            ready_for_review: ps.readyForReview,
+          };
+          return (
+            <span
+              className="hidden sm:block text-[10px] font-medium px-2 py-1 rounded-full border shrink-0"
+              style={{ color: sc.color, backgroundColor: sc.bg, borderColor: sc.border }}
+            >
+              {labelMap[displayStatus]}
+            </span>
+          );
+        })()}
 
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">

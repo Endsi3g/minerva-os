@@ -1,13 +1,14 @@
 'use client';
 import { useState } from 'react';
-import { motion } from 'motion/react';
-import { Download, CreditCard } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Download, CreditCard, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import type { InvoiceStatus } from '@/lib/types';
 import { toast } from 'sonner';
 import { useLang } from '@/i18n';
 import { InvoicePdf, downloadPdf } from '@/components/minerva/PdfExport';
+import { CommentSection } from '@/components/minerva/CommentSection';
 
 const STATUS_CONFIG: Record<InvoiceStatus, { label: string; class: string }> = {
   draft:     { label: 'Draft',    class: 'text-[#8A9099] bg-[#8A9099]/10 border-[#8A9099]/20' },
@@ -25,6 +26,7 @@ export default function PortalInvoices() {
   const { t, lang } = useLang();
   const { isValid, invoices: rawInvoices, projects, token, clientName } = usePortalData();
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (!isValid) return null;
 
@@ -149,60 +151,87 @@ export default function PortalInvoices() {
               initial={{ opacity: 0, y: 12 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06, duration: 0.4 }}
-              className="flex items-center gap-4 px-5 py-4 rounded-[14px] border transition-colors duration-200 hover:border-white/10"
+              className="rounded-[14px] border overflow-hidden transition-colors duration-200 hover:border-white/10"
               style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
             >
-              {/* Number + project */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold tabular-nums" style={{ color: '#F5F1E8' }}>{invoice.number}</p>
-                  <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border', sc.class)}>{sc.label}</span>
+              <div className="flex items-center gap-4 px-5 py-4">
+                {/* Number + project */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold tabular-nums" style={{ color: '#F5F1E8' }}>{invoice.number}</p>
+                    <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border', sc.class)}>{sc.label}</span>
+                  </div>
+                  <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8A9099' }}>
+                    {invoice.project} · Issued {new Date(invoice.issuedDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
                 </div>
-                <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8A9099' }}>
-                  {invoice.project} · Issued {new Date(invoice.issuedDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+
+                {/* Due date */}
+                <div className="hidden sm:block text-right shrink-0">
+                  <p className="text-xs" style={{ color: '#8A9099' }}>
+                    {invoice.status === 'paid' && invoice.paidDate
+                      ? `Paid ${new Date(invoice.paidDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`
+                      : `Due ${new Date(invoice.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`}
+                  </p>
+                </div>
+
+                {/* Amount */}
+                <p className="text-sm font-semibold tabular-nums shrink-0" style={{ color: '#F5F1E8' }}>
+                  {fmt(invoice.amount, invoice.currency)}
                 </p>
-              </div>
 
-              {/* Due date */}
-              <div className="hidden sm:block text-right shrink-0">
-                <p className="text-xs" style={{ color: '#8A9099' }}>
-                  {invoice.status === 'paid' && invoice.paidDate
-                    ? `Paid ${new Date(invoice.paidDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`
-                    : `Due ${new Date(invoice.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`}
-                </p>
-              </div>
-
-              {/* Amount */}
-              <p className="text-sm font-semibold tabular-nums shrink-0" style={{ color: '#F5F1E8' }}>
-                {fmt(invoice.amount, invoice.currency)}
-              </p>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 shrink-0">
-                {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'pending') && (
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'pending') && (
+                    <button
+                      onClick={() => handlePay(invoice)}
+                      disabled={payingId !== null}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      style={{
+                        backgroundColor: 'rgba(127,163,138,0.10)',
+                        border: '1px solid rgba(127,163,138,0.22)',
+                        color: '#7FA38A',
+                      }}
+                    >
+                      <CreditCard size={12} />
+                      {payingId === invoice.id ? 'Paying...' : 'Pay'}
+                    </button>
+                  )}
                   <button
-                    onClick={() => handlePay(invoice)}
-                    disabled={payingId !== null}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                    style={{
-                      backgroundColor: 'rgba(127,163,138,0.10)',
-                      border: '1px solid rgba(127,163,138,0.22)',
-                      color: '#7FA38A',
-                    }}
+                    onClick={() => handleDownload(invoice)}
+                    className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-white/5 cursor-pointer"
+                    title={lang === 'fr' ? 'Télécharger PDF' : 'Download PDF'}
+                    aria-label="Download invoice"
                   >
-                    <CreditCard size={12} />
-                    {payingId === invoice.id ? 'Paying...' : 'Pay'}
+                    <Download size={13} style={{ color: '#8A9099' }} />
                   </button>
-                )}
-                <button
-                  onClick={() => handleDownload(invoice)}
-                  className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-white/5 cursor-pointer"
-                  title={lang === 'fr' ? 'Télécharger PDF' : 'Download PDF'}
-                  aria-label="Download invoice"
-                >
-                  <Download size={13} style={{ color: '#8A9099' }} />
-                </button>
+                  <button
+                    onClick={() => setExpandedId(expandedId === invoice.id ? null : invoice.id)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#B8BDC7' }}
+                  >
+                    <MessageSquare size={11} />
+                    {expandedId === invoice.id ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                  </button>
+                </div>
               </div>
+
+              <AnimatePresence>
+                {expandedId === invoice.id && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 260, opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden border-t"
+                    style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+                  >
+                    <div className="p-5 h-full">
+                      <CommentSection targetId={invoice.id} targetType="invoice" token={token} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           );
         })}

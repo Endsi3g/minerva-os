@@ -1,7 +1,8 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { CheckCircle2, Clock, AlertCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, ArrowRight, Sparkles, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import { useLang } from '@/i18n';
@@ -31,15 +32,21 @@ export default function PortalOverview() {
   const pc = t.portal.common;
   const po = t.portal.overview;
 
-  const { token, isValid, clientName, projects, tasks, approvals, invoices, milestones } = usePortalData();
+  const { token, isValid, clientName, projects, tasks, approvals, invoices, milestones, proposals } = usePortalData();
+
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryGenerating, setSummaryGenerating] = useState(false);
+  const [summaryDate, setSummaryDate] = useState<string | null>(null);
 
   if (!isValid) return null;
 
   const pendingApprovals = approvals.filter((a: any) => a.status === 'pending').length;
   const activeProjects   = projects.filter((p: any) => p.status === 'active').length;
-  const outstandingTotal = invoices
-    .filter((i: any) => i.status === 'sent' || i.status === 'overdue')
-    .reduce((sum: any, i: any) => sum + i.amount, 0);
+  const outstandingInvoices = invoices.filter((i: any) => i.status === 'sent' || i.status === 'overdue');
+  const outstandingTotal = outstandingInvoices.reduce((sum: number, i: any) => sum + Number(i.amount || 0), 0);
+  const unsignedProposals = (proposals || []).filter((p: any) => p.status === 'sent').length;
+
+  const pendingDecisionsCount = pendingApprovals + outstandingInvoices.length + unsignedProposals;
 
   const upcomingMilestones = milestones
     .filter((m: any) => m.status !== 'completed')
@@ -51,6 +58,31 @@ export default function PortalOverview() {
     { label: po.stats.pendingApprovals,  value: String(pendingApprovals), sub: po.stats.pendingApprovalsSub, color: pendingApprovals > 0 ? 'text-[#B89B6A]' : 'text-[#7FA38A]' },
     { label: po.stats.outstanding,        value: outstandingTotal > 0 ? `$${outstandingTotal.toLocaleString()}` : '—', sub: po.stats.outstandingSub, color: outstandingTotal > 0 ? 'text-[#B89B6A]' : 'text-[#7FA38A]' },
   ];
+
+  function plural(count: number, single: string, plural: string) {
+    return (count === 1 ? single : plural).replace('{{count}}', String(count));
+  }
+
+  async function generateSummary(force = false) {
+    if (!token || summaryGenerating) return;
+    if (summary && !force) return;
+    setSummaryGenerating(true);
+    try {
+      const res = await fetch('/api/portal/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const d = await res.json();
+      if (d.summary) {
+        setSummary(d.summary);
+        setSummaryDate(d.generatedAt);
+      }
+    } catch {}
+    finally {
+      setSummaryGenerating(false);
+    }
+  }
 
   return (
     <div className="space-y-10">
@@ -69,7 +101,7 @@ export default function PortalOverview() {
           {pc.snapshot}
         </p>
       </motion.div>
-      
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {stats.map((s, i) => (
@@ -89,17 +121,47 @@ export default function PortalOverview() {
         ))}
       </div>
 
+      {/* Pending Decisions CTA */}
+      {pendingDecisionsCount > 0 && (
+        <motion.div custom={4} variants={fadeInUp} initial="hidden" animate="visible">
+          <div
+            className="rounded-[16px] border p-5 space-y-3"
+            style={{ backgroundColor: 'rgba(184,155,106,0.04)', borderColor: 'rgba(184,155,106,0.22)' }}
+          >
+            <p className="text-sm font-semibold" style={{ color: '#B89B6A' }}>{po.decisions.title}</p>
+            <div className="space-y-2">
+              {pendingApprovals > 0 && (
+                <Link href={`/portal/${token}/deliverables`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-white/5" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+                  <span className="text-sm" style={{ color: '#F5F1E8' }}>{plural(pendingApprovals, po.decisions.pendingApprovals, po.decisions.pendingApprovalsPlural)}</span>
+                  <ArrowRight size={13} style={{ color: '#B89B6A' }} />
+                </Link>
+              )}
+              {outstandingInvoices.length > 0 && (
+                <Link href={`/portal/${token}/invoices`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-white/5" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+                  <span className="text-sm" style={{ color: '#F5F1E8' }}>{plural(outstandingInvoices.length, po.decisions.unpaidInvoices, po.decisions.unpaidInvoicesPlural)}</span>
+                  <ArrowRight size={13} style={{ color: '#B89B6A' }} />
+                </Link>
+              )}
+              {unsignedProposals > 0 && (
+                <Link href={`/portal/${token}/proposals`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-white/5" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+                  <span className="text-sm" style={{ color: '#F5F1E8' }}>{plural(unsignedProposals, po.decisions.openProposals, po.decisions.openProposalsPlural)}</span>
+                  <ArrowRight size={13} style={{ color: '#B89B6A' }} />
+                </Link>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Active projects */}
-      <motion.div custom={4} variants={fadeInUp} initial="hidden" animate="visible">
+      <motion.div custom={5} variants={fadeInUp} initial="hidden" animate="visible">
         <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>{po.projects.title}</h2>
         <div className="space-y-3">
           {projects.filter((p: any) => p.status === 'active').map((project: any) => {
             const projectTasks = tasks.filter((t: any) => t.projectId === project._id);
             const totalTasks = projectTasks.length;
             const doneTasks = projectTasks.filter((t: any) => t.status === 'done').length;
-            const pct = totalTasks > 0
-              ? Math.round((doneTasks / totalTasks) * 100)
-              : 0;
+            const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
             return (
               <div
                 key={project._id}
@@ -134,7 +196,7 @@ export default function PortalOverview() {
 
       {/* Upcoming milestones */}
       {upcomingMilestones.length > 0 && (
-        <motion.div custom={5} variants={fadeInUp} initial="hidden" animate="visible">
+        <motion.div custom={6} variants={fadeInUp} initial="hidden" animate="visible">
           <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>{po.milestones.title}</h2>
           <div className="space-y-2">
             {upcomingMilestones.map((m: any) => {
@@ -178,27 +240,67 @@ export default function PortalOverview() {
         </motion.div>
       )}
 
-      {/* Quick links */}
-      {pendingApprovals > 0 && (
-        <motion.div custom={6} variants={fadeInUp} initial="hidden" animate="visible">
-          <Link
-            href={`/portal/${token}/deliverables`}
-            className="flex items-center justify-between px-5 py-4 rounded-[14px] border transition-all duration-200 hover:border-white/15"
-            style={{
-              backgroundColor: 'rgba(127,163,138,0.06)',
-              borderColor: 'rgba(127,163,138,0.18)',
-            }}
-          >
-            <div>
-              <p className="text-sm font-medium" style={{ color: '#F5F1E8' }}>
-                {po.approvals.alert.replace('{{count}}', String(pendingApprovals))}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: '#7FA38A' }}>{po.approvals.action}</p>
+      {/* Monthly Summary */}
+      <motion.div custom={7} variants={fadeInUp} initial="hidden" animate="visible">
+        <div
+          className="rounded-[16px] border p-5"
+          style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+        >
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles size={13} style={{ color: '#B89B6A' }} />
+              <p className="text-sm font-semibold" style={{ color: '#F5F1E8' }}>{po.summary.title}</p>
             </div>
-            <ArrowRight size={16} style={{ color: '#7FA38A', flexShrink: 0 }} />
-          </Link>
-        </motion.div>
-      )}
+            <div className="flex items-center gap-2">
+              {summary && (
+                <button
+                  onClick={() => generateSummary(true)}
+                  disabled={summaryGenerating}
+                  className="text-[11px] flex items-center gap-1 transition-opacity duration-200 hover:opacity-70 disabled:opacity-40 cursor-pointer"
+                  style={{ color: '#8A9099' }}
+                >
+                  <RefreshCw size={10} className={summaryGenerating ? 'animate-spin' : ''} />
+                  {po.summary.regenerate}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {!summary && !summaryGenerating && (
+            <div>
+              <p className="text-xs mb-3" style={{ color: '#8A9099' }}>{po.summary.subtitle}</p>
+              <button
+                onClick={() => generateSummary(false)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
+                style={{ backgroundColor: 'rgba(184,155,106,0.10)', border: '1px solid rgba(184,155,106,0.22)', color: '#B89B6A' }}
+              >
+                <Sparkles size={11} />
+                {po.summary.generate}
+              </button>
+            </div>
+          )}
+
+          {summaryGenerating && !summary && (
+            <div className="space-y-2">
+              {[1, 2].map(i => (
+                <div key={i} className="h-3 rounded-full animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.06)', width: i === 1 ? '100%' : '70%' }} />
+              ))}
+              <p className="text-[11px] mt-1" style={{ color: '#8A9099' }}>{po.summary.generating}</p>
+            </div>
+          )}
+
+          {summary && (
+            <div>
+              <p className="text-sm leading-relaxed" style={{ color: '#B8BDC7' }}>{summary}</p>
+              {summaryDate && (
+                <p className="text-[10px] mt-3" style={{ color: '#8A9099' }}>
+                  {po.summary.generatedOn} {new Date(summaryDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long' })}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 }

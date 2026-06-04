@@ -1,6 +1,6 @@
 # Minerva OS
 
-**The strategic operating system for elite agencies. v2.3.0**
+**The strategic operating system for elite agencies. v3.1.0**
 
 Minerva OS is the internal agency platform for [Uprising Studio](https://uprisingstudio.com) — a premium platform that centralises CRM, project management, approvals, billing, file storage, AI-powered risk monitoring, and reporting in one cohesive experience.
 
@@ -19,7 +19,18 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 
 ### Web app (Next.js 15 · Vercel)
 
-- 22 modules: Dashboard, Pipeline, Clients, Projects, Tasks, Approvals, Files, Billing, Proposals, Expenses, Knowledge Base, Tickets, NPS, Resource Planning, Time Tracking, Agent Ops, Services, Fulfillment, Finance, Call Preps, Reports, Settings
+**6-space navigation** (consolidated from 29 fragmented routes):
+
+| Space | Route | What lives here |
+|---|---|---|
+| Home | `/app/command` `/app/dashboard` | Operating review cockpit, portfolio health scores, role dashboard |
+| Revenue | `/app/clients` `/app/pipeline` `/app/proposals` | CRM, pipeline, proposals — Call Preps as a tab inside Clients |
+| Delivery | `/app/projects` `/app/tasks` `/app/approvals` `/app/files` `/app/workflows` `/app/time-tracking` `/app/resources` | Full project execution surface |
+| Finance | `/app/finance-hub` | Billing · Expenses · Profitability · Ledger in one tabbed view |
+| Intelligence | `/app/intelligence` | Reports · Health scores · NPS signal · Agent Ops in one tabbed view |
+| Admin | `/app/settings` `/app/support-hub` `/app/services` `/app/marketplace` `/app/scorecards` `/app/changelog` | Settings, Support & Knowledge hub, Operations Catalog (Services + Fulfillment tab), Marketplace, Scorecards |
+
+**Core modules:**
 - Split-screen signup + login: cinematic video left, form right
 - Fully bilingual EN / FR via custom `useLang()` context — zero hardcoded copy
 - Dark mode enforced (Celestial Editorial Noir design system)
@@ -27,14 +38,19 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 - Sentry error monitoring + PostHog product analytics
 - PWA support + Electron desktop shell
 - Dev service worker auto-cleanup to prevent stale cache issues
-- Secure Client Portal: email validation gate, token verification, scope enforcement, and audit activity logging (e.g. downloads, approvals, comments)
-- API-driven routes: server-side Next.js endpoints using `supabaseAdmin` service role to securely read/write portal actions, preventing guest visitors from querying Supabase directly
-- Proposal Viewer: secure portal for clients to view, sign, or decline proposals with real-time agency notifications and bilingual i18n support
-- Collapsible sidebar with 5 grouped sections (CRM, Delivery, Finance, Intelligence, Ops) — state persisted in localStorage
-- Support page: animated FAQ accordion, contact ticket form (Supabase), keyboard shortcuts reference
-- Changelog page: timeline of versioned releases with tag badges and motion entrance animations
-- Premium animation layer: `AnimatedNumber` spring counters on all KPI cards, `TextAnimate` per-letter entrance on all page titles and section headers, `DirectionAwareTabs` content navigation for AppSettings (6 tabs) and Dashboard (2 tabs), animated pill filter tabs on Billing and Time Tracking
-- Fully responsive: all 22 modules audited and fixed for mobile (375px), tablet (768px), and desktop (1440px)
+- Secure Client Portal: email validation gate, token verification, scope enforcement, and audit activity logging
+- API-driven routes: server-side Next.js endpoints using `supabaseAdmin` service role
+- Proposal Viewer: clients view, sign, or decline proposals with real-time agency notifications
+- Client Portal: Decision Journal, Notifications, Shareable Reports, Timeline, AI Copilot (Claude)
+- Collapsible sidebar with 6 spaces — state persisted in localStorage
+- Support & Knowledge hub: tickets, knowledge base, and FAQ in one context
+- Operations Catalog: services, packages, and fulfillment templates unified
+- Marketplace: built-in + workspace-custom templates, automations, views, and playbooks
+- Team Scorecards: delivery quality and capacity metrics per team member
+- Portfolio Health Scores: per-client and per-project health with 4 dimensions (delivery, financial, engagement, risk)
+- Workflow Analytics: execution stats, success rate, time saved, daily series
+- Premium animation layer: `AnimatedNumber`, `TextAnimate`, `DirectionAwareTabs`
+- Fully responsive: all modules audited for mobile (375px), tablet (768px), and desktop (1440px)
 
 ### Desktop (Electron 42)
 
@@ -47,7 +63,7 @@ Minerva OS is the internal agency platform for [Uprising Studio](https://uprisin
 - 17 screens for iOS and Android
 - 100% bilingual EN / FR via `MobileLangProvider`
 - iOS-native UX: ActionSheetIOS, Haptics, BlurView, SegmentedControl
-- Sentry crash reporting via `@sentry/react-native` — root layout wrapped with `Sentry.wrap()`
+- Sentry crash reporting via `@sentry/react-native`
 - Offline detection, background timer sync
 - EAS build profiles (preview + production)
 - pnpm package manager
@@ -156,18 +172,19 @@ See **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions covering:
 
 | Tag | Date | Highlights |
 |---|---|---|
-| `v2.3.0` | 2026-06-02 | Collapsible sidebar groups, Support and Changelog pages, AnimatedNumber / TextAnimate / DirectionAwareTabs animation layer, full responsive audit across all 22 modules |
-| `v2.2.1` | 2026-06-01 | Automatic mock fallback in all portal API routes for offline or local-only configurations |
-| `v2.2.0` | 2026-06-01 | Secure Client Portal email gate, token scopes, activity logging, and API-driven proposal viewer |
+| `v3.1.0` | 2026-06-04 | Module consolidation — 6-space nav (Home/Revenue/Delivery/Finance/Intelligence/Admin), Finance Hub, Intelligence Hub, Support & Knowledge Hub, Call Preps tab in Clients, Fulfillment tab in Services |
+| `v3.0.0` | 2026-06-04 | Minerva OS as central system — Cockpit operating review, portfolio health scores, workflow analytics, marketplace, team scorecards, DB migration |
+| `v2.7.0` | 2026-06-04 | Client Portal V2 — Decision Journal, Notifications, Shareable Reports, Timeline, AI Copilot (Claude) |
+| `v2.3.0` | 2026-06-02 | Collapsible sidebar groups, Support and Changelog pages, AnimatedNumber / TextAnimate / DirectionAwareTabs animation layer, full responsive audit |
+| `v2.2.0` | 2026-06-01 | Secure Client Portal email gate, token scopes, activity logging, API-driven proposal viewer |
 | `v2.1.0` | 2026-06-01 | Expo 54 upgrade, Sentry wrap, pnpm migration, dev SW cleanup |
-| `v2.0.1` | — | Redesign landing CTA, fix login page, Electron welcome |
 | `v2.0.0` | — | Landing overhaul, animations, i18n toggle, changelog |
 
 To publish a new release:
 
 ```bash
-git tag -a v2.3.0 -m "description"
-git push origin v2.3.0
+git tag -a v3.1.0 -m "description"
+git push origin v3.1.0
 ```
 
 ---

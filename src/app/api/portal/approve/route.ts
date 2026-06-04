@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validatePortalToken, logPortalActivity, notifyWorkspace } from '@/lib/portal-auth';
+import { validatePortalToken, logPortalActivity, notifyWorkspace, notifyPortalClient } from '@/lib/portal-auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { MOCK_APPROVALS } from '@/lib/mock-data';
 
@@ -112,9 +112,34 @@ export async function POST(request: Request) {
 
     // 5. Notify workspace
     const actionText = status === 'approved' ? 'approved' : 'requested changes on';
-    const title = status === 'approved' ? 'Deliverable Approved' : 'Revision Requested';
-    const message = `Client ${project.client_name} ${actionText} "${approval.name}"`;
-    await notifyWorkspace(workspaceId, title, message, `/app/approvals`);
+    const wsTitle = status === 'approved' ? 'Deliverable Approved' : 'Revision Requested';
+    const wsMessage = `Client ${project.client_name} ${actionText} "${approval.name}"`;
+    await notifyWorkspace(workspaceId, wsTitle, wsMessage, `/app/approvals`);
+
+    // 6. Log decision
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/portal/decisions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId, clientId,
+          objectType: 'approval',
+          objectId: approvalId,
+          objectName: approval.name,
+          decision: status,
+          decidedBy: project.client_name,
+        }),
+      });
+    } catch {}
+
+    // 7. Notify client (workspace-side confirmation)
+    await notifyPortalClient({
+      clientId, workspaceId,
+      type: 'approval_action',
+      title: status === 'approved' ? 'Deliverable approved' : 'Changes requested',
+      message: `Your decision on "${approval.name}" has been recorded.`,
+      targetPath: 'deliverables',
+    });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

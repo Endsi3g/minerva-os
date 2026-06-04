@@ -32,6 +32,10 @@ import { useWorkspaces, useClients, useProjects, useAddClient } from '@/lib/hook
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import CallPreps from './CallPreps';
+
+type ClientsView = 'clients' | 'call-preps';
 
 function ClientCardSkeleton() {
   return (
@@ -81,6 +85,7 @@ export default function Clients() {
   const projects = useProjects(workspaceId);
   const addClient = useAddClient();
 
+  const [viewTab, setViewTab] = useState<ClientsView>('clients');
   const [query, setQuery] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewClientForm>(EMPTY_FORM);
@@ -268,12 +273,33 @@ export default function Clients() {
             {cKeys.stats.replace('{{count}}', String(clients ? clients.length : 0))}
           </p>
         </div>
-        <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
-          <Plus size={14} />
-          {cKeys.addClient}
-        </Button>
+        {viewTab === 'clients' && (
+          <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
+            <Plus size={14} />
+            {cKeys.addClient}
+          </Button>
+        )}
       </div>
 
+      {/* Tab switcher */}
+      <div className="flex items-center gap-1 border-b border-white/5 mb-6">
+        {([['clients', cKeys.title], ['call-preps', t.app.sidebar.callPreps]] as [ClientsView, string][]).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setViewTab(key)}
+            className={cn(
+              'px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors',
+              viewTab === key ? 'border-sage text-sage' : 'border-transparent text-fog hover:text-silver'
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {viewTab === 'call-preps' && <CallPreps />}
+
+      {viewTab === 'clients' && <>
       {/* Search */}
       <div className="relative mb-6 max-w-sm">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-fog pointer-events-none" />
@@ -337,6 +363,7 @@ export default function Clients() {
           )}
         </div>
       )}
+      </>}
 
       {/* Add client sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

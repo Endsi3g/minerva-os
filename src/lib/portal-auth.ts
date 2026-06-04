@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { MOCK_PORTAL_TOKENS, MOCK_CLIENTS } from '@/lib/mock-data';
 import { isDemoMode } from '@/lib/demo';
+import type { PortalNotificationType } from '@/lib/types';
 
 const PORTAL_COOKIE = 'minerva_portal_email';
 
@@ -161,6 +162,78 @@ export async function logPortalActivity(params: {
 }
 
 /**
+ * Inserts a portal notification for a client and triggers instant email if prefs say so.
+ */
+export async function notifyPortalClient(params: {
+  clientId: string;
+  workspaceId: string;
+  type: PortalNotificationType;
+  title: string;
+  message: string;
+  targetPath?: string;
+}) {
+  const hasCredentials = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!hasCredentials) {
+    console.log(`[Portal Notification] ${params.clientId}: [${params.type}] ${params.title}`);
+    return;
+  }
+
+  try {
+    const { data: inserted } = await supabaseAdmin
+      .from('portal_notifications')
+      .insert({
+        workspace_id: params.workspaceId,
+        client_id: params.clientId,
+        type: params.type,
+        title: params.title,
+        message: params.message,
+        read: false,
+        target_path: params.targetPath || null,
+      })
+      .select()
+      .single();
+
+    if (!inserted) return;
+
+    const { data: prefs } = await supabaseAdmin
+      .from('portal_notification_prefs')
+      .select('frequency, enabled_types')
+      .eq('client_id', params.clientId)
+      .maybeSingle();
+
+    if (!prefs || prefs.frequency !== 'instant') return;
+    if (Array.isArray(prefs.enabled_types) && !prefs.enabled_types.includes(params.type)) return;
+
+    const { data: client } = await supabaseAdmin
+      .from('clients')
+      .select('email, company')
+      .eq('id', params.clientId)
+      .maybeSingle();
+
+    if (!client?.email) return;
+
+    const { data: tokenRow } = await supabaseAdmin
+      .from('portal_tokens')
+      .select('token')
+      .eq('client_id', params.clientId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const targetUrl = tokenRow
+      ? `${baseUrl}/portal/${tokenRow.token}${params.targetPath ? '/' + params.targetPath : ''}`
+      : baseUrl;
+
+    const { sendInstantNotification } = await import('@/lib/portal-email');
+    await sendInstantNotification(client.email, params.title, params.message, targetUrl);
+  } catch (e) {
+    console.warn('[notifyPortalClient] failed:', e);
+  }
+}
+
+/**
  * Creates notifications for all team members in a workspace.
  */
 export async function notifyWorkspace(
@@ -179,7 +252,7 @@ export async function notifyWorkspace(
         .eq('workspace_id', workspaceId);
 
       if (users && users.length > 0) {
-        const notificationsToInsert = users.map(u => ({
+        const notificationsToInsert = users.map((u: { id: string }) => ({
           workspace_id: workspaceId,
           user_id: u.id,
           title,

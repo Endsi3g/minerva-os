@@ -1,18 +1,53 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { notifyWorkspace } from '@/lib/portal-auth';
+import { notifyWorkspace, validatePortalToken } from '@/lib/portal-auth';
 import { MOCK_PROPOSALS } from '@/lib/mock-data';
 
 export async function POST(request: Request) {
   try {
-    const { token, status, signedBy } = await request.json();
+    const body = await request.json();
+    // Supports two formats:
+    // Portal format: { token: portalToken, proposalId, action: 'sign' | 'decline' }
+    // Legacy format: { token: proposalToken, status: 'signed' | 'declined', signedBy? }
+    const isPortalFormat = !!body.proposalId;
 
-    if (!token || !status) {
-      return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
+    let portalClientId: string | null = null;
+    let portalClientName = 'Client';
+    let proposalId: string | null = null;
+    let status: 'signed' | 'declined';
+    let signedBy: string | undefined;
+
+    if (isPortalFormat) {
+      const authResult = await validatePortalToken(body.token);
+      if (!authResult.valid || !authResult.verifiedEmail) {
+        return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+      }
+      portalClientId = authResult.tokenData!.client_id;
+      const hasC = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (hasC) {
+        try {
+          const { data: c } = await supabaseAdmin.from('clients').select('company, contact').eq('id', portalClientId).maybeSingle();
+          if (c) portalClientName = c.contact || c.company || 'Client';
+        } catch {}
+      } else {
+        const { MOCK_CLIENTS } = await import('@/lib/mock-data');
+        const mc = MOCK_CLIENTS.find(c => c.id === portalClientId);
+        if (mc) portalClientName = mc.contact || mc.company || 'Client';
+      }
+      proposalId = body.proposalId;
+      status = body.action === 'sign' ? 'signed' : 'declined';
+      signedBy = portalClientName;
+    } else {
+      const { token: propToken, status: s, signedBy: sb } = body;
+      if (!propToken || !s) return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
+      if (s !== 'signed' && s !== 'declined') return NextResponse.json({ error: 'invalid_status' }, { status: 400 });
+      status = s;
+      signedBy = sb;
+      proposalId = null;
     }
 
-    if (status !== 'signed' && status !== 'declined') {
-      return NextResponse.json({ error: 'invalid_status' }, { status: 400 });
+    if (status === 'signed' && (!signedBy || !signedBy.trim())) {
+      return NextResponse.json({ error: 'missing_signer_name' }, { status: 400 });
     }
 
     // 1. Fetch proposal
@@ -23,14 +58,16 @@ export async function POST(request: Request) {
 
     if (hasCredentials) {
       try {
-        const { data: dbProposal, error: propErr } = await supabaseAdmin
-          .from('proposals')
-          .select('*')
-          .eq('token', token)
-          .maybeSingle();
+        const query = isPortalFormat
+          ? supabaseAdmin.from('proposals').select('*').eq('id', proposalId).maybeSingle()
+          : supabaseAdmin.from('proposals').select('*').eq('token', body.token).maybeSingle();
 
+        const { data: dbProposal, error: propErr } = await query;
         if (!propErr && dbProposal) {
           proposal = dbProposal;
+          if (portalClientId && proposal.client_id !== portalClientId) {
+            return NextResponse.json({ error: 'unauthorized' }, { status: 403 });
+          }
         }
       } catch (e) {
         console.warn('Failed to fetch proposal from Supabase, falling back to mock:', e);
@@ -38,7 +75,9 @@ export async function POST(request: Request) {
     }
 
     if (!proposal) {
-      const mockProp = MOCK_PROPOSALS.find(p => p.token === token);
+      const mockProp = isPortalFormat
+        ? MOCK_PROPOSALS.find(p => p.id === proposalId)
+        : MOCK_PROPOSALS.find(p => p.token === body.token);
       if (mockProp) {
         proposal = mockProp;
         isMock = true;
@@ -51,32 +90,24 @@ export async function POST(request: Request) {
 
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null;
     const ua = request.headers.get('user-agent') || null;
+    const signer = (signedBy || '').trim();
 
     // 2. Perform updates
     if (status === 'signed') {
-      if (!signedBy || !signedBy.trim()) {
-        return NextResponse.json({ error: 'missing_signer_name' }, { status: 400 });
-      }
-
       if (!isMock && hasCredentials) {
         try {
           const { error: updateErr } = await supabaseAdmin
             .from('proposals')
-            .update({
-              status: 'signed',
-              signed_at: new Date().toISOString(),
-              signed_by: signedBy.trim(),
-            })
-            .eq('token', token);
+            .update({ status: 'signed', signed_at: new Date().toISOString(), signed_by: signer })
+            .eq('id', proposal.id);
 
           if (updateErr) throw updateErr;
 
-          // Log activity
           await supabaseAdmin.from('portal_activity_log').insert({
             workspace_id: proposal.workspace_id,
             client_id: proposal.client_id,
             event: 'proposal_signed',
-            metadata: { proposalId: proposal.id, title: proposal.title, signedBy: signedBy.trim() },
+            metadata: { proposalId: proposal.id, title: proposal.title, signedBy: signer },
             ip_address: ip,
             user_agent: ua,
           });
@@ -85,16 +116,15 @@ export async function POST(request: Request) {
         }
       } else {
         proposal.status = 'signed';
-        proposal.signed_by = signedBy.trim();
+        proposal.signed_by = signer;
         proposal.signed_at = new Date().toISOString();
-        console.log(`[Proposal Signed] ID: ${proposal.id}, SignedBy: ${signedBy.trim()}`);
+        console.log(`[Proposal Signed] ID: ${proposal.id}, SignedBy: ${signer}`);
       }
 
-      // Notify workspace
       await notifyWorkspace(
         proposal.workspace_id,
         'Proposal Signed',
-        `Proposal "${proposal.title}" has been signed by ${signedBy.trim()}`,
+        `Proposal "${proposal.title}" has been signed by ${signer}`,
         `/app/proposals`
       );
     } else {
@@ -102,14 +132,11 @@ export async function POST(request: Request) {
         try {
           const { error: updateErr } = await supabaseAdmin
             .from('proposals')
-            .update({
-              status: 'declined',
-            })
-            .eq('token', token);
+            .update({ status: 'declined' })
+            .eq('id', proposal.id);
 
           if (updateErr) throw updateErr;
 
-          // Log activity
           await supabaseAdmin.from('portal_activity_log').insert({
             workspace_id: proposal.workspace_id,
             client_id: proposal.client_id,
@@ -126,7 +153,6 @@ export async function POST(request: Request) {
         console.log(`[Proposal Declined] ID: ${proposal.id}`);
       }
 
-      // Notify workspace
       await notifyWorkspace(
         proposal.workspace_id,
         'Proposal Declined',
