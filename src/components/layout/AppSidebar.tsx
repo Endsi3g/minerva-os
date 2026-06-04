@@ -25,6 +25,11 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Briefcase,
+  FolderOpen,
+  Globe,
+  DollarSign,
+  Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLang } from '@/i18n';
@@ -55,6 +60,10 @@ export function AppSidebar() {
   const [newWorkspaceOpen, setNewWorkspaceOpen] = useState(false);
   const [workforceOpen, setWorkforceOpen] = useState(true);
   const [accountOpen, setAccountOpen] = useState(true);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  const SMB_SIZES = ['solo', '2-5', '6-15'];
+  const isSMB = SMB_SIZES.includes(workspace?.teamSize ?? '');
 
   const workspaceInitials = workspace?.name
     ? workspace.name
@@ -211,47 +220,19 @@ export function AppSidebar() {
 
       {/* Navigation List */}
       <nav className="flex-1 overflow-y-auto px-2 py-3.5 space-y-4 scrollbar-thin">
-        
-        {/* General Items */}
-        <div className="space-y-0.5">
-          {mainNavItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
-                  isActive
-                    ? 'text-ivory bg-white/8 font-semibold'
-                    : 'text-silver hover:text-ivory hover:bg-white/4'
-                )}
-              >
-                <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
-        </div>
 
-        {/* Workforce Section */}
-        <div className="space-y-0.5">
-          {!collapsed && (
-            <button
-              onClick={() => setWorkforceOpen(!workforceOpen)}
-              className="w-full flex items-center justify-between px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-fog hover:text-silver cursor-pointer"
-            >
-              <span>Workforce</span>
-              <ChevronDown
-                size={10}
-                className={cn('transition-transform duration-200', !workforceOpen && '-rotate-90')}
-              />
-            </button>
-          )}
-
-          {(workforceOpen || collapsed) && (
+        {isSMB ? (
+          /* ── SMB Simplified Navigation ── */
+          <>
+            {/* Core 5 items */}
             <div className="space-y-0.5">
-              {workforceItems.map((item) => {
+              {[
+                { href: '/app/dashboard', label: sidebar.dashboard, icon: Home },
+                { href: '/app/clients', label: 'Clients', icon: Briefcase },
+                { href: '/app/projects', label: 'Projects', icon: FolderOpen },
+                { href: '/app/approvals', label: 'Client Portal', icon: Globe },
+                { href: '/app/finance-hub', label: 'Finances', icon: DollarSign },
+              ].map(item => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
                   <Link
@@ -259,81 +240,82 @@ export function AppSidebar() {
                     href={item.href}
                     className={cn(
                       'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
-                      isActive
-                        ? 'text-ivory bg-white/8 font-semibold'
-                        : 'text-silver hover:text-ivory hover:bg-white/4'
+                      isActive ? 'text-ivory bg-white/8 font-semibold' : 'text-silver hover:text-ivory hover:bg-white/4'
                     )}
                   >
                     <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
-                    {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
-                    {!collapsed && item.hasDropdown && (
-                      <ChevronRight size={10} className="text-fog" />
-                    )}
+                    {!collapsed && <span>{item.label}</span>}
                   </Link>
                 );
               })}
-
-              {/* More Popover for remaining modules */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={cn(
-                      'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors text-silver hover:text-ivory hover:bg-white/4 cursor-pointer',
-                      isMoreActive && 'text-ivory bg-white/8'
-                    )}
-                  >
-                    <MoreHorizontal size={14} className={isMoreActive ? 'text-[#7FA38A]' : 'text-fog'} />
-                    {!collapsed && <span className="flex-1 text-left">More</span>}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="start" className="w-48 bg-[#111522] border-white/5 text-silver z-50">
-                  <DropdownMenuLabel className="text-[10px] text-fog font-bold uppercase tracking-wider px-2.5 py-1">More Modules</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-white/5" />
-                  <DropdownMenuItem onClick={() => router.push('/app/proposals')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
-                    <span>Proposals</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/app/time-tracking')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
-                    <span>Time Tracking</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/app/expenses')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
-                    <span>Expenses</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/app/nps')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
-                    <span>NPS Responses</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/app/changelog')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
-                    <span>Changelog</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/app/services')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
-                    <span>Services</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/app/billing')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
-                    <span>Billing / Subscriptions</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
-          )}
-        </div>
 
-        {/* Account Section */}
-        <div className="space-y-0.5">
-          {!collapsed && (
-            <button
-              onClick={() => setAccountOpen(!accountOpen)}
-              className="w-full flex items-center justify-between px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-fog hover:text-silver cursor-pointer"
-            >
-              <span>Account</span>
-              <ChevronDown
-                size={10}
-                className={cn('transition-transform duration-200', !accountOpen && '-rotate-90')}
-              />
-            </button>
-          )}
-
-          {(accountOpen || collapsed) && (
+            {/* Advanced / More section (collapsed by default) */}
             <div className="space-y-0.5">
-              {accountItems.map((item) => {
+              {!collapsed && (
+                <button
+                  onClick={() => setAdvancedOpen(!advancedOpen)}
+                  className="w-full flex items-center justify-between px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-fog hover:text-silver cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5"><Lock size={8} /> Advanced</span>
+                  <ChevronDown size={10} className={cn('transition-transform duration-200', !advancedOpen && '-rotate-90')} />
+                </button>
+              )}
+              {(advancedOpen || collapsed) && (
+                <div className="space-y-0.5">
+                  {[
+                    { href: '/app/pipeline', label: 'Pipeline', icon: Activity },
+                    { href: '/app/tasks', label: 'Tasks', icon: Activity },
+                    { href: '/app/proposals', label: 'Proposals', icon: Briefcase },
+                    { href: '/app/marketplace', label: 'Marketplace', icon: ShoppingBag },
+                    { href: '/app/agents', label: 'Agents', icon: Bot },
+                    { href: '/app/copilot', label: 'Chat', icon: MessageSquare },
+                    { href: '/app/workflows', label: 'Workflows', icon: Hammer },
+                    { href: '/app/intelligence', label: 'Intelligence', icon: BarChart2 },
+                  ].map(item => {
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
+                          isActive ? 'text-ivory bg-white/8 font-semibold' : 'text-silver hover:text-ivory hover:bg-white/4'
+                        )}
+                      >
+                        <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                        {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Bottom settings */}
+            <div className="pt-2 border-t border-white/5 space-y-0.5">
+              {[
+                { href: '/app/settings', label: 'Settings', icon: Settings },
+                { href: '/app/support-hub', label: 'Ask for help', icon: HelpCircle },
+              ].map(item => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link key={item.href} href={item.href}
+                    className={cn('flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors', isActive ? 'text-ivory bg-white/8 font-semibold' : 'text-silver hover:text-ivory hover:bg-white/4')}
+                  >
+                    <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          /* ── Full Agency Navigation ── */
+          <>
+            {/* General Items */}
+            <div className="space-y-0.5">
+              {mainNavItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
@@ -352,30 +334,151 @@ export function AppSidebar() {
                 );
               })}
             </div>
-          )}
-        </div>
 
-        {/* Bottom items */}
-        <div className="pt-2 border-t border-white/5 space-y-0.5">
-          {bottomItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
-                  isActive
-                    ? 'text-ivory bg-white/8 font-semibold'
-                    : 'text-silver hover:text-ivory hover:bg-white/4'
-                )}
-              >
-                <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
-                {!collapsed && <span className="truncate">{item.label}</span>}
-              </Link>
-            );
-          })}
-        </div>
+            {/* Workforce Section */}
+            <div className="space-y-0.5">
+              {!collapsed && (
+                <button
+                  onClick={() => setWorkforceOpen(!workforceOpen)}
+                  className="w-full flex items-center justify-between px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-fog hover:text-silver cursor-pointer"
+                >
+                  <span>Workforce</span>
+                  <ChevronDown
+                    size={10}
+                    className={cn('transition-transform duration-200', !workforceOpen && '-rotate-90')}
+                  />
+                </button>
+              )}
+
+              {(workforceOpen || collapsed) && (
+                <div className="space-y-0.5">
+                  {workforceItems.map((item) => {
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
+                          isActive
+                            ? 'text-ivory bg-white/8 font-semibold'
+                            : 'text-silver hover:text-ivory hover:bg-white/4'
+                        )}
+                      >
+                        <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                        {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                        {!collapsed && item.hasDropdown && (
+                          <ChevronRight size={10} className="text-fog" />
+                        )}
+                      </Link>
+                    );
+                  })}
+
+                  {/* More Popover for remaining modules */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className={cn(
+                          'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors text-silver hover:text-ivory hover:bg-white/4 cursor-pointer',
+                          isMoreActive && 'text-ivory bg-white/8'
+                        )}
+                      >
+                        <MoreHorizontal size={14} className={isMoreActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                        {!collapsed && <span className="flex-1 text-left">More</span>}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="start" className="w-48 bg-[#111522] border-white/5 text-silver z-50">
+                      <DropdownMenuLabel className="text-[10px] text-fog font-bold uppercase tracking-wider px-2.5 py-1">More Modules</DropdownMenuLabel>
+                      <DropdownMenuSeparator className="bg-white/5" />
+                      <DropdownMenuItem onClick={() => router.push('/app/proposals')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                        <span>Proposals</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/app/time-tracking')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                        <span>Time Tracking</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/app/expenses')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                        <span>Expenses</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/app/nps')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                        <span>NPS Responses</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/app/changelog')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                        <span>Changelog</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/app/services')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                        <span>Services</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/app/billing')} className="flex items-center gap-2 hover:bg-white/5 text-xs text-silver hover:text-ivory cursor-pointer">
+                        <span>Billing / Subscriptions</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
+            </div>
+
+            {/* Account Section */}
+            <div className="space-y-0.5">
+              {!collapsed && (
+                <button
+                  onClick={() => setAccountOpen(!accountOpen)}
+                  className="w-full flex items-center justify-between px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-fog hover:text-silver cursor-pointer"
+                >
+                  <span>Account</span>
+                  <ChevronDown
+                    size={10}
+                    className={cn('transition-transform duration-200', !accountOpen && '-rotate-90')}
+                  />
+                </button>
+              )}
+
+              {(accountOpen || collapsed) && (
+                <div className="space-y-0.5">
+                  {accountItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
+                          isActive
+                            ? 'text-ivory bg-white/8 font-semibold'
+                            : 'text-silver hover:text-ivory hover:bg-white/4'
+                        )}
+                      >
+                        <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                        {!collapsed && <span>{item.label}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Bottom items */}
+            <div className="pt-2 border-t border-white/5 space-y-0.5">
+              {bottomItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors',
+                      isActive
+                        ? 'text-ivory bg-white/8 font-semibold'
+                        : 'text-silver hover:text-ivory hover:bg-white/4'
+                    )}
+                  >
+                    <item.icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )}
       </nav>
 
       {/* Footer Plan Card */}

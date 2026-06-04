@@ -137,6 +137,8 @@ export function DiscoveryOnboarding() {
   const [features, setFeatures] = useState<string[]>([]);
   const [goal, setGoal] = useState('');
 
+  const isSMB = ['solo', '2-5', '6-15'].includes(teamSize);
+
   useEffect(() => {
     if (!user) return;
     const userId = user.id;
@@ -402,12 +404,14 @@ export function DiscoveryOnboarding() {
 
             {step === 3 && (
               <StepWrapper
-                heading={d.step4.heading}
-                subheading={d.step4.subheading}
+                heading={isSMB ? t.smb.discovery.step4.heading : d.step4.heading}
+                subheading={isSMB ? t.smb.discovery.step4.subheading : d.step4.subheading}
               >
-                <p style={{ color: '#B8BDC7', fontSize: 12, marginBottom: 10 }}>{d.step4.featuresLabel}</p>
+                <p style={{ color: '#B8BDC7', fontSize: 12, marginBottom: 10 }}>
+                  {isSMB ? t.smb.discovery.step4.featuresLabel : d.step4.featuresLabel}
+                </p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-                  {d.step4.options.map(opt => (
+                  {(isSMB ? t.smb.discovery.step4.options : d.step4.options).map(opt => (
                     <OptionCard
                       key={opt.value}
                       label={opt.label}
@@ -418,12 +422,12 @@ export function DiscoveryOnboarding() {
                   ))}
                 </div>
                 <label style={{ color: '#B8BDC7', fontSize: 13, display: 'block', marginBottom: 6 }}>
-                  {d.step4.goalLabel}
+                  {isSMB ? t.smb.discovery.step4.goalLabel : d.step4.goalLabel}
                 </label>
                 <textarea
                   value={goal}
                   onChange={e => setGoal(e.target.value)}
-                  placeholder={d.step4.goalPlaceholder}
+                  placeholder={isSMB ? t.smb.discovery.step4.goalPlaceholder : d.step4.goalPlaceholder}
                   rows={3}
                   style={{
                     width: '100%',
