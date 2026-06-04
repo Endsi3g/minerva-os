@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Search, FileText, Send, Copy, Trash2, X, Check, FileDown, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -282,12 +283,13 @@ function ProposalForm({
 export default function Proposals() {
   const { t } = useLang();
   const p = t.app.proposals;
+  const searchParams = useSearchParams();
 
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [query, setQuery] = useState('');
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(searchParams.get('copilot') === '1');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {

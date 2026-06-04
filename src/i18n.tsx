@@ -374,6 +374,26 @@ const translations = {
         clientPortal: 'Client Portal',
         finances: 'Finances',
       },
+      solo: {
+        sidebar: {
+          advancedLabel: 'More',
+          clients: 'Clients',
+          mandates: 'Mandates',
+          revenue: 'Revenue',
+          proposals: 'Proposals',
+          dashboard: 'Dashboard',
+        },
+        onboarding: {
+          title: 'Set up your studio in 4 steps.',
+          subtitle: 'Add a client, draft a proposal, and share your portal link.',
+          steps: ['Name your studio', 'Add your first client', 'Draft a proposal', 'Share the portal'] as string[],
+          studio: { label: 'Your studio name', placeholder: 'Uprising Studio' },
+          client: { nameLabel: 'Client name', namePlaceholder: 'Acme Inc.', emailLabel: 'Client email (optional)', emailPlaceholder: 'hello@acme.com' },
+          proposal: { label: 'Open Proposal Copilot', hint: 'Hermes drafts scope, timeline and pricing in seconds.' },
+          portal: { label: 'Portal link ready', hint: 'Your client gets a private, branded link.', copy: 'Copy link', copied: 'Copied' },
+          cta: { next: 'Continue', finish: 'Open my studio', skip: 'Skip for now', saving: 'Saving...' },
+        },
+      },
     },
     comments: {
       empty: 'No comments yet.',
@@ -2403,6 +2423,26 @@ const translations = {
         projects: 'Projets',
         clientPortal: 'Portail Client',
         finances: 'Finances',
+      },
+      solo: {
+        sidebar: {
+          advancedLabel: 'Plus',
+          clients: 'Clients',
+          mandates: 'Mandats',
+          revenue: 'Revenus',
+          proposals: 'Propositions',
+          dashboard: 'Tableau de bord',
+        },
+        onboarding: {
+          title: 'Configure ton studio en 4 etapes.',
+          subtitle: 'Ajoute un client, redige une proposition et partage ton lien de portail.',
+          steps: ['Nommer ton studio', 'Ajouter ton premier client', 'Rediger une proposition', 'Partager le portail'] as string[],
+          studio: { label: 'Nom de ton studio', placeholder: 'Uprising Studio' },
+          client: { nameLabel: 'Nom du client', namePlaceholder: 'Acme Inc.', emailLabel: 'Email du client (optionnel)', emailPlaceholder: 'bonjour@acme.com' },
+          proposal: { label: 'Ouvrir le Copilote de Proposition', hint: 'Hermes redige le scope, le calendrier et les prix en quelques secondes.' },
+          portal: { label: 'Lien du portail pret', hint: 'Ton client recoit un lien prive et marque.', copy: 'Copier le lien', copied: 'Copie' },
+          cta: { next: 'Continuer', finish: 'Ouvrir mon studio', skip: 'Passer pour l\'instant', saving: 'Sauvegarde...' },
+        },
       },
     },
     comments: {

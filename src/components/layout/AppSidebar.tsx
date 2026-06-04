@@ -64,6 +64,7 @@ export function AppSidebar() {
 
   const SMB_SIZES = ['solo', '2-5', '6-15'];
   const isSMB = SMB_SIZES.includes(workspace?.teamSize ?? '');
+  const isSolo = workspace?.teamSize === 'solo';
 
   const workspaceInitials = workspace?.name
     ? workspace.name
@@ -222,17 +223,21 @@ export function AppSidebar() {
       <nav className="flex-1 overflow-y-auto px-2 py-3.5 space-y-4 scrollbar-thin">
 
         {isSMB ? (
-          /* ── SMB Simplified Navigation ── */
+          /* ── SMB / Solo Simplified Navigation ── */
           <>
-            {/* Core 5 items */}
+            {/* Core nav items — 3 for solo, 5 for small teams */}
             <div className="space-y-0.5">
-              {[
+              {(isSolo ? [
+                { href: '/app/clients', label: t.smb.solo.sidebar.clients, icon: Briefcase },
+                { href: '/app/projects', label: t.smb.solo.sidebar.mandates, icon: FolderOpen },
+                { href: '/app/finance-hub', label: t.smb.solo.sidebar.revenue, icon: DollarSign },
+              ] : [
                 { href: '/app/dashboard', label: sidebar.dashboard, icon: Home },
-                { href: '/app/clients', label: 'Clients', icon: Briefcase },
-                { href: '/app/projects', label: 'Projects', icon: FolderOpen },
-                { href: '/app/approvals', label: 'Client Portal', icon: Globe },
-                { href: '/app/finance-hub', label: 'Finances', icon: DollarSign },
-              ].map(item => {
+                { href: '/app/clients', label: t.smb.sidebar.clients, icon: Briefcase },
+                { href: '/app/projects', label: t.smb.sidebar.projects, icon: FolderOpen },
+                { href: '/app/approvals', label: t.smb.sidebar.clientPortal, icon: Globe },
+                { href: '/app/finance-hub', label: t.smb.sidebar.finances, icon: DollarSign },
+              ]).map(item => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
                   <Link
@@ -257,13 +262,21 @@ export function AppSidebar() {
                   onClick={() => setAdvancedOpen(!advancedOpen)}
                   className="w-full flex items-center justify-between px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-fog hover:text-silver cursor-pointer"
                 >
-                  <span className="flex items-center gap-1.5"><Lock size={8} /> Advanced</span>
+                  <span className="flex items-center gap-1.5"><Lock size={8} /> {isSolo ? t.smb.solo.sidebar.advancedLabel : t.smb.sidebar.advancedLabel}</span>
                   <ChevronDown size={10} className={cn('transition-transform duration-200', !advancedOpen && '-rotate-90')} />
                 </button>
               )}
               {(advancedOpen || collapsed) && (
                 <div className="space-y-0.5">
-                  {[
+                  {(isSolo ? [
+                    { href: '/app/dashboard', label: t.smb.solo.sidebar.dashboard, icon: Home },
+                    { href: '/app/proposals', label: t.smb.solo.sidebar.proposals, icon: Briefcase },
+                    { href: '/app/approvals', label: t.smb.sidebar.clientPortal, icon: Globe },
+                    { href: '/app/pipeline', label: 'Pipeline', icon: Activity },
+                    { href: '/app/tasks', label: 'Tasks', icon: Activity },
+                    { href: '/app/agents', label: 'Agents', icon: Bot },
+                    { href: '/app/copilot', label: 'Chat', icon: MessageSquare },
+                  ] : [
                     { href: '/app/pipeline', label: 'Pipeline', icon: Activity },
                     { href: '/app/tasks', label: 'Tasks', icon: Activity },
                     { href: '/app/proposals', label: 'Proposals', icon: Briefcase },
@@ -272,7 +285,7 @@ export function AppSidebar() {
                     { href: '/app/copilot', label: 'Chat', icon: MessageSquare },
                     { href: '/app/workflows', label: 'Workflows', icon: Hammer },
                     { href: '/app/intelligence', label: 'Intelligence', icon: BarChart2 },
-                  ].map(item => {
+                  ]).map(item => {
                     const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                     return (
                       <Link

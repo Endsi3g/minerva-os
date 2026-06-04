@@ -20,6 +20,7 @@ import {
   Hammer,
 } from 'lucide-react';
 import { GettingStartedChecklist } from '@/components/minerva/GettingStartedChecklist';
+import { SoloQuickStart, useSoloQuickStart } from '@/components/minerva/SoloQuickStart';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -496,6 +497,8 @@ function SMBDashboard({
   const hour = new Date().getHours();
   const greeting = hour < 12 ? d.greetingMorning : hour < 18 ? d.greetingAfternoon : d.greetingEvening;
   const displayName = user?.name ?? workspace?.name ?? 'Studio';
+  const isSolo = workspace?.teamSize === 'solo';
+  const { visible: soloQsVisible, dismiss: dismissSoloQs } = useSoloQuickStart(workspaceId);
 
   return (
     <div className="space-y-6 w-full px-6 py-6 max-w-[1200px] mx-auto select-none">
@@ -507,6 +510,17 @@ function SMBDashboard({
       >
         <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-2xl font-semibold text-ivory tracking-tight" />
       </motion.div>
+
+      {/* Solo Quick Start (only shows for solo users who haven't dismissed it) */}
+      <AnimatePresence>
+        {isSolo && soloQsVisible && workspaceId && (
+          <SoloQuickStart
+            workspaceId={workspaceId}
+            workspaceName={workspace?.name ?? ''}
+            onDismiss={dismissSoloQs}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Top row: action queue + revenue snapshot */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
