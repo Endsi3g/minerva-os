@@ -618,6 +618,7 @@ const translations = {
           generating: 'Generating your briefing...',
           error: 'Could not load briefing.',
           lastGenerated: 'Generated {{ago}}',
+          nothingToReport: 'Nothing to report.',
           sections: {
             urgences:     { title: 'Urgencies',         empty: 'No urgent items.' },
             derive:       { title: 'Projects at Risk',  empty: 'All projects on track.' },
@@ -2814,6 +2815,7 @@ const translations = {
           generating: 'Generation du briefing en cours...',
           error: 'Impossible de charger le briefing.',
           lastGenerated: 'Généré {{ago}}',
+          nothingToReport: 'Aucun element a signaler.',
           sections: {
             urgences:     { title: 'Urgences',           empty: 'Aucun element urgent.' },
             derive:       { title: 'Projets en derive',  empty: 'Tous les projets sont en bonne voie.' },

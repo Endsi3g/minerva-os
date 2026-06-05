@@ -196,11 +196,19 @@ const SECTION_COLORS: Record<string, { badge: string; bg: string }> = {
   approbations: { badge: '#8A9099', bg: 'rgba(138,144,153,0.10)' },
 };
 
-function minervaDailySessionKey(wsId: string) { return `minerva_daily_${wsId}`; }
+function minervaDailySessionKey(wsId: string, lang: string, role: string) {
+  return `minerva_daily_${wsId}_${lang}_${role}`;
+}
 
-function relativeDailyTime(iso: string): string {
+function relativeDailyTime(iso: string, lang: 'en' | 'fr'): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
+  if (lang === 'fr') {
+    if (mins < 1) return "a l'instant";
+    if (mins < 60) return `il y a ${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    return hrs < 24 ? `il y a ${hrs}h` : `il y a ${Math.floor(hrs / 24)}j`;
+  }
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
@@ -219,7 +227,7 @@ function MinervaDaily({ workspaceId, userRole }: { workspaceId: string; userRole
     if (!workspaceId) return;
     if (!force) {
       try {
-        const cached = sessionStorage.getItem(minervaDailySessionKey(workspaceId));
+        const cached = sessionStorage.getItem(minervaDailySessionKey(workspaceId, lang, userRole ?? 'owner'));
         if (cached) {
           const parsed = JSON.parse(cached) as BriefingResult;
           if (Date.now() - new Date(parsed.generatedAt).getTime() < 30 * 60 * 1000) {
@@ -240,7 +248,7 @@ function MinervaDaily({ workspaceId, userRole }: { workspaceId: string; userRole
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setBriefing(data);
-      try { sessionStorage.setItem(minervaDailySessionKey(workspaceId), JSON.stringify(data)); } catch { /* ignore */ }
+      try { sessionStorage.setItem(minervaDailySessionKey(workspaceId, lang, userRole ?? 'owner'), JSON.stringify(data)); } catch { /* ignore */ }
     } catch {
       setErr(true);
     } finally {
@@ -338,7 +346,7 @@ function MinervaDaily({ workspaceId, userRole }: { workspaceId: string; userRole
                       >
                         <div className="px-5 pb-4 pt-2 space-y-2">
                           {section.items.length === 0 ? (
-                            <p className="text-[11px] text-fog">{sl?.empty ?? 'Nothing to report.'}</p>
+                            <p className="text-[11px] text-fog">{sl?.empty ?? d.nothingToReport}</p>
                           ) : (
                             <>
                               {section.items.map((item, j) => (
@@ -372,7 +380,7 @@ function MinervaDaily({ workspaceId, userRole }: { workspaceId: string; userRole
 
             {briefing.generatedAt && (
               <p className="px-5 py-2 text-[10px] text-fog">
-                {d.lastGenerated.replace('{{ago}}', relativeDailyTime(briefing.generatedAt))}
+                {d.lastGenerated.replace('{{ago}}', relativeDailyTime(briefing.generatedAt, lang))}
               </p>
             )}
           </div>
