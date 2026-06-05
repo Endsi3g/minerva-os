@@ -1684,6 +1684,11 @@ const translations = {
           help: 'Help',
         },
       },
+      agentBuilder: {
+        nameRequired: 'Agent name is required.',
+        saveSuccess: 'Agent saved.',
+        saveError: 'Could not save agent.',
+      },
     },
     portal: {
       common: {
@@ -1927,11 +1932,6 @@ const translations = {
         emptyState: 'Ask me about your project status, deliverables, invoices, or any documents.',
         poweredBy: 'Powered by Claude',
         thinking: 'Thinking...',
-      },
-      agentBuilder: {
-        nameRequired: 'Agent name is required.',
-        saveSuccess: 'Agent saved.',
-        saveError: 'Could not save agent.',
       },
     },
     welcome: {
@@ -3881,6 +3881,11 @@ const translations = {
           help: 'Aide',
         },
       },
+      agentBuilder: {
+        nameRequired: 'Le nom de l\'agent est requis.',
+        saveSuccess: 'Agent sauvegardé.',
+        saveError: 'Impossible de sauvegarder l\'agent.',
+      },
     },
     portal: {
       common: {
@@ -4124,12 +4129,6 @@ const translations = {
         emptyState: 'Interrogez-moi sur l\'état de vos projets, vos livrables, vos factures ou vos documents.',
         poweredBy: 'Propulsé par Claude',
         thinking: 'Réflexion...',
-      },
-      searchCommands: 'Recherche & Commandes',
-      agentBuilder: {
-        nameRequired: 'Le nom de l\'agent est requis.',
-        saveSuccess: 'Agent sauvegardé.',
-        saveError: 'Impossible de sauvegarder l\'agent.',
       },
     },
     welcome: {
