@@ -18,6 +18,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLang } from '@/i18n';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -51,6 +52,7 @@ function MobileBottomNav() {
   const { setOpen: openPalette } = useCommandPalette();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
+  const { t } = useLang();
 
   return (
     <nav
@@ -84,7 +86,8 @@ function MobileBottomNav() {
           onClick={() => openPalette(true)}
           className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors"
           style={{ color: '#9FA8B5' }}
-          aria-label="Search"
+          aria-label={t.app.searchCommands}
+          title={t.app.searchCommands}
         >
           <Search size={20} strokeWidth={1.5} />
           <span style={{ fontSize: 10 }}>Search</span>

@@ -1,10 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { Plus, Search, FileText, Send, Copy, Trash2, X, Check, FileDown, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { TextAnimate } from '@/components/ui/text-animate';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
@@ -195,7 +197,8 @@ function ProposalForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title || !totalAmount) return;
+    if (!title) { toast.error(f.titleRequired); return; }
+    if (!totalAmount) { toast.error(f.amountRequired); return; }
     setSaving(true);
     try {
       const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -220,12 +223,12 @@ function ProposalForm({
           clientId: data.client_id,
           totalAmount: Number(data.total_amount),
         });
+        onClose();
       }
     } catch (err) {
       console.error(err);
     } finally {
       setSaving(false);
-      onClose();
     }
   }
 
@@ -398,6 +401,7 @@ export default function Proposals() {
   const [query, setQuery] = useState('');
   const [showForm, setShowForm] = useState(searchParams.get('copilot') === '1');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.from('workspaces').select('*').then(({ data }) => {
@@ -450,6 +454,7 @@ export default function Proposals() {
       setProposals(prev =>
         prev.map(pr => pr._id === proposalId ? { ...pr, status: 'sent' } : pr)
       );
+      toast.success(p.form.sendSuccess);
     }
   }
 
@@ -460,6 +465,7 @@ export default function Proposals() {
       .eq('id', proposalId);
     if (!error) {
       setProposals(prev => prev.filter(pr => pr._id !== proposalId));
+      toast.success(p.form.removeSuccess);
     }
   }
 
@@ -486,6 +492,21 @@ export default function Proposals() {
 
   return (
     <>
+      <AlertDialog open={confirmDeleteId !== null} onOpenChange={open => { if (!open) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{p.form.removeConfirm}</AlertDialogTitle>
+            <AlertDialogDescription>{p.form.removeConfirmDesc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{p.form.cancel}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => { if (confirmDeleteId) removeProposal(confirmDeleteId); setConfirmDeleteId(null); }}>
+              {p.actions.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {showForm && workspaceId && (
         <ProposalForm
           workspaceId={workspaceId}
@@ -572,7 +593,7 @@ export default function Proposals() {
                     <FileDown size={12} />
                   </button>
                   <button
-                    onClick={() => removeProposal(proposal._id)}
+                    onClick={() => setConfirmDeleteId(proposal._id)}
                     className="h-7 w-7 flex items-center justify-center rounded-md text-fog hover:text-ember hover:bg-ember/10 transition-colors"
                   >
                     <Trash2 size={12} />

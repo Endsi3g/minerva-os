@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { TextureOverlay } from '@/components/ui/texture-overlay';
 import { toast } from 'sonner';
+import { useLang } from '@/i18n';
 import { useSidebar } from '@/components/layout/AppShell';
 import { AgentSandboxChat } from '@/components/agents/AgentSandboxChat';
 
@@ -48,6 +49,7 @@ export default function AgentBuilder() {
   const { agents, updateAgent, getAgentKeys } = useAgents();
   const { tier } = useTier();
   const { collapsed } = useSidebar();
+  const { t } = useLang();
 
   const [agent, setAgent] = useState<AIAgent | null>(null);
   const [activeTab, setActiveTab] = useState<'build' | 'run'>('build');
@@ -120,20 +122,28 @@ export default function AgentBuilder() {
   }
 
   const handleSave = async () => {
+    if (!name.trim()) {
+      toast.error(t.app.agentBuilder.nameRequired);
+      return;
+    }
     const keysPayload: Record<string, string> = {};
     if (!isStarter) {
       keysPayload.openai = openaiKey;
       keysPayload.anthropic = anthropicKey;
     }
-
-    await updateAgent(agent.id, {
-      name,
-      role,
-      description,
-      goal,
-      rules,
-      status: isPublished ? 'active' : 'idle',
-    }, keysPayload);
+    try {
+      await updateAgent(agent.id, {
+        name,
+        role,
+        description,
+        goal,
+        rules,
+        status: isPublished ? 'active' : 'idle',
+      }, keysPayload);
+      toast.success(t.app.agentBuilder.saveSuccess);
+    } catch {
+      toast.error(t.app.agentBuilder.saveError);
+    }
   };
 
   const handlePublish = async () => {

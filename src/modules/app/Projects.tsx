@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCard } from '@/components/minerva/ProjectCard';
+import { toast } from 'sonner';
 import { useLang } from '@/i18n';
 import { useWorkspaces, useProjects, useClients, useAddProject } from '@/lib/hooks/useSupabase';
 
@@ -190,31 +191,36 @@ export default function Projects() {
     if (!form.name.trim() || !form.clientId) return;
     const client = clients?.find((c: any) => c._id === form.clientId);
 
-    const project = await createProject({
-      workspaceId: workspaceId!,
-      name: form.name.trim(),
-      clientName: client?.company ?? '',
-      status: 'active',
-      dueDate: form.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      budget: parseFloat(form.budget) || 0,
-    });
+    try {
+      const project = await createProject({
+        workspaceId: workspaceId!,
+        name: form.name.trim(),
+        clientName: client?.company ?? '',
+        status: 'active',
+        dueDate: form.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        budget: parseFloat(form.budget) || 0,
+      });
 
-    if (project?.id && workspaceId) {
-      fetch('/api/workflow/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event: 'project_created',
-          entityType: 'project',
-          entityId: project.id,
-          workspaceId,
-          context: { projectId: project.id, projectName: project.name, clientName: client?.company ?? '' },
-        }),
-      }).catch(() => null);
+      if (project?.id && workspaceId) {
+        fetch('/api/workflow/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'project_created',
+            entityType: 'project',
+            entityId: project.id,
+            workspaceId,
+            context: { projectId: project.id, projectName: project.name, clientName: client?.company ?? '' },
+          }),
+        }).catch(() => null);
+      }
+
+      toast.success(p.createSuccess);
+      setSheetOpen(false);
+      setForm(EMPTY_FORM);
+    } catch {
+      toast.error(p.createError);
     }
-
-    setSheetOpen(false);
-    setForm(EMPTY_FORM);
   }
 
   return (

@@ -38,11 +38,17 @@ export default function PortalEmailGate({ token, onVerified }: PortalEmailGatePr
       if (res.ok && data.success) {
         onVerified();
       } else {
-        setError(data.error === 'invalid_email' ? eg.error : 'Failed to verify email. Please try again.');
+        if (data.error === 'invalid_email') {
+          setError(eg.errorInvalidEmail);
+        } else if (!res.ok) {
+          setError(eg.errorVerificationFailed);
+        } else {
+          setError(eg.errorGeneric);
+        }
       }
     } catch (err) {
       console.error(err);
-      setError('An unexpected error occurred. Please try again.');
+      setError(eg.errorGeneric);
     } finally {
       setLoading(false);
     }

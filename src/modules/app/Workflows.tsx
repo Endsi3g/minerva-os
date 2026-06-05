@@ -905,17 +905,28 @@ function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
   const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null);
   const [applying, setApplying] = useState<string | null>(null);
   const [applied, setApplied] = useState<Set<string>>(new Set());
+  const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
+  function loadSuggestions() {
     if (!workspaceId) return;
+    setSuggestions(null);
+    setLoadError(false);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10_000);
     fetch('/api/ai/workflow-suggestions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ workspaceId, lang }),
+      signal: controller.signal,
     })
       .then(r => r.json())
-      .then(d => setSuggestions(d.suggestions ?? []))
-      .catch(() => setSuggestions([]));
+      .then(d => { clearTimeout(timer); setSuggestions(d.suggestions ?? []); })
+      .catch(() => { clearTimeout(timer); setSuggestions([]); setLoadError(true); });
+  }
+
+  useEffect(() => {
+    loadSuggestions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, lang]);
 
   async function handleApply(s: Suggestion) {
@@ -954,6 +965,17 @@ function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
         <div className="space-y-3">
           {[0, 1, 2].map(i => <Skeleton key={i} className="h-24 bg-white/5 rounded-2xl" />)}
           <p className="text-xs text-fog text-center pt-2">{sg.loading}</p>
+        </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-white/6 p-10 text-center space-y-3" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+          <p className="text-sm text-fog">{sg.loadError}</p>
+          <button
+            onClick={loadSuggestions}
+            className="px-4 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-white/8"
+            style={{ border: '1px solid rgba(255,255,255,0.10)', color: '#B8BDC7' }}
+          >
+            {sg.retry}
+          </button>
         </div>
       ) : suggestions.length === 0 ? (
         <div className="rounded-2xl border border-white/6 p-12 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>

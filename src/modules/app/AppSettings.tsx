@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Check, Copy, Download, Minus, Plus, Trash2, Globe, Play, Pause } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +8,7 @@ import { cn } from '@/lib/utils';
 // Convex removed — Supabase is used instead.
 import { supabase } from '@/lib/supabase';
 import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { useTier } from '@/lib/hooks/useTier';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -893,6 +895,8 @@ function ApiTab() {
   const [newKey, setNewKey] = useState<string | null>(null);
   const [keyCopied, setKeyCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [showManualCopy, setShowManualCopy] = useState<string | null>(null);
+  const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -952,11 +956,28 @@ function ApiTab() {
     navigator.clipboard.writeText(newKey).then(() => {
       setKeyCopied(true);
       setTimeout(() => setKeyCopied(false), 2000);
+    }).catch(() => {
+      setShowManualCopy(newKey);
+      toast.error(s.copyFailed);
     });
   }
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
+      <AlertDialog open={confirmRevokeId !== null} onOpenChange={open => { if (!open) setConfirmRevokeId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{s.revokeConfirm}</AlertDialogTitle>
+            <AlertDialogDescription>{s.revokeConfirmDesc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.app.proposals.form.cancel}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => { if (confirmRevokeId) handleRevoke(confirmRevokeId); setConfirmRevokeId(null); }}>
+              {s.revoke}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="w-full space-y-4">
         <div className="flex justify-end">
           <button
@@ -1003,7 +1024,7 @@ function ApiTab() {
                     <td className="px-4 py-3 text-right">
                       {!k.revokedAt && (
                         <button
-                          onClick={() => handleRevoke(k.id)}
+                          onClick={() => setConfirmRevokeId(k.id)}
                           className="text-xs text-fog hover:text-rose transition-colors"
                         >
                           {s.revoke}
@@ -1042,6 +1063,18 @@ function ApiTab() {
                   <Copy size={13} />
                   {keyCopied ? 'Copied!' : s.copyKey}
                 </button>
+                {showManualCopy && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-amber">{s.copyFailed}</p>
+                    <input
+                      readOnly
+                      value={showManualCopy}
+                      autoFocus
+                      onFocus={e => e.target.select()}
+                      className="w-full rounded-xl h-9 px-3 font-mono text-xs bg-obsidian border border-border text-sage focus:outline-none focus:ring-1 focus:ring-sage/20"
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <>
@@ -1204,6 +1237,7 @@ function WebhooksTab() {
   const [newSecret, setNewSecret] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testedId, setTestedId] = useState<string | null>(null);
+  const [confirmDeleteHookId, setConfirmDeleteHookId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -1228,7 +1262,9 @@ function WebhooksTab() {
       active: true,
       created_at: new Date().toISOString(),
     });
-    if (!error) {
+    if (error) {
+      toast.error(s.saveError);
+    } else {
       setHooks(prev => [{ id, workspace_id: workspace.id, url: url.trim(), events: selectedEvents, secret, active: true, created_at: new Date().toISOString() }, ...prev]);
       setNewSecret(secret);
       setUrl('');
@@ -1239,27 +1275,40 @@ function WebhooksTab() {
   }
 
   async function handleDelete(id: string) {
-    await supabase.from('webhooks').delete().eq('id', id);
-    setHooks(prev => prev.filter(h => h.id !== id));
+    const { error } = await supabase.from('webhooks').delete().eq('id', id);
+    if (!error) {
+      setHooks(prev => prev.filter(h => h.id !== id));
+      toast.success(s.deleteSuccess);
+    }
   }
 
   async function handleToggle(hook: any) {
     const newActive = !hook.active;
-    await supabase.from('webhooks').update({ active: newActive }).eq('id', hook.id);
-    setHooks(prev => prev.map(h => h.id === hook.id ? { ...h, active: newActive } : h));
+    const { error } = await supabase.from('webhooks').update({ active: newActive }).eq('id', hook.id);
+    if (!error) {
+      setHooks(prev => prev.map(h => h.id === hook.id ? { ...h, active: newActive } : h));
+    } else {
+      toast.error(s.toggleError);
+    }
   }
 
   async function handleTest(hook: any) {
     setTestingId(hook.id);
     try {
-      await fetch(hook.url, {
+      const res = await fetch(hook.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event: 'test', workspaceId: workspace?.id, data: {}, timestamp: new Date().toISOString() }),
       });
-    } catch { /* ignore CORS/network errors in test */ }
-    setTestedId(hook.id);
-    setTimeout(() => setTestedId(null), 2500);
+      if (res.ok) {
+        setTestedId(hook.id);
+        setTimeout(() => setTestedId(null), 2500);
+      } else {
+        toast.error(s.testFailed);
+      }
+    } catch {
+      toast.error(s.testFailed);
+    }
     setTestingId(null);
   }
 
@@ -1269,6 +1318,20 @@ function WebhooksTab() {
 
   return (
     <div className="space-y-5 w-full">
+      <AlertDialog open={confirmDeleteHookId !== null} onOpenChange={open => { if (!open) setConfirmDeleteHookId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{s.deleteConfirm}</AlertDialogTitle>
+            <AlertDialogDescription>{s.deleteConfirmDesc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.app.proposals.form.cancel}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => { if (confirmDeleteHookId) handleDelete(confirmDeleteHookId); setConfirmDeleteHookId(null); }}>
+              {t.app.proposals.actions.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-ivory">{s.heading}</p>
@@ -1390,7 +1453,7 @@ function WebhooksTab() {
                   {hook.active ? <Pause size={11} /> : <Play size={11} />}
                 </button>
                 <button
-                  onClick={() => handleDelete(hook.id)}
+                  onClick={() => setConfirmDeleteHookId(hook.id)}
                   className="p-1.5 rounded-lg transition-all hover:-translate-y-0.5 text-fog hover:text-rose"
                 >
                   <Trash2 size={11} />

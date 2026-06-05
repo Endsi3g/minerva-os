@@ -1,10 +1,12 @@
 'use client';
 import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { FileSignature, Check, ChevronDown, ChevronUp, MessageSquare, X } from 'lucide-react';
 import { usePortalData } from './usePortalData';
 import { useLang } from '@/i18n';
 import { CommentSection } from '@/components/minerva/CommentSection';
+import { toast } from 'sonner';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 14 },
@@ -150,11 +152,15 @@ export default function PortalProposals() {
   const { t, lang } = useLang();
   const pp = t.portal.proposals;
   const { isValid, proposals, token } = usePortalData();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [signingId, setSigningId] = useState<string | null>(null);
   const [modalProposal, setModalProposal] = useState<any>(null);
 
   if (!isValid) return null;
+
+  const justSigned = searchParams.get('signed') === '1';
 
   async function handleSign(proposalId: string, signerName: string) {
     if (!token || signingId) return;
@@ -167,11 +173,15 @@ export default function PortalProposals() {
       });
       if (res.ok) {
         setModalProposal(null);
-        window.location.reload();
+        router.push(`/portal/${token}/proposals?signed=1`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? pp.signError);
+        setSigningId(null);
       }
     } catch (err) {
       console.error(err);
-    } finally {
+      toast.error(pp.signError);
       setSigningId(null);
     }
   }
@@ -214,6 +224,21 @@ export default function PortalProposals() {
           </h1>
           <p className="text-sm mt-1" style={{ color: '#8A9099' }}>{pp.subtitle}</p>
         </div>
+
+        {justSigned && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-3 rounded-xl px-4 py-3 border"
+            style={{ backgroundColor: 'rgba(127,163,138,0.08)', borderColor: 'rgba(127,163,138,0.25)' }}
+          >
+            <Check size={15} style={{ color: '#7FA38A', marginTop: 1 }} />
+            <div>
+              <p className="text-sm font-semibold" style={{ color: '#7FA38A' }}>{pp.confirmTitle}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#8A9099' }}>{pp.confirmMessage}</p>
+            </div>
+          </motion.div>
+        )}
 
         <div className="space-y-3">
           {proposals.map((proposal: any, i: number) => {

@@ -684,14 +684,14 @@ function SMBDashboard({
           {/* Open tasks */}
           <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Open Tasks</CardTitle>
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{d.kpis.openTasks}</CardTitle>
               <button onClick={() => router.push('/app/tasks')} className="h-6 w-6 rounded-full border border-white/10 flex items-center justify-center text-fog hover:text-silver hover:bg-white/5 transition-colors cursor-pointer">
                 <Plus size={12} />
               </button>
             </CardHeader>
             <CardContent>
               {localTasks.length === 0 ? (
-                <div className="text-center py-6 text-xs text-fog">All tasks completed</div>
+                <div className="text-center py-6 text-xs text-fog">{d.allTasksDone}</div>
               ) : (
                 <div className="divide-y divide-white/5 space-y-2">
                   <AnimatePresence initial={false}>
@@ -977,7 +977,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               {localTasks.length === 0 ? (
-                <div className="text-center py-6 text-xs text-fog">All tasks completed</div>
+                <div className="text-center py-6 text-xs text-fog">{t.app.dashboard.allTasksDone}</div>
               ) : (
                 <div className="divide-y divide-white/5 space-y-2">
                   <AnimatePresence initial={false}>
@@ -1152,7 +1152,7 @@ export default function Dashboard() {
                         <span className="text-xs font-bold text-[#B89B6A]">{perf.capacity}%</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">Open Tasks</span>
+                        <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">{t.app.dashboard.kpis.openTasks}</span>
                         <span className="text-xs font-bold text-silver">{perf.openTasks}</span>
                       </div>
                     </div>

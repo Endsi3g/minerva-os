@@ -30,6 +30,8 @@ export default function PortalInvoices() {
 
   if (!isValid) return null;
 
+  const [stripeAvailable, setStripeAvailable] = useState<boolean | null>(null);
+
   async function handlePay(invoice: any) {
     if (payingId) return;
     setPayingId(invoice.id);
@@ -46,7 +48,11 @@ export default function PortalInvoices() {
       });
       const data = await res.json();
       if (data.url) {
+        setStripeAvailable(true);
         window.location.href = data.url;
+      } else if (data.error === 'stripe_not_configured') {
+        setStripeAvailable(false);
+        toast.error(t.portal.proposals.stripeNotConfigured);
       } else {
         throw new Error(data.error || 'Failed to create payment session.');
       }
@@ -183,19 +189,23 @@ export default function PortalInvoices() {
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0">
                   {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'pending') && (
-                    <button
-                      onClick={() => handlePay(invoice)}
-                      disabled={payingId !== null}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                      style={{
-                        backgroundColor: 'rgba(127,163,138,0.10)',
-                        border: '1px solid rgba(127,163,138,0.22)',
-                        color: '#7FA38A',
-                      }}
-                    >
-                      <CreditCard size={12} />
-                      {payingId === invoice.id ? 'Paying...' : 'Pay'}
-                    </button>
+                    stripeAvailable === false
+                      ? <span className="text-[11px] px-2 py-1 rounded-lg" style={{ color: '#B89B6A', backgroundColor: 'rgba(184,155,106,0.08)', border: '1px solid rgba(184,155,106,0.18)' }}>
+                          {t.portal.proposals.stripeNotConfigured}
+                        </span>
+                      : <button
+                          onClick={() => handlePay(invoice)}
+                          disabled={payingId !== null}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          style={{
+                            backgroundColor: 'rgba(127,163,138,0.10)',
+                            border: '1px solid rgba(127,163,138,0.22)',
+                            color: '#7FA38A',
+                          }}
+                        >
+                          <CreditCard size={12} />
+                          {payingId === invoice.id ? 'Paying...' : 'Pay'}
+                        </button>
                   )}
                   <button
                     onClick={() => handleDownload(invoice)}

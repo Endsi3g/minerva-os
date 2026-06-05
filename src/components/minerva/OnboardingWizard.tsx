@@ -423,12 +423,14 @@ export function OnboardingWizard() {
         {step === 1 && <TeamStep onNext={() => setStep(2)} onBack={() => setStep(0)} workspaceId={workspaceId} />}
         {step === 2 && <ClientStep onNext={() => setStep(3)} onBack={() => setStep(1)} workspaceId={workspaceId} />}
         {step === 3 && <ProjectStep onNext={handleComplete} onBack={() => setStep(2)} workspaceId={workspaceId} />}
-        <button
-          onClick={handleComplete}
-          style={{ background: 'none', border: 'none', color: '#8A9099', fontSize: 12, cursor: 'pointer', marginTop: 24, display: 'block' }}
-        >
-          Skip setup
-        </button>
+        {step >= 1 && (
+          <button
+            onClick={handleComplete}
+            style={{ background: 'none', border: 'none', color: '#8A9099', fontSize: 12, cursor: 'pointer', marginTop: 24, display: 'block' }}
+          >
+            Skip setup
+          </button>
+        )}
       </div>
     </div>
   );

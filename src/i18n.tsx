@@ -539,6 +539,12 @@ const translations = {
           save: 'Save draft',
           send: 'Send to client',
           cancel: 'Cancel',
+          titleRequired: 'Title is required.',
+          amountRequired: 'Amount is required.',
+          removeConfirm: 'Remove this proposal?',
+          removeConfirmDesc: 'It will be removed from the client portal.',
+          sendSuccess: 'Proposal sent to portal.',
+          removeSuccess: 'Proposal removed.',
         },
         actions: {
           view: 'View',
@@ -586,6 +592,7 @@ const translations = {
           revenueMtd: 'Revenue MTD',
           revenueMtdDelta: '+18% vs last month',
         },
+        allTasksDone: 'All tasks completed',
         recentActivity: 'Recent Activity',
         activityEmpty: 'Activity will appear here once you start working.',
         quickActions: 'Quick Actions',
@@ -676,6 +683,9 @@ const translations = {
             placeholder: 'client@company.com',
             verify: 'Verify Email',
             error: 'This email address is not authorized for this portal access link.',
+            errorInvalidEmail: 'This email is not linked to this portal.',
+            errorVerificationFailed: 'Verification failed. Please try again.',
+            errorGeneric: 'An unexpected error occurred. Please try again.',
           },
           expired: {
             title: 'Portal Access Expired',
@@ -734,13 +744,21 @@ const translations = {
           notesPlaceholder: 'Context, requirements, next steps...',
           save: 'Save Changes',
           add: 'Add Deal',
-        }
+          companyRequired: 'Company name is required.',
+        },
+        hermes: {
+          replyDraft: 'Hermes AI Reply Draft',
+          approveAndSend: 'Approve & Mark Sent',
+        },
       },
       projects: {
         title: 'Projects',
         stats: 'active · total',
         newProject: 'New project',
         editProject: 'Edit Project',
+        noProjects: 'No projects found.',
+        createSuccess: 'Project created.',
+        createError: 'Could not create project.',
         form: {
           name: 'Project name',
           namePlaceholder: 'Website Redesign',
@@ -788,6 +806,7 @@ const translations = {
       approvals: {
         title: 'Approvals',
         stats: 'deliverables',
+        slaBreached: 'SLA breached',
         summary: {
           pending: 'Pending',
           revision: 'Needs revision',
@@ -1014,6 +1033,9 @@ const translations = {
             read: 'Read only',
             write: 'Read + Write',
           },
+          copyFailed: 'Copy failed — please select and copy the key manually.',
+          revokeConfirm: 'Revoke this API key?',
+          revokeConfirmDesc: 'Integrations using this key will stop working immediately.',
         },
         audit: {
           heading: 'Audit Log',
@@ -1043,6 +1065,12 @@ const translations = {
           cancel: 'Cancel',
           save: 'Save webhook',
           secretNote: 'Save this secret now — it will not be shown again. Use it to verify webhook signatures.',
+          saveError: 'Failed to save webhook.',
+          deleteSuccess: 'Webhook deleted.',
+          deleteConfirm: 'Delete this webhook?',
+          deleteConfirmDesc: 'This action cannot be undone.',
+          toggleError: 'Failed to update webhook status.',
+          testFailed: 'Test delivery failed.',
           events: {
             proposal_signed: 'Proposal signed',
             invoice_paid: 'Invoice paid',
@@ -1131,6 +1159,9 @@ const translations = {
         cashFlow: 'Cash Flow',
         revenue: 'Revenue',
         netProfit: 'Net Profit',
+        newTransaction: 'New Transaction',
+        qcTaxSummary: 'Quebec Tax Summary (TPS/TVQ)',
+        noTransactions: 'No transactions found.',
       },
       collaboration: {
         activeNow: 'Active Now',
@@ -1248,6 +1279,7 @@ const translations = {
         addDeal: 'Add Deal',
         newInvoice: 'New Invoice',
       },
+      searchCommands: 'Search & Commands',
       workflows: {
         title: 'Workflow Engine',
         subtitle: '{{count}} workflows · {{runs}} runs today',
@@ -1394,6 +1426,8 @@ const translations = {
           apply: 'Apply',
           applying: 'Applying...',
           applied: 'Created',
+          loadError: 'Could not load suggestions.',
+          retry: 'Retry',
           urgency: {
             high: 'High priority',
             medium: 'Suggested',
@@ -1762,6 +1796,11 @@ const translations = {
           sign: 'Accept and sign',
           cancel: 'Cancel',
         },
+        signSuccess: 'Proposal signed successfully.',
+        signError: 'Could not sign proposal. Please try again.',
+        confirmTitle: 'Proposal Signed',
+        confirmMessage: 'Your signature has been recorded. The agency will be in touch shortly.',
+        stripeNotConfigured: 'Online payment is not available. Please contact the agency to arrange payment.',
       },
       journal: {
         tabLabel: 'Decisions',
@@ -1881,6 +1920,11 @@ const translations = {
         poweredBy: 'Powered by Claude',
         thinking: 'Thinking...',
       },
+      agentBuilder: {
+        nameRequired: 'Agent name is required.',
+        saveSuccess: 'Agent saved.',
+        saveError: 'Could not save agent.',
+      },
     },
     welcome: {
       title: 'Minerva OS',
@@ -1900,6 +1944,8 @@ const translations = {
       stepLabel: 'Step {{current}} of {{total}}',
       steps: ['Discovery', 'Your Agency', 'Agency Type', 'Team Size', 'Your Goals', 'Kit Preview', 'Choose Plan', 'Get Started'] as string[],
       skip: 'Skip setup',
+      skipForNow: 'Skip for now',
+      skipTooltip: 'You can complete setup later in Settings.',
       back: 'Back',
       continue: 'Continue',
       step1: {
@@ -2682,6 +2728,12 @@ const translations = {
           save: 'Sauvegarder le brouillon',
           send: 'Envoyer au client',
           cancel: 'Annuler',
+          titleRequired: 'Le titre est requis.',
+          amountRequired: 'Le montant est requis.',
+          removeConfirm: 'Retirer cette proposition ?',
+          removeConfirmDesc: 'Elle sera retirée du portail client.',
+          sendSuccess: 'Proposition envoyée au portail.',
+          removeSuccess: 'Proposition retirée.',
         },
         actions: {
           view: 'Voir',
@@ -2729,6 +2781,7 @@ const translations = {
           revenueMtd: 'Revenus du mois',
           revenueMtdDelta: '+18% vs mois dernier',
         },
+        allTasksDone: 'Toutes les taches terminees',
         recentActivity: 'Activite recente',
         activityEmpty: "L'activite apparaitra ici une fois que vous aurez commence.",
         quickActions: 'Actions rapides',
@@ -2819,6 +2872,9 @@ const translations = {
             placeholder: 'client@entreprise.com',
             verify: 'Vérifier l\'e-mail',
             error: 'Cette adresse e-mail n\'est pas autorisée pour ce lien d\'accès au portail.',
+            errorInvalidEmail: 'Cet e-mail n\'est pas lié à ce portail.',
+            errorVerificationFailed: 'Vérification échouée. Veuillez réessayer.',
+            errorGeneric: 'Une erreur inattendue s\'est produite. Veuillez réessayer.',
           },
           expired: {
             title: 'Accès au portail expiré',
@@ -2877,13 +2933,21 @@ const translations = {
           notesPlaceholder: 'Contexte, besoins, prochaines étapes...',
           save: 'Enregistrer',
           add: 'Ajouter l\'affaire',
-        }
+          companyRequired: 'Le nom de l\'entreprise est requis.',
+        },
+        hermes: {
+          replyDraft: 'Brouillon IA Hermes',
+          approveAndSend: 'Approuver et marquer envoyé',
+        },
       },
       projects: {
         title: 'Projets',
         stats: 'actifs · total',
         newProject: 'Nouveau projet',
         editProject: 'Modifier le projet',
+        noProjects: 'Aucun projet trouvé.',
+        createSuccess: 'Projet créé.',
+        createError: 'Impossible de créer le projet.',
         form: {
           name: 'Nom du projet',
           namePlaceholder: 'Refonte Site Web',
@@ -2931,6 +2995,7 @@ const translations = {
       approvals: {
         title: 'Approbations',
         stats: 'livrables',
+        slaBreached: 'SLA dépassé',
         summary: {
           pending: 'En attente',
           revision: 'À réviser',
@@ -3157,6 +3222,9 @@ const translations = {
             read: 'Lecture seule',
             write: 'Lecture + Ecriture',
           },
+          copyFailed: 'Copie echouee — veuillez selectionner et copier la cle manuellement.',
+          revokeConfirm: 'Revoquer cette cle API ?',
+          revokeConfirmDesc: 'Les integrations utilisant cette cle cesseront de fonctionner immediatement.',
         },
         audit: {
           heading: 'Journal d\'audit',
@@ -3186,6 +3254,12 @@ const translations = {
           cancel: 'Annuler',
           save: 'Sauvegarder',
           secretNote: 'Sauvegardez ce secret maintenant — il ne sera plus affiche. Utilisez-le pour verifier les signatures.',
+          saveError: 'Impossible de sauvegarder le webhook.',
+          deleteSuccess: 'Webhook supprime.',
+          deleteConfirm: 'Supprimer ce webhook ?',
+          deleteConfirmDesc: 'Cette action est irreversible.',
+          toggleError: 'Impossible de mettre a jour le statut.',
+          testFailed: 'Envoi de test echoue.',
           events: {
             proposal_signed: 'Proposition signee',
             invoice_paid: 'Facture payee',
@@ -3274,6 +3348,9 @@ const translations = {
         cashFlow: 'Flux de tresorerie',
         revenue: 'Revenu',
         netProfit: 'Benefice net',
+        newTransaction: 'Nouvelle transaction',
+        qcTaxSummary: 'Sommaire taxes QC (TPS/TVQ)',
+        noTransactions: 'Aucune transaction trouvee.',
       },
       collaboration: {
         activeNow: 'Actifs',
@@ -3391,6 +3468,7 @@ const translations = {
         addDeal: 'Ajouter Affaire',
         newInvoice: 'Nouvelle Facture',
       },
+      searchCommands: 'Recherche & Commandes',
       workflows: {
         title: 'Moteur de Workflows',
         subtitle: '{{count}} workflows · {{runs}} exécutions aujourd\'hui',
@@ -3537,6 +3615,8 @@ const translations = {
           apply: 'Appliquer',
           applying: 'Application...',
           applied: 'Cree',
+          loadError: 'Impossible de charger les suggestions.',
+          retry: 'Réessayer',
           urgency: {
             high: 'Priorite haute',
             medium: 'Suggere',
@@ -3905,6 +3985,11 @@ const translations = {
           sign: 'Accepter et signer',
           cancel: 'Annuler',
         },
+        signSuccess: 'Proposition signée avec succès.',
+        signError: 'Impossible de signer la proposition. Veuillez réessayer.',
+        confirmTitle: 'Proposition signée',
+        confirmMessage: 'Votre signature a été enregistrée. L\'agence vous contactera prochainement.',
+        stripeNotConfigured: 'Paiement en ligne non disponible. Veuillez contacter l\'agence pour organiser le paiement.',
       },
       journal: {
         tabLabel: 'Décisions',
@@ -4024,6 +4109,12 @@ const translations = {
         poweredBy: 'Propulsé par Claude',
         thinking: 'Réflexion...',
       },
+      searchCommands: 'Recherche & Commandes',
+      agentBuilder: {
+        nameRequired: 'Le nom de l\'agent est requis.',
+        saveSuccess: 'Agent sauvegardé.',
+        saveError: 'Impossible de sauvegarder l\'agent.',
+      },
     },
     welcome: {
       title: 'Minerva OS',
@@ -4043,6 +4134,8 @@ const translations = {
       stepLabel: 'Etape {{current}} sur {{total}}',
       steps: ['Decouverte', 'Votre agence', 'Type d\'agence', 'Taille d\'equipe', 'Vos priorites', 'Kit', 'Choisir un plan', 'Commencer'] as string[],
       skip: 'Ignorer',
+      skipForNow: 'Passer pour l\'instant',
+      skipTooltip: 'Vous pourrez finaliser la configuration dans les Paramètres.',
       back: 'Retour',
       continue: 'Continuer',
       step1: {
