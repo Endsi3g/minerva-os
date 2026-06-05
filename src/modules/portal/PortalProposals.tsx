@@ -13,8 +13,8 @@ const fadeInUp = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.07 } }),
 };
 
-function fmt(amount: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+function fmt(amount: number, lang: 'en' | 'fr' = 'en') {
+  return new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
 }
 
 interface SignatureModalProps {
@@ -72,7 +72,7 @@ function SignatureModal({ proposal, onConfirm, onCancel, labels, signing, lang }
           {proposal.total_amount > 0 && (
             <div className="flex items-center justify-between rounded-xl px-4 py-3 border" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}>
               <span className="text-xs" style={{ color: '#8A9099' }}>{m.totalInvestment}</span>
-              <span className="text-sm font-semibold" style={{ color: '#F5F1E8' }}>{fmt(proposal.total_amount)}</span>
+              <span className="text-sm font-semibold" style={{ color: '#F5F1E8' }}>{fmt(proposal.total_amount, lang)}</span>
             </div>
           )}
 
@@ -279,7 +279,7 @@ export default function PortalProposals() {
                       </span>
                       {proposal.total_amount && (
                         <span className="text-[11px]" style={{ color: '#8A9099' }}>
-                          {fmt(proposal.total_amount)}
+                          {fmt(proposal.total_amount, lang)}
                         </span>
                       )}
                       {proposal.valid_until && status === 'sent' && (
