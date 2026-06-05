@@ -152,7 +152,7 @@ export default function Approvals() {
                         return (
                           <span className={cn('hidden sm:flex items-center gap-1 text-[10px] font-medium shrink-0', color)}>
                             <Clock size={10} />
-                            {approval.sla_breached ? 'SLA breached' : `${hoursLeft}h`}
+                            {approval.sla_breached ? a.slaBreached : `${hoursLeft}h`}
                           </span>
                         );
                       })()}

@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Search, Plus, ChevronDown, ChevronUp, FileDown, Link2, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AnimatePresence, motion } from 'motion/react';
 import { AnimatedNumber } from '@/components/ui/animated-number';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/i18n';
-import { useWorkspaces, useInvoices, useRetainers, useClients, useAddRetainer } from '@/lib/hooks/useSupabase';
+import { useWorkspaces, useInvoices, useRetainers, useClients, useAddRetainer, useAddInvoice } from '@/lib/hooks/useSupabase';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -242,8 +243,6 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
   );
 }
 
-import { Skeleton } from '@/components/ui/skeleton';
-
 function KpiSkeleton() {
   return (
     <div className="bg-card border border-border rounded-xl p-4 animate-pulse space-y-2">
@@ -300,6 +299,9 @@ export default function Billing() {
   const [filter, setFilter] = useState<string | 'all'>('all');
   const [query, setQuery]   = useState('');
   const [retainerSheetOpen, setRetainerSheetOpen] = useState(false);
+  const [invoiceSheetOpen, setInvoiceSheetOpen] = useState(false);
+  const [newInvoiceForm, setNewInvoiceForm] = useState({ clientId: '', description: '', amount: '', dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] });
+  const [addingInvoice, setAddingInvoice] = useState(false);
   const [newRetainerForm, setNewRetainerForm] = useState({
     clientId: '',
     amount: '',
@@ -310,6 +312,37 @@ export default function Billing() {
   });
 
   const addRetainer = useAddRetainer();
+  const addInvoice = useAddInvoice();
+
+  async function handleAddInvoice() {
+    if (!newInvoiceForm.clientId || !newInvoiceForm.amount) {
+      toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill all required fields');
+      return;
+    }
+    setAddingInvoice(true);
+    try {
+      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+      await addInvoice({
+        workspaceId,
+        clientId: newInvoiceForm.clientId,
+        invoiceNumber,
+        amount: parseFloat(newInvoiceForm.amount),
+        status: 'draft',
+        date: new Date().toISOString().split('T')[0],
+        dueDate: newInvoiceForm.dueDate,
+        items: [{ description: newInvoiceForm.description || 'Services', quantity: 1, price: parseFloat(newInvoiceForm.amount) }],
+        tps: 0,
+        tvq: 0,
+      });
+      toast.success(lang === 'fr' ? 'Facture créée.' : 'Invoice created.');
+      setInvoiceSheetOpen(false);
+      setNewInvoiceForm({ clientId: '', description: '', amount: '', dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] });
+    } catch {
+      toast.error(lang === 'fr' ? 'Impossible de créer la facture.' : 'Could not create invoice.');
+    } finally {
+      setAddingInvoice(false);
+    }
+  }
 
   async function handleAddRetainer() {
     if (!newRetainerForm.clientId || !newRetainerForm.amount || !newRetainerForm.hoursIncluded) {
@@ -394,7 +427,7 @@ export default function Billing() {
             <Plus size={14} />
             {b.retainers.newRetainer}
           </Button>
-          <Button size="sm" id="btn-new-invoice">
+          <Button size="sm" id="btn-new-invoice" onClick={() => setInvoiceSheetOpen(true)}>
             <Plus size={14} />
             {b.newInvoice}
           </Button>
@@ -654,6 +687,66 @@ export default function Billing() {
           <Button className="w-full" onClick={handleAddRetainer}>
             {lang === 'fr' ? 'Créer le forfait' : 'Create Retainer'}
           </Button>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={invoiceSheetOpen} onOpenChange={setInvoiceSheetOpen}>
+        <SheetContent side="right" className="w-80 bg-midnight border-l border-white/8">
+          <SheetHeader className="pb-4 border-b border-white/8">
+            <SheetTitle className="text-base font-semibold text-ivory">{b.newInvoice}</SheetTitle>
+          </SheetHeader>
+          <div className="py-5 space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-silver">{lang === 'fr' ? 'Client' : 'Client'} *</Label>
+              <Select value={newInvoiceForm.clientId} onValueChange={v => setNewInvoiceForm(f => ({ ...f, clientId: v }))}>
+                <SelectTrigger className="rounded-xl bg-obsidian border-border text-ivory text-sm h-10">
+                  <SelectValue placeholder={lang === 'fr' ? 'Sélectionner un client' : 'Select client'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(clients ?? []).map((c: any) => (
+                    <SelectItem key={c._id ?? c.id} value={c._id ?? c.id}>{c.company}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-silver">{lang === 'fr' ? 'Description' : 'Description'}</Label>
+              <Input
+                value={newInvoiceForm.description}
+                onChange={e => setNewInvoiceForm(f => ({ ...f, description: e.target.value }))}
+                placeholder={lang === 'fr' ? 'Services rendus' : 'Services rendered'}
+                className="rounded-xl bg-obsidian border-border text-ivory text-sm h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-silver">{lang === 'fr' ? 'Montant (USD)' : 'Amount (USD)'} *</Label>
+              <Input
+                type="number"
+                value={newInvoiceForm.amount}
+                onChange={e => setNewInvoiceForm(f => ({ ...f, amount: e.target.value }))}
+                placeholder="0"
+                className="rounded-xl bg-obsidian border-border text-ivory text-sm h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-silver">{lang === 'fr' ? 'Échéance' : 'Due Date'}</Label>
+              <Input
+                type="date"
+                value={newInvoiceForm.dueDate}
+                onChange={e => setNewInvoiceForm(f => ({ ...f, dueDate: e.target.value }))}
+                className="rounded-xl bg-obsidian border-border text-ivory text-sm h-10"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setInvoiceSheetOpen(false)}>
+              {lang === 'fr' ? 'Annuler' : 'Cancel'}
+            </Button>
+            <Button className="flex-1 rounded-xl" onClick={handleAddInvoice} disabled={addingInvoice}>
+              {addingInvoice ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              {lang === 'fr' ? 'Créer' : 'Create'}
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
     </>

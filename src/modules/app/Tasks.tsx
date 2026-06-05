@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import { Plus, Circle, Loader2, Eye, CheckCircle2 } from 'lucide-react';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { cn } from '@/lib/utils';
@@ -68,9 +70,6 @@ interface NewTaskForm {
 const EMPTY_FORM: NewTaskForm = {
   title: '', projectId: '', assignee: 'US', dueDate: '', priority: 'medium', status: 'todo',
 };
-
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
 
 function TaskRowSkeleton() {
   return (

@@ -1,9 +1,9 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Plus, Play, Pause, Trash2, Edit2,
   CheckCircle2, AlertTriangle, ChevronRight,
-  ChevronDown, ChevronUp, X, Check, XCircle,
+  ChevronDown, ChevronUp, X, Check, XCircle, Sparkles,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -887,6 +887,154 @@ function SLAPolicyManager({ workspaceId }: { workspaceId: string }) {
   );
 }
 
+// ─── Suggested Workflows ──────────────────────────────────────────────────────
+
+type Suggestion = {
+  trigger: string;
+  suggestedName: string;
+  rationale: string;
+  urgency: 'high' | 'medium' | 'low';
+};
+
+function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
+  const { t, lang } = useLang();
+  const wf = t.app.workflows;
+  const sg = wf.suggestions;
+  const addWorkflow = useAddWorkflow();
+
+  const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null);
+  const [applying, setApplying] = useState<string | null>(null);
+  const [applied, setApplied] = useState<Set<string>>(new Set());
+  const [loadError, setLoadError] = useState(false);
+
+  function loadSuggestions() {
+    if (!workspaceId) return;
+    setSuggestions(null);
+    setLoadError(false);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10_000);
+    fetch('/api/ai/workflow-suggestions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workspaceId, lang }),
+      signal: controller.signal,
+    })
+      .then(r => r.json())
+      .then(d => { clearTimeout(timer); setSuggestions(d.suggestions ?? []); })
+      .catch(() => { clearTimeout(timer); setSuggestions([]); setLoadError(true); });
+  }
+
+  useEffect(() => {
+    loadSuggestions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId, lang]);
+
+  async function handleApply(s: Suggestion) {
+    if (applying) return;
+    setApplying(s.suggestedName);
+    try {
+      await addWorkflow({
+        workspaceId,
+        name: s.suggestedName,
+        triggerEvent: s.trigger as any,
+        triggerFilters: {},
+        steps: [],
+      });
+      setApplied(prev => new Set(prev).add(s.suggestedName));
+    } catch {
+      // no-op
+    } finally {
+      setApplying(null);
+    }
+  }
+
+  const urgencyConfig: Record<string, { color: string; bg: string; border: string }> = {
+    high:   { color: '#A86A6A', bg: 'rgba(168,106,106,0.10)', border: 'rgba(168,106,106,0.25)' },
+    medium: { color: '#B89B6A', bg: 'rgba(184,155,106,0.10)', border: 'rgba(184,155,106,0.25)' },
+    low:    { color: '#8A9099', bg: 'rgba(138,144,153,0.10)', border: 'rgba(138,144,153,0.20)' },
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm font-medium text-ivory">{sg.heading}</p>
+        <p className="text-xs text-fog mt-0.5">{sg.subtitle}</p>
+      </div>
+
+      {suggestions === null ? (
+        <div className="space-y-3">
+          {[0, 1, 2].map(i => <Skeleton key={i} className="h-24 bg-white/5 rounded-2xl" />)}
+          <p className="text-xs text-fog text-center pt-2">{sg.loading}</p>
+        </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-white/6 p-10 text-center space-y-3" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+          <p className="text-sm text-fog">{sg.loadError}</p>
+          <button
+            onClick={loadSuggestions}
+            className="px-4 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-white/8"
+            style={{ border: '1px solid rgba(255,255,255,0.10)', color: '#B8BDC7' }}
+          >
+            {sg.retry}
+          </button>
+        </div>
+      ) : suggestions.length === 0 ? (
+        <div className="rounded-2xl border border-white/6 p-12 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+          <Sparkles size={22} className="mx-auto mb-3 opacity-30" style={{ color: '#8A9099' }} />
+          <p className="text-sm text-fog">{sg.empty}</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {suggestions.map((s, i) => {
+            const u = urgencyConfig[s.urgency] ?? urgencyConfig.low;
+            const isApplied = applied.has(s.suggestedName);
+            const isApplying = applying === s.suggestedName;
+
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="rounded-2xl border p-5 flex items-start gap-4"
+                style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}
+              >
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(184,189,199,0.08)' }}>
+                  <Sparkles size={14} style={{ color: '#B8BDC7' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <p className="text-sm font-medium text-ivory">{s.suggestedName}</p>
+                    <span
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-full border"
+                      style={{ color: u.color, backgroundColor: u.bg, borderColor: u.border }}
+                    >
+                      {(sg.urgency as Record<string, string>)[s.urgency] ?? s.urgency}
+                    </span>
+                  </div>
+                  <p className="text-xs text-fog leading-relaxed">{s.rationale}</p>
+                  <p className="text-[11px] mt-1.5" style={{ color: '#8A9099' }}>
+                    {sg.trigger}: <span style={{ color: '#B8BDC7' }}>{s.trigger}</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleApply(s)}
+                  disabled={isApplying || isApplied}
+                  className="shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition-all disabled:opacity-50 cursor-pointer"
+                  style={isApplied
+                    ? { backgroundColor: 'rgba(127,163,138,0.12)', border: '1px solid rgba(127,163,138,0.25)', color: '#7FA38A' }
+                    : { backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#B8BDC7' }}
+                >
+                  {isApplied ? <><Check size={11} className="inline mr-1" />{sg.applied}</> : isApplying ? sg.applying : sg.apply}
+                </button>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Module ───────────────────────────────────────────────────────────────
 
 export default function Workflows() {
@@ -902,10 +1050,11 @@ export default function Workflows() {
   }
 
   const tabs = [
-    { id: 0, label: wf.tabWorkflows, content: <WorkflowList workspaceId={workspaceId} /> },
-    { id: 1, label: wf.tabTemplates, content: <TemplateGallery workspaceId={workspaceId} /> },
-    { id: 2, label: wf.tabHandoffs, content: <HandoffBoard workspaceId={workspaceId} /> },
-    { id: 3, label: wf.tabSLA, content: <SLAPolicyManager workspaceId={workspaceId} /> },
+    { id: 0, label: wf.tabWorkflows,    content: <WorkflowList workspaceId={workspaceId} /> },
+    { id: 1, label: wf.tabTemplates,    content: <TemplateGallery workspaceId={workspaceId} /> },
+    { id: 2, label: wf.tabHandoffs,     content: <HandoffBoard workspaceId={workspaceId} /> },
+    { id: 3, label: wf.tabSLA,          content: <SLAPolicyManager workspaceId={workspaceId} /> },
+    { id: 4, label: wf.tabSuggestions,  content: <SuggestedWorkflows workspaceId={workspaceId} /> },
   ];
 
   return (

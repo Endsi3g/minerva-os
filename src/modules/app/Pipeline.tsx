@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import { UpgradeBanner } from '@/components/minerva/UpgradeBanner';
 import { useRouter } from 'next/navigation';
 import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
@@ -42,9 +44,6 @@ const STAGE_STYLE: Partial<Record<DealStage, string>> = {
   won:  'border-sage/25 bg-sage/5',
   lost: 'border-ember/25 bg-ember/5',
 };
-
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
 
 function KanbanSkeleton() {
   return (
@@ -366,7 +365,7 @@ export default function Pipeline() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs text-warm font-semibold">
                     <Sparkles size={13} className="text-warm animate-pulse" />
-                    <span>Hermes AI Reply Draft</span>
+                    <span>{p.hermes.replyDraft}</span>
                   </div>
                   <div className="text-[10px] text-fog font-mono">Source: AI CRM Agent</div>
                 </div>
@@ -420,7 +419,7 @@ export default function Pipeline() {
                   ) : (
                     <Send size={12} />
                   )}
-                  Approve & Mark Sent
+                  {p.hermes.approveAndSend}
                 </Button>
               </div>
             )}

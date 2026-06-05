@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Search, BookOpen, Tag, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -192,8 +193,6 @@ function ArticleModal({
     </div>
   );
 }
-
-import { Skeleton } from '@/components/ui/skeleton';
 
 function ArticleCardSkeleton() {
   return (

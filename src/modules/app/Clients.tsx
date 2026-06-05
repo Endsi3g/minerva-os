@@ -29,6 +29,7 @@ import { ClientCard } from '@/components/minerva/ClientCard';
 import type { ClientStatus } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { useWorkspaces, useClients, useProjects, useAddClient } from '@/lib/hooks/useSupabase';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -80,6 +81,7 @@ export default function Clients() {
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?.id;
+  const { workspace } = useWorkspace();
 
   const clients = useClients(workspaceId);
   const projects = useProjects(workspaceId);
@@ -159,7 +161,8 @@ export default function Clients() {
 
     if (!error && existingToken) {
       setActiveToken(existingToken);
-      setPortalUrl(`${window.location.origin}/portal/${existingToken.token}`);
+      const base = workspace?.customDomain ? `https://${workspace.customDomain}` : window.location.origin;
+      setPortalUrl(`${base}/portal/${existingToken.token}`);
       setSelectedScopes(existingToken.scopes || []);
       
       const expiryDate = new Date(existingToken.expires_at);
@@ -222,7 +225,8 @@ export default function Clients() {
     }
 
     setActiveToken(newToken);
-    setPortalUrl(`${window.location.origin}/portal/${token}`);
+    const portalBase = workspace?.customDomain ? `https://${workspace.customDomain}` : window.location.origin;
+    setPortalUrl(`${portalBase}/portal/${token}`);
     toast.success('Portal link created successfully.');
     refreshTokens();
   }

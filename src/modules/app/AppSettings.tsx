@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Check, Copy, Download, Minus } from 'lucide-react';
+import { toast } from 'sonner';
+import { Check, Copy, Download, Minus, Plus, Trash2, Globe, Play, Pause } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 // Convex removed — Supabase is used instead.
 import { supabase } from '@/lib/supabase';
 import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { useTier } from '@/lib/hooks/useTier';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -291,6 +293,14 @@ function WorkspaceTab() {
     });
   }
 
+  const [cnameCopied, setCnameCopied] = useState(false);
+  function handleCopyCname() {
+    navigator.clipboard.writeText(s.dnsCnameValue).then(() => {
+      setCnameCopied(true);
+      setTimeout(() => setCnameCopied(false), 2000);
+    });
+  }
+
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start w-full">
@@ -410,6 +420,26 @@ function WorkspaceTab() {
                 </button>
               </div>
               <p className="text-[10px] text-fog mt-1">{s.domainHint}</p>
+              {customDomain && (
+                <div className="mt-3 rounded-xl border border-white/6 p-4 space-y-3 bg-obsidian">
+                  <p className="text-[11px] font-semibold text-silver">{s.dnsSetupTitle}</p>
+                  <p className="text-[11px] text-fog leading-relaxed">{s.dnsSetupDesc}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 rounded-lg px-3 py-2 border border-white/8 bg-midnight">
+                      <p className="text-[9px] text-fog uppercase tracking-widest mb-0.5">{s.dnsCnameLabel}</p>
+                      <code className="text-xs text-silver">{s.dnsCnameValue}</code>
+                    </div>
+                    <button
+                      onClick={handleCopyCname}
+                      className="flex items-center gap-1.5 h-[52px] px-3 rounded-xl border border-white/8 text-[11px] text-silver hover:text-ivory transition-colors"
+                    >
+                      {cnameCopied ? <Check size={11} className="text-sage" /> : <Copy size={11} />}
+                      {cnameCopied ? s.dnsCopied : s.dnsCopy}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-fog">{s.dnsNote}</p>
+                </div>
+              )}
             </SettingsField>
           </div>
         </div>
@@ -550,15 +580,37 @@ function NotificationsTab() {
   const s = t.app.settings.notifications;
 
   const prefs = [
-    { key: 'projectUpdates', label: s.projectUpdates, desc: s.projectUpdatesDesc, default: true },
-    { key: 'approvalRequests', label: s.approvalRequests, desc: s.approvalRequestsDesc, default: true },
+    { key: 'projectUpdates',  label: s.projectUpdates,  desc: s.projectUpdatesDesc,  default: true },
+    { key: 'approvalRequests',label: s.approvalRequests,desc: s.approvalRequestsDesc,default: true },
     { key: 'invoiceActivity', label: s.invoiceActivity, desc: s.invoiceActivityDesc, default: true },
-    { key: 'riskAlerts', label: s.riskAlerts, desc: s.riskAlertsDesc, default: true },
+    { key: 'riskAlerts',      label: s.riskAlerts,      desc: s.riskAlertsDesc,      default: true },
+    { key: 'dailyBriefing',   label: s.dailyBriefing,   desc: s.dailyBriefingDesc,   default: false },
   ];
 
+  const { user } = useAuth();
   const [enabled, setEnabled] = useState<Record<string, boolean>>(
     Object.fromEntries(prefs.map(p => [p.key, p.default]))
   );
+
+  useEffect(() => {
+    if (!user?.email) return;
+    supabase.from('user_profiles').select('notification_prefs').eq('email', user.email).maybeSingle()
+      .then(({ data }) => {
+        if (data?.notification_prefs) {
+          setEnabled(prev => ({ ...prev, ...data.notification_prefs }));
+        }
+      });
+  }, [user?.email]);
+
+  async function handleToggle(key: string) {
+    const next = { ...enabled, [key]: !enabled[key] };
+    setEnabled(next);
+    if (user?.email) {
+      await supabase.from('user_profiles')
+        .update({ notification_prefs: next })
+        .eq('email', user.email);
+    }
+  }
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
@@ -567,7 +619,7 @@ function NotificationsTab() {
           <div
             key={pref.key}
             className="flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-colors hover:bg-white/[0.02] bg-midnight border border-border"
-            onClick={() => setEnabled(prev => ({ ...prev, [pref.key]: !prev[pref.key] }))}
+            onClick={() => handleToggle(pref.key)}
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-ivory">{pref.label}</p>
@@ -843,6 +895,8 @@ function ApiTab() {
   const [newKey, setNewKey] = useState<string | null>(null);
   const [keyCopied, setKeyCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [showManualCopy, setShowManualCopy] = useState<string | null>(null);
+  const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -868,11 +922,14 @@ function ApiTab() {
     const fullKey = `mk_live_${rand}`;
     const prefix = fullKey.slice(0, 16);
     const id = crypto.randomUUID();
+    const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(fullKey));
+    const keyHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
     await supabase.from('api_keys').insert({
       id,
       workspace_id: workspace.id,
       name: keyName.trim(),
       key_prefix: prefix,
+      key_hash: keyHash,
       scopes: scope === 'write' ? ['read', 'write'] : ['read'],
       created_at: new Date().toISOString(),
       last_used_at: null,
@@ -899,11 +956,28 @@ function ApiTab() {
     navigator.clipboard.writeText(newKey).then(() => {
       setKeyCopied(true);
       setTimeout(() => setKeyCopied(false), 2000);
+    }).catch(() => {
+      setShowManualCopy(newKey);
+      toast.error(s.copyFailed);
     });
   }
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
+      <AlertDialog open={confirmRevokeId !== null} onOpenChange={open => { if (!open) setConfirmRevokeId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{s.revokeConfirm}</AlertDialogTitle>
+            <AlertDialogDescription>{s.revokeConfirmDesc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.app.proposals.form.cancel}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => { if (confirmRevokeId) handleRevoke(confirmRevokeId); setConfirmRevokeId(null); }}>
+              {s.revoke}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="w-full space-y-4">
         <div className="flex justify-end">
           <button
@@ -950,7 +1024,7 @@ function ApiTab() {
                     <td className="px-4 py-3 text-right">
                       {!k.revokedAt && (
                         <button
-                          onClick={() => handleRevoke(k.id)}
+                          onClick={() => setConfirmRevokeId(k.id)}
                           className="text-xs text-fog hover:text-rose transition-colors"
                         >
                           {s.revoke}
@@ -989,6 +1063,18 @@ function ApiTab() {
                   <Copy size={13} />
                   {keyCopied ? 'Copied!' : s.copyKey}
                 </button>
+                {showManualCopy && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-amber">{s.copyFailed}</p>
+                    <input
+                      readOnly
+                      value={showManualCopy}
+                      autoFocus
+                      onFocus={e => e.target.select()}
+                      className="w-full rounded-xl h-9 px-3 font-mono text-xs bg-obsidian border border-border text-sage focus:outline-none focus:ring-1 focus:ring-sage/20"
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <>
@@ -1130,6 +1216,254 @@ function AuditTab() {
         )}
       </div>
     </Section>
+  );
+}
+
+/* ── Webhooks tab ────────────────────────────────────────────────────────── */
+
+const WEBHOOK_EVENTS = ['proposal_signed', 'invoice_paid', 'approval_approved', 'project_created', 'client_created'] as const;
+
+function WebhooksTab() {
+  const { t } = useLang();
+  const { isFeatureVisible } = useTier();
+  const { workspace } = useWorkspace();
+  const s = t.app.settings.webhooks;
+
+  const [hooks, setHooks] = useState<any[]>([]);
+  const [adding, setAdding] = useState(false);
+  const [url, setUrl] = useState('');
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [newSecret, setNewSecret] = useState<string | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [testedId, setTestedId] = useState<string | null>(null);
+  const [confirmDeleteHookId, setConfirmDeleteHookId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!workspace?.id) return;
+    supabase.from('webhooks').select('*').eq('workspace_id', workspace.id).order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setHooks(data); });
+  }, [workspace?.id]);
+
+  if (!isFeatureVisible('api_access')) return <LockedFeaturePage featureKey="api_access" />;
+
+  async function handleSave() {
+    if (!url.trim() || selectedEvents.length === 0 || !workspace?.id) return;
+    setSaving(true);
+    const secretBytes = crypto.getRandomValues(new Uint8Array(20));
+    const secret = 'whsec_' + Array.from(secretBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    const id = crypto.randomUUID();
+    const { error } = await supabase.from('webhooks').insert({
+      id,
+      workspace_id: workspace.id,
+      url: url.trim(),
+      events: selectedEvents,
+      secret,
+      active: true,
+      created_at: new Date().toISOString(),
+    });
+    if (error) {
+      toast.error(s.saveError);
+    } else {
+      setHooks(prev => [{ id, workspace_id: workspace.id, url: url.trim(), events: selectedEvents, secret, active: true, created_at: new Date().toISOString() }, ...prev]);
+      setNewSecret(secret);
+      setUrl('');
+      setSelectedEvents([]);
+      setAdding(false);
+    }
+    setSaving(false);
+  }
+
+  async function handleDelete(id: string) {
+    const { error } = await supabase.from('webhooks').delete().eq('id', id);
+    if (!error) {
+      setHooks(prev => prev.filter(h => h.id !== id));
+      toast.success(s.deleteSuccess);
+    }
+  }
+
+  async function handleToggle(hook: any) {
+    const newActive = !hook.active;
+    const { error } = await supabase.from('webhooks').update({ active: newActive }).eq('id', hook.id);
+    if (!error) {
+      setHooks(prev => prev.map(h => h.id === hook.id ? { ...h, active: newActive } : h));
+    } else {
+      toast.error(s.toggleError);
+    }
+  }
+
+  async function handleTest(hook: any) {
+    setTestingId(hook.id);
+    try {
+      const res = await fetch(hook.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'test', workspaceId: workspace?.id, data: {}, timestamp: new Date().toISOString() }),
+      });
+      if (res.ok) {
+        setTestedId(hook.id);
+        setTimeout(() => setTestedId(null), 2500);
+      } else {
+        toast.error(s.testFailed);
+      }
+    } catch {
+      toast.error(s.testFailed);
+    }
+    setTestingId(null);
+  }
+
+  function toggleEvent(ev: string) {
+    setSelectedEvents(prev => prev.includes(ev) ? prev.filter(e => e !== ev) : [...prev, ev]);
+  }
+
+  return (
+    <div className="space-y-5 w-full">
+      <AlertDialog open={confirmDeleteHookId !== null} onOpenChange={open => { if (!open) setConfirmDeleteHookId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{s.deleteConfirm}</AlertDialogTitle>
+            <AlertDialogDescription>{s.deleteConfirmDesc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.app.proposals.form.cancel}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => { if (confirmDeleteHookId) handleDelete(confirmDeleteHookId); setConfirmDeleteHookId(null); }}>
+              {t.app.proposals.actions.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-ivory">{s.heading}</p>
+          <p className="text-xs text-fog mt-0.5">{s.subtitle}</p>
+        </div>
+        {!adding && (
+          <button
+            onClick={() => setAdding(true)}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-xl text-sm font-medium bg-ivory text-obsidian hover:opacity-90 transition-all shrink-0"
+          >
+            <Plus size={13} />{s.addWebhook}
+          </button>
+        )}
+      </div>
+
+      {newSecret && (
+        <div className="rounded-xl border p-4 space-y-2" style={{ backgroundColor: 'rgba(127,163,138,0.06)', borderColor: 'rgba(127,163,138,0.25)' }}>
+          <p className="text-xs text-sage font-medium">{s.secretNote}</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs text-ivory font-mono bg-obsidian rounded-lg px-3 py-2 break-all">{newSecret}</code>
+            <button onClick={() => { navigator.clipboard.writeText(newSecret); }} className="p-2 rounded-lg hover:bg-white/5 text-fog">
+              <Copy size={13} />
+            </button>
+          </div>
+          <button onClick={() => setNewSecret(null)} className="text-[11px] text-fog hover:text-silver transition-colors">{t.app.common.dismiss}</button>
+        </div>
+      )}
+
+      {adding && (
+        <div className="rounded-2xl border p-5 space-y-4" style={{ backgroundColor: '#111522', borderColor: 'rgba(255,255,255,0.08)' }}>
+          <div>
+            <label className="block text-[11px] font-medium text-silver mb-1.5">{s.urlLabel}</label>
+            <input
+              type="url"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              placeholder={s.urlPlaceholder}
+              className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+              style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-silver mb-2">{s.eventsLabel}</label>
+            <div className="flex flex-wrap gap-2">
+              {WEBHOOK_EVENTS.map(ev => (
+                <button
+                  key={ev}
+                  onClick={() => toggleEvent(ev)}
+                  className="text-[11px] px-2.5 py-1 rounded-full border transition-all"
+                  style={selectedEvents.includes(ev)
+                    ? { backgroundColor: 'rgba(127,163,138,0.15)', borderColor: 'rgba(127,163,138,0.4)', color: '#7FA38A' }
+                    : { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: '#8A9099' }}
+                >
+                  {(s.events as Record<string, string>)[ev]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setAdding(false); setUrl(''); setSelectedEvents([]); }}
+              className="flex-1 py-2.5 rounded-xl text-xs transition-colors"
+              style={{ border: '1px solid rgba(255,255,255,0.08)', color: '#8A9099' }}
+            >
+              {s.cancel}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!url.trim() || selectedEvents.length === 0 || saving}
+              className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40 bg-ivory text-obsidian"
+            >
+              {saving ? s.saving : s.save}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {hooks.length === 0 && !adding ? (
+        <div className="rounded-2xl border border-white/6 p-10 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+          <Globe size={20} className="mx-auto mb-3 opacity-30 text-fog" />
+          <p className="text-sm text-fog">{s.noWebhooks}</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {hooks.map(hook => (
+            <div
+              key={hook.id}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border"
+              style={{ backgroundColor: '#111522', borderColor: 'rgba(255,255,255,0.07)' }}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-ivory truncate">{hook.url}</p>
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <span
+                    className="text-[10px] font-medium px-2 py-0.5 rounded-full border"
+                    style={hook.active
+                      ? { color: '#7FA38A', backgroundColor: 'rgba(127,163,138,0.10)', borderColor: 'rgba(127,163,138,0.22)' }
+                      : { color: '#8A9099', backgroundColor: 'rgba(138,144,153,0.08)', borderColor: 'rgba(138,144,153,0.18)' }}
+                  >
+                    {hook.active ? s.active : s.paused}
+                  </span>
+                  {(hook.events as string[]).map((ev: string) => (
+                    <span key={ev} className="text-[10px] text-fog">{(s.events as Record<string, string>)[ev] ?? ev}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => handleTest(hook)}
+                  disabled={testingId === hook.id}
+                  className="px-2.5 py-1.5 rounded-lg text-[11px] transition-all hover:-translate-y-0.5 text-fog border border-white/8 hover:text-silver"
+                >
+                  {testedId === hook.id ? s.testSent : s.test}
+                </button>
+                <button
+                  onClick={() => handleToggle(hook)}
+                  className="px-2.5 py-1.5 rounded-lg text-[11px] transition-all hover:-translate-y-0.5 text-fog border border-white/8 hover:text-silver"
+                >
+                  {hook.active ? <Pause size={11} /> : <Play size={11} />}
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteHookId(hook.id)}
+                  className="p-1.5 rounded-lg transition-all hover:-translate-y-0.5 text-fog hover:text-rose"
+                >
+                  <Trash2 size={11} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1290,6 +1624,7 @@ export default function AppSettings() {
     { id: 6, label: s.tabs.plan,          content: <PlanTab /> },
     { id: 7, label: s.tabs.api,           content: <ApiTab /> },
     { id: 8, label: s.tabs.audit,         content: <AuditTab /> },
+    { id: 9, label: s.tabs.webhooks,      content: <WebhooksTab /> },
   ];
 
   return (

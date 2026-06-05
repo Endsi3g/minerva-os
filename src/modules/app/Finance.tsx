@@ -206,7 +206,7 @@ export default function Finance() {
       <div className="bg-dusk/30 rounded-2xl p-6 border border-white/5">
         <div className="flex items-center gap-2 mb-4 text-ivory">
           <Calculator size={18} className="text-warm" />
-          <TextAnimate text="Quebec Tax Summary (TPS/TVQ)" type="fadeIn" className="text-lg font-medium" />
+          <TextAnimate text={f.qcTaxSummary} type="fadeIn" className="text-lg font-medium" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
           <div className="space-y-3">
@@ -252,7 +252,7 @@ export default function Finance() {
             {finances?.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-10 text-xs text-fog">
-                  No transactions found.
+                  {f.noTransactions}
                 </td>
               </tr>
             ) : (
@@ -282,7 +282,7 @@ export default function Finance() {
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-midnight border border-white/10 rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-xl font-serif text-ivory mb-6">New Transaction</h2>
+            <h2 className="text-xl font-serif text-ivory mb-6">{f.newTransaction}</h2>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-fog">Type</Label>
