@@ -109,47 +109,49 @@ export async function applySetupKit(
   // Check idempotency
   const { data: ws } = await supabase
     .from('workspaces')
-    .select('setup_kit_applied')
+    .select('settings')
     .eq('id', workspaceId)
     .maybeSingle();
 
-  if (ws?.setup_kit_applied) return;
+  if (ws?.settings?.setup_kit_applied) return;
 
   const kit = KITS[agencyType];
   const now = new Date().toISOString();
 
   // Insert sample projects
-  const projectRows = kit.projects.map((p, i) => ({
-    id: `kit-project-${agencyType}-${i}`,
+  const projectRows = kit.projects.map((p) => ({
     workspace_id: workspaceId,
+    client_name: 'Demo Client',
     name: p.name,
     status: p.status,
     due_date: p.dueDate,
     budget: p.budget,
-    spent: 0,
     created_at: now,
   }));
 
   await supabase.from('projects').insert(projectRows);
 
   // Insert sample services
-  const serviceRows = kit.services.map((s, i) => ({
-    id: `kit-service-${agencyType}-${i}`,
+  const serviceRows = kit.services.map((s) => ({
     workspace_id: workspaceId,
     name: s.name,
+    description: s.name,
     category: s.category,
     base_price: s.basePrice,
-    cost_rate: s.basePrice * 0.6,
-    sell_rate: s.basePrice,
-    target_margin: 40,
     created_at: now,
   }));
 
   await supabase.from('services').insert(serviceRows);
 
   // Mark kit as applied
+  const currentSettings = ws?.settings || {};
   await supabase
     .from('workspaces')
-    .update({ setup_kit_applied: true })
+    .update({
+      settings: {
+        ...currentSettings,
+        setup_kit_applied: true,
+      },
+    })
     .eq('id', workspaceId);
 }

@@ -382,7 +382,7 @@ export function OnboardingWizard() {
 
       await supabase
         .from('user_profiles')
-        .update({ onboarding_complete: true })
+        .update({ onboarding_completed: true })
         .eq('user_id', user.id);
     }
     router.push('/app/dashboard');

@@ -1,0 +1,7 @@
+allowBuilds:
+  '@sentry/cli': true
+  canvas: true
+  core-js: true
+  electron-winstaller: true
+  protobufjs: true
+  sharp: true

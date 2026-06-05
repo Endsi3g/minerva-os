@@ -93,9 +93,22 @@ export function UpgradeModal({ featureKey, open, onClose }: Props) {
     if (!workspace?.id || upgrading) return;
     setUpgrading(true);
     try {
+      const { data: currentWs } = await supabase
+        .from('workspaces')
+        .select('settings')
+        .eq('id', workspace.id)
+        .maybeSingle();
+
+      const currentSettings = currentWs?.settings || {};
+
       await supabase
         .from('workspaces')
-        .update({ workspace_tier: targetTier })
+        .update({
+          settings: {
+            ...currentSettings,
+            workspace_tier: targetTier,
+          },
+        })
         .eq('id', workspace.id);
       setWorkspaceProfile({ tier: targetTier });
       if (typeof window !== 'undefined') {

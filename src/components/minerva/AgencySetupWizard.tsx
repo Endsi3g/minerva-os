@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import useMeasure from 'react-use-measure';
 import {
   Palette, Target, FileText, Code2, Layers, Users,
   CheckCircle2, ArrowLeft, ArrowRight, Rocket,
@@ -10,7 +11,7 @@ import {
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { supabase } from '@/lib/supabase';
+
 import { deriveTier } from '@/lib/tier';
 import { applySetupKit } from '@/lib/setup-kits';
 import type { AgencyType } from '@/lib/types';
@@ -58,6 +59,7 @@ export function AgencySetupWizard() {
     billingCycle: 'monthly',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [measureRef, { height }] = useMeasure();
 
   function patch(updates: Partial<WizardState>) {
     setState(prev => ({ ...prev, ...updates }));
@@ -84,15 +86,27 @@ export function AgencySetupWizard() {
   async function handleSkip() {
     const toastId = toast.loading('Skipping setup...');
     try {
-      setWorkspaceProfile({ onboardingComplete: true });
-      if (user) {
-        await supabase.from('user_profiles').update({
-          onboarding_complete: true,
-        }).eq('user_id', user.id);
-      }
+      if (!user) return;
+
+      const res = await fetch('/api/workspace/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skip: true, tier: 'scale' }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+
+      setWorkspaceProfile({
+        onboardingComplete: true,
+        id: json.workspaceId,
+        tier: 'scale',
+      });
+
       toast.success('Setup skipped', { id: toastId });
       router.push('/app/dashboard');
     } catch (err) {
+      console.error('Failed to skip setup:', err);
       toast.error('Failed to skip setup.', { id: toastId });
     }
   }
@@ -105,25 +119,22 @@ export function AgencySetupWizard() {
     try {
       const tier = deriveTier(state.teamSize ?? '1-5');
 
-      const { data: ws } = await supabase
-        .from('workspaces')
-        .select('id')
-        .limit(1)
-        .maybeSingle();
+      const res = await fetch('/api/workspace/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agencyName: state.agencyName || undefined,
+          agencyType: state.agencyType,
+          teamSize: state.teamSize,
+          goals: state.goals,
+          tier,
+        }),
+      });
 
-      const workspaceId = ws?.id ?? 'mock-workspace-123';
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
 
-      await supabase.from('workspaces').update({
-        workspace_tier: tier,
-        agency_type: state.agencyType,
-        team_size: state.teamSize,
-        priority_goals: state.goals,
-        name: state.agencyName || undefined,
-      }).eq('id', workspaceId);
-
-      await supabase.from('user_profiles').update({
-        onboarding_complete: true,
-      }).eq('user_id', user.id);
+      const workspaceId: string = json.workspaceId;
 
       if (state.agencyType) {
         await applySetupKit(workspaceId, state.agencyType, tier);
@@ -137,12 +148,13 @@ export function AgencySetupWizard() {
         priorityGoals: state.goals,
         setupKitApplied: true,
         name: state.agencyName,
+        id: workspaceId,
       });
 
       toast.success(ob.toastSuccess || 'Workspace configured!', { id: toastId });
       router.push('/app/dashboard');
     } catch (err) {
-      console.error('Onboarding submit error', err);
+      console.error('Onboarding submit error', err instanceof Error ? err.message : err);
       toast.error('Failed to configure workspace.', { id: toastId });
       setIsSubmitting(false);
     }
@@ -191,26 +203,33 @@ export function AgencySetupWizard() {
       </div>
 
       {/* Step content */}
-      <div className="w-full max-w-lg">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-          >
-            {step === 1 && <StepDiscovery ob={ob} state={state} patch={patch} />}
-            {step === 2 && <StepAgencyName ob={ob} state={state} patch={patch} fileInputRef={fileInputRef} />}
-            {step === 3 && <StepAgencyType ob={ob} state={state} patch={patch} />}
-            {step === 4 && <StepTeamSize ob={ob} state={state} patch={patch} derivedTier={derivedTier} />}
-            {step === 5 && <StepGoals ob={ob} state={state} toggleGoal={toggleGoal} />}
-            {step === 6 && <StepKitPreview ob={ob} state={state} isSubmitting={isSubmitting} />}
-            {step === 7 && <StepChoosePlan ob={ob} state={state} patch={patch} />}
-            {step === 8 && <StepGetStarted ob={ob} isSubmitting={isSubmitting} handleSubmit={handleSubmit} />}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      <motion.div
+        animate={{ height: height > 0 ? height : 'auto' }}
+        className="w-full max-w-lg overflow-hidden relative"
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div ref={measureRef}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, scale: 0.98, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: -8 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {step === 1 && <StepDiscovery ob={ob} state={state} patch={patch} />}
+              {step === 2 && <StepAgencyName ob={ob} state={state} patch={patch} fileInputRef={fileInputRef} />}
+              {step === 3 && <StepAgencyType ob={ob} state={state} patch={patch} />}
+              {step === 4 && <StepTeamSize ob={ob} state={state} patch={patch} derivedTier={derivedTier} />}
+              {step === 5 && <StepGoals ob={ob} state={state} toggleGoal={toggleGoal} />}
+              {step === 6 && <StepKitPreview ob={ob} state={state} isSubmitting={isSubmitting} />}
+              {step === 7 && <StepChoosePlan ob={ob} state={state} patch={patch} />}
+              {step === 8 && <StepGetStarted ob={ob} isSubmitting={isSubmitting} handleSubmit={handleSubmit} />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </motion.div>
+
 
       {/* Navigation */}
       <div className="w-full max-w-lg mt-8 flex items-center justify-between">
