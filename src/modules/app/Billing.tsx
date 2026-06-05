@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Search, Plus, ChevronDown, ChevronUp, FileDown, Link2, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AnimatePresence, motion } from 'motion/react';
 import { AnimatedNumber } from '@/components/ui/animated-number';
 import { TextAnimate } from '@/components/ui/text-animate';
@@ -241,8 +242,6 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
     </div>
   );
 }
-
-import { Skeleton } from '@/components/ui/skeleton';
 
 function KpiSkeleton() {
   return (

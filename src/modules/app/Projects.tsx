@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { UpgradeBanner } from '@/components/minerva/UpgradeBanner';
 import { Plus, LayoutGrid, GanttChartSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -138,8 +139,6 @@ interface NewProjectForm {
 }
 
 const EMPTY_FORM: NewProjectForm = { name: '', clientId: '', dueDate: '', budget: '' };
-
-import { Skeleton } from '@/components/ui/skeleton';
 
 function ProjectCardSkeleton() {
   return (

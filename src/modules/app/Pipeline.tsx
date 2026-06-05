@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import { UpgradeBanner } from '@/components/minerva/UpgradeBanner';
 import { useRouter } from 'next/navigation';
 import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
@@ -42,9 +44,6 @@ const STAGE_STYLE: Partial<Record<DealStage, string>> = {
   won:  'border-sage/25 bg-sage/5',
   lost: 'border-ember/25 bg-ember/5',
 };
-
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
 
 function KanbanSkeleton() {
   return (
