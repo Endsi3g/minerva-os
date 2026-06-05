@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for the release (e.g. v4.6.0)'
+        required: true
+        default: 'v4.6.0'
 
 permissions:
   contents: write
@@ -35,10 +41,20 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate changelog
         id: changelog
         run: |
-          PREV_TAG=$(git tag --sort=-version:refname | sed -n '2p')
+          RELEASE_TAG="${{ steps.tag.outputs.name }}"
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${RELEASE_TAG}$" | head -1)
           if [ -z "$PREV_TAG" ]; then
             LOG=$(git log --oneline --no-decorate)
           else
@@ -52,6 +68,7 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.name }}
           body: |
             ## Changes
 
@@ -96,6 +113,7 @@ jobs:
       - name: Upload macOS DMG
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.release.outputs.upload_url && steps.tag.outputs.name }}
           files: electron-dist/*.dmg
 
   # ── Windows Electron build ──────────────────────────────────────────────────
@@ -129,4 +147,5 @@ jobs:
       - name: Upload Windows installer
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.release.outputs.upload_url && steps.tag.outputs.name }}
           files: electron-dist/*.exe
