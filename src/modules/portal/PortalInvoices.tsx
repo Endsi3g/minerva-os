@@ -27,10 +27,9 @@ export default function PortalInvoices() {
   const { isValid, invoices: rawInvoices, projects, token, clientName } = usePortalData();
   const [payingId, setPayingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [stripeAvailable, setStripeAvailable] = useState<boolean | null>(null);
 
   if (!isValid) return null;
-
-  const [stripeAvailable, setStripeAvailable] = useState<boolean | null>(null);
 
   async function handlePay(invoice: any) {
     if (payingId) return;

@@ -5,6 +5,7 @@ import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { FlickeringGrid } from '@/components/ui/flickering-grid';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLang } from '@/i18n';
 
 const STEPS = [
   { id: 'workspace', label: 'Workspace', description: 'Set up your workspace identity' },
@@ -277,6 +278,7 @@ const ghostBtn: React.CSSProperties = {
 
 export function OnboardingWizard() {
   const router = useRouter();
+  const { t } = useLang();
   const [step, setStep] = useState(0);
   const [workspaceId, setWorkspaceId] = useState('');
   const [discoveryChecked, setDiscoveryChecked] = useState(false);
@@ -426,9 +428,10 @@ export function OnboardingWizard() {
         {step >= 1 && (
           <button
             onClick={handleComplete}
+            title={t.onboarding.skipTooltip}
             style={{ background: 'none', border: 'none', color: '#8A9099', fontSize: 12, cursor: 'pointer', marginTop: 24, display: 'block' }}
           >
-            Skip setup
+            {t.onboarding.skipForNow}
           </button>
         )}
       </div>

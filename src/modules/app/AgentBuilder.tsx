@@ -140,7 +140,6 @@ export default function AgentBuilder() {
         rules,
         status: isPublished ? 'active' : 'idle',
       }, keysPayload);
-      toast.success(t.app.agentBuilder.saveSuccess);
     } catch {
       toast.error(t.app.agentBuilder.saveError);
     }
