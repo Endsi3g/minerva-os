@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         .select('workspace_id')
         .eq('user_id', user.id)
         .maybeSingle();
-      if (profile?.workspace_id && profile.workspace_id !== workspaceId) {
+      if (!profile?.workspace_id || profile.workspace_id !== workspaceId) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
     }

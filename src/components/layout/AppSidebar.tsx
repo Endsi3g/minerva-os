@@ -272,19 +272,19 @@ export function AppSidebar() {
                     { href: '/app/dashboard', label: t.smb.solo.sidebar.dashboard, icon: Home },
                     { href: '/app/proposals', label: t.smb.solo.sidebar.proposals, icon: Briefcase },
                     { href: '/app/approvals', label: t.smb.sidebar.clientPortal, icon: Globe },
-                    { href: '/app/pipeline', label: 'Pipeline', icon: Activity },
-                    { href: '/app/tasks', label: 'Tasks', icon: Activity },
-                    { href: '/app/agents', label: 'Agents', icon: Bot },
-                    { href: '/app/copilot', label: 'Chat', icon: MessageSquare },
+                    { href: '/app/pipeline', label: sidebar.pipeline, icon: Activity },
+                    { href: '/app/tasks', label: sidebar.tasks, icon: Activity },
+                    { href: '/app/agents', label: sidebar.agents, icon: Bot },
+                    { href: '/app/copilot', label: sidebar.chat, icon: MessageSquare },
                   ] : [
-                    { href: '/app/pipeline', label: 'Pipeline', icon: Activity },
-                    { href: '/app/tasks', label: 'Tasks', icon: Activity },
-                    { href: '/app/proposals', label: 'Proposals', icon: Briefcase },
-                    { href: '/app/marketplace', label: 'Marketplace', icon: ShoppingBag },
-                    { href: '/app/agents', label: 'Agents', icon: Bot },
-                    { href: '/app/copilot', label: 'Chat', icon: MessageSquare },
-                    { href: '/app/workflows', label: 'Workflows', icon: Hammer },
-                    { href: '/app/intelligence', label: 'Intelligence', icon: BarChart2 },
+                    { href: '/app/pipeline', label: sidebar.pipeline, icon: Activity },
+                    { href: '/app/tasks', label: sidebar.tasks, icon: Activity },
+                    { href: '/app/proposals', label: sidebar.proposals, icon: Briefcase },
+                    { href: '/app/marketplace', label: sidebar.marketplace, icon: ShoppingBag },
+                    { href: '/app/agents', label: sidebar.agents, icon: Bot },
+                    { href: '/app/copilot', label: sidebar.chat, icon: MessageSquare },
+                    { href: '/app/workflows', label: sidebar.workflows, icon: Hammer },
+                    { href: '/app/intelligence', label: sidebar.intelligence, icon: BarChart2 },
                   ]).map(item => {
                     const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                     return (
@@ -308,8 +308,8 @@ export function AppSidebar() {
             {/* Bottom settings */}
             <div className="pt-2 border-t border-white/5 space-y-0.5">
               {[
-                { href: '/app/settings', label: 'Settings', icon: Settings },
-                { href: '/app/support-hub', label: 'Ask for help', icon: HelpCircle },
+                { href: '/app/settings', label: sidebar.settings, icon: Settings },
+                { href: '/app/support-hub', label: sidebar.help, icon: HelpCircle },
               ].map(item => {
                 const isActive = pathname === item.href;
                 return (

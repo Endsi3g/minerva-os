@@ -1013,7 +1013,7 @@ function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
                   </div>
                   <p className="text-xs text-fog leading-relaxed">{s.rationale}</p>
                   <p className="text-[11px] mt-1.5" style={{ color: '#8A9099' }}>
-                    Trigger: <span style={{ color: '#B8BDC7' }}>{s.trigger}</span>
+                    {sg.trigger}: <span style={{ color: '#B8BDC7' }}>{s.trigger}</span>
                   </p>
                 </div>
                 <button

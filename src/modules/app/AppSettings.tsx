@@ -1356,7 +1356,7 @@ function WebhooksTab() {
               <Copy size={13} />
             </button>
           </div>
-          <button onClick={() => setNewSecret(null)} className="text-[11px] text-fog hover:text-silver transition-colors">Dismiss</button>
+          <button onClick={() => setNewSecret(null)} className="text-[11px] text-fog hover:text-silver transition-colors">{t.app.common.dismiss}</button>
         </div>
       )}
 

@@ -4,9 +4,18 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'hermes@uprising.studio';
 const FROM_NAME = process.env.RESEND_FROM_NAME || 'Minerva OS';
 
+function escapeHtml(value: string): string {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 async function sendBriefingEmail(to: string, userName: string, sections: any[], workspaceName: string): Promise<boolean> {
   if (!process.env.RESEND_API_KEY) {
-    console.log(`[workspace-digest] No RESEND_API_KEY — skipping email to ${to}`);
+    console.log(`[workspace-digest] No RESEND_API_KEY — skipping email send (1 recipient)`);
     return true;
   }
 
@@ -16,13 +25,13 @@ async function sendBriefingEmail(to: string, userName: string, sections: any[], 
       : s.items.map((item: any) => `
         <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;">
           <span style="color:#8A9099;font-size:11px;margin-top:2px;">·</span>
-          <p style="margin:0;font-size:12px;color:#B8BDC7;line-height:1.5;">${item.label}</p>
+          <p style="margin:0;font-size:12px;color:#B8BDC7;line-height:1.5;">${escapeHtml(item.label ?? '')}</p>
         </div>`).join('');
     return `
       <div style="margin-bottom:20px;padding:16px;background:#111522;border:1px solid rgba(255,255,255,0.07);border-radius:12px;">
-        <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#F5F1E8;">${s.emoji} ${s.title} <span style="font-size:11px;font-weight:400;color:#8A9099;">(${s.items.length})</span></p>
+        <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#F5F1E8;">${escapeHtml(s.emoji ?? '')} ${escapeHtml(s.title ?? '')} <span style="font-size:11px;font-weight:400;color:#8A9099;">(${s.items.length})</span></p>
         ${itemsHtml}
-        ${s.ai_summary ? `<p style="margin:10px 0 0;font-size:11px;color:#8A9099;font-style:italic;border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;">${s.ai_summary}</p>` : ''}
+        ${s.ai_summary ? `<p style="margin:10px 0 0;font-size:11px;color:#8A9099;font-style:italic;border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;">${escapeHtml(s.ai_summary)}</p>` : ''}
       </div>`;
   }).join('');
 
@@ -32,9 +41,9 @@ async function sendBriefingEmail(to: string, userName: string, sections: any[], 
 <body style="margin:0;padding:0;background-color:#0A0D14;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;margin:40px auto;padding:0 20px;">
     <tr><td>
-      <p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#7FA38A;margin:0 0 12px;">${workspaceName} · ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+      <p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#7FA38A;margin:0 0 12px;">${escapeHtml(workspaceName)} · ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       <h1 style="margin:0 0 6px;font-size:22px;font-weight:400;color:#F5F1E8;font-family:Georgia,serif;">☀️ Minerva Daily</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#8A9099;">Good morning, ${userName}. Here's your workspace briefing.</p>
+      <p style="margin:0 0 28px;font-size:13px;color:#8A9099;">Good morning, ${escapeHtml(userName)}. Here's your workspace briefing.</p>
       ${sectionHtml}
       <p style="margin:28px 0 0;font-size:11px;color:#8A9099;text-align:center;">Powered by Hermes · Minerva OS · <a href="#" style="color:#8A9099;">Manage preferences</a></p>
     </td></tr>
@@ -63,8 +72,11 @@ async function sendBriefingEmail(to: string, userName: string, sections: any[], 
 }
 
 export async function POST(req: NextRequest) {
+  if (!process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'cron_not_configured' }, { status: 500 });
+  }
   const secret = req.headers.get('x-cron-secret') || req.headers.get('authorization')?.replace('Bearer ', '');
-  if (secret !== process.env.CRON_SECRET) {
+  if (!secret || secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

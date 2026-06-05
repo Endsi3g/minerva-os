@@ -23,9 +23,10 @@ interface SignatureModalProps {
   onCancel: () => void;
   labels: any;
   signing: boolean;
+  lang: 'en' | 'fr';
 }
 
-function SignatureModal({ proposal, onConfirm, onCancel, labels, signing }: SignatureModalProps) {
+function SignatureModal({ proposal, onConfirm, onCancel, labels, signing, lang }: SignatureModalProps) {
   const m = labels.signatureModal;
   const [name, setName] = useState('');
   const [agreed, setAgreed] = useState(false);
@@ -70,7 +71,7 @@ function SignatureModal({ proposal, onConfirm, onCancel, labels, signing }: Sign
           {/* Proposal amount */}
           {proposal.total_amount > 0 && (
             <div className="flex items-center justify-between rounded-xl px-4 py-3 border" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}>
-              <span className="text-xs" style={{ color: '#8A9099' }}>Total investment</span>
+              <span className="text-xs" style={{ color: '#8A9099' }}>{m.totalInvestment}</span>
               <span className="text-sm font-semibold" style={{ color: '#F5F1E8' }}>{fmt(proposal.total_amount)}</span>
             </div>
           )}
@@ -107,7 +108,7 @@ function SignatureModal({ proposal, onConfirm, onCancel, labels, signing }: Sign
                 {name}
               </p>
               <p className="text-[10px] mt-1" style={{ color: '#8A9099' }}>
-                {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             </motion.div>
           )}
@@ -213,6 +214,7 @@ export default function PortalProposals() {
             onCancel={() => setModalProposal(null)}
             labels={pp}
             signing={signingId === modalProposal.id}
+            lang={lang}
           />
         )}
       </AnimatePresence>

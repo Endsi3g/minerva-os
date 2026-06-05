@@ -39,7 +39,7 @@ function PortalAnalytics({ workspaceId }: { workspaceId: string }) {
   }
 
   function relTime(iso: string | null) {
-    if (!iso) return '—';
+    if (!iso) return '·';
     const diff = Date.now() - new Date(iso).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 60) return `${mins}m ago`;
