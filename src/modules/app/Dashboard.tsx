@@ -18,6 +18,8 @@ import {
   Activity,
   Key,
   Hammer,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { GettingStartedChecklist } from '@/components/minerva/GettingStartedChecklist';
 import { SoloQuickStart, useSoloQuickStart } from '@/components/minerva/SoloQuickStart';
@@ -159,84 +161,224 @@ function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspa
   );
 }
 
-/* ── AI Daily Briefing ────────────────────────────────────────────────────── */
-function DailyBriefing({ context, labels }: {
-  context: string;
-  labels: { title: string; loading: string; error: string; refresh: string };
-}) {
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState(false);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setErr(false);
-    try {
-      const res = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: 'Generate a dense, bulleted strategic advice list based on this context. Prefix each point with a middot (·). Make it extremely actionable.' }],
-          context,
-        }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setContent(data.content);
-    } catch {
-      setErr(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [context]);
-
-  useEffect(() => {
-    if (context) load();
-  }, [context, load]);
-
-  return (
-    <div className="rounded-xl border border-white/5 bg-[#111522] p-5 relative overflow-hidden">
-      <TextureOverlay texture="dots" opacity={0.08} />
-      <div className="flex items-center justify-between mb-3 relative z-10">
-        <div className="flex items-center gap-1.5">
-          <Sparkles size={14} className="text-[#B89B6A] animate-pulse" />
-          <span className="text-xs font-semibold text-ivory uppercase tracking-wider">{labels.title}</span>
-        </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="text-fog hover:text-silver transition-colors cursor-pointer"
-        >
-          <RefreshCwIcon className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
-        </button>
-      </div>
-
-      <div className="relative z-10 min-h-[60px]">
-        {loading && (
-          <div className="space-y-2">
-            <Skeleton className="h-3 w-full bg-white/5" />
-            <Skeleton className="h-3 w-5/6 bg-white/5" />
-            <Skeleton className="h-3 w-2/3 bg-white/5" />
-          </div>
-        )}
-        {err && !loading && (
-          <p className="text-xs text-ember">{labels.error}</p>
-        )}
-        {content && !loading && (
-          <div className="text-xs text-silver leading-relaxed whitespace-pre-wrap font-sans">
-            {content}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function RefreshCwIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={className}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
     </svg>
+  );
+}
+
+/* ── Minerva Daily ────────────────────────────────────────────────────────── */
+
+type BriefingItem = { label: string; module: string; id?: string };
+type BriefingSection = {
+  type: string;
+  title: string;
+  emoji: string;
+  items: BriefingItem[];
+  ai_summary: string;
+};
+type BriefingResult = { generatedAt: string; role: string; sections: BriefingSection[] };
+
+const MODULE_LINKS: Record<string, string> = {
+  projects: '/app/projects',
+  tasks: '/app/projects',
+  invoices: '/app/finance-hub',
+  approvals: '/app/approvals',
+};
+
+const SECTION_COLORS: Record<string, { badge: string; bg: string }> = {
+  urgences:     { badge: '#A86A6A', bg: 'rgba(168,106,106,0.10)' },
+  derive:       { badge: '#B89B6A', bg: 'rgba(184,155,106,0.10)' },
+  facturation:  { badge: '#7FA38A', bg: 'rgba(127,163,138,0.10)' },
+  approbations: { badge: '#8A9099', bg: 'rgba(138,144,153,0.10)' },
+};
+
+function minervaDailySessionKey(wsId: string) { return `minerva_daily_${wsId}`; }
+
+function relativeDailyTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  return hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`;
+}
+
+function MinervaDaily({ workspaceId, userRole }: { workspaceId: string; userRole?: string }) {
+  const { t, lang } = useLang();
+  const d = t.app.dashboard.minervaDaily;
+  const [briefing, setBriefing] = useState<BriefingResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['urgences']));
+
+  const fetchBriefing = useCallback(async (force = false) => {
+    if (!workspaceId) return;
+    if (!force) {
+      try {
+        const cached = sessionStorage.getItem(minervaDailySessionKey(workspaceId));
+        if (cached) {
+          const parsed = JSON.parse(cached) as BriefingResult;
+          if (Date.now() - new Date(parsed.generatedAt).getTime() < 30 * 60 * 1000) {
+            setBriefing(parsed);
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+    }
+    setLoading(true);
+    setErr(false);
+    try {
+      const res = await fetch('/api/ai/daily-briefing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId, userRole: userRole ?? 'owner', lang }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setBriefing(data);
+      try { sessionStorage.setItem(minervaDailySessionKey(workspaceId), JSON.stringify(data)); } catch { /* ignore */ }
+    } catch {
+      setErr(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [workspaceId, userRole, lang]);
+
+  useEffect(() => { fetchBriefing(); }, [fetchBriefing]);
+
+  function toggleSection(type: string) {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type); else next.add(type);
+      return next;
+    });
+  }
+
+  return (
+    <div className="rounded-xl border border-white/5 bg-[#111522] overflow-hidden relative">
+      <TextureOverlay texture="dots" opacity={0.08} />
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 relative z-10">
+        <div className="flex items-center gap-2">
+          <Sparkles size={13} className="text-[#B89B6A] animate-pulse" />
+          <span className="text-xs font-semibold text-ivory uppercase tracking-wider">{d.title}</span>
+          {briefing && (
+            <span className="text-[10px] text-fog">
+              · {(d.roles as Record<string, string>)[briefing.role] ?? briefing.role}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => fetchBriefing(true)}
+          disabled={loading}
+          className="text-fog hover:text-silver transition-colors cursor-pointer"
+          title={d.regenerate}
+        >
+          <RefreshCwIcon className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
+        </button>
+      </div>
+
+      <div className="relative z-10">
+        {loading && !briefing && (
+          <div className="px-5 py-4 space-y-2.5">
+            <p className="text-[11px] text-fog animate-pulse">{d.generating}</p>
+            <Skeleton className="h-2.5 w-full bg-white/5" />
+            <Skeleton className="h-2.5 w-4/5 bg-white/5" />
+            <Skeleton className="h-2.5 w-3/5 bg-white/5" />
+          </div>
+        )}
+        {err && !loading && (
+          <p className="px-5 py-4 text-xs text-[#A86A6A]">{d.error}</p>
+        )}
+        {briefing && (
+          <div>
+            {briefing.sections.map((section, i) => {
+              const isOpen = expanded.has(section.type);
+              const colors = SECTION_COLORS[section.type] ?? SECTION_COLORS.urgences;
+              const sl = (d.sections as Record<string, { title: string; empty: string }>)[section.type];
+
+              return (
+                <motion.div
+                  key={section.type}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.07, duration: 0.3 }}
+                >
+                  <button
+                    onClick={() => toggleSection(section.type)}
+                    className="w-full flex items-center gap-2.5 px-5 py-3 text-left hover:bg-white/[0.02] transition-colors border-b border-white/5"
+                  >
+                    <span className="text-sm leading-none">{section.emoji}</span>
+                    <span className="text-xs font-medium text-silver flex-1">{sl?.title ?? section.title}</span>
+                    <span
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                      style={{ backgroundColor: colors.bg, color: colors.badge }}
+                    >
+                      {section.items.length}
+                    </span>
+                    {isOpen
+                      ? <ChevronUp size={11} className="text-fog" />
+                      : <ChevronDown size={11} className="text-fog" />}
+                  </button>
+
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden"
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                      >
+                        <div className="px-5 pb-4 pt-2 space-y-2">
+                          {section.items.length === 0 ? (
+                            <p className="text-[11px] text-fog">{sl?.empty ?? 'Nothing to report.'}</p>
+                          ) : (
+                            <>
+                              {section.items.map((item, j) => (
+                                <div key={j} className="flex items-start gap-2 group">
+                                  <span className="text-fog text-[10px] shrink-0 mt-0.5">·</span>
+                                  <p className="text-[11px] text-silver flex-1 leading-relaxed">{item.label}</p>
+                                  {item.module && MODULE_LINKS[item.module] && (
+                                    <a
+                                      href={MODULE_LINKS[item.module]}
+                                      className="text-[10px] text-fog hover:text-[#B89B6A] transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                                    >
+                                      →
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                              {section.ai_summary && (
+                                <p className="text-[10px] text-fog italic leading-relaxed mt-2 pt-2 border-t border-white/5">
+                                  {section.ai_summary}
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+
+            {briefing.generatedAt && (
+              <p className="px-5 py-2 text-[10px] text-fog">
+                {d.lastGenerated.replace('{{ago}}', relativeDailyTime(briefing.generatedAt))}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -585,10 +727,7 @@ function SMBDashboard({
         <div className="space-y-6">
           <GettingStartedChecklist />
           {workspaceId && (
-            <DailyBriefing
-              context={`Active projects: ${projects?.filter((p: any) => p.status === 'active').length ?? 0}. Open tasks: ${localTasks.length}. Pending approvals: ${approvals?.filter((a: any) => a.status === 'pending').length ?? 0}. Outstanding invoices: $${invoices?.filter((i: any) => i.status !== 'paid').reduce((s: number, i: any) => s + (i.amount || 0), 0) ?? 0}.`}
-              labels={{ title: 'AI Reviews & Suggestions', loading: d.briefingLoading, error: d.briefingError, refresh: d.briefingRefresh }}
-            />
+            <MinervaDaily workspaceId={workspaceId} userRole={user?.role} />
           )}
         </div>
       </div>
@@ -679,13 +818,6 @@ export default function Dashboard() {
     const paidPending = invoices.filter((i: any) => ['paid', 'sent'].includes(i.status)).reduce((s: number, i: any) => s + (i.amount || 0), 0);
     return { outstanding, overdue, paidPending, otherIncome: 460 };
   }, [invoices]);
-
-  const activeProjectsCount = projects ? projects.filter((p: any) => p.status === 'active').length : 0;
-  const pendingApprovalsCount = approvals ? approvals.filter((a: any) => a.status === 'pending').length : 0;
-
-  const briefingContext = workspaceId
-    ? `Active projects: ${activeProjectsCount}. Open tasks: ${localTasks.length}. Pending approvals: ${pendingApprovalsCount}. Outstanding invoices: $${financialMetrics.outstanding}. Overdue invoices: $${financialMetrics.overdue}.`
-    : '';
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
@@ -1037,15 +1169,7 @@ export default function Dashboard() {
           
           {/* AI Reviews & Suggestions */}
           {workspaceId && (
-            <DailyBriefing
-              context={briefingContext}
-              labels={{
-                title: 'AI Reviews & Suggestions',
-                loading: d.briefingLoading,
-                error: d.briefingError,
-                refresh: d.briefingRefresh,
-              }}
-            />
+            <MinervaDaily workspaceId={workspaceId} userRole={user?.role} />
           )}
 
           {workspaceId && <AgentSuggestions workspaceId={workspaceId} />}

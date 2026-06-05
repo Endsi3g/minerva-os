@@ -578,15 +578,37 @@ function NotificationsTab() {
   const s = t.app.settings.notifications;
 
   const prefs = [
-    { key: 'projectUpdates', label: s.projectUpdates, desc: s.projectUpdatesDesc, default: true },
-    { key: 'approvalRequests', label: s.approvalRequests, desc: s.approvalRequestsDesc, default: true },
+    { key: 'projectUpdates',  label: s.projectUpdates,  desc: s.projectUpdatesDesc,  default: true },
+    { key: 'approvalRequests',label: s.approvalRequests,desc: s.approvalRequestsDesc,default: true },
     { key: 'invoiceActivity', label: s.invoiceActivity, desc: s.invoiceActivityDesc, default: true },
-    { key: 'riskAlerts', label: s.riskAlerts, desc: s.riskAlertsDesc, default: true },
+    { key: 'riskAlerts',      label: s.riskAlerts,      desc: s.riskAlertsDesc,      default: true },
+    { key: 'dailyBriefing',   label: s.dailyBriefing,   desc: s.dailyBriefingDesc,   default: false },
   ];
 
+  const { user } = useAuth();
   const [enabled, setEnabled] = useState<Record<string, boolean>>(
     Object.fromEntries(prefs.map(p => [p.key, p.default]))
   );
+
+  useEffect(() => {
+    if (!user?.email) return;
+    supabase.from('user_profiles').select('notification_prefs').eq('email', user.email).maybeSingle()
+      .then(({ data }) => {
+        if (data?.notification_prefs) {
+          setEnabled(prev => ({ ...prev, ...data.notification_prefs }));
+        }
+      });
+  }, [user?.email]);
+
+  async function handleToggle(key: string) {
+    const next = { ...enabled, [key]: !enabled[key] };
+    setEnabled(next);
+    if (user?.email) {
+      await supabase.from('user_profiles')
+        .update({ notification_prefs: next })
+        .eq('email', user.email);
+    }
+  }
 
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
@@ -595,7 +617,7 @@ function NotificationsTab() {
           <div
             key={pref.key}
             className="flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-colors hover:bg-white/[0.02] bg-midnight border border-border"
-            onClick={() => setEnabled(prev => ({ ...prev, [pref.key]: !prev[pref.key] }))}
+            onClick={() => handleToggle(pref.key)}
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-ivory">{pref.label}</p>

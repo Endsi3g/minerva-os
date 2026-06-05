@@ -601,6 +601,25 @@ const translations = {
         briefingLoading: 'Hermes is analyzing your workspace...',
         briefingError: 'Could not load briefing.',
         briefingRefresh: 'Refresh',
+        minervaDaily: {
+          title: 'Minerva Daily',
+          regenerate: 'Regenerate',
+          generating: 'Generating your briefing...',
+          error: 'Could not load briefing.',
+          lastGenerated: 'Generated {{ago}}',
+          sections: {
+            urgences:     { title: 'Urgencies',         empty: 'No urgent items.' },
+            derive:       { title: 'Projects at Risk',  empty: 'All projects on track.' },
+            facturation:  { title: 'Billing',           empty: 'No pending invoices.' },
+            approbations: { title: 'Stalled Approvals', empty: 'No pending approvals.' },
+          },
+          roles: {
+            owner:           'Owner view',
+            pm:              'PM view',
+            project_manager: 'PM view',
+            designer:        'Designer view',
+          },
+        },
       },
       clients: {
         title: 'Clients',
@@ -961,6 +980,8 @@ const translations = {
           invoiceActivityDesc: 'Payments received, overdue notices, and reminders.',
           riskAlerts: 'Risk alerts',
           riskAlertsDesc: 'Flagged issues surfaced by the AI risk engine.',
+          dailyBriefing: 'Daily AI Briefing email',
+          dailyBriefingDesc: 'Receive Minerva Daily by email every weekday morning at 8am.',
         },
         security: {
           heading: 'Security',
@@ -2723,6 +2744,25 @@ const translations = {
         briefingLoading: 'Hermes analyse votre espace de travail...',
         briefingError: 'Impossible de charger le briefing.',
         briefingRefresh: 'Actualiser',
+        minervaDaily: {
+          title: 'Minerva Daily',
+          regenerate: 'Regenerer',
+          generating: 'Generation du briefing en cours...',
+          error: 'Impossible de charger le briefing.',
+          lastGenerated: 'Genere {{ago}}',
+          sections: {
+            urgences:     { title: 'Urgences',           empty: 'Aucun element urgent.' },
+            derive:       { title: 'Projets en derive',  empty: 'Tous les projets sont en bonne voie.' },
+            facturation:  { title: 'Facturation',        empty: 'Aucune facture en attente.' },
+            approbations: { title: 'Approbations',       empty: 'Aucune approbation en attente.' },
+          },
+          roles: {
+            owner:           'Vue proprietaire',
+            pm:              'Vue chef de projet',
+            project_manager: 'Vue chef de projet',
+            designer:        'Vue designer',
+          },
+        },
       },
       clients: {
         title: 'Clients',
@@ -3083,6 +3123,8 @@ const translations = {
           invoiceActivityDesc: 'Paiements recus, avis de retard et rappels.',
           riskAlerts: 'Alertes de risque',
           riskAlertsDesc: 'Problemes signales par le moteur de risque IA.',
+          dailyBriefing: 'Briefing IA quotidien par email',
+          dailyBriefingDesc: 'Recevez Minerva Daily par email chaque matin de semaine a 8h.',
         },
         security: {
           heading: 'Securite',
