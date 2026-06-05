@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Check, Copy, Download, Minus } from 'lucide-react';
 import { useLang, type Lang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 // Convex removed — Supabase is used instead.
 import { supabase } from '@/lib/supabase';
@@ -46,13 +47,17 @@ function ProfileTab() {
 
   async function handleSave() {
     if (profile?._id) {
-      await supabase
+      const { error } = await supabase
         .from('user_profiles')
         .update({
           name,
           avatar_url: avatarUrl.trim() || null,
         })
         .eq('id', profile._id);
+      if (error) {
+        toast.error(s.saveError ?? 'Failed to save profile.');
+        return;
+      }
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -227,7 +232,7 @@ function WorkspaceTab() {
 
   async function handleSave() {
     if (wsRow?.id) {
-      await supabase
+      const { error } = await supabase
         .from('workspaces')
         .update({
           name: studioName,
@@ -240,6 +245,10 @@ function WorkspaceTab() {
           },
         })
         .eq('id', wsRow.id);
+      if (error) {
+        toast.error(s.saveError ?? 'Failed to save workspace settings.');
+        return;
+      }
       setWorkspaceProfile({ name: studioName, brandColor, customDomain: customDomain || undefined });
     }
     setSaved(true);
@@ -843,6 +852,8 @@ function ApiTab() {
   const [newKey, setNewKey] = useState<string | null>(null);
   const [keyCopied, setKeyCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [showManualCopy, setShowManualCopy] = useState<string | null>(null);
+  const manualCopyRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -889,17 +900,26 @@ function ApiTab() {
   }
 
   async function handleRevoke(keyId: string) {
+    const confirmed = window.confirm(s.confirmRevoke ?? 'Are you sure you want to revoke this API key? This action cannot be undone.');
+    if (!confirmed) return;
     const now = new Date().toISOString();
     await supabase.from('api_keys').update({ revoked_at: now }).eq('id', keyId);
     setKeys(prev => prev.map(k => k.id === keyId ? { ...k, revokedAt: now } : k));
+    toast.success(s.revokedSuccess ?? 'API key revoked.');
   }
 
   function handleCopyKey() {
     if (!newKey) return;
-    navigator.clipboard.writeText(newKey).then(() => {
-      setKeyCopied(true);
-      setTimeout(() => setKeyCopied(false), 2000);
-    });
+    navigator.clipboard.writeText(newKey).then(
+      () => {
+        setKeyCopied(true);
+        setTimeout(() => setKeyCopied(false), 2000);
+      },
+      () => {
+        setShowManualCopy(newKey);
+        toast.error(s.copyFailed ?? 'Clipboard unavailable — copy the key manually.');
+      }
+    );
   }
 
   return (
@@ -989,6 +1009,19 @@ function ApiTab() {
                   <Copy size={13} />
                   {keyCopied ? 'Copied!' : s.copyKey}
                 </button>
+                {showManualCopy && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-silver">{s.manualCopy ?? 'Copy manually'}</label>
+                    <input
+                      ref={manualCopyRef}
+                      type="text"
+                      readOnly
+                      value={showManualCopy}
+                      onClick={() => manualCopyRef.current?.select()}
+                      className="w-full rounded-xl h-10 px-3 text-sm font-mono bg-obsidian border border-border text-sage cursor-pointer"
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <>
