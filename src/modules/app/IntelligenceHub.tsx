@@ -4,11 +4,88 @@ import { useLang } from '@/i18n';
 import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs';
 import { supabase } from '@/lib/supabase';
 import { useWorkspaces, useProjects, useDeals, useApprovals } from '@/lib/hooks/useSupabase';
-import { AlertTriangle, Bot, Clock } from 'lucide-react';
+import { AlertTriangle, Bot, Clock, Eye } from 'lucide-react';
 import Reports from './Reports';
 import Cockpit from './Cockpit';
 import NPS from './NPS';
 import AgentOps from './AgentOps';
+
+/* ── PortalAnalytics ─────────────────────────────────────────────────────────── */
+
+function PortalAnalytics({ workspaceId }: { workspaceId: string }) {
+  const { t } = useLang();
+  const ci = t.app.intelligence.clientIntel;
+  const [rows, setRows] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    fetch(`/api/intelligence/portal-analytics?workspaceId=${workspaceId}`)
+      .then(r => r.json())
+      .then(d => setRows(d.analytics ?? []))
+      .catch(() => setRows([]));
+  }, [workspaceId]);
+
+  if (rows === null) {
+    return <p className="text-sm text-fog py-8 text-center">{ci.loading}</p>;
+  }
+
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-2xl border border-white/6 p-12 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+        <Eye size={24} className="mx-auto mb-3 opacity-30" style={{ color: '#8A9099' }} />
+        <p className="text-sm text-fog">{ci.noData}</p>
+      </div>
+    );
+  }
+
+  function relTime(iso: string | null) {
+    if (!iso) return '—';
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm font-medium text-ivory">{ci.title}</p>
+        <p className="text-xs text-fog mt-0.5">{ci.subtitle}</p>
+      </div>
+      <div className="rounded-2xl border border-white/6 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              {[ci.cols.client, ci.cols.visits, ci.cols.lastSeen, ci.cols.proposals, ci.cols.files, ci.cols.approvals].map(col => (
+                <th key={col} className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-fog">{col}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr
+                key={row.clientId}
+                style={{
+                  backgroundColor: i % 2 === 0 ? '#111522' : '#0E1119',
+                  borderBottom: '1px solid rgba(255,255,255,0.04)',
+                }}
+              >
+                <td className="px-4 py-3 font-medium text-ivory">{row.clientName}</td>
+                <td className="px-4 py-3 text-silver">{row.visits}</td>
+                <td className="px-4 py-3 text-fog">{relTime(row.lastSeen)}</td>
+                <td className="px-4 py-3 text-silver">{row.proposals}</td>
+                <td className="px-4 py-3 text-silver">{row.files}</td>
+                <td className="px-4 py-3 text-silver">{row.approvals}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -233,12 +310,16 @@ export default function IntelligenceHub() {
   const h = t.app.intelligence;
   const [activeTab, setActiveTab] = useState(0);
 
+  const workspaces = useWorkspaces();
+  const workspaceId = (workspaces as any[])?.[0]?._id ?? (workspaces as any[])?.[0]?.id ?? '';
+
   const tabs = [
-    { id: 0, label: h.tabs.overview,  content: <IntelligenceOverview /> },
-    { id: 1, label: h.tabs.reports,   content: <Reports /> },
-    { id: 2, label: h.tabs.health,    content: <Cockpit /> },
-    { id: 3, label: h.tabs.nps,       content: <NPS /> },
-    { id: 4, label: h.tabs.agentOps,  content: <AgentOps /> },
+    { id: 0, label: h.tabs.overview,    content: <IntelligenceOverview /> },
+    { id: 1, label: h.tabs.reports,     content: <Reports /> },
+    { id: 2, label: h.tabs.health,      content: <Cockpit /> },
+    { id: 3, label: h.tabs.nps,         content: <NPS /> },
+    { id: 4, label: h.tabs.agentOps,    content: <AgentOps /> },
+    { id: 5, label: h.tabs.clientIntel, content: <PortalAnalytics workspaceId={workspaceId} /> },
   ];
 
   return (
