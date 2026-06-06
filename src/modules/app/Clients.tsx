@@ -278,7 +278,7 @@ export default function Clients() {
           </p>
         </div>
         {viewTab === 'clients' && (
-          <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
+          <Button size="sm" id="btn-new-client" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
             <Plus size={14} />
             {cKeys.addClient}
           </Button>
