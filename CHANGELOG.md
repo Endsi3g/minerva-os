@@ -5,6 +5,85 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [4.7.0] — 2026-06-07
+
+### Added
+- **Marketplace Community Tier**: New "Community" tab in the Marketplace — browse and install community-contributed templates, automations, and playbooks.
+- **Contribute modal**: Any workspace member can submit a template or automation for community review directly from the Marketplace.
+- **POST /api/marketplace/submit**: New API endpoint that creates a `marketplace_items` entry (status: submitted) and a `marketplace_submissions` record for the review workflow.
+- **marketplace_submissions table**: Supabase migration adding the community submission table with RLS and a draft → submitted → approved → published review flow.
+- **is_community column**: Added to `marketplace_items` to distinguish official from community-contributed items.
+
+---
+
+## [4.6.0] — 2026-06-07
+
+### Changed
+- Full UI/UX audit pass across all modules — fixed two critical JS runtime errors.
+- Improved form validation and error feedback in Proposals, Tasks, and Approvals.
+- i18n hardening: all previously untranslated strings localised in EN and FR.
+- Added full-coverage Playwright audit suite with generated HTML report.
+
+---
+
+## [4.5.0] — 2026-06-05
+
+### Added
+- **MinervaDaily widget**: Role-aware AI morning briefing on the Dashboard — top 3 urgent actions, drifting projects, invoices to send, approvals waiting.
+- **Email digest**: Optional daily summary delivered at 6 AM (Resend integration).
+- **Push notification support**: Morning briefing delivered to mobile via push token.
+
+---
+
+## [4.4.0] — 2026-06-04
+
+### Added
+- **Client portal analytics**: Behaviour tracking — which sections clients visit, time spent, and engagement signals.
+- **AI workflow suggestions**: Minerva detects recurring usage patterns and proposes automations automatically.
+- **Public REST API v1**: Full workspace data API (clients, projects, invoices, approvals) — available on the Scale plan.
+- **Webhook system**: Event subscriptions for all major state changes with delivery tracking.
+- **API keys table**: Workspace-scoped API keys with scopes and rate limits.
+
+---
+
+## [4.3.0] — 2026-06-04
+
+### Added
+- **Quick Proposal templates**: Library by service type (brand identity, web, content strategy, audit, development).
+- **E-signature in client portal**: Clients can sign proposals directly — no third-party DocuSign required.
+- **Custom domain portal**: Support for `client.yourstudio.com` via CNAME configuration.
+
+---
+
+## [4.2.0] — 2026-06-04
+
+### Added
+- **Solo Studio Mode**: 3-item simplified sidebar navigation for solo/duo studios.
+- **Mandate terminology**: Freelancer-adapted language — "mandate" instead of "project", retainers foregrounded.
+- **Solo quick-start**: SoloQuickStart component with guided onboarding in under 5 minutes.
+
+---
+
+## [4.1.0] — 2026-06-04
+
+### Added
+- **Proposal Copilot**: 3-line brief input → complete proposal (intro, scope, timeline, pricing, T&C) powered by claude-sonnet-4-6 with prompt caching.
+- **AI pricing suggestion**: Intelligent pricing based on historical workspace projects.
+- **One-click PDF export**: AI-generated proposals exportable to PDF via `@react-pdf/renderer`.
+
+---
+
+## [4.0.0] — 2026-06-04
+
+### Added
+- **CRM Agent**: Lead scoring, automatic follow-up reminders, and pipeline health alerts.
+- **PM Agent**: Scope drift detection, delay prediction, and task escalation suggestions.
+- **Finance Agent**: Cash flow forecast, billing anomaly flags, and late payment alerts.
+- **Agent activity log**: Unified audit trail for all AI agent actions across modules.
+- **Agent builder**: Custom agent creation with goal descriptions, rules, system instructions, and RAG knowledge tables.
+
+---
+
 ## [3.3.0] — 2026-06-04
 
 ### Added

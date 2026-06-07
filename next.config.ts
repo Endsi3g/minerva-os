@@ -5,7 +5,7 @@ const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
   swDest: 'public/sw.js',
   // Only register SW in production to avoid dev-mode cache issues
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === 'development' || process.env.DISABLE_SW === '1',
 });
 
 const nextConfig: NextConfig = {
