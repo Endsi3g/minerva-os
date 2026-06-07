@@ -541,6 +541,7 @@ export default function AgentBuilder() {
           <button
             onClick={() => router.push('/app/agents')}
             className="p-1.5 hover:bg-white/5 rounded-lg border border-white/10 text-fog hover:text-silver transition-colors cursor-pointer"
+            aria-label="Back to agents list"
           >
             <ChevronLeft size={14} />
           </button>
@@ -554,6 +555,8 @@ export default function AgentBuilder() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="bg-transparent border-none text-xs font-bold text-ivory outline-none focus:bg-white/5 px-1 py-0.5 rounded transition-all"
+                title="Agent Name"
+                placeholder="Agent Name"
               />
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={cn(
@@ -842,7 +845,7 @@ export default function AgentBuilder() {
                               <span className="flex items-center gap-2 font-mono text-xs">
                                 <span className="text-fog">{idx + 1}.</span> {rule}
                               </span>
-                              <button onClick={() => handleRemoveRule(idx)} className="text-fog hover:text-ember cursor-pointer">
+                              <button onClick={() => handleRemoveRule(idx)} className="text-fog hover:text-ember cursor-pointer" aria-label="Remove rule">
                                 <X size={12} />
                               </button>
                             </div>
@@ -1068,6 +1071,7 @@ export default function AgentBuilder() {
                                     toast.success('Knowledge table disconnected.');
                                   }}
                                   className="text-fog hover:text-ember p-1 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                                  aria-label="Remove knowledge table"
                                 >
                                   <X size={12} />
                                 </button>
@@ -1084,6 +1088,7 @@ export default function AgentBuilder() {
                       type="file"
                       onChange={handleUploadFile}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      title="Upload knowledge source file"
                     />
                     <Upload size={22} className="text-fog mx-auto mb-3 group-hover:scale-105 transition-transform" />
                     <p className="text-xs text-silver font-semibold">
@@ -1131,6 +1136,7 @@ export default function AgentBuilder() {
                           <button
                             onClick={() => setSelectedToolId(null)}
                             className="p-1 hover:bg-white/5 rounded text-fog hover:text-silver cursor-pointer"
+                            aria-label="Back to tools list"
                           >
                             <ChevronLeft size={14} />
                           </button>
@@ -1200,8 +1206,12 @@ export default function AgentBuilder() {
                               placeholder="Ask Inventor to build anything..."
                               rows={1}
                               className="bg-transparent border-none text-xs text-ivory placeholder-fog outline-none flex-1 resize-none py-1.5 px-2"
+                              title="Ask Inventor to build anything"
                             />
-                            <button className="h-7 w-7 rounded bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 flex items-center justify-center cursor-pointer transition-colors self-end">
+                            <button
+                              className="h-7 w-7 rounded bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 flex items-center justify-center cursor-pointer transition-colors self-end"
+                              aria-label="Send prompt to AI Inventor"
+                            >
                               <Send size={12} />
                             </button>
                           </div>
@@ -1296,6 +1306,7 @@ export default function AgentBuilder() {
                                 value={summaryLength}
                                 onChange={(e) => setSummaryLength(e.target.value)}
                                 className="w-full bg-black/30 border border-white/5 text-xs text-silver rounded-lg h-9 px-3 outline-none focus:border-white/10"
+                                title="Summary Length"
                               >
                                 <option value="brief">Brief (1-2 paragraphs)</option>
                                 <option value="standard">Standard (3-5 paragraphs)</option>
@@ -1362,7 +1373,7 @@ export default function AgentBuilder() {
                                     <Zap size={12} />
                                   </div>
                                   <div className="text-left">
-                                    <div className="text-[9px] font-bold text-fog uppercase">Step {index + 1}</div>
+                            <div className="text-[9px] font-bold text-fog uppercase">Step {index + 1}</div>
                                     <div className="text-xs font-bold text-ivory mt-0.5">{nodeName}</div>
                                   </div>
                                 </div>
@@ -1372,6 +1383,7 @@ export default function AgentBuilder() {
                                     toast.success(`Removed ${nodeName} from workflow`);
                                   }}
                                   className="text-fog hover:text-ember opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/5 cursor-pointer"
+                                  aria-label={`Remove ${nodeName} step`}
                                 >
                                   <X size={12} />
                                 </button>
@@ -1620,6 +1632,7 @@ export default function AgentBuilder() {
                             <button
                               onClick={() => setMemories(prev => prev.filter((_, idx) => idx !== i))}
                               className="text-fog hover:text-ember cursor-pointer"
+                              aria-label="Remove memory"
                             >
                               <X size={12} />
                             </button>
@@ -1676,6 +1689,7 @@ export default function AgentBuilder() {
                               <button
                                 onClick={() => setVariables(prev => prev.filter((_, idx) => idx !== i))}
                                 className="text-fog hover:text-ember cursor-pointer"
+                                aria-label={`Remove variable ${v.key}`}
                               >
                                 <X size={12} />
                               </button>
@@ -2042,7 +2056,7 @@ export default function AgentBuilder() {
                     <span className="text-[9px] bg-[#7FA38A]/10 text-[#7FA38A] border border-[#7FA38A]/20 px-2 py-0.5 rounded-full font-bold">optimal</span>
                   </div>
                   <div className="w-full bg-black/30 h-1 rounded overflow-hidden">
-                    <div className="bg-[#7FA38A] h-full" style={{ width: '98.2%' }} />
+                    <div className="bg-[#7FA38A] h-full w-[98.2%]" />
                   </div>
                 </Card>
 
@@ -2053,7 +2067,7 @@ export default function AgentBuilder() {
                     <span className="text-[9px] text-[#7FA38A] font-semibold">-0.12s delta</span>
                   </div>
                   <div className="w-full bg-black/30 h-1 rounded overflow-hidden">
-                    <div className="bg-[#7FA38A] h-full" style={{ width: '82%' }} />
+                    <div className="bg-[#7FA38A] h-full w-[82%]" />
                   </div>
                 </Card>
 
@@ -2064,7 +2078,7 @@ export default function AgentBuilder() {
                     <span className="text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold">verified</span>
                   </div>
                   <div className="w-full bg-black/30 h-1 rounded overflow-hidden">
-                    <div className="bg-blue-500 h-full" style={{ width: '100%' }} />
+                    <div className="bg-blue-500 h-full w-full" />
                   </div>
                 </Card>
               </div>
@@ -2095,7 +2109,10 @@ export default function AgentBuilder() {
                         <span>{testSuiteProgress}%</span>
                       </div>
                       <div className="w-full bg-black/30 h-1.5 rounded overflow-hidden">
-                        <div className="bg-[#7FA38A] h-full transition-all duration-300" style={{ width: `${testSuiteProgress}%` }} />
+                        {(() => {
+                          const progressStyle = { width: `${testSuiteProgress}%` };
+                          return <div className="bg-[#7FA38A] h-full transition-all duration-300" style={progressStyle} />;
+                        })()}
                       </div>
                     </div>
                   )}
@@ -2200,6 +2217,7 @@ export default function AgentBuilder() {
                     
                     <select
                       defaultValue="work"
+                      title="Select calendar"
                       className="w-full bg-black/50 border border-white/5 rounded px-1.5 py-1 text-[9px] text-silver outline-none"
                     >
                       <option value="work">Work Calendar</option>
@@ -2207,7 +2225,7 @@ export default function AgentBuilder() {
                     </select>
 
                     <label className="flex items-center gap-2 text-[8px] text-fog cursor-pointer select-none">
-                      <input type="checkbox" defaultChecked className="rounded border-white/5 bg-black/50 text-[#7FA38A] focus:ring-0 w-2.5 h-2.5 cursor-pointer" />
+                      <input type="checkbox" defaultChecked title="Fires 10 mins before event" className="rounded border-white/5 bg-black/50 text-[#7FA38A] focus:ring-0 w-2.5 h-2.5 cursor-pointer" />
                       <span>Fires 10 mins before event</span>
                     </label>
                   </div>
@@ -2237,12 +2255,14 @@ export default function AgentBuilder() {
                       <input
                         type="text"
                         defaultValue="Acme Corp Feedback"
+                        title="Subject Filter"
+                        placeholder="Subject Filter"
                         className="w-full bg-black/50 border border-white/5 rounded px-1.5 py-1 text-[9px] text-silver outline-none"
                       />
                     </div>
 
                     <label className="flex items-center gap-2 text-[8px] text-fog cursor-pointer select-none">
-                      <input type="checkbox" defaultChecked className="rounded border-white/5 bg-black/50 text-[#7FA38A] focus:ring-0 w-2.5 h-2.5 cursor-pointer" />
+                      <input type="checkbox" defaultChecked title="Auto-draft replies" className="rounded border-white/5 bg-black/50 text-[#7FA38A] focus:ring-0 w-2.5 h-2.5 cursor-pointer" />
                       <span>Auto-draft replies</span>
                     </label>
                   </div>
@@ -2360,12 +2380,13 @@ export default function AgentBuilder() {
           <div className="bg-[#111522] border border-white/8 rounded-xl p-5 w-full max-w-sm space-y-4">
             <div className="flex items-center justify-between border-b border-white/5 pb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-ivory">Add new tool</h3>
-              <button onClick={() => setShowAddToolModal(false)} className="text-fog hover:text-silver cursor-pointer"><X size={14} /></button>
+              <button onClick={() => setShowAddToolModal(false)} className="text-fog hover:text-silver cursor-pointer" aria-label="Close dialog"><X size={14} /></button>
             </div>
             <div className="space-y-3">
               <label className="text-[10px] font-bold text-fog uppercase">Select tool definition</label>
               <select
                 id="add-tool-select"
+                title="Select tool definition"
                 className="w-full bg-black/30 border border-white/5 rounded-lg text-xs text-silver h-9 px-3 outline-none"
               >
                 <option value="Analyze CSV Data">Analyze CSV Data</option>
@@ -2401,16 +2422,16 @@ export default function AgentBuilder() {
           <div className="bg-[#111522] border border-white/8 rounded-xl p-5 w-full max-w-sm space-y-4">
             <div className="flex items-center justify-between border-b border-white/5 pb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-ivory">Add MCP Server Connection</h3>
-              <button onClick={() => setShowAddMcpModal(false)} className="text-fog hover:text-silver cursor-pointer"><X size={14} /></button>
+              <button onClick={() => setShowAddMcpModal(false)} className="text-fog hover:text-silver cursor-pointer" aria-label="Close dialog"><X size={14} /></button>
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-fog uppercase">Server Name</label>
-                <Input id="mcp-server-name" placeholder="e.g. github-mcp" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
+                <Input id="mcp-server-name" title="Server Name" placeholder="e.g. github-mcp" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-fog uppercase">SSE Endpoint URL</label>
-                <Input id="mcp-server-url" placeholder="http://localhost:3001/sse" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
+                <Input id="mcp-server-url" title="SSE Endpoint URL" placeholder="http://localhost:3001/sse" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -2439,17 +2460,18 @@ export default function AgentBuilder() {
           <div className="bg-[#111522] border border-white/8 rounded-xl p-5 w-full max-w-sm space-y-4">
             <div className="flex items-center justify-between border-b border-white/5 pb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-ivory">Add Event Trigger</h3>
-              <button onClick={() => setShowAddTriggerModal(false)} className="text-fog hover:text-silver cursor-pointer"><X size={14} /></button>
+              <button onClick={() => setShowAddTriggerModal(false)} className="text-fog hover:text-silver cursor-pointer" aria-label="Close dialog"><X size={14} /></button>
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-fog uppercase">Trigger Name</label>
-                <Input id="trig-name" placeholder="e.g. New Ticket Slack Alert" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
+                <Input id="trig-name" title="Trigger Name" placeholder="e.g. New Ticket Slack Alert" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-fog uppercase">Trigger Type</label>
                 <select
                   id="trig-type"
+                  title="Trigger Type"
                   className="w-full bg-black/30 border border-white/5 rounded-lg text-xs text-silver h-9 px-3 outline-none"
                 >
                   <option value="slack">Slack Channel Activity</option>

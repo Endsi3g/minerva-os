@@ -131,6 +131,8 @@ export default function Support() {
                   value={subject}
                   onChange={e => setSubject(e.target.value)}
                   required
+                  title={s.subjectLabel}
+                  placeholder={s.subjectLabel}
                   className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground"
                 />
               </div>
@@ -141,6 +143,8 @@ export default function Support() {
                   onChange={e => setMessage(e.target.value)}
                   required
                   rows={4}
+                  title={s.messageLabel}
+                  placeholder={s.messageLabel}
                   className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 resize-none bg-obsidian border border-border text-foreground"
                 />
               </div>

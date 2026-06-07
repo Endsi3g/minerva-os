@@ -227,10 +227,15 @@ export default function Dashboard() {
               {/* Visual Horizontal Thermometer Bar */}
               <div className="space-y-2">
                 <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden border border-white/5 p-0.5">
-                  <div
-                    className="h-full rounded-full transition-all duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)] bg-[#7FA38A]"
-                    style={{ width: `${projectMargin}%` }}
-                  />
+                  {(() => {
+                    const thermometerStyle = { width: `${projectMargin}%` };
+                    return (
+                      <div
+                        className="h-full rounded-full transition-all duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)] bg-[#7FA38A]"
+                        style={thermometerStyle}
+                      />
+                    );
+                  })()}
                 </div>
                 <div className="flex justify-between text-[8px] text-fog font-semibold">
                   <span>0%</span>
@@ -337,7 +342,7 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div>
                     <label className="text-[10px] uppercase font-semibold text-fog">Select Meeting Client</label>
-                    <select className="w-full text-xs bg-obsidian border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none mt-1 focus:border-[#7FA38A]">
+                    <select title="Select Meeting Client" className="w-full text-xs bg-obsidian border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none mt-1 focus:border-[#7FA38A]">
                       <option>Acme Corp</option>
                       <option>Bolt Tech</option>
                       <option>Zenith Lab</option>

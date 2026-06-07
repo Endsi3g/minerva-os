@@ -106,8 +106,7 @@ function ProfileTab() {
         {/* Left Column - Avatar & Info Card */}
         <div className="md:col-span-1 rounded-2xl p-6 bg-midnight border border-border flex flex-col items-center text-center space-y-4">
           <div
-            className="h-24 w-24 rounded-2xl flex items-center justify-center text-2xl font-semibold shrink-0 overflow-hidden"
-            style={{ backgroundColor: 'var(--dusk)', color: 'var(--ivory)', border: '1px solid var(--border)' }}
+            className="h-24 w-24 rounded-2xl flex items-center justify-center text-2xl font-semibold shrink-0 overflow-hidden bg-dusk text-ivory border border-border"
           >
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -119,8 +118,7 @@ function ProfileTab() {
             <p className="text-xs text-fog mt-0.5">{user?.email ?? 'studio@uprising.co'}</p>
             {user?.role && (
               <span
-                className="inline-block mt-2.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: 'rgba(127,163,138,0.12)', color: '#7FA38A', border: '1px solid rgba(127,163,138,0.2)' }}
+                className="inline-block mt-2.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sage/12 text-sage border border-sage/20"
               >
                 {roleLabels[user.role] ?? user.role}
               </span>
@@ -135,6 +133,8 @@ function ProfileTab() {
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
+              title={s.displayName}
+              placeholder={s.displayName}
               className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all bg-midnight border border-border text-foreground"
             />
           </SettingsField>
@@ -146,6 +146,7 @@ function ProfileTab() {
                 accept="image/*"
                 onChange={handleAvatarUpload}
                 disabled={uploading}
+                title={s.avatarUrl}
                 className="text-xs text-silver file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ivory file:text-obsidian hover:file:opacity-90 file:cursor-pointer disabled:opacity-50"
               />
               {uploading && <p className="text-xs text-fog">Uploading...</p>}
@@ -160,6 +161,7 @@ function ProfileTab() {
               type="email"
               value={user?.email ?? 'studio@uprising.co'}
               readOnly
+              title={s.email}
               className="w-full rounded-xl h-10 px-3 text-sm opacity-50 cursor-not-allowed bg-midnight border border-border text-foreground"
             />
           </SettingsField>
@@ -327,6 +329,8 @@ function WorkspaceTab() {
               type="text"
               value={studioName}
               onChange={e => setStudioName(e.target.value)}
+              title={s.studioName}
+              placeholder={s.studioName}
               className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all bg-midnight border border-border text-foreground"
             />
           </SettingsField>
@@ -335,6 +339,7 @@ function WorkspaceTab() {
             <select
               value={timezone}
               onChange={e => setTimezone(e.target.value)}
+              title={s.timezone}
               className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all appearance-none bg-midnight border border-border text-foreground"
             >
               <option value="America/Montreal">Montreal (ET)</option>
@@ -379,6 +384,7 @@ function WorkspaceTab() {
                 accept="image/*"
                 onChange={handleLogoUpload}
                 disabled={logoUploading}
+                title="Logo File"
                 className="text-xs text-silver file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ivory file:text-obsidian hover:file:opacity-90 file:cursor-pointer disabled:opacity-50"
               />
               {logoUploading && <p className="text-xs text-fog mt-1">Uploading...</p>}
@@ -386,19 +392,22 @@ function WorkspaceTab() {
 
             <SettingsField label={s.brandColor}>
               <div className="flex gap-2 mt-0.5">
-                {BRAND_PRESETS.map(p => (
-                  <button
-                    key={p.color}
-                    title={p.name}
-                    onClick={() => handleColorSelect(p.color)}
-                    className="h-6 w-6 rounded-full transition-all"
-                    style={{
-                      backgroundColor: p.color,
-                      outline: brandColor === p.color ? `2px solid ${p.color}` : 'none',
-                      outlineOffset: brandColor === p.color ? '2px' : '0',
-                    }}
-                  />
-                ))}
+                {BRAND_PRESETS.map(p => {
+                  const colorBtnStyle = {
+                    backgroundColor: p.color,
+                    outline: brandColor === p.color ? `2px solid ${p.color}` : 'none',
+                    outlineOffset: brandColor === p.color ? '2px' : '0',
+                  };
+                  return (
+                    <button
+                      key={p.color}
+                      title={p.name}
+                      onClick={() => handleColorSelect(p.color)}
+                      className="h-6 w-6 rounded-full transition-all"
+                      style={colorBtnStyle}
+                    />
+                  );
+                })}
               </div>
             </SettingsField>
 
@@ -542,8 +551,7 @@ function TeamTab() {
                 className="flex items-center gap-3 px-4 py-3 rounded-xl bg-midnight border border-border"
               >
                 <div
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0"
-                  style={{ backgroundColor: 'var(--dusk)', color: 'var(--silver)' }}
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0 bg-dusk text-silver"
                 >
                   {initials}
                 </div>
@@ -564,8 +572,7 @@ function TeamTab() {
                   </select>
                 ) : (
                   <span
-                    className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
-                    style={{ backgroundColor: 'var(--muted)', color: 'var(--fog)' }}
+                    className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0 bg-muted text-fog"
                   >
                     {roleLabels[member.role] ?? member.role}
                   </span>
@@ -624,6 +631,9 @@ function NotificationsTab() {
             key={pref.key}
             className="flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-colors hover:bg-white/[0.02] bg-midnight border border-border"
             onClick={() => handleToggle(pref.key)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleToggle(pref.key)}
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-ivory">{pref.label}</p>
@@ -666,18 +676,15 @@ function SecurityTab() {
     <Section title={s.heading} subtitle={s.subtitle}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start w-full">
         {/* Change password */}
-        <div
-          className="rounded-2xl p-5 space-y-3 bg-midnight border border-border"
-        >
-          <p className="text-sm font-semibold text-ivory">{s.changePassword}</p>
+        <div className="rounded-2xl p-5 space-y-3 bg-midnight border border-border">
           <SettingsField label={s.currentPassword}>
-            <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
+            <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} title={s.currentPassword} placeholder={s.currentPassword} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
           </SettingsField>
           <SettingsField label={s.newPassword}>
-            <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
+            <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} title={s.newPassword} placeholder={s.newPassword} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
           </SettingsField>
           <SettingsField label={s.confirmPassword}>
-            <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
+            <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} title={s.confirmPassword} placeholder={s.confirmPassword} className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-foreground" />
           </SettingsField>
           {pwError && <p className="text-xs text-ember">{pwError}</p>}
           <div className="pt-2">
@@ -754,6 +761,8 @@ function Toggle({ on }: { on: boolean }) {
   return (
     <div
       className={cn('w-9 h-5 rounded-full relative transition-colors duration-200 shrink-0', on ? 'bg-sage' : 'bg-white/10')}
+      role="switch"
+      aria-checked={on}
     >
       <div
         className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200', on ? 'translate-x-4' : 'translate-x-0.5')}
@@ -998,7 +1007,7 @@ function ApiTab() {
           <div className="rounded-xl overflow-hidden border border-border">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ backgroundColor: '#0E1119', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <tr className="bg-[#0E1119] border-b border-white/6">
                   <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-fog">Name</th>
                   <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-fog">Key</th>
                   <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-fog">{s.created}</th>
@@ -1010,9 +1019,9 @@ function ApiTab() {
                 {keys.map((k, i) => (
                   <tr
                     key={k.id}
+                    className="border-b border-white/4"
                     style={{
                       backgroundColor: i % 2 === 0 ? '#111522' : '#0E1119',
-                      borderBottom: '1px solid rgba(255,255,255,0.04)',
                       opacity: k.revokedAt ? 0.45 : 1,
                     }}
                   >
@@ -1075,6 +1084,7 @@ function ApiTab() {
                       value={showManualCopy}
                       autoFocus
                       onFocus={e => e.target.select()}
+                      title="Generated API Key"
                       className="w-full rounded-xl h-9 px-3 font-mono text-xs bg-obsidian border border-border text-sage focus:outline-none focus:ring-1 focus:ring-sage/20"
                     />
                   </div>
@@ -1090,6 +1100,7 @@ function ApiTab() {
                       value={keyName}
                       onChange={e => setKeyName(e.target.value)}
                       placeholder={t.app.settings.api.keyNamePlaceholder ?? ''}
+                      title={s.keyName}
                       className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 placeholder:text-white/20 bg-obsidian border border-border text-ivory"
                     />
                   </div>
@@ -1104,7 +1115,8 @@ function ApiTab() {
                             value={v}
                             checked={scope === v}
                             onChange={() => setScope(v)}
-                            className="accent-sage"
+                            title={`Scope ${v}`}
+                            className="text-sage focus:ring-0 bg-midnight border-white/10 w-3.5 h-3.5 cursor-pointer"
                           />
                           <span className="text-sm text-silver">{s.scopes[v]}</span>
                         </label>
@@ -1198,8 +1210,7 @@ function AuditTab() {
                 className="flex items-start gap-3 px-4 py-3 rounded-xl bg-midnight border border-border"
               >
                 <div
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5"
-                  style={{ backgroundColor: 'var(--dusk)', color: 'var(--silver)' }}
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 bg-dusk text-silver"
                 >
                   {initials(event.username || 'U')}
                 </div>
@@ -1352,11 +1363,11 @@ function WebhooksTab() {
       </div>
 
       {newSecret && (
-        <div className="rounded-xl border p-4 space-y-2" style={{ backgroundColor: 'rgba(127,163,138,0.06)', borderColor: 'rgba(127,163,138,0.25)' }}>
+        <div className="rounded-xl border p-4 space-y-2 bg-sage/6 border-sage/25">
           <p className="text-xs text-sage font-medium">{s.secretNote}</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs text-ivory font-mono bg-obsidian rounded-lg px-3 py-2 break-all">{newSecret}</code>
-            <button onClick={() => { navigator.clipboard.writeText(newSecret); }} className="p-2 rounded-lg hover:bg-white/5 text-fog">
+            <button onClick={() => { navigator.clipboard.writeText(newSecret); }} className="p-2 rounded-lg hover:bg-white/5 text-fog" aria-label="Copy Webhook Secret">
               <Copy size={13} />
             </button>
           </div>
@@ -1365,7 +1376,7 @@ function WebhooksTab() {
       )}
 
       {adding && (
-        <div className="rounded-2xl border p-5 space-y-4" style={{ backgroundColor: '#111522', borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="rounded-2xl border p-5 space-y-4 bg-midnight border-white/8">
           <div>
             <label className="block text-[11px] font-medium text-silver mb-1.5">{s.urlLabel}</label>
             <input
@@ -1373,32 +1384,34 @@ function WebhooksTab() {
               value={url}
               onChange={e => setUrl(e.target.value)}
               placeholder={s.urlPlaceholder}
-              className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-              style={{ backgroundColor: '#0A0D14', border: '1px solid rgba(255,255,255,0.08)', color: '#F5F1E8' }}
+              title={s.urlLabel}
+              className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none bg-[#0A0D14] border border-white/8 text-ivory"
             />
           </div>
           <div>
             <label className="block text-[11px] font-medium text-silver mb-2">{s.eventsLabel}</label>
             <div className="flex flex-wrap gap-2">
-              {WEBHOOK_EVENTS.map(ev => (
-                <button
-                  key={ev}
-                  onClick={() => toggleEvent(ev)}
-                  className="text-[11px] px-2.5 py-1 rounded-full border transition-all"
-                  style={selectedEvents.includes(ev)
-                    ? { backgroundColor: 'rgba(127,163,138,0.15)', borderColor: 'rgba(127,163,138,0.4)', color: '#7FA38A' }
-                    : { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: '#8A9099' }}
-                >
-                  {(s.events as Record<string, string>)[ev]}
-                </button>
-              ))}
+              {WEBHOOK_EVENTS.map(ev => {
+                const eventStyle = selectedEvents.includes(ev)
+                  ? { backgroundColor: 'rgba(127,163,138,0.15)', borderColor: 'rgba(127,163,138,0.4)', color: '#7FA38A' }
+                  : { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: '#8A9099' };
+                return (
+                  <button
+                    key={ev}
+                    onClick={() => toggleEvent(ev)}
+                    className="text-[11px] px-2.5 py-1 rounded-full border transition-all"
+                    style={eventStyle}
+                  >
+                    {(s.events as Record<string, string>)[ev]}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => { setAdding(false); setUrl(''); setSelectedEvents([]); }}
-              className="flex-1 py-2.5 rounded-xl text-xs transition-colors"
-              style={{ border: '1px solid rgba(255,255,255,0.08)', color: '#8A9099' }}
+              className="flex-1 py-2.5 rounded-xl text-xs transition-colors border border-white/8 text-[#8A9099]"
             >
               {s.cancel}
             </button>
@@ -1414,7 +1427,7 @@ function WebhooksTab() {
       )}
 
       {hooks.length === 0 && !adding ? (
-        <div className="rounded-2xl border border-white/6 p-10 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+        <div className="rounded-2xl border border-white/6 p-10 text-center bg-white/2">
           <Globe size={20} className="mx-auto mb-3 opacity-30 text-fog" />
           <p className="text-sm text-fog">{s.noWebhooks}</p>
         </div>
@@ -1423,8 +1436,7 @@ function WebhooksTab() {
           {hooks.map(hook => (
             <div
               key={hook.id}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl border"
-              style={{ backgroundColor: '#111522', borderColor: 'rgba(255,255,255,0.07)' }}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-[#111522] border-white/7"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-ivory truncate">{hook.url}</p>
@@ -1453,12 +1465,14 @@ function WebhooksTab() {
                 <button
                   onClick={() => handleToggle(hook)}
                   className="px-2.5 py-1.5 rounded-lg text-[11px] transition-all hover:-translate-y-0.5 text-fog border border-white/8 hover:text-silver"
+                  aria-label={hook.active ? "Pause Webhook" : "Activate Webhook"}
                 >
                   {hook.active ? <Pause size={11} /> : <Play size={11} />}
                 </button>
                 <button
                   onClick={() => setConfirmDeleteHookId(hook.id)}
                   className="p-1.5 rounded-lg transition-all hover:-translate-y-0.5 text-fog hover:text-rose"
+                  aria-label="Delete Webhook"
                 >
                   <Trash2 size={11} />
                 </button>
@@ -1504,14 +1518,13 @@ function PlanTab() {
     <div className="space-y-8 w-full">
       {/* Current plan card */}
       <div
-        className="rounded-2xl p-6 flex flex-col gap-4"
-        style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+        className="rounded-2xl p-6 flex flex-col gap-4 bg-[#111522] border border-white/7"
       >
         <p className="text-xs text-fog uppercase tracking-widest">{u.plan.current}</p>
         <div className="flex items-center gap-3">
           <span
             className="text-sm font-semibold px-3 py-1.5 rounded-full capitalize"
-            style={tierColors}
+            style={(() => { const st = tierColors; return st; })()}
           >
             {tier}
           </span>
@@ -1525,8 +1538,7 @@ function PlanTab() {
         {next && (
           <button
             onClick={() => setUpgradeOpen(true)}
-            className="self-start h-9 px-5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-95"
-            style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
+            className="self-start h-9 px-5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-95 bg-ivory text-obsidian"
           >
             {u.plan.upgrade.replace('{tier}', next)}
           </button>
@@ -1535,47 +1547,39 @@ function PlanTab() {
 
       {/* Feature comparison table */}
       <div
-        className="rounded-2xl overflow-hidden"
-        style={{ border: '1px solid rgba(255,255,255,0.07)' }}
+        className="rounded-2xl overflow-hidden border border-white/7"
       >
         {/* Header row */}
         <div
-          className="grid grid-cols-4 px-5 py-3 text-[11px] font-semibold uppercase tracking-widest"
-          style={{ backgroundColor: '#0E1119', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          className="grid grid-cols-4 px-5 py-3 text-[11px] font-semibold uppercase tracking-widest bg-[#0E1119] border-b border-white/6"
         >
           <span className="text-fog">Feature</span>
-          {TIERS.map(t => (
-            <span
-              key={t}
-              className="text-center capitalize"
-              style={{ color: tier === t ? TIER_BADGE_COLORS[t].color : '#8A9099' }}
-            >
-              {t}
-            </span>
-          ))}
+          {TIERS.map(t => {
+            const textCol = { color: tier === t ? TIER_BADGE_COLORS[t].color : '#8A9099' };
+            return (
+              <span
+                key={t}
+                className="text-center capitalize"
+                style={textCol}
+              >
+                {t}
+              </span>
+            );
+          })}
         </div>
 
         {FEATURE_GROUPS.map((group, gi) => (
           <div key={group.label}>
             {/* Group header */}
             <div
-              className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-fog"
-              style={{
-                backgroundColor: '#0E1119',
-                borderBottom: '1px solid rgba(255,255,255,0.04)',
-                borderTop: gi > 0 ? '1px solid rgba(255,255,255,0.04)' : undefined,
-              }}
+              className={cn("px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-fog bg-[#0E1119] border-b border-white/4", gi > 0 && "border-t border-white/4")}
             >
               {group.label}
             </div>
             {group.keys.map((key, ki) => (
               <div
                 key={key}
-                className="grid grid-cols-4 px-5 py-3 text-sm items-center"
-                style={{
-                  backgroundColor: ki % 2 === 0 ? '#111522' : '#0E1119',
-                  borderBottom: '1px solid rgba(255,255,255,0.04)',
-                }}
+                className={cn("grid grid-cols-4 px-5 py-3 text-sm items-center border-b border-white/4", ki % 2 === 0 ? "bg-[#111522]" : "bg-[#0E1119]")}
               >
                 <span className="text-silver text-[13px]">
                   {(u.plan.featureLabels as Record<string, string>)[key]}
@@ -1584,12 +1588,15 @@ function PlanTab() {
                   const included = isFeatureVisibleForTier(key, t);
                   return (
                     <div key={t} className="flex justify-center">
-                      {included ? (
-                        <Check
-                          size={14}
-                          style={{ color: tier === t ? TIER_BADGE_COLORS[t].color : '#7FA38A' }}
-                        />
-                      ) : (
+                      {included ? (() => {
+                        const iconColor = { color: tier === t ? TIER_BADGE_COLORS[t].color : '#7FA38A' };
+                        return (
+                          <Check
+                            size={14}
+                            style={iconColor}
+                          />
+                        );
+                      })() : (
                         <Minus size={14} className="text-fog opacity-30" />
                       )}
                     </div>

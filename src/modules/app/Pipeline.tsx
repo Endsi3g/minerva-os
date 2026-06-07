@@ -257,7 +257,7 @@ export default function Pipeline() {
         <KanbanSkeleton />
       ) : (
         /* Kanban board */
-        <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6" style={{ minHeight: 'calc(100vh - 200px)' }}>
+        <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6 min-h-[calc(100vh-200px)]">
           {STAGES.map((stage: any) => {
             const stageLeads = localLeads.filter((l: any) => l.stage === stage.id);
             const total = totalValue(localLeads, stage.id);
@@ -377,6 +377,7 @@ export default function Pipeline() {
                       className="h-8 text-xs bg-midnight border-white/5 text-ivory focus-visible:ring-1"
                       value={emailDraft.subject}
                       onChange={e => setEmailDraft(prev => prev ? { ...prev, subject: e.target.value } : null)}
+                      title="Subject"
                     />
                   </div>
                   <div className="space-y-1">
@@ -386,6 +387,7 @@ export default function Pipeline() {
                       className="w-full rounded-md border border-white/5 bg-midnight px-2 py-1.5 text-xs text-silver placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none font-sans"
                       value={emailDraft.body}
                       onChange={e => setEmailDraft(prev => prev ? { ...prev, body: e.target.value } : null)}
+                      title="Body"
                     />
                   </div>
                 </div>

@@ -64,7 +64,7 @@ function TicketForm({ workspaceId, clients, onClose, onCreated }: { workspaceId:
       >
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-ivory">{f.title}</h2>
-          <button type="button" onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
+          <button type="button" onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
         <div className="space-y-3">
           <input value={subject} onChange={e => setSubject(e.target.value)} placeholder={f.subjectPlaceholder}
@@ -72,16 +72,19 @@ function TicketForm({ workspaceId, clients, onClose, onCreated }: { workspaceId:
           <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder={f.descriptionPlaceholder} rows={3}
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none resize-none bg-obsidian border border-border" />
           <select value={clientId} onChange={e => setClientId(e.target.value)}
+            title="Client"
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
             <option value="">{f.clientPlaceholder}</option>
              {clients.map((c) => <option key={c._id as string} value={c._id as string}>{c.company as string}</option>)}
           </select>
           <div className="grid grid-cols-2 gap-3">
             <select value={priority} onChange={e => setPriority(e.target.value)}
+              title="Priority"
               className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               {PRIORITIES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
             </select>
             <select value={category} onChange={e => setCategory(e.target.value)}
+              title="Category"
               className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>

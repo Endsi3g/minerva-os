@@ -50,7 +50,10 @@ function NPSGauge({ score }: { score: number }) {
         <span>+100</span>
       </div>
       <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+        {(() => {
+          const gaugeStyle = { width: `${pct}%`, backgroundColor: color };
+          return <div className="h-full rounded-full transition-all duration-500" style={gaugeStyle} />;
+        })()}
       </div>
       <div className="flex items-center justify-between text-[10px] text-fog mt-1">
         <span>Detractors</span>
@@ -130,10 +133,11 @@ function NPSForm({
       >
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-ivory">{f.title}</h2>
-          <button type="button" onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
+          <button type="button" onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
         <div className="space-y-3">
           <select value={clientId} onChange={e => setClientId(e.target.value)}
+            title="Client"
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
             <option value="">{f.clientPlaceholder}</option>
             {clients.map((c) => <option key={c._id} value={c._id}>{c.company}</option>)}
@@ -161,6 +165,7 @@ function NPSForm({
           </div>
 
           <select value={trigger} onChange={e => setTrigger(e.target.value)}
+            title="Trigger Event"
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
             <option value="manual">{f.triggers.manual}</option>
             <option value="phase_complete">{f.triggers.phase_complete}</option>

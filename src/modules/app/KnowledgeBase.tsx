@@ -46,6 +46,7 @@ function ArticleCard({
       <button
         onClick={e => { e.stopPropagation(); onDelete(article.id); }}
         className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-5 w-5 flex items-center justify-center"
+        aria-label="Delete Article"
       >
         <X size={11} />
       </button>
@@ -155,12 +156,13 @@ function ArticleModal({
       >
         <div className="flex items-center justify-between p-5 border-b border-white/5">
           <h2 className="text-sm font-semibold text-ivory">{isEdit ? f.editTitle : f.newTitle}</h2>
-          <button type="button" onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
+          <button type="button" onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
         <div className="overflow-y-auto flex-1 p-5 space-y-3">
           <input value={title} onChange={e => setTitle(e.target.value)} placeholder={f.titlePlaceholder}
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
           <select value={category} onChange={e => setCategory(e.target.value)}
+            title="Category"
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -178,7 +180,7 @@ function ArticleModal({
                 {tags.map(tag => (
                   <span key={tag} className="flex items-center gap-1 text-[11px] text-fog bg-white/5 px-2 py-0.5 rounded-full">
                     {tag}
-                    <button type="button" onClick={() => setTags(prev => prev.filter(t => t !== tag))}><X size={9} /></button>
+                    <button type="button" onClick={() => setTags(prev => prev.filter(t => t !== tag))} aria-label={`Remove tag ${tag}`}><X size={9} /></button>
                   </span>
                 ))}
               </div>

@@ -70,15 +70,18 @@ function GanttTimeline({ projects }: { projects: any[] }) {
       <div className="min-w-[600px]">
         {/* Month header */}
         <div className="relative h-6 mb-2 ml-40">
-          {months.map(m => (
-            <div
-              key={m.label}
-              className="absolute top-0 text-[10px] text-fog"
-              style={{ left: `${m.pct}%` }}
-            >
-              {m.label}
-            </div>
-          ))}
+          {months.map(m => {
+            const mLeftStyle = { left: `${m.pct}%` };
+            return (
+              <div
+                key={m.label}
+                className="absolute top-0 text-[10px] text-fog"
+                style={mLeftStyle}
+              >
+                {m.label}
+              </div>
+            );
+          })}
         </div>
 
         {/* Rows */}
@@ -99,32 +102,44 @@ function GanttTimeline({ projects }: { projects: any[] }) {
                 </div>
                 <div className="flex-1 relative h-full">
                   {/* Grid lines */}
-                  {months.map(m => (
-                    <div
-                      key={m.label}
-                      className="absolute top-0 bottom-0 border-l"
-                      style={{ left: `${m.pct}%`, borderColor: 'rgba(255,255,255,0.04)' }}
-                    />
-                  ))}
+                  {months.map(m => {
+                    const gridLineStyle = { left: `${m.pct}%`, borderColor: 'rgba(255,255,255,0.04)' };
+                    return (
+                      <div
+                        key={m.label}
+                        className="absolute top-0 bottom-0 border-l"
+                        style={gridLineStyle}
+                      />
+                    );
+                  })}
                   {/* Today line */}
-                  {todayPct > 0 && todayPct < 100 && (
-                    <div
-                      className="absolute top-0 bottom-0 border-l border-dashed border-warm/40 z-10"
-                      style={{ left: `${todayPct}%` }}
-                    />
-                  )}
+                  {todayPct > 0 && todayPct < 100 && (() => {
+                    const todayLineStyle = { left: `${todayPct}%` };
+                    return (
+                      <div
+                        className="absolute top-0 bottom-0 border-l border-dashed border-warm/40 z-10"
+                        style={todayLineStyle}
+                      />
+                    );
+                  })()}
                   {/* Bar */}
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 h-5 rounded-md flex items-center px-2 text-[10px] text-white/80 overflow-hidden"
-                    style={{ left: `${left}%`, width: `${width}%`, backgroundColor: barColor, opacity: 0.85 }}
-                    title={`${project.name} · Due ${new Date(project.dueDate).toLocaleDateString()}`}
-                  >
-                    {width > 8 && <span className="truncate">{new Date(project.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>}
-                  </div>
+                  {(() => {
+                    const barStyle = { left: `${left}%`, width: `${width}%`, backgroundColor: barColor, opacity: 0.85 };
+                    return (
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 h-5 rounded-md flex items-center px-2 text-[10px] text-white/80 overflow-hidden"
+                        style={barStyle}
+                        title={`${project.name} · Due ${new Date(project.dueDate).toLocaleDateString()}`}
+                      >
+                        {width > 8 && <span className="truncate">{new Date(project.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             );
           })}
+
         </div>
       </div>
     </div>
@@ -264,12 +279,16 @@ export default function Projects() {
             <button
               onClick={() => setViewTab('grid')}
               className={cn('h-8 px-3 flex items-center gap-1.5 text-xs transition-colors', viewTab === 'grid' ? 'bg-white/10 text-ivory' : 'text-fog hover:text-silver')}
+              aria-label="Grid view"
+              title="Grid view"
             >
               <LayoutGrid size={13} />
             </button>
             <button
               onClick={() => setViewTab('timeline')}
               className={cn('h-8 px-3 flex items-center gap-1.5 text-xs transition-colors border-l border-white/8', viewTab === 'timeline' ? 'bg-white/10 text-ivory' : 'text-fog hover:text-silver')}
+              aria-label="Timeline view"
+              title="Timeline view"
             >
               <GanttChartSquare size={13} />
             </button>

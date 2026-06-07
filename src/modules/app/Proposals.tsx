@@ -208,7 +208,7 @@ function ProposalCopilot({
             <Sparkles size={13} className="text-sage animate-pulse" />
             <span className="text-sm font-semibold text-ivory">Quick Proposal</span>
           </div>
-          <button onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
+          <button onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
 
         <div className="p-5 space-y-4">
@@ -231,6 +231,7 @@ function ProposalCopilot({
                 <select
                   value={clientId}
                   onChange={e => setClientId(e.target.value)}
+                  title="Client"
                   className="w-full px-3 py-2 rounded-lg text-sm text-ivory bg-obsidian border border-border outline-none"
                 >
                   <option value="">Select a client (optional)</option>
@@ -466,7 +467,7 @@ function ProposalForm({
       >
         <div className="flex items-center justify-between p-5 border-b border-white/5">
           <h2 className="text-sm font-semibold text-ivory">{t.app.proposals.newProposal}</h2>
-          <button type="button" onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
+          <button type="button" onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
 
         <div className="overflow-y-auto flex-1 p-5 space-y-4">
@@ -475,6 +476,7 @@ function ProposalForm({
             <input value={title} onChange={e => setTitle(e.target.value)} placeholder={f.titlePlaceholder}
               className="col-span-2 px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
             <select value={clientId} onChange={e => setClientId(e.target.value)}
+              title="Select Client"
               className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               <option value="">{f.selectClient}</option>
               {clients.map(c => <option key={c._id} value={c._id}>{c.company}</option>)}
@@ -498,7 +500,10 @@ function ProposalForm({
                       ? 'border-transparent font-medium'
                       : 'text-fog border-white/10 hover:border-white/20'
                   )}
-                  style={activeTemplate === key ? { backgroundColor: `${tpl.color}20`, color: tpl.color, borderColor: `${tpl.color}40` } : {}}
+                  style={(() => {
+                    const templateStyle = activeTemplate === key ? { backgroundColor: `${tpl.color}20`, color: tpl.color, borderColor: `${tpl.color}40` } : {};
+                    return templateStyle;
+                  })()}
                 >
                   {activeTemplate === key && <Check size={9} className="inline mr-1" />}
                   {tpl.label}
@@ -859,6 +864,7 @@ export default function Proposals() {
                   <button
                     onClick={() => setConfirmDeleteId(proposal._id)}
                     className="h-7 w-7 flex items-center justify-center rounded-md text-fog hover:text-ember hover:bg-ember/10 transition-colors"
+                    aria-label="Delete Proposal"
                   >
                     <Trash2 size={12} />
                   </button>

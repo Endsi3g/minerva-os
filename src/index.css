@@ -194,8 +194,13 @@
     background-color: rgba(245,241,232,0.2);
   }
 
+  @supports (scrollbar-width: none) {
+    * {
+      scrollbar-width: none;
+    }
+  }
+
   * {
-    scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
@@ -214,6 +219,7 @@
 
   .glass-card {
     background: rgba(255, 255, 255, 0.7);
+    -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
     border: 1px solid var(--border-glass);
   }
@@ -355,8 +361,8 @@
 .liquid-glass {
   background: rgba(0, 0, 0, 0.4);
   background-blend-mode: luminosity;
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   border: none;
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   position: relative;

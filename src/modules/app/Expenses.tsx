@@ -63,7 +63,7 @@ function ExpenseForm({ workspaceId, submittedBy, projects, categories, onClose, 
       >
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-ivory">{t.app.expenses.addExpense}</h2>
-          <button type="button" onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
+          <button type="button" onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
         <div className="space-y-3">
           <input value={description} onChange={e => setDescription(e.target.value)} placeholder={f.descriptionPlaceholder}
@@ -72,14 +72,17 @@ function ExpenseForm({ workspaceId, submittedBy, projects, categories, onClose, 
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={f.amount}
               className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
             <select value={category} onChange={e => setCategory(e.target.value)}
+              title="Category"
               className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
+            title="Date"
             className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-obsidian border border-border" />
           {projects.length > 0 && (
             <select value={projectId} onChange={e => setProjectId(e.target.value)}
+              title="Project"
               className="w-full px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               <option value="">{f.project}</option>
               {projects.map((p: any) => <option key={p._id} value={p._id}>{p.name}</option>)}
@@ -214,12 +217,14 @@ export default function Expenses() {
                     <button
                       onClick={() => approveExpense(expense.id)}
                       className="h-6 w-6 flex items-center justify-center rounded text-fog hover:text-sage hover:bg-sage/10 transition-colors"
+                      aria-label="Approve Expense"
                     >
                       <Check size={11} />
                     </button>
                     <button
                       onClick={() => rejectExpense(expense.id)}
                       className="h-6 w-6 flex items-center justify-center rounded text-fog hover:text-ember hover:bg-ember/10 transition-colors"
+                      aria-label="Reject Expense"
                     >
                       <X size={11} />
                     </button>
@@ -228,6 +233,7 @@ export default function Expenses() {
                 <button
                   onClick={() => removeExpense(expense.id)}
                   className="opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-6 w-6 flex items-center justify-center rounded"
+                  aria-label="Delete Expense"
                 >
                   <Trash2 size={11} />
                 </button>

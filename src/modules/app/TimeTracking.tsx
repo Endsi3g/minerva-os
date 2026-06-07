@@ -272,6 +272,8 @@ export default function TimeTracking() {
                         <button
                           onClick={async () => { await supabase.from('time_entries').delete().eq('id', entry.id); setEntries(prev => prev.filter(e => e.id !== entry.id)); }}
                           className="opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all"
+                          aria-label="Delete entry"
+                          title="Delete entry"
                         >
                           <Trash2 size={12} />
                         </button>
@@ -347,6 +349,8 @@ export default function TimeTracking() {
                 checked={form.billable}
                 onChange={e => setForm(f => ({ ...f, billable: e.target.checked }))}
                 className="rounded border-white/10 bg-midnight text-sage focus:ring-sage"
+                title="Billable"
+                aria-label="Billable"
               />
               <Label htmlFor="billable" className="cursor-pointer text-xs font-normal">Billable</Label>
             </div>

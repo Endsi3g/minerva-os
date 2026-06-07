@@ -37,10 +37,10 @@ function CapacityBar({ used, total }: { used: number; total: number }) {
         </span>
       </div>
       <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
+        {(() => {
+          const capStyle = { width: `${pct}%`, backgroundColor: color };
+          return <div className="h-full rounded-full transition-all duration-500" style={capStyle} />;
+        })()}
       </div>
     </div>
   );
@@ -127,7 +127,7 @@ function AddMemberForm({
       >
         <div className="flex items-center justify-between pb-2 border-b border-white/5">
           <h3 className="text-sm font-semibold text-ivory">{f.title}</h3>
-          <button type="button" onClick={onClose} className="text-fog hover:text-ivory"><X size={14} /></button>
+          <button type="button" onClick={onClose} className="text-fog hover:text-ivory" aria-label="Close dialog"><X size={14} /></button>
         </div>
         <div className="space-y-3">
           <div className="space-y-1">
@@ -137,6 +137,8 @@ function AddMemberForm({
               required
               value={name}
               onChange={e => setName(e.target.value)}
+              title={f.namePlaceholder}
+              placeholder={f.namePlaceholder}
               className="w-full text-xs bg-midnight border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none focus:border-sage"
             />
           </div>
@@ -146,6 +148,8 @@ function AddMemberForm({
               type="text"
               value={role}
               onChange={e => setRole(e.target.value)}
+              title={f.rolePlaceholder}
+              placeholder={f.rolePlaceholder}
               className="w-full text-xs bg-midnight border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none focus:border-sage"
             />
           </div>
@@ -156,6 +160,8 @@ function AddMemberForm({
               required
               value={hours}
               onChange={e => setHours(e.target.value)}
+              title={f.weeklyCapacity}
+              placeholder="e.g. 40"
               className="w-full text-xs bg-midnight border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none focus:border-sage"
             />
           </div>
@@ -320,6 +326,7 @@ export default function ResourcePlanning() {
                   <button
                     onClick={() => removeMember(member._id)}
                     className="opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-6 w-6 flex items-center justify-center rounded"
+                    aria-label="Remove Member"
                   >
                     <X size={11} />
                   </button>

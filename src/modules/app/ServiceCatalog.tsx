@@ -83,7 +83,7 @@ function ServiceForm({
       >
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-ivory">{t.app.serviceCatalog.addService}</h2>
-          <button type="button" onClick={onClose}><X size={14} className="text-fog hover:text-ivory" /></button>
+          <button type="button" onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
         <div className="space-y-3">
           <input value={name} onChange={e => setName(e.target.value)} placeholder={f.namePlaceholder}
@@ -94,6 +94,7 @@ function ServiceForm({
             <input type="number" value={basePrice} onChange={e => setBasePrice(e.target.value)} placeholder="0"
               className="px-3 py-2 rounded-lg text-sm text-ivory placeholder:text-fog outline-none bg-obsidian border border-border" />
             <select value={category} onChange={e => setCategory(e.target.value)}
+              title="Category"
               className="px-3 py-2 rounded-lg text-sm text-ivory outline-none bg-midnight border border-border">
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -226,6 +227,7 @@ export default function ServiceCatalog() {
                     <button
                       onClick={() => removeService(service._id)}
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-6 w-6 flex items-center justify-center rounded"
+                      aria-label="Remove Service"
                     >
                       <X size={11} />
                     </button>
