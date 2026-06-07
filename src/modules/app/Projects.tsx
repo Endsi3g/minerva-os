@@ -167,6 +167,9 @@ function ProjectCardSkeleton() {
   );
 }
 
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+
 export default function Projects() {
   const { t, lang } = useLang();
   const p = t.app.projects;
@@ -181,6 +184,28 @@ export default function Projects() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM);
   const [viewTab, setViewTab] = useState<'grid' | 'timeline'>('grid');
+  const [projectFilter, setProjectFilter] = useState<'all' | 'active' | 'at_risk' | 'completed'>('all');
+
+  const filteredProjects = useMemo(() => {
+    if (!projects) return [];
+    return projects.filter((p: any) => {
+      if (projectFilter === 'all') return true;
+      if (projectFilter === 'active') return p.status === 'active';
+      if (projectFilter === 'completed') return p.status === 'completed';
+      if (projectFilter === 'at_risk') {
+        const isOverdue = p.dueDate && new Date(p.dueDate).getTime() < Date.now();
+        return p.status === 'active' && (isOverdue || (p.budget ?? 0) > 10000);
+      }
+      return true;
+    });
+  }, [projects, projectFilter]);
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams?.get('create') === 'true' || searchParams?.get('new') === 'true') {
+      setSheetOpen(true);
+    }
+  }, [searchParams]);
 
   const isLoading = projects === null || clients === null;
   const activeCount = projects ? projects.filter((p: any) => p.status === 'active').length : 0;
@@ -256,6 +281,31 @@ export default function Projects() {
         </div>
       </div>
 
+      {/* Saved Views Filter Tabs / Chips */}
+      {!isLoading && totalCount > 0 && (
+        <div className="flex items-center gap-1.5 mb-6 overflow-x-auto">
+          {[
+            { id: 'all' as const, label: lang === 'fr' ? 'Tous' : 'All' },
+            { id: 'active' as const, label: lang === 'fr' ? 'Actifs' : 'Active' },
+            { id: 'at_risk' as const, label: lang === 'fr' ? 'À risque' : 'At Risk' },
+            { id: 'completed' as const, label: lang === 'fr' ? 'Complétés' : 'Completed' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setProjectFilter(tab.id)}
+              className={cn(
+                "relative px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer select-none",
+                projectFilter === tab.id
+                  ? "bg-white/10 text-ivory border-white/15 shadow-sm"
+                  : "bg-transparent text-fog border-transparent hover:text-silver"
+              )}
+            >
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <UpgradeBanner featureKey="workflows" show={(projects?.length ?? 0) >= 3} />
 
       {isLoading ? (
@@ -280,13 +330,13 @@ export default function Projects() {
         <>
           {viewTab === 'timeline' && (
             <div className="rounded-xl border border-border bg-card p-4 mb-4">
-              <GanttTimeline projects={projects as any[]} />
+              <GanttTimeline projects={filteredProjects as any[]} />
             </div>
           )}
 
           {viewTab === 'grid' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {projects.map((proj: any) => (
+              {filteredProjects.map((proj: any) => (
                 <ProjectCard key={proj._id} project={{
                   ...proj,
                   id: proj._id,

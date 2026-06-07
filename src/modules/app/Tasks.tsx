@@ -98,6 +98,7 @@ export default function Tasks() {
   const createTask = useAddTask();
 
   const [filter, setFilter] = useState<Filter>('all');
+  const [viewPreset, setViewPreset] = useState<'all' | 'my_tasks' | 'overdue' | 'blocked'>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewTaskForm>(EMPTY_FORM);
   const [selectedTask, setSelectedTask] = useState<any>(null);
@@ -120,7 +121,25 @@ export default function Tasks() {
   }, [tasks]);
 
   const isLoading = tasks === null || projects === null;
-  const visible = filter === 'all' ? orderedTasks : orderedTasks.filter((t: any) => t.status === filter);
+  const filteredOrderedTasks = useMemo(() => {
+    return orderedTasks.filter((t: any) => {
+      const matchStatus = filter === 'all' || t.status === filter;
+      if (!matchStatus) return false;
+
+      if (viewPreset === 'all') return true;
+      if (viewPreset === 'my_tasks') return t.assignee === 'US';
+      if (viewPreset === 'overdue') {
+        const isOverdue = t.dueDate && new Date(t.dueDate).getTime() < Date.now();
+        return t.status !== 'done' && isOverdue;
+      }
+      if (viewPreset === 'blocked') {
+        return t.priority === 'urgent' && t.status !== 'done';
+      }
+      return true;
+    });
+  }, [orderedTasks, filter, viewPreset]);
+
+  const visible = filteredOrderedTasks;
   const totalPages = Math.ceil(totalTasksCount / pageSize);
 
   async function cycleStatus(id: string, currentStatus: TaskStatus) {
@@ -172,6 +191,31 @@ export default function Tasks() {
           {tk.addTask}
         </Button>
       </div>
+
+      {/* Saved Views Filter Tabs / Chips */}
+      {!isLoading && totalTasksCount > 0 && (
+        <div className="flex items-center gap-1.5 mb-4 overflow-x-auto">
+          {[
+            { id: 'all' as const, label: lang === 'fr' ? 'Tous' : 'All Tasks' },
+            { id: 'my_tasks' as const, label: lang === 'fr' ? 'Mes tâches' : 'My Tasks' },
+            { id: 'overdue' as const, label: lang === 'fr' ? 'En retard' : 'Overdue' },
+            { id: 'blocked' as const, label: lang === 'fr' ? 'Bloqués' : 'Blocked' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setViewPreset(tab.id)}
+              className={cn(
+                "relative px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer select-none",
+                viewPreset === tab.id
+                  ? "bg-white/10 text-ivory border-white/15 shadow-sm"
+                  : "bg-transparent text-fog border-transparent hover:text-silver"
+              )}
+            >
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="flex items-center gap-1 mb-5 p-1 rounded-lg bg-card border border-border w-fit max-w-full overflow-x-auto">

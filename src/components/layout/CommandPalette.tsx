@@ -73,10 +73,10 @@ const navItems = [
 ];
 
 const quickActions = [
-  { label: 'New Project', href: '/app/projects', icon: Plus, hint: 'Create a project' },
-  { label: 'Add Client', href: '/app/clients', icon: UserPlus, hint: 'Add a client' },
+  { label: 'New Project', href: '/app/projects?create=true', icon: Plus, hint: 'Create a project' },
+  { label: 'Add Client', href: '/app/clients?create=true', icon: UserPlus, hint: 'Add a client' },
   { label: 'Add Deal', href: '/app/pipeline', icon: GitBranch, hint: 'Add to pipeline' },
-  { label: 'New Invoice', href: '/app/billing', icon: DollarSign, hint: 'Create invoice' },
+  { label: 'New Invoice', href: '/app/billing?create=true', icon: DollarSign, hint: 'Create invoice' },
 ];
 
 function CommandPalette() {

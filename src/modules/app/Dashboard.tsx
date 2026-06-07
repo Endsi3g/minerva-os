@@ -2,393 +2,40 @@
 import { useRouter } from 'next/navigation';
 import {
   Sparkles,
-  Plus,
   ExternalLink,
-  Phone,
-  Network,
   Bot,
-  Wrench,
-  Database,
-  Globe,
-  Search,
-  MessageSquare,
-  Users,
-  HelpCircle,
   ArrowRight,
-  Activity,
-  Key,
-  Hammer,
-  ChevronUp,
   ChevronDown,
+  Crown,
+  ClipboardList,
+  Coins,
+  User,
+  Palette,
+  Code,
+  AlertTriangle,
+  Clock,
+  Play,
+  Pause,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { GettingStartedChecklist } from '@/components/minerva/GettingStartedChecklist';
-import { SoloQuickStart, useSoloQuickStart } from '@/components/minerva/SoloQuickStart';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWorkspaces, useProjects, useInvoices, useApprovals, useDeals, useTasks, useActivity } from '@/lib/hooks/useSupabase';
-import { AgentSuggestions } from '@/components/agents/AgentSuggestions';
+import { useWorkspaces, useProjects, useInvoices, useApprovals, useTasks } from '@/lib/hooks/useSupabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { TextureOverlay } from '@/components/ui/texture-overlay';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from 'recharts';
-
-/* ── Types ───────────────────────────────────────────────────────────────── */
-interface RecentPageItem {
-  title: string;
-  path: string;
-  timestamp: number;
-}
-
-const MOCK_RECENT_AGENTS = [
-  { id: 'ux-research-insights', name: 'UX Research Insights Agent', edited: 'Edited 7m ago', color: 'bg-indigo-600', initials: 'UX', icons: [Globe, Search, MessageSquare] },
-  { id: 'ux-competitor-benchmark', name: 'UX Competitor Benchmark Analyst', edited: 'Edited 1h ago', color: 'bg-emerald-600', initials: 'CB', icons: [Activity, Wrench, Key] },
-  { id: 'rellie-recruiter', name: 'Rellie, The Relevance Recruiter', edited: 'Edited 8h ago', color: 'bg-purple-600', initials: 'RL', icons: [Users, Bot, Database] },
-  { id: 'recruitmer', name: 'Recruitmer', edited: 'Edited 1d ago', color: 'bg-pink-600', initials: 'RM', icons: [Hammer, HelpCircle, Activity] },
-];
-
-function AgentOrbit({ avatarColor = 'bg-blue-500', name = 'A', icons = [] }: { avatarColor?: string, name?: string, icons?: any[] }) {
-  return (
-    <div className="relative w-24 h-24 flex items-center justify-center select-none mx-auto mb-3">
-      {/* Outer orbit circle */}
-      <div className="absolute w-20 h-20 rounded-full border border-white/5 animate-[spin_40s_linear_infinite]" />
-      
-      {/* Inner dashed orbit circle */}
-      <div className="absolute w-14 h-14 rounded-full border border-dashed border-[#7FA38A]/10 animate-[spin_20s_linear_infinite]" />
-
-      {/* Floating mini icons on outer orbit */}
-      {icons.map((Icon: any, idx: number) => {
-        const angle = (idx * 360) / icons.length;
-        const radius = 40; // perimeter placement
-        const x = Math.cos((angle * Math.PI) / 180) * radius;
-        const y = Math.sin((angle * Math.PI) / 180) * radius;
-        
-        return (
-          <div
-            key={idx}
-            className="absolute h-4 w-4 rounded-full bg-[#171C2A] border border-white/10 flex items-center justify-center shadow-md"
-            style={{
-              transform: `translate(${x}px, ${y}px)`,
-            }}
-          >
-            <Icon size={8} className="text-[#7FA38A]" />
-          </div>
-        );
-      })}
-
-      {/* Central avatar bubble */}
-      <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md z-10 border border-white/10", avatarColor)}>
-        {name}
-      </div>
-    </div>
-  );
-}
-
-const TOP_PERFORMERS = [
-  { name: 'Kael', role: 'Owner', capacity: 85, onTimeRate: 98, openTasks: 3, avatar: 'K' },
-  { name: 'Jane Studio', role: 'Designer', capacity: 92, onTimeRate: 100, openTasks: 2, avatar: 'JS' },
-  { name: 'Alex', role: 'Developer', capacity: 70, onTimeRate: 90, openTasks: 5, avatar: 'A' },
-];
-
-const TIME_TRACKED_DATA = [
-  { date: 'Jan 25', unbilled: 0.5, billed: 4 },
-  { date: 'Jan 27', unbilled: 1.2, billed: 6 },
-  { date: 'Jan 29', unbilled: 0, billed: 3.5 },
-  { date: 'Jan 31', unbilled: 2, billed: 5 },
-  { date: 'Feb 02', unbilled: 1.5, billed: 6.2 },
-  { date: 'Feb 04', unbilled: 0.8, billed: 4.8 },
-  { date: 'Feb 06', unbilled: 3.2, billed: 1.5 },
-  { date: 'Feb 08', unbilled: 2.1, billed: 5.5 },
-];
 
 
-/* ── Activity Feed ────────────────────────────────────────────────────────── */
-function ActivityFeed({ emptyLabel, workspaceId }: { emptyLabel: string, workspaceId: any }) {
-  const activity = useActivity(workspaceId);
-
-  if (activity === null) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="flex items-start gap-3">
-            <Skeleton className="h-6 w-6 rounded-full shrink-0 mt-0.5" />
-            <div className="space-y-1.5 flex-1">
-              <Skeleton className="h-3 w-3/4" />
-              <Skeleton className="h-2 w-1/4" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (activity.length === 0) {
-    return (
-      <p className="text-center text-xs text-fog pt-4">{emptyLabel}</p>
-    );
-  }
-
-  return (
-    <div className="relative border-l border-white/5 pl-4 ml-2.5 space-y-5">
-      {activity.slice(0, 10).map((a: any) => (
-        <div key={a._id} className="relative">
-          {/* Dot */}
-          <div className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full border border-white/10 bg-[#7FA38A]" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-silver leading-relaxed">
-              <span className="font-semibold text-ivory">{a.user}</span> {a.action} <span className="text-ivory font-medium">{a.targetName}</span>
-            </p>
-            <p className="text-[10px] text-fog mt-0.5">
-              {new Date(a.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 
-function RefreshCwIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-    </svg>
-  );
-}
 
-/* ── Minerva Daily ────────────────────────────────────────────────────────── */
-
-type BriefingItem = { label: string; module: string; id?: string };
-type BriefingSection = {
-  type: string;
-  title: string;
-  emoji: string;
-  items: BriefingItem[];
-  ai_summary: string;
-};
-type BriefingResult = { generatedAt: string; role: string; sections: BriefingSection[] };
-
-const MODULE_LINKS: Record<string, string> = {
-  projects: '/app/projects',
-  tasks: '/app/projects',
-  invoices: '/app/finance-hub',
-  approvals: '/app/approvals',
-};
-
-const SECTION_COLORS: Record<string, { badge: string; bg: string }> = {
-  urgences:     { badge: '#A86A6A', bg: 'rgba(168,106,106,0.10)' },
-  derive:       { badge: '#B89B6A', bg: 'rgba(184,155,106,0.10)' },
-  facturation:  { badge: '#7FA38A', bg: 'rgba(127,163,138,0.10)' },
-  approbations: { badge: '#8A9099', bg: 'rgba(138,144,153,0.10)' },
-};
-
-function minervaDailySessionKey(wsId: string, lang: string, role: string) {
-  return `minerva_daily_${wsId}_${lang}_${role}`;
-}
-
-function relativeDailyTime(iso: string, lang: 'en' | 'fr'): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (lang === 'fr') {
-    if (mins < 1) return "a l'instant";
-    if (mins < 60) return `il y a ${mins}m`;
-    const hrs = Math.floor(mins / 60);
-    return hrs < 24 ? `il y a ${hrs}h` : `il y a ${Math.floor(hrs / 24)}j`;
-  }
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  return hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`;
-}
-
-function MinervaDaily({ workspaceId, userRole }: { workspaceId: string; userRole?: string }) {
-  const { t, lang } = useLang();
-  const d = t.app.dashboard.minervaDaily;
-  const [briefing, setBriefing] = useState<BriefingResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState(false);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(['urgences']));
-
-  const fetchBriefing = useCallback(async (force = false) => {
-    if (!workspaceId) return;
-    if (!force) {
-      try {
-        const cached = sessionStorage.getItem(minervaDailySessionKey(workspaceId, lang, userRole ?? 'owner'));
-        if (cached) {
-          const parsed = JSON.parse(cached) as BriefingResult;
-          if (Date.now() - new Date(parsed.generatedAt).getTime() < 30 * 60 * 1000) {
-            setBriefing(parsed);
-            return;
-          }
-        }
-      } catch { /* ignore */ }
-    }
-    setLoading(true);
-    setErr(false);
-    try {
-      const res = await fetch('/api/ai/daily-briefing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workspaceId, userRole: userRole ?? 'owner', lang }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setBriefing(data);
-      try { sessionStorage.setItem(minervaDailySessionKey(workspaceId, lang, userRole ?? 'owner'), JSON.stringify(data)); } catch { /* ignore */ }
-    } catch {
-      setErr(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [workspaceId, userRole, lang]);
-
-  useEffect(() => { fetchBriefing(); }, [fetchBriefing]);
-
-  function toggleSection(type: string) {
-    setExpanded(prev => {
-      const next = new Set(prev);
-      if (next.has(type)) next.delete(type); else next.add(type);
-      return next;
-    });
-  }
-
-  return (
-    <div className="rounded-xl border border-white/5 bg-[#111522] overflow-hidden relative">
-      <TextureOverlay texture="dots" opacity={0.08} />
-
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 relative z-10">
-        <div className="flex items-center gap-2">
-          <Sparkles size={13} className="text-[#B89B6A] animate-pulse" />
-          <span className="text-xs font-semibold text-ivory uppercase tracking-wider">{d.title}</span>
-          {briefing && (
-            <span className="text-[10px] text-fog">
-              · {(d.roles as Record<string, string>)[briefing.role] ?? briefing.role}
-            </span>
-          )}
-        </div>
-        <button
-          onClick={() => fetchBriefing(true)}
-          disabled={loading}
-          className="text-fog hover:text-silver transition-colors cursor-pointer"
-          title={d.regenerate}
-        >
-          <RefreshCwIcon className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
-        </button>
-      </div>
-
-      <div className="relative z-10">
-        {loading && !briefing && (
-          <div className="px-5 py-4 space-y-2.5">
-            <p className="text-[11px] text-fog animate-pulse">{d.generating}</p>
-            <Skeleton className="h-2.5 w-full bg-white/5" />
-            <Skeleton className="h-2.5 w-4/5 bg-white/5" />
-            <Skeleton className="h-2.5 w-3/5 bg-white/5" />
-          </div>
-        )}
-        {err && !loading && (
-          <p className="px-5 py-4 text-xs text-[#A86A6A]">{d.error}</p>
-        )}
-        {briefing && (
-          <div>
-            {briefing.sections.map((section, i) => {
-              const isOpen = expanded.has(section.type);
-              const colors = SECTION_COLORS[section.type] ?? SECTION_COLORS.urgences;
-              const sl = (d.sections as Record<string, { title: string; empty: string }>)[section.type];
-
-              return (
-                <motion.div
-                  key={section.type}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07, duration: 0.3 }}
-                >
-                  <button
-                    onClick={() => toggleSection(section.type)}
-                    className="w-full flex items-center gap-2.5 px-5 py-3 text-left hover:bg-white/[0.02] transition-colors border-b border-white/5"
-                  >
-                    <span className="text-sm leading-none">{section.emoji}</span>
-                    <span className="text-xs font-medium text-silver flex-1">{sl?.title ?? section.title}</span>
-                    <span
-                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                      style={{ backgroundColor: colors.bg, color: colors.badge }}
-                    >
-                      {section.items.length}
-                    </span>
-                    {isOpen
-                      ? <ChevronUp size={11} className="text-fog" />
-                      : <ChevronDown size={11} className="text-fog" />}
-                  </button>
-
-                  <AnimatePresence>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                        className="overflow-hidden"
-                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                      >
-                        <div className="px-5 pb-4 pt-2 space-y-2">
-                          {section.items.length === 0 ? (
-                            <p className="text-[11px] text-fog">{sl?.empty ?? d.nothingToReport}</p>
-                          ) : (
-                            <>
-                              {section.items.map((item, j) => (
-                                <div key={j} className="flex items-start gap-2 group">
-                                  <span className="text-fog text-[10px] shrink-0 mt-0.5">·</span>
-                                  <p className="text-[11px] text-silver flex-1 leading-relaxed">{item.label}</p>
-                                  {item.module && MODULE_LINKS[item.module] && (
-                                    <a
-                                      href={MODULE_LINKS[item.module]}
-                                      className="text-[10px] text-fog hover:text-[#B89B6A] transition-colors opacity-0 group-hover:opacity-100 shrink-0"
-                                    >
-                                      →
-                                    </a>
-                                  )}
-                                </div>
-                              ))}
-                              {section.ai_summary && (
-                                <p className="text-[10px] text-fog italic leading-relaxed mt-2 pt-2 border-t border-white/5">
-                                  {section.ai_summary}
-                                </p>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-
-            {briefing.generatedAt && (
-              <p className="px-5 py-2 text-[10px] text-fog">
-                {d.lastGenerated.replace('{{ago}}', relativeDailyTime(briefing.generatedAt, lang))}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 /* ── Skeletons ────────────────────────────────────────────────────────────── */
 function DashboardSkeleton() {
@@ -419,419 +66,11 @@ function DashboardSkeleton() {
   );
 }
 
-const SMB_TEAM_SIZES = ['solo', '2-5', '6-15'];
-
-/* ── SMB Action Queue ─────────────────────────────────────────────────────── */
-function SMBActionQueue({
-  approvals, invoices, deals, labels, workspaceId,
-}: {
-  approvals: any[] | null;
-  invoices: any[] | null;
-  deals: any[] | null;
-  labels: any;
-  workspaceId: string | undefined;
-}) {
-  const router = useRouter();
-  const now = Date.now();
-  const [agentAlerts, setAgentAlerts] = useState<{ key: string; label: string; href: string; color: string }[]>([]);
-  const [runningAgents, setRunningAgents] = useState(false);
-  const [lastRanAt, setLastRanAt] = useState<string | null>(null);
-
-  // Load most recent agent alerts from the last 24 hours
-  useEffect(() => {
-    if (!workspaceId) return;
-    const since = new Date(Date.now() - 86400000).toISOString();
-    supabase
-      .from('agent_audit')
-      .select('details, action, timestamp')
-      .eq('workspace_id', workspaceId)
-      .in('action', ['crm_agent_alert', 'pm_agent_alert', 'finance_agent_alert'])
-      .gte('timestamp', since)
-      .order('timestamp', { ascending: false })
-      .limit(10)
-      .then(({ data }) => {
-        if (!data) return;
-        const severityColor = (s: string) =>
-          s === 'rose' ? '#A86A6A' : s === 'amber' ? '#B89B6A' : '#8A9099';
-        const mapped = data.map((row: any) => ({
-          key: `agent-${row.timestamp}-${row.details?.entity_id || Math.random()}`,
-          label: row.details?.title || row.details?.description || 'Agent alert',
-          href: row.details?.href || '/app/agents',
-          color: severityColor(row.details?.severity || 'info'),
-        }));
-        setAgentAlerts(mapped);
-        // Find most recent run timestamp
-        const run = data[0];
-        if (run) setLastRanAt(run.timestamp);
-      });
-  }, [workspaceId]);
-
-  async function runAllAgents() {
-    if (!workspaceId || runningAgents) return;
-    setRunningAgents(true);
-    try {
-      await Promise.all([
-        fetch('/api/agents/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId }) }),
-        fetch('/api/agents/pm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId }) }),
-        fetch('/api/agents/finance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId }) }),
-      ]);
-      // Reload alerts after run
-      const since = new Date(Date.now() - 300000).toISOString(); // last 5 min
-      const { data } = await supabase
-        .from('agent_audit')
-        .select('details, action, timestamp')
-        .eq('workspace_id', workspaceId)
-        .in('action', ['crm_agent_alert', 'pm_agent_alert', 'finance_agent_alert'])
-        .gte('timestamp', since)
-        .order('timestamp', { ascending: false })
-        .limit(10);
-      if (data) {
-        const severityColor = (s: string) =>
-          s === 'rose' ? '#A86A6A' : s === 'amber' ? '#B89B6A' : '#8A9099';
-        setAgentAlerts(data.map((row: any) => ({
-          key: `agent-${row.timestamp}-${row.details?.entity_id || Math.random()}`,
-          label: row.details?.title || 'Agent alert',
-          href: row.details?.href || '/app/agents',
-          color: severityColor(row.details?.severity || 'info'),
-        })));
-        if (data[0]) setLastRanAt(data[0].timestamp);
-      }
-    } catch (err) {
-      console.error('[Run agents]', err);
-    } finally {
-      setRunningAgents(false);
-    }
-  }
-
-  const items: { key: string; label: string; href: string; color: string }[] = [];
-
-  if (approvals) {
-    approvals
-      .filter((a: any) => a.status === 'pending')
-      .forEach((a: any) => {
-        const submittedAt = a.submitted_at ? new Date(a.submitted_at).getTime() : now;
-        const days = Math.floor((now - submittedAt) / 86400000);
-        if (days >= 2) {
-          items.push({
-            key: a.id || a._id,
-            label: labels.approvalAlert.replace('{{days}}', String(days)),
-            href: '/app/approvals',
-            color: '#B89B6A',
-          });
-        }
-      });
-  }
-
-  if (invoices) {
-    invoices
-      .filter((i: any) => i.status === 'overdue')
-      .forEach((i: any) => {
-        const dueAt = i.due_date ? new Date(i.due_date).getTime() : now;
-        const days = Math.floor((now - dueAt) / 86400000);
-        items.push({
-          key: i.id || i._id,
-          label: labels.invoiceAlert.replace('{{days}}', String(Math.max(0, days))),
-          href: '/app/billing',
-          color: '#A86A6A',
-        });
-      });
-  }
-
-  if (deals) {
-    deals
-      .filter((d: any) => d.stage === 'proposal')
-      .forEach((d: any) => {
-        const updatedAt = d.updated_at ? new Date(d.updated_at).getTime() : now;
-        const days = Math.floor((now - updatedAt) / 86400000);
-        if (days >= 5) {
-          items.push({
-            key: d.id || d._id,
-            label: labels.proposalAlert.replace('{{days}}', String(days)),
-            href: '/app/pipeline',
-            color: '#8A9099',
-          });
-        }
-      });
-  }
-
-  // Merge: agent alerts first, then manual checks (deduplicate by href+label)
-  const allItems = [...agentAlerts, ...items];
-
-  return (
-    <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{labels.actionQueueTitle}</CardTitle>
-          <button
-            onClick={runAllAgents}
-            disabled={runningAgents}
-            className="flex items-center gap-1.5 text-[10px] text-fog hover:text-silver transition-colors cursor-pointer disabled:opacity-40"
-          >
-            <Sparkles size={10} className={runningAgents ? 'animate-pulse' : ''} />
-            {runningAgents ? 'Analysing...' : lastRanAt ? `AI scan · ${new Date(lastRanAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Run AI scan'}
-          </button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {allItems.length === 0 ? (
-          <p className="text-xs text-fog py-2">{labels.actionQueueEmpty}</p>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {allItems.map(item => (
-              <button
-                key={item.key}
-                onClick={() => router.push(item.href)}
-                className="flex items-center gap-3 text-left hover:bg-white/3 rounded-lg px-2 py-1.5 transition-colors cursor-pointer group"
-              >
-                <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-silver group-hover:text-ivory transition-colors">{item.label}</span>
-                <ArrowRight size={10} className="ml-auto text-fog opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ── SMB Revenue Snapshot ─────────────────────────────────────────────────── */
-function SMBRevenueSnapshot({
-  invoices, labels, onDetails, formatCurrency,
-}: {
-  invoices: any[] | null;
-  labels: any;
-  onDetails: () => void;
-  formatCurrency: (v: number) => string;
-}) {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-
-  const collected = invoices
-    ? invoices.filter((i: any) => i.status === 'paid' && new Date(i.paid_date || i.updated_at || 0).getTime() >= startOfMonth)
-        .reduce((s: number, i: any) => s + (i.amount || 0), 0)
-    : 0;
-
-  const outstanding = invoices
-    ? invoices.filter((i: any) => ['sent', 'overdue'].includes(i.status))
-        .reduce((s: number, i: any) => s + (i.amount || 0), 0)
-    : 0;
-
-  const nextInvoice = invoices
-    ? invoices
-        .filter((i: any) => i.status === 'sent' && i.due_date)
-        .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0]
-    : null;
-
-  const metrics = [
-    { label: labels.revenueCollected, value: formatCurrency(collected), color: '#7FA38A' },
-    { label: labels.revenueOutstanding, value: formatCurrency(outstanding), color: '#B89B6A' },
-    {
-      label: labels.revenueNextInvoice,
-      value: nextInvoice
-        ? `${formatCurrency(nextInvoice.amount || 0)} · ${new Date(nextInvoice.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
-        : '—',
-      color: '#B8BDC7',
-    },
-  ];
-
-  return (
-    <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{labels.revenueTitle}</CardTitle>
-        <button onClick={onDetails} className="text-[10px] text-fog hover:text-silver transition-colors cursor-pointer flex items-center gap-0.5">
-          {labels.revenueViewDetails} <ArrowRight size={9} />
-        </button>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-3 gap-4">
-          {metrics.map(m => (
-            <div key={m.label} className="flex flex-col gap-1">
-              <span className="text-[9px] uppercase font-semibold tracking-wider text-fog">{m.label}</span>
-              <span className="text-sm font-bold" style={{ color: m.color }}>{m.value}</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ── SMB Active Projects ──────────────────────────────────────────────────── */
-function SMBActiveProjects({ projects, labels }: { projects: any[] | null; labels: any }) {
-  const router = useRouter();
-  const now = Date.now();
-
-  if (!projects) return null;
-
-  const active = projects.filter((p: any) => p.status === 'active').slice(0, 5);
-
-  return (
-    <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{labels.projectsTitle}</CardTitle>
-        <button
-          onClick={() => router.push('/app/projects')}
-          className="text-[10px] font-bold text-sage hover:underline flex items-center gap-0.5 cursor-pointer"
-        >
-          {labels.projectsViewAll} <ArrowRight size={10} />
-        </button>
-      </CardHeader>
-      <CardContent>
-        {active.length === 0 ? (
-          <p className="text-xs text-fog py-2">{labels.projectsEmpty}</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {active.map((p: any) => {
-              const dueDate = p.dueDate || p.due_date;
-              const isOverdue = dueDate && new Date(dueDate).getTime() < now;
-              return (
-                <button
-                  key={p.id || p._id}
-                  onClick={() => router.push('/app/projects')}
-                  className="flex items-center justify-between text-left hover:bg-white/3 rounded-lg px-2 py-2 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="h-1.5 w-1.5 rounded-full bg-sage shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-ivory truncate group-hover:text-white">{p.name}</p>
-                      <p className="text-[10px] text-fog mt-0.5">{p.clientName || p.client_name || ''}</p>
-                    </div>
-                  </div>
-                  {dueDate && (
-                    <span className={cn('text-[10px] shrink-0 ml-2', isOverdue ? 'text-rose font-semibold' : 'text-fog')}>
-                      {new Date(dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ── SMB Dashboard Layout ─────────────────────────────────────────────────── */
-function SMBDashboard({
-  user, workspace, workspaceId, projects, invoices, approvals, deals,
-  localTasks, handleToggleTask, formatCurrency,
-}: {
-  user: any; workspace: any; workspaceId: any;
-  projects: any; invoices: any; approvals: any; deals: any;
-  localTasks: any[]; handleToggleTask: (id: string, title: string) => void;
-  formatCurrency: (v: number) => string;
-}) {
-  const router = useRouter();
-  const { t } = useLang();
-  const d = t.app.dashboard;
-  const s = t.smb.dashboard;
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? d.greetingMorning : hour < 18 ? d.greetingAfternoon : d.greetingEvening;
-  const displayName = user?.name ?? workspace?.name ?? 'Studio';
-  const isSolo = workspace?.teamSize === 'solo';
-  const { visible: soloQsVisible, dismiss: dismissSoloQs } = useSoloQuickStart(workspaceId);
-
-  return (
-    <div className="space-y-6 w-full px-6 py-6 max-w-[1200px] mx-auto select-none">
-      {/* Greeting */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-2xl font-semibold text-ivory tracking-tight" />
-      </motion.div>
-
-      {/* Solo Quick Start (only shows for solo users who haven't dismissed it) */}
-      <AnimatePresence>
-        {isSolo && soloQsVisible && workspaceId && (
-          <SoloQuickStart
-            workspaceId={workspaceId}
-            workspaceName={workspace?.name ?? ''}
-            onDismiss={dismissSoloQs}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Top row: action queue + revenue snapshot */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.4 }}>
-          <SMBActionQueue approvals={approvals} invoices={invoices} deals={deals} labels={s} workspaceId={workspaceId} />
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }}>
-          <SMBRevenueSnapshot invoices={invoices} labels={s} onDetails={() => router.push('/app/finance-hub')} formatCurrency={formatCurrency} />
-        </motion.div>
-      </div>
-
-      {/* Active projects + right sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 space-y-6">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.4 }}>
-            <SMBActiveProjects projects={projects} labels={s} />
-          </motion.div>
-
-          {/* Open tasks */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">{d.kpis.openTasks}</CardTitle>
-              <button onClick={() => router.push('/app/tasks')} className="h-6 w-6 rounded-full border border-white/10 flex items-center justify-center text-fog hover:text-silver hover:bg-white/5 transition-colors cursor-pointer">
-                <Plus size={12} />
-              </button>
-            </CardHeader>
-            <CardContent>
-              {localTasks.length === 0 ? (
-                <div className="text-center py-6 text-xs text-fog">{d.allTasksDone}</div>
-              ) : (
-                <div className="divide-y divide-white/5 space-y-2">
-                  <AnimatePresence initial={false}>
-                    {localTasks.slice(0, 5).map(task => (
-                      <motion.div
-                        key={task.id || task._id}
-                        initial={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                        transition={{ duration: 0.2 }}
-                        className="flex items-center justify-between py-2 pt-2.5"
-                      >
-                        <div className="flex items-center gap-3">
-                          <input type="checkbox" checked={false} onChange={() => handleToggleTask(task.id || task._id, task.title)}
-                            className="h-3.5 w-3.5 rounded border-white/10 bg-transparent text-sage focus:ring-0 cursor-pointer" />
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium text-ivory truncate">{task.title}</p>
-                            <p className="text-[10px] text-fog mt-0.5">{task.project}</p>
-                          </div>
-                        </div>
-                        <span className="text-[10px] text-fog shrink-0">
-                          {new Date(task.dueDate || task.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                        </span>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right sidebar */}
-        <div className="space-y-6">
-          <GettingStartedChecklist />
-          {workspaceId && (
-            <MinervaDaily workspaceId={workspaceId} userRole={user?.role} />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── Dashboard Restructure ────────────────────────────────────────────────── */
 export default function Dashboard() {
   const router = useRouter();
   const { t } = useLang();
   const { user } = useAuth();
-  const { workspace } = useWorkspace();
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?._id;
@@ -845,10 +84,9 @@ export default function Dashboard() {
   const projects = useProjects(workspaceId);
   const invoices = useInvoices(workspaceId);
   const approvals = useApprovals(workspaceId);
-  const deals = useDeals(workspaceId);
   const tasks = useTasks(workspaceId);
 
-  const isLoading = workspaces === null || projects === null || invoices === null || approvals === null || deals === null || tasks === null;
+  const isLoading = workspaces === null || projects === null || invoices === null || approvals === null || tasks === null;
 
   const d = t.app.dashboard;
   const hour = new Date().getHours();
@@ -859,7 +97,6 @@ export default function Dashboard() {
   const [localTasks, setLocalTasks] = useState<any[]>([]);
   useEffect(() => {
     if (tasks) {
-      // Filter to keep only active, non-completed tasks
       setLocalTasks(tasks.filter((tsk: any) => tsk.status !== 'done'));
     }
   }, [tasks]);
@@ -874,414 +111,750 @@ export default function Dashboard() {
     }
   };
 
-  /* ── Recent pages state & hook ── */
-  const [recentPages, setRecentPages] = useState<RecentPageItem[]>([]);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const key = 'minerva_recent_pages';
-      let pages = JSON.parse(localStorage.getItem(key) || '[]');
-      if (pages.length === 0) {
-        pages = [
-          { title: 'Brand Identity', path: '/app/projects', timestamp: Date.now() - 3600000 },
-          { title: 'Active CRM Pipeline', path: '/app/pipeline', timestamp: Date.now() - 7200000 },
-          { title: 'Workspace Settings', path: '/app/settings', timestamp: Date.now() - 86400000 },
-        ];
-        localStorage.setItem(key, JSON.stringify(pages));
-      }
-      setRecentPages(pages);
-
-      // Track current page visit
-      const currentItem = {
-        title: 'Dashboard',
-        path: '/app/dashboard',
-        timestamp: Date.now()
-      };
-      const updated = [currentItem, ...pages.filter((p: any) => p.path !== '/app/dashboard')].slice(0, 4);
-      localStorage.setItem(key, JSON.stringify(updated));
-    }
-  }, []);
-
-  /* ── Financial calculations for Bonsai KPI strip ── */
-  const financialMetrics = useMemo(() => {
-    if (!invoices) return { outstanding: 0, overdue: 0, paidPending: 0, otherIncome: 460 };
-    const outstanding = invoices.filter((i: any) => i.status === 'sent').reduce((s: number, i: any) => s + (i.amount || 0), 0);
-    const overdue = invoices.filter((i: any) => i.status === 'overdue').reduce((s: number, i: any) => s + (i.amount || 0), 0);
-    const paidPending = invoices.filter((i: any) => ['paid', 'sent'].includes(i.status)).reduce((s: number, i: any) => s + (i.amount || 0), 0);
-    return { outstanding, overdue, paidPending, otherIncome: 460 };
-  }, [invoices]);
-
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
   };
 
-  const isSMB = SMB_TEAM_SIZES.includes(workspace?.teamSize ?? '');
+  const [selectedRole, setSelectedRole] = useState<string>('owner');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (isLoading) {
     return <DashboardSkeleton />;
   }
 
-  if (isSMB) {
-    return (
-      <SMBDashboard
-        user={user}
-        workspace={workspace}
-        workspaceId={workspaceId}
-        projects={projects}
-        invoices={invoices}
-        approvals={approvals}
-        deals={deals}
-        localTasks={localTasks}
-        handleToggleTask={handleToggleTask}
-        formatCurrency={formatCurrency}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6 w-full px-6 py-6 max-w-[1400px] mx-auto select-none">
       
-      {/* Relevance AI Style Welcome Banner */}
-      <motion.div
-        className="relative h-48 w-full rounded-xl overflow-hidden border border-white/5 shadow-lg bg-gradient-to-r from-[#0C1222] via-[#0A0D14] to-[#121A30] flex flex-col items-center justify-center p-6 select-none"
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      >
-        {/* Banner Star Video Background */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
-          src="/dashboard-banner.mp4"
-        />
-        
-        {/* Banner Title */}
-        <div className="relative z-20 text-center mb-5 mt-2">
-          <h2 className="text-2xl font-bold tracking-tight text-ivory font-sans">
-            Welcome to Relevance AI {workspace ? `· ${workspace.name}` : ''}
-          </h2>
+      {/* Role Switcher and Greeting Flex Row */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
+        <div className="space-y-1">
+          <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-2xl font-semibold text-ivory tracking-tight" />
+          <p className="text-xs text-fog max-w-2xl leading-relaxed">
+            Welcome to Minerva OS. Here is your personalized focus dashboard for today.
+          </p>
         </div>
-
-        {/* Floating rounded bar container */}
-        <div className="relative z-20 bg-[#F5F1E8] text-[#0A0D14] rounded-full px-8 py-2.5 flex items-center justify-between gap-6 shadow-xl max-w-md w-full border border-black/10">
-          <button
-            onClick={() => router.push('/app/copilot')}
-            className="flex flex-col items-center gap-0.5 hover:scale-105 transition-transform cursor-pointer"
-          >
-            <Phone size={13} className="text-[#0A0D14]" />
-            <span className="text-[9px] font-bold">Phone</span>
-          </button>
-          
-          <button
-            onClick={() => router.push('/app/resources')}
-            className="flex flex-col items-center gap-0.5 hover:scale-105 transition-transform cursor-pointer"
-          >
-            <Network size={13} className="text-[#0A0D14]" />
-            <span className="text-[9px] font-bold">Workforce</span>
-          </button>
-
-          {/* Centered highlighted Agent button */}
-          <div className="relative -mt-6 flex flex-col items-center group">
-            <button
-              onClick={() => router.push('/app/agents')}
-              className="h-11 w-11 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center shadow-md hover:scale-110 transition-transform cursor-pointer relative"
-            >
-              <div className="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center text-[#A855F7] animate-pulse">
-                <Bot size={16} />
-              </div>
-            </button>
-            <span className="text-[9px] font-extrabold text-[#0A0D14] mt-0.5">Agent</span>
-          </div>
-
-          <button
-            onClick={() => router.push('/app/agent-ops')}
-            className="flex flex-col items-center gap-0.5 hover:scale-105 transition-transform cursor-pointer"
-          >
-            <Wrench size={13} className="text-[#0A0D14]" />
-            <span className="text-[9px] font-bold">Tool</span>
-          </button>
-
-          <button
-            onClick={() => router.push('/app/knowledge')}
-            className="flex flex-col items-center gap-0.5 hover:scale-105 transition-transform cursor-pointer"
-          >
-            <Database size={13} className="text-[#0A0D14]" />
-            <span className="text-[9px] font-bold">Knowledge</span>
-          </button>
-        </div>
-      </motion.div>
-
-      {/* Greeting Messages */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-1"
-      >
-        <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-2xl font-semibold text-ivory tracking-tight" />
-        <p className="text-xs text-fog max-w-2xl leading-relaxed">
-          Welcome {displayName}, your statistics for today are here. Here's what you can do to be better today...
-        </p>
-      </motion.div>
-
-      {/* Bonsai-Style Top KPI Analytics Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Outstanding', value: financialMetrics.outstanding, color: 'text-silver' },
-          { label: 'Overdue', value: financialMetrics.overdue, color: 'text-ember' },
-          { label: 'Paid & Pending', value: financialMetrics.paidPending, color: 'text-[#B89B6A]' },
-          { label: 'Other Income', value: financialMetrics.otherIncome, color: 'text-[#7FA38A]', isSuccess: true }
-        ].map((kpi, idx) => (
-          <motion.div
-            key={kpi.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05, duration: 0.4 }}
-            className="bg-[#111522] border border-white/5 rounded-xl p-4.5 flex flex-col gap-1 shadow-sm"
-          >
-            <span className="text-[10px] uppercase font-semibold tracking-wider text-fog">{kpi.label}</span>
-            <span className={cn("text-xl font-bold tracking-tight", kpi.isSuccess ? 'text-[#7FA38A]' : 'text-ivory')}>
-              {formatCurrency(kpi.value)}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {/* Left Column (2/3 width) */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Upcoming & Overdue Tasks */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Upcoming & Overdue Tasks</CardTitle>
-              <button
-                onClick={() => router.push('/app/tasks')}
-                className="h-6 w-6 rounded-full border border-white/10 flex items-center justify-center text-fog hover:text-silver hover:bg-white/5 transition-colors cursor-pointer"
+        {/* Sleek dropdown role switcher */}
+        <div className="relative z-50">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-2.5 px-4 py-2 rounded-full border border-white/10 bg-[#111522] hover:bg-[#171C2A] text-xs font-semibold text-silver hover:text-ivory cursor-pointer transition-all shadow-sm"
+          >
+            {(() => {
+              const activeRoleObj = ROLES.find(r => r.id === selectedRole) || ROLES[0];
+              const Icon = activeRoleObj.icon;
+              return (
+                <>
+                  <Icon size={14} className="text-[#7FA38A]" />
+                  <span>Role: {activeRoleObj.label}</span>
+                </>
+              );
+            })()}
+            <ChevronDown size={12} className="text-fog" />
+          </button>
+
+          {dropdownOpen && (
+            <>
+              {/* Global Click Shield */}
+              <div className="fixed inset-0 z-45 bg-transparent" onClick={() => setDropdownOpen(false)} />
+              
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute right-0 mt-2 w-64 rounded-xl border border-white/10 bg-[#111522] p-1.5 shadow-xl z-50"
               >
-                <Plus size={12} />
-              </button>
-            </CardHeader>
-            <CardContent>
-              {localTasks.length === 0 ? (
-                <div className="text-center py-6 text-xs text-fog">{t.app.dashboard.allTasksDone}</div>
-              ) : (
-                <div className="divide-y divide-white/5 space-y-2">
-                  <AnimatePresence initial={false}>
-                    {localTasks.slice(0, 5).map(task => (
-                      <motion.div
-                        key={task.id || task._id}
-                        initial={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                        transition={{ duration: 0.2 }}
-                        className="flex items-center justify-between py-2 pt-2.5"
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={false}
-                            onChange={() => handleToggleTask(task.id || task._id, task.title)}
-                            className="h-3.5 w-3.5 rounded border-white/10 bg-transparent text-[#7FA38A] focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                          />
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium text-ivory truncate">{task.title}</p>
-                            <p className="text-[10px] text-fog mt-0.5">{task.project}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className="text-[10px] text-fog">
-                            {new Date(task.dueDate || task.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                          </span>
-                          <span className={cn(
-                            "h-1.5 w-1.5 rounded-full",
-                            task.priority === 'urgent' ? 'bg-ember' : task.priority === 'high' ? 'bg-warm' : 'bg-fog'
-                          )} />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
+                <div className="px-2 py-1.5 text-[9px] font-bold text-fog uppercase tracking-wider">
+                  Select Active Workspace Role
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Time Tracked Chart */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Time Tracked</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="h-44 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={TIME_TRACKED_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <XAxis
-                      dataKey="date"
-                      stroke="#8A9099"
-                      fontSize={9}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      stroke="#8A9099"
-                      fontSize={9}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#171C2A', borderColor: 'rgba(255,255,255,0.06)', borderRadius: '8px' }}
-                      labelStyle={{ fontSize: '10px', color: '#F5F1E8', fontWeight: 600 }}
-                      itemStyle={{ fontSize: '10px', color: '#B8BDC7' }}
-                    />
-                    <Bar dataKey="billed" stackId="a" fill="#7FA38A" radius={[2, 2, 0, 0]} barSize={12} />
-                    <Bar dataKey="unbilled" stackId="a" fill="#B89B6A" radius={[2, 2, 0, 0]} barSize={12} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Bottom Metrics Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-white/5">
-                {[
-                  { label: 'Unbilled Hours', value: '08:01:16' },
-                  { label: 'Unbilled Amount', value: '$160.42', isAmount: true },
-                  { label: 'Billed Hours', value: '01:00:07' },
-                  { label: 'Billed Amount', value: '$20.04', isAmount: true }
-                ].map((item) => (
-                  <div key={item.label} className="space-y-0.5">
-                    <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">{item.label}</span>
-                    <span className="text-sm font-bold text-ivory">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recently Visited Pages */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-            <CardHeader>
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Recently Visited Pages</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {recentPages.map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => router.push(item.path)}
-                    className="p-3 bg-white/2 border border-white/5 rounded-xl hover:bg-white/4 text-left transition-colors cursor-pointer group flex flex-col justify-between h-20"
-                  >
-                    <span className="text-xs font-semibold text-ivory group-hover:text-white transition-colors">{item.title}</span>
-                    <span className="text-[10px] text-fog flex items-center gap-1 justify-between w-full mt-2">
-                      <span>{item.path}</span>
-                      <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Relevance AI style Recent Agents strip */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Recent</CardTitle>
-              <button
-                onClick={() => router.push('/app/agents')}
-                className="text-[10px] font-bold text-[#7FA38A] hover:underline flex items-center gap-0.5 cursor-pointer"
-              >
-                <span>View all</span>
-                <ArrowRight size={10} />
-              </button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {MOCK_RECENT_AGENTS.map((agent) => (
-                  <button
-                    key={agent.id}
-                    onClick={() => router.push(`/app/agents/${agent.id}`)}
-                    className="p-4 bg-white/2 border border-white/5 rounded-xl hover:bg-white/4 text-center transition-all cursor-pointer group flex flex-col justify-between h-44 shadow-sm"
-                  >
-                    <AgentOrbit avatarColor={agent.color} name={agent.initials} icons={agent.icons} />
-                    <div className="space-y-0.5">
-                      <span className="text-[11px] font-bold text-ivory block truncate group-hover:text-[#7FA38A] transition-colors">{agent.name}</span>
-                      <span className="text-[9px] text-fog block">{agent.edited}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top Performers / Top Board */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-            <CardHeader>
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Top Board / Performers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {TOP_PERFORMERS.map((perf, idx) => (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-7 w-7 rounded-full bg-dusk border border-white/5 flex items-center justify-center text-[10px] font-bold text-[#7FA38A]">
-                        {perf.avatar}
-                      </div>
+                <div className="h-px bg-white/5 my-1" />
+                {ROLES.map(roleItem => {
+                  const Icon = roleItem.icon;
+                  const isSelected = selectedRole === roleItem.id;
+                  return (
+                    <button
+                      key={roleItem.id}
+                      onClick={() => {
+                        setSelectedRole(roleItem.id);
+                        setDropdownOpen(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-start gap-3 px-2.5 py-2 rounded-lg text-left transition-colors cursor-pointer group",
+                        isSelected ? "bg-white/5 text-[#7FA38A]" : "text-silver hover:text-ivory hover:bg-white/2"
+                      )}
+                    >
+                      <Icon size={14} className={cn("mt-0.5", isSelected ? "text-[#7FA38A]" : "text-fog group-hover:text-silver")} />
                       <div>
-                        <p className="text-xs font-semibold text-ivory">{perf.name}</p>
-                        <p className="text-[10px] text-fog">{perf.role}</p>
+                        <p className="text-xs font-semibold">{roleItem.label}</p>
+                        <p className="text-[9px] text-fog mt-0.5 leading-tight">{roleItem.desc}</p>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">On-Time</span>
-                        <span className="text-xs font-bold text-[#7FA38A]">{perf.onTimeRate}%</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">Capacity</span>
-                        <span className="text-xs font-bold text-[#B89B6A]">{perf.capacity}%</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] uppercase font-semibold tracking-wider text-fog block">{t.app.dashboard.kpis.openTasks}</span>
-                        <span className="text-xs font-bold text-silver">{perf.openTasks}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-        </div>
-
-        {/* Right Column (1/3 width) */}
-        <div className="space-y-6">
-          
-          {/* AI Reviews & Suggestions */}
-          {workspaceId && (
-            <MinervaDaily workspaceId={workspaceId} userRole={user?.role} />
+                    </button>
+                  );
+                })}
+              </motion.div>
+            </>
           )}
-
-          {workspaceId && <AgentSuggestions workspaceId={workspaceId} />}
-
-          {/* Activity Feed */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
-            <CardHeader>
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Activity Feed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ActivityFeed emptyLabel={d.activityEmpty} workspaceId={workspaceId} />
-            </CardContent>
-          </Card>
-
-          {/* Getting Started Checklist */}
-          <GettingStartedChecklist />
-
         </div>
-
       </div>
 
+      {/* Unified Today Action Queue */}
+      <TodayActionQueue approvals={approvals} invoices={invoices} tasks={localTasks} router={router} />
+
+      {/* Role-Specific View Grid */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={selectedRole}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {selectedRole === 'owner' && <OwnerDashboardView invoices={invoices} projects={projects} formatCurrency={formatCurrency} router={router} />}
+          {selectedRole === 'pm' && <PMDashboardView projects={projects} tasks={tasks} router={router} />}
+          {selectedRole === 'finance' && <FinanceDashboardView invoices={invoices} formatCurrency={formatCurrency} router={router} />}
+          {selectedRole === 'client' && <ClientDashboardView approvals={approvals} router={router} />}
+          {selectedRole === 'designer' && <DesignerDeveloperDashboardView tasks={localTasks} handleToggleTask={handleToggleTask} role="designer" router={router} />}
+          {selectedRole === 'developer' && <DesignerDeveloperDashboardView tasks={localTasks} handleToggleTask={handleToggleTask} role="developer" router={router} />}
+        </motion.div>
+      </AnimatePresence>
+
+    </div>
+  );
+}
+
+/* ── Role Layout definitions ── */
+const ROLES = [
+  { id: 'owner', label: 'Owner', icon: Crown, desc: 'MRR, Forecasts & Client Risk' },
+  { id: 'pm', label: 'Project Manager', icon: ClipboardList, desc: 'Project Health & Workload' },
+  { id: 'finance', label: 'Finance Manager', icon: Coins, desc: 'Outstanding Invoices & Burn Rate' },
+  { id: 'client', label: 'Client Portal', icon: User, desc: 'Deliverables Reviews & Support' },
+  { id: 'designer', label: 'Designer Workspace', icon: Palette, desc: 'Active Tasks & Figma Files' },
+  { id: 'developer', label: 'Developer Workspace', icon: Code, desc: 'Priority Tasks & PR Status' },
+];
+
+function TodayActionQueue({ approvals, invoices, tasks, router }: { approvals: any[] | null, invoices: any[] | null, tasks: any[] | null, router: any }) {
+  const { lang } = useLang();
+  const items: { id: string; type: string; label: string; badgeText: string; color: string; route: string }[] = [];
+
+  items.push(
+    {
+      id: 'mock-blockage-1',
+      type: 'blockage',
+      label: 'E-Commerce Database Schema is BLOCKED by Stripe API response delay',
+      badgeText: 'Blocked',
+      color: 'text-ember bg-[#A86A6A]/10 border-[#A86A6A]/20',
+      route: '/app/projects'
+    },
+    {
+      id: 'mock-approval-1',
+      type: 'approval',
+      label: 'Review and sign-off on Bolt Tech Brand Guidelines v2',
+      badgeText: 'Pending Approval',
+      color: 'text-sage bg-[#7FA38A]/10 border-[#7FA38A]/20',
+      route: '/app/approvals'
+    }
+  );
+
+  if (approvals) {
+    approvals.filter(a => a.status === 'pending').forEach(a => {
+      items.push({
+        id: `real-app-${a.id || a._id}`,
+        type: 'approval',
+        label: `Client review requested: ${a.title || 'Deliverable approval'}`,
+        badgeText: 'Approval Request',
+        color: 'text-sage bg-[#7FA38A]/10 border-[#7FA38A]/20',
+        route: '/app/approvals'
+      });
+    });
+  }
+
+  if (invoices) {
+    invoices.filter(i => i.status === 'overdue').forEach(i => {
+      items.push({
+        id: `real-inv-${i.id || i._id}`,
+        type: 'invoice',
+        label: `Invoice ${i.invoiceNumber} to ${i.clientName || 'Client'} is OVERDUE · $${i.amount}`,
+        badgeText: 'Overdue Invoice',
+        color: 'text-ember bg-[#A86A6A]/10 border-[#A86A6A]/20',
+        route: '/app/billing'
+      });
+    });
+  }
+
+  if (tasks) {
+    tasks.filter(t => t.priority === 'urgent' && t.status !== 'done').forEach(t => {
+      items.push({
+        id: `real-task-${t.id || t._id}`,
+        type: 'task',
+        label: `Urgent Task: ${t.title} (${t.project || 'Project'})`,
+        badgeText: 'Urgent Task',
+        color: 'text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20',
+        route: '/app/tasks'
+      });
+    });
+  }
+
+  return (
+    <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none overflow-hidden relative">
+      <TextureOverlay texture="dots" opacity={0.05} />
+      <CardHeader className="pb-3 border-b border-white/5 relative z-10">
+        <div className="flex items-center gap-2">
+          <Sparkles size={13} className="text-[#B89B6A] animate-pulse" />
+          <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">
+            {lang === 'fr' ? 'Aujourd\'hui · File d\'actions prioritaires' : 'Today · Unified Priority Action Queue'}
+          </CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-4 relative z-10">
+        <div className="flex flex-col gap-3">
+          {items.map(item => (
+            <div
+              key={item.id}
+              onClick={() => router.push(item.route)}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white/2 hover:bg-white/4 border border-white/5 hover:border-white/10 rounded-xl transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <span className={cn("text-[9px] font-semibold px-2 py-0.5 rounded-full border tracking-wide uppercase font-sans shrink-0", item.color)}>
+                  {item.badgeText}
+                </span>
+                <p className="text-xs text-silver group-hover:text-ivory transition-colors leading-relaxed">
+                  {item.label}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-fog group-hover:text-silver transition-colors self-end sm:self-auto">
+                <span>{lang === 'fr' ? 'Agir' : 'Take Action'}</span>
+                <ArrowRight size={10} className="transform group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function OwnerDashboardView({ invoices, formatCurrency, router }: { invoices: any[] | null; projects: any[] | null; formatCurrency: any; router: any }) {
+  const collected = invoices
+    ? invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount || 0), 0)
+    : 14500;
+  const outstanding = invoices
+    ? invoices.filter(i => ['sent', 'overdue'].includes(i.status)).reduce((sum, i) => sum + (i.amount || 0), 0)
+    : 8400;
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: 'Monthly Revenue', value: formatCurrency(collected), color: 'text-ivory', sub: 'Target: $50,000' },
+            { label: 'Outstanding AR', value: formatCurrency(outstanding), color: 'text-[#B89B6A]', sub: 'Invoice collections' },
+            { label: 'Client NPS Average', value: '8.6 · Excellent', color: 'text-[#7FA38A]', sub: 'Based on 14 responses' },
+            { label: 'Pipeline Deals', value: '$124,000', color: 'text-silver', sub: '8 active negotiations' }
+          ].map((kpi, idx) => (
+            <Card key={idx} className="bg-[#111522] border border-white/5 rounded-xl p-4.5 flex flex-col gap-1 shadow-sm">
+              <span className="text-[9px] uppercase font-semibold tracking-wider text-fog">{kpi.label}</span>
+              <span className={cn("text-xl font-bold tracking-tight", kpi.color)}>
+                {kpi.value}
+              </span>
+              <span className="text-[9px] text-fog/60">{kpi.sub}</span>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader>
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Cash-Flow Projections</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              {[
+                { period: 'Next 30 Days', expected: 18400, type: 'positive' },
+                { period: 'Next 60 Days', expected: 34200, type: 'positive' },
+                { period: 'Next 90 Days', expected: -4500, type: 'negative' }
+              ].map((proj, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/2">
+                  <span className="text-xs text-silver font-medium">{proj.period}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={cn("text-xs font-bold font-mono", proj.type === 'positive' ? 'text-[#7FA38A]' : 'text-ember')}>
+                      {proj.type === 'positive' ? '+' : ''}{formatCurrency(proj.expected)}
+                    </span>
+                    <span className={cn("h-1.5 w-1.5 rounded-full", proj.type === 'positive' ? 'bg-sage' : 'bg-ember')} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-fog leading-relaxed italic">
+              AI forecasting model based on contract renewal dates, billing milestones, and client payment cycles.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Client Health & Risk Tracker</CardTitle>
+            <button onClick={() => router.push('/app/clients')} className="text-[10px] text-fog hover:text-silver transition-colors flex items-center gap-0.5">
+              Manage accounts <ArrowRight size={10} />
+            </button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { client: 'Acme Corp', status: 'At Risk', score: 'NPS: 5.4 · 2 late invoices', color: 'text-ember bg-[#A86A6A]/10 border-[#A86A6A]/20' },
+                { client: 'Bolt Tech', status: 'Fair', score: 'NPS: 7.2 · 1 open support ticket', color: 'text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20' },
+                { client: 'Zenith Lab', status: 'Good', score: 'NPS: 9.0 · Healthy retainer', color: 'text-sage bg-[#7FA38A]/10 border-[#7FA38A]/20' }
+              ].map((row, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg border border-white/5 bg-white/2 hover:bg-white/4 transition-colors">
+                  <div>
+                    <p className="text-xs font-semibold text-ivory">{row.client}</p>
+                    <p className="text-[10px] text-fog mt-0.5">{row.score}</p>
+                  </div>
+                  <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider", row.color)}>
+                    {row.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <GettingStartedChecklist />
+      </div>
+    </div>
+  );
+}
+
+function PMDashboardView({ projects, router }: { projects: any[] | null; tasks: any[] | null; router: any }) {
+  const activeProjects = projects ? projects.filter(p => p.status === 'active') : [];
+  
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: 'Active Projects', value: String(activeProjects.length || 8), color: 'text-ivory', sub: '6 on track, 2 delayed' },
+            { label: 'Task Completion', value: '87%', color: 'text-[#7FA38A]', sub: '+3% this week' },
+            { label: 'Project Velocity', value: '1.4 tasks / day', color: 'text-silver', sub: 'Optimal workflow speed' },
+            { label: 'Capacity Utility', value: '84%', color: 'text-[#B89B6A]', sub: 'Team workload balance' }
+          ].map((kpi, idx) => (
+            <Card key={idx} className="bg-[#111522] border border-white/5 rounded-xl p-4.5 flex flex-col gap-1 shadow-sm">
+              <span className="text-[9px] uppercase font-semibold tracking-wider text-fog">{kpi.label}</span>
+              <span className={cn("text-xl font-bold tracking-tight", kpi.color)}>
+                {kpi.value}
+              </span>
+              <span className="text-[9px] text-fog/60">{kpi.sub}</span>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Project Health Index</CardTitle>
+            <button onClick={() => router.push('/app/projects')} className="text-[10px] text-fog hover:text-silver transition-colors flex items-center gap-0.5">
+              All projects <ArrowRight size={10} />
+            </button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { name: 'Brand Refresh (Acme)', pm: 'Jane Studio', progress: 64, status: 'On Track', color: 'bg-sage' },
+                { name: 'E-Commerce Launch (Bolt)', pm: 'Alex Developer', progress: 40, status: 'Delayed', color: 'bg-ember' },
+                { name: 'Mobile App Design', pm: 'Jane Studio', progress: 90, status: 'On Track', color: 'bg-sage' }
+              ].map((p, idx) => (
+                <div key={idx} className="p-3 rounded-lg border border-white/5 bg-white/2 hover:bg-white/4 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-xs font-semibold text-ivory">{p.name}</p>
+                      <p className="text-[9px] text-fog">PM: {p.pm}</p>
+                    </div>
+                    <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider", p.status === 'On Track' ? 'text-sage bg-[#7FA38A]/10 border-[#7FA38A]/20' : 'text-ember bg-[#A86A6A]/10 border-[#A86A6A]/20')}>
+                      {p.status}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full overflow-hidden bg-dusk">
+                    <div className={cn("h-full rounded-full transition-all duration-500", p.color)} style={{ width: `${p.progress}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Bot size={13} className="text-[#B89B6A]" />
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">PM Agent Intelligence Insights</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                'Developer workload is close to capacity limit (84%). Recommend shifting task #204 to Designer Studio to avoid bottleneck.',
+                'The wireframe approval milestone for E-Commerce Launch is delayed by 4 days due to outstanding client feedback.',
+                'Weekly project velocity has increased by 12% following integration of Relevance AI workflows.'
+              ].map((insight, idx) => (
+                <div key={idx} className="flex gap-2.5 items-start text-xs text-silver leading-relaxed p-2.5 rounded-lg border border-white/5 bg-white/1">
+                  <span className="text-fog">·</span>
+                  <p>{insight}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <GettingStartedChecklist />
+      </div>
+    </div>
+  );
+}
+
+function FinanceDashboardView({ invoices, formatCurrency, router }: { invoices: any[] | null; formatCurrency: any; router: any }) {
+  const outstanding = invoices ? invoices.filter(i => ['sent', 'overdue'].includes(i.status)).reduce((sum, i) => sum + (i.amount || 0), 0) : 12800;
+  const overdue = invoices ? invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + (i.amount || 0), 0) : 3200;
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: 'Outstanding AR', value: formatCurrency(outstanding), color: 'text-silver', sub: 'Pending payments' },
+            { label: 'Overdue Invoices', value: formatCurrency(overdue), color: 'text-ember', sub: 'Immediate follow-up' },
+            { label: 'Retainer Monthly Value', value: '$28,500', color: 'text-[#7FA38A]', sub: '7 active contracts' },
+            { label: 'Monthly Burn Rate', value: '$18,400', color: 'text-[#B89B6A]', sub: 'Runway: 11 months' }
+          ].map((kpi, idx) => (
+            <Card key={idx} className="bg-[#111522] border border-white/5 rounded-xl p-4.5 flex flex-col gap-1 shadow-sm">
+              <span className="text-[9px] uppercase font-semibold tracking-wider text-fog">{kpi.label}</span>
+              <span className={cn("text-xl font-bold tracking-tight", kpi.color)}>
+                {kpi.value}
+              </span>
+              <span className="text-[9px] text-fog/60">{kpi.sub}</span>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Active Retainers & Contracts</CardTitle>
+            <button onClick={() => router.push('/app/billing')} className="text-[10px] text-fog hover:text-silver transition-colors flex items-center gap-0.5">
+              Billing hub <ArrowRight size={10} />
+            </button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { client: 'Acme Corp Design Retainer', amount: 5000, hrsUsed: 8, hrsMax: 20, cycle: 'Monthly' },
+                { client: 'Bolt Tech Dev Retainer', amount: 8000, hrsUsed: 14, hrsMax: 40, cycle: 'Monthly' },
+                { client: 'Zenith Lab Consulting', amount: 3500, hrsUsed: 19, hrsMax: 20, cycle: 'Monthly' }
+              ].map((r, idx) => {
+                const pct = Math.round((r.hrsUsed / r.hrsMax) * 100);
+                const barColor = pct >= 95 ? 'bg-ember' : pct >= 75 ? 'bg-warm' : 'bg-sage';
+                return (
+                  <div key={idx} className="p-3 rounded-lg border border-white/5 bg-white/2 hover:bg-white/4 transition-colors space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-semibold text-ivory">{r.client}</p>
+                        <p className="text-[9px] text-fog">{r.cycle} · {r.hrsUsed} / {r.hrsMax} hrs billed</p>
+                      </div>
+                      <span className="text-xs font-bold text-silver">{formatCurrency(r.amount)}</span>
+                    </div>
+                    <div className="w-full h-1 rounded-full overflow-hidden bg-dusk">
+                      <div className={cn("h-full rounded-full transition-all duration-500", barColor)} style={{ width: `${Math.min(pct, 100)}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader>
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Invoice Aging & Cash-In Predictions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Current (0-15d)', value: '$12,600', desc: '94% collection probability' },
+                { label: 'Overdue (16-30d)', value: '$2,000', desc: '80% collection probability' },
+                { label: 'Late (30d+)', value: '$1,200', desc: 'Requires collection calls' }
+              ].map((age, idx) => (
+                <div key={idx} className="p-3 rounded-lg border border-white/5 bg-white/2 text-center">
+                  <p className="text-[9px] uppercase font-semibold text-fog tracking-wider">{age.label}</p>
+                  <p className="text-sm font-bold text-ivory mt-1 font-mono">{age.value}</p>
+                  <p className="text-[9px] text-fog/60 mt-1 leading-tight">{age.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div className="p-3 rounded-lg border border-[#B89B6A]/10 bg-[#B89B6A]/5 flex items-center gap-3">
+              <AlertTriangle size={14} className="text-[#B89B6A] shrink-0" />
+              <p className="text-xs text-silver leading-relaxed">
+                <span className="font-semibold text-ivory">Billing Anomaly Alert:</span> Bolt Tech design sprint hours tracked exceed the estimate by 18%. Verify task list before invoice generation.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <GettingStartedChecklist />
+      </div>
+    </div>
+  );
+}
+
+function ClientDashboardView({ router }: { approvals: any[] | null; router: any }) {
+  const [items, setItems] = useState<any[]>([
+    { id: 'app-1', title: 'Logo guidelines wireframe design v2', type: 'Design', status: 'pending' },
+    { id: 'app-2', title: 'Content marketing plan strategy sign-off', type: 'Document', status: 'pending' },
+    { id: 'app-3', title: 'Sprint milestone project roadmap timeline', type: 'Milestone', status: 'pending' }
+  ]);
+
+  const handleApprove = (id: string, name: string) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, status: 'approved' } : item));
+    toast.success(`Approved deliverable: "${name}"`);
+  };
+
+  const pendingItems = items.filter(i => i.status === 'pending');
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: 'Active Projects', value: '2 Projects', color: 'text-ivory', sub: 'Brand & Web Identity' },
+            { label: 'Pending Reviews', value: String(pendingItems.length), color: 'text-[#B89B6A]', sub: 'Requires sign-off' },
+            { label: 'Open Support Tickets', value: '1 Active', color: 'text-silver', sub: 'Login issues' },
+            { label: 'Next Sync Session', value: 'June 10 · 10am', color: 'text-[#7FA38A]', sub: 'Status call calendar' }
+          ].map((kpi, idx) => (
+            <Card key={idx} className="bg-[#111522] border border-white/5 rounded-xl p-4.5 flex flex-col gap-1 shadow-sm">
+              <span className="text-[9px] uppercase font-semibold tracking-wider text-fog">{kpi.label}</span>
+              <span className={cn("text-xl font-bold tracking-tight", kpi.color)}>
+                {kpi.value}
+              </span>
+              <span className="text-[9px] text-fog/60">{kpi.sub}</span>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader>
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Pending reviews & approvals</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pendingItems.length === 0 ? (
+              <p className="text-xs text-fog py-4 text-center">No outstanding approvals needed. You are all caught up!</p>
+            ) : (
+              <div className="space-y-3">
+                {pendingItems.map((item) => (
+                  <div key={item.id} className="p-3 rounded-lg border border-white/5 bg-white/2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[9px] font-semibold text-fog uppercase border border-white/15 px-2 py-0.5 rounded-full">
+                        {item.type}
+                      </span>
+                      <p className="text-xs font-semibold text-ivory mt-1">{item.title}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => handleApprove(item.id, item.title)}
+                      className="bg-ivory hover:bg-white text-midnight font-semibold rounded-full shrink-0 text-xs py-1 h-8"
+                    >
+                      Approve deliverable
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader>
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Support ticket status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="p-3.5 rounded-lg border border-white/5 bg-white/2 hover:bg-white/4 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-ivory">Ticket #2844: Client portal link expired</span>
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20">
+                  Investigating
+                </span>
+              </div>
+              <p className="text-[11px] text-fog mt-2 leading-relaxed">
+                "Our team is looking into the token expiration logic and will reissue a permanent workspace link by this afternoon." (Last response 2 hrs ago)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader>
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Quick resource links</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {[
+              { label: 'View Shared Files', href: '/app/files' },
+              { label: 'Figma Canvas Mockup', href: 'https://figma.com' },
+              { label: 'Past Billing Invoices', href: '/app/billing' }
+            ].map((link, idx) => (
+              <button
+                key={idx}
+                onClick={() => link.href.startsWith('http') ? window.open(link.href, '_blank') : router.push(link.href)}
+                className="w-full p-2.5 rounded-lg border border-white/5 bg-white/2 hover:bg-white/4 text-xs text-silver hover:text-ivory text-left transition-colors flex items-center justify-between"
+              >
+                <span>{link.label}</span>
+                <ExternalLink size={11} className="text-fog" />
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function DesignerDeveloperDashboardView({ tasks, handleToggleTask, role, router }: { tasks: any[]; handleToggleTask: any; role: 'designer' | 'developer'; router: any }) {
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(6128);
+  
+  useEffect(() => {
+    let interval: any = null;
+    if (timerRunning) {
+      interval = setInterval(() => {
+        setElapsedSeconds(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timerRunning]);
+
+  const formatTime = (totalSecs: number) => {
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    const pad = (num: number) => String(num).padStart(2, '0');
+    return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+  };
+
+  const focusTask = role === 'developer'
+    ? 'Refactor database migrations for Supabase tables'
+    : 'Design onboarding UI flows in Figma';
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: 'Tasks Due Today', value: String(tasks.length || 5), color: 'text-silver' },
+            { label: 'Time Tracked', value: '5.8 hours', color: 'text-ivory' },
+            { label: 'Focus Score', value: '94% · Optimal', color: 'text-[#7FA38A]' },
+            { label: role === 'developer' ? 'PRs Merged' : 'Designs Completed', value: '4 completed', color: 'text-[#B89B6A]' }
+          ].map((kpi, idx) => (
+            <Card key={idx} className="bg-[#111522] border border-white/5 rounded-xl p-4.5 flex flex-col gap-1 shadow-sm">
+              <span className="text-[9px] uppercase font-semibold tracking-wider text-fog">{kpi.label}</span>
+              <span className={cn("text-xl font-bold tracking-tight", kpi.color)}>
+                {kpi.value}
+              </span>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none overflow-hidden relative">
+          <CardHeader className="pb-3 border-b border-white/5">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Active focus spotlight</CardTitle>
+              <div className="flex items-center gap-1.5 text-[10px] text-fog">
+                <Clock size={10} />
+                <span>Deep work session</span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-4">
+            <div>
+              <p className="text-[10px] text-fog uppercase tracking-wider font-semibold">Priority #1 Focus Task</p>
+              <p className="text-sm font-semibold text-ivory mt-1">{focusTask}</p>
+            </div>
+            
+            <div className="flex items-center gap-4 bg-[#0A0D14] border border-white/5 rounded-xl p-4 justify-between">
+              <div>
+                <span className="text-[9px] text-fog uppercase tracking-wider font-semibold">Tracked Session Time</span>
+                <p className="text-xl font-bold font-mono text-ivory tracking-tight">{formatTime(elapsedSeconds)}</p>
+              </div>
+              <Button
+                onClick={() => setTimerRunning(!timerRunning)}
+                className={cn("h-10 w-10 rounded-full flex items-center justify-center transition-colors shadow-md", timerRunning ? 'bg-[#A86A6A] hover:bg-[#A86A6A]/80 text-white' : 'bg-ivory hover:bg-white text-midnight')}
+              >
+                {timerRunning ? <Pause size={14} /> : <Play size={14} />}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Focus Priority Queue</CardTitle>
+            <button onClick={() => router.push('/app/tasks')} className="text-[10px] text-fog hover:text-silver transition-colors flex items-center gap-0.5">
+              Task board <ArrowRight size={10} />
+            </button>
+          </CardHeader>
+          <CardContent>
+            {tasks.length === 0 ? (
+              <p className="text-xs text-fog py-3 text-center">All caught up! No tasks left in your queue.</p>
+            ) : (
+              <div className="divide-y divide-white/5 space-y-2">
+                {tasks.slice(0, 5).map(task => (
+                  <div key={task.id || task._id} className="flex items-center justify-between py-2 pt-2.5">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={false}
+                        onChange={() => handleToggleTask(task.id || task._id, task.title)}
+                        className="h-3.5 w-3.5 rounded border-white/10 bg-transparent text-[#7FA38A] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-ivory truncate">{task.title}</p>
+                        <p className="text-[10px] text-fog mt-0.5">{task.project}</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-fog shrink-0">
+                      {new Date(task.dueDate || task.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <CardHeader>
+            <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Quick Links & Resources</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {[
+              { label: role === 'developer' ? 'GitHub Repositories' : 'Figma Design Workspace', href: 'https://github.com' },
+              { label: 'Workspace Assets & Files', href: '/app/files' },
+              { label: 'Time Tracking Dashboard', href: '/app/time-tracking' }
+            ].map((link, idx) => (
+              <button
+                key={idx}
+                onClick={() => link.href.startsWith('http') ? window.open(link.href, '_blank') : router.push(link.href)}
+                className="w-full p-2.5 rounded-lg border border-white/5 bg-white/2 hover:bg-white/4 text-xs text-silver hover:text-ivory text-left transition-colors flex items-center justify-between"
+              >
+                <span>{link.label}</span>
+                <ExternalLink size={11} className="text-fog" />
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

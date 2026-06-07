@@ -282,6 +282,9 @@ function InvoiceRowSkeleton() {
   );
 }
 
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+
 export default function Billing() {
   const { t, lang } = useLang();
   const b = t.app.billing;
@@ -292,6 +295,15 @@ export default function Billing() {
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
+  const [invoiceSheetOpen, setInvoiceSheetOpen] = useState(false);
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams?.get('create') === 'true' || searchParams?.get('new') === 'true') {
+      setInvoiceSheetOpen(true);
+    }
+  }, [searchParams]);
+
   const { data: invoices, count: totalInvoicesCount } = useInvoices(workspaceId, page, pageSize) || { data: null, count: 0 };
   const retainers = useRetainers(workspaceId);
   const clients = useClients(workspaceId);
@@ -299,7 +311,6 @@ export default function Billing() {
   const [filter, setFilter] = useState<string | 'all'>('all');
   const [query, setQuery]   = useState('');
   const [retainerSheetOpen, setRetainerSheetOpen] = useState(false);
-  const [invoiceSheetOpen, setInvoiceSheetOpen] = useState(false);
   const [newInvoiceForm, setNewInvoiceForm] = useState({ clientId: '', description: '', amount: '', dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] });
   const [addingInvoice, setAddingInvoice] = useState(false);
   const [newRetainerForm, setNewRetainerForm] = useState({

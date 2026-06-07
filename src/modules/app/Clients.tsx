@@ -74,6 +74,8 @@ const EMPTY_FORM: NewClientForm = {
   company: '', industry: '', contact: '', email: '', monthlyValue: '', status: 'onboarding',
 };
 
+import { useSearchParams } from 'next/navigation';
+
 export default function Clients() {
   const { t } = useLang();
   const cKeys = t.app.clients;
@@ -91,6 +93,13 @@ export default function Clients() {
   const [query, setQuery] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewClientForm>(EMPTY_FORM);
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams?.get('create') === 'true' || searchParams?.get('new') === 'true') {
+      setSheetOpen(true);
+    }
+  }, [searchParams]);
 
   const [portalDialogOpen, setPortalDialogOpen] = useState(false);
   const [portalUrl, setPortalUrl] = useState('');

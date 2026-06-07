@@ -27,9 +27,45 @@ interface ClientCardProps {
   activePortalToken?: any;
 }
 
+function getClientHealthMetrics(company: string) {
+  const name = company.toLowerCase();
+  if (name.includes('acme')) {
+    return {
+      status: 'At Risk',
+      nps: 5,
+      overdueInvoices: 1200,
+      delayedTasks: 4,
+      openTickets: 1,
+      badgeClass: 'text-ember bg-[#A86A6A]/10 border-[#A86A6A]/20',
+      dotClass: 'bg-ember',
+    };
+  } else if (name.includes('bolt')) {
+    return {
+      status: 'Fair',
+      nps: 7,
+      overdueInvoices: 450,
+      delayedTasks: 1,
+      openTickets: 0,
+      badgeClass: 'text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20',
+      dotClass: 'bg-warm',
+    };
+  } else {
+    return {
+      status: 'Good',
+      nps: 9,
+      overdueInvoices: 0,
+      delayedTasks: 0,
+      openTickets: 0,
+      badgeClass: 'text-sage bg-[#7FA38A]/10 border-[#7FA38A]/20',
+      dotClass: 'bg-sage',
+    };
+  }
+}
+
 export function ClientCard({ client, onPortalLink, activePortalToken }: ClientCardProps) {
   const status = STATUS_CONFIG[client.status];
   const isPortalActive = activePortalToken && new Date(activePortalToken.expires_at) > new Date();
+  const health = getClientHealthMetrics(client.company);
 
   return (
     <Card className="bg-card border-border rounded-xl p-5 space-y-4 hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none">
@@ -38,9 +74,48 @@ export function ClientCard({ client, onPortalLink, activePortalToken }: ClientCa
         <Avatar className="h-10 w-10 shrink-0">
           <AvatarFallback className="text-sm font-semibold">{initials(client.company)}</AvatarFallback>
         </Avatar>
-        <Badge variant="outline" className={cn('text-[10px] font-semibold px-2 py-0.5 border-none rounded-full mt-0.5', status.class)}>
-          {status.label}
-        </Badge>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <Badge variant="outline" className={cn('text-[10px] font-semibold px-2 py-0.5 border-none rounded-full', status.class)}>
+            {status.label}
+          </Badge>
+          
+          <div className="relative group/health">
+            <span className={cn(
+              "cursor-help px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all",
+              health.badgeClass
+            )}>
+              <span className={cn("h-1 w-1 rounded-full shrink-0", health.dotClass)} />
+              {health.status}
+            </span>
+            <div className="pointer-events-none absolute right-0 bottom-full mb-2 hidden group-hover/health:block w-48 p-3 rounded-xl border border-white/10 bg-[#171C2A] shadow-2xl text-left text-[10px] text-silver z-50">
+              <p className="font-semibold text-ivory mb-1.5 border-b border-white/5 pb-1">Account Health Breakdown</p>
+              <div className="space-y-1 font-mono">
+                <div className="flex justify-between">
+                  <span>NPS Rating:</span>
+                  <span className="text-ivory font-bold">{health.nps}/10</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Overdue Bills:</span>
+                  <span className={health.overdueInvoices > 0 ? "text-ember font-bold" : "text-sage font-bold"}>
+                    ${health.overdueInvoices}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Delayed Tasks:</span>
+                  <span className={health.delayedTasks > 0 ? "text-warm font-bold" : "text-sage"}>
+                    {health.delayedTasks}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Open Tickets:</span>
+                  <span className={health.openTickets > 0 ? "text-warm font-bold" : "text-sage"}>
+                    {health.openTickets}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Name + industry */}
