@@ -54,29 +54,34 @@ function MobileBottomNav() {
   const pathname = usePathname();
   const { t } = useLang();
 
+  const navStyle = {
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    background: 'rgba(10,13,20,0.88)',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    paddingBottom: 'env(safe-area-inset-bottom)',
+  };
+  const sheetStyle = { background: 'var(--midnight)', maxHeight: '80vh' };
+
   return (
     <nav
       className="md:hidden fixed bottom-0 inset-x-0 z-50"
-      style={{
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        background: 'rgba(10,13,20,0.88)',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
+      style={navStyle}
     >
       <div className="flex items-center justify-around px-2 h-[60px]">
         {MOBILE_NAV_ITEMS.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/');
+          const linkStyle = { color: isActive ? '#7FA38A' : '#9FA8B5' };
+          const spanStyle = { fontSize: 10, fontWeight: isActive ? 600 : 400 };
           return (
             <Link
               key={href}
               href={href}
               className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors"
-              style={{ color: isActive ? '#7FA38A' : '#9FA8B5' }}
+              style={linkStyle}
             >
               <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
-              <span style={{ fontSize: 10, fontWeight: isActive ? 600 : 400 }}>{label}</span>
+              <span style={spanStyle}>{label}</span>
             </Link>
           );
         })}
@@ -84,34 +89,29 @@ function MobileBottomNav() {
         {/* Search */}
         <button
           onClick={() => openPalette(true)}
-          className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors"
-          style={{ color: '#9FA8B5' }}
+          className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors text-[#9FA8B5]"
           aria-label={t.app.searchCommands}
           title={t.app.searchCommands}
         >
           <Search size={20} strokeWidth={1.5} />
-          <span style={{ fontSize: 10 }}>Search</span>
+          <span className="text-[10px]">Search</span>
         </button>
 
         {/* More — opens full nav drawer */}
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
           <SheetTrigger asChild>
             <button
-              className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors"
-              style={{ color: '#9FA8B5' }}
+              className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors text-[#9FA8B5]"
               aria-label="More navigation"
             >
               <Menu size={20} strokeWidth={1.5} />
-              <span style={{ fontSize: 10 }}>More</span>
+              <span className="text-[10px]">More</span>
             </button>
           </SheetTrigger>
           <SheetContent
             side="bottom"
             className="rounded-t-2xl border-t border-white/10 p-0"
-            style={{
-              background: 'var(--midnight)',
-              maxHeight: '80vh',
-            }}
+            style={sheetStyle}
           >
             <div className="px-4 pt-4 pb-2">
               <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4" />

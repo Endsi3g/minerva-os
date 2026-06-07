@@ -106,8 +106,8 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 hover:bg-white/5 p-1 rounded-md transition-colors cursor-pointer text-left max-w-[150px] group">
                   <div
-                    className="h-7 w-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white bg-blue-600 shadow-md group-hover:opacity-90"
-                    style={{ backgroundColor: workspace?.brandColor ?? '#4F46E5' }}
+                    className="h-7 w-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white shadow-md group-hover:opacity-90"
+                    ref={(node) => { if (node) node.style.backgroundColor = workspace?.brandColor ?? '#4F46E5'; }}
                   >
                     {workspaceInitials}
                   </div>
@@ -128,7 +128,7 @@ export function AppSidebar() {
                   >
                     <div
                       className="h-5 w-5 rounded flex items-center justify-center shrink-0 text-[9px] font-bold text-obsidian"
-                      style={{ backgroundColor: w.brandColor ?? '#F5F1E8' }}
+                      ref={(node) => { if (node) node.style.backgroundColor = w.brandColor ?? '#F5F1E8'; }}
                     >
                       {w.name.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
@@ -234,7 +234,7 @@ export function AppSidebar() {
               <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
                 <div
                   className="bg-[#7FA38A] h-full rounded-full transition-all duration-300"
-                  style={{ width: `${actionPct}%` }}
+                  ref={(node) => { if (node) node.style.width = `${actionPct}%`; }}
                 />
               </div>
             </div>
@@ -248,7 +248,7 @@ export function AppSidebar() {
               <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
                 <div
                   className="bg-[#7FA38A] h-full rounded-full transition-all duration-300"
-                  style={{ width: `${creditPct}%` }}
+                  ref={(node) => { if (node) node.style.width = `${creditPct}%`; }}
                 />
               </div>
             </div>

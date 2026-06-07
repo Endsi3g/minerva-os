@@ -77,7 +77,7 @@ export function GettingStartedChecklist() {
           <span className="text-sage text-sm font-semibold">{Math.round(progress)}%</span>
         </div>
         <div className="h-[3px] bg-white/5 rounded-full mb-4">
-          <div className="h-full bg-sage rounded-full transition-[width] duration-500" style={{ width: `${progress}%` }} />
+          <div className="h-full bg-sage rounded-full transition-[width] duration-500" ref={(node) => { if (node) node.style.width = `${progress}%`; }} />
         </div>
         <div className="flex flex-col gap-2">
           {LEGACY_ITEMS.map(item => {
@@ -116,7 +116,7 @@ export function GettingStartedChecklist() {
       </div>
 
       <div className="h-[3px] bg-white/5 rounded-full mb-4">
-        <div className="h-full bg-sage rounded-full transition-[width] duration-500" style={{ width: `${progress}%` }} />
+        <div className="h-full bg-sage rounded-full transition-[width] duration-500" ref={(node) => { if (node) node.style.width = `${progress}%`; }} />
       </div>
 
       {/* Week 1 track */}

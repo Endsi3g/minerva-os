@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { FlickeringGrid } from '@/components/ui/flickering-grid';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLang } from '@/i18n';
+import { cn } from '@/lib/utils';
 import type { UserRole } from '@/contexts/AuthContext';
 
 const TOTAL_STEPS = 4;
@@ -22,39 +23,26 @@ const ROLE_MAP: Record<string, UserRole> = {
 
 function ProgressBar({ current }: { current: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 40 }}>
+    <div className="flex items-center gap-0 mb-10">
       {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
         <div
           key={i}
-          style={{ display: 'flex', alignItems: 'center', flex: i < TOTAL_STEPS - 1 ? 1 : undefined }}
+          className={cn('flex items-center', i < TOTAL_STEPS - 1 && 'flex-1')}
         >
           <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: i < current ? '#7FA38A' : i === current ? '#F5F1E8' : 'rgba(255,255,255,0.08)',
-              color: i < current ? '#0A0D14' : i === current ? '#0A0D14' : '#8A9099',
-              fontSize: 13,
-              fontWeight: 600,
-              flexShrink: 0,
-              transition: 'all 0.3s ease',
-            }}
+            className={cn(
+              'w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[13px] font-semibold transition-all duration-300',
+              i < current ? 'bg-[#7FA38A] text-[#0A0D14]' : i === current ? 'bg-[#F5F1E8] text-[#0A0D14]' : 'bg-white/8 text-fog'
+            )}
           >
             {i < current ? <Check size={14} /> : i + 1}
           </div>
           {i < TOTAL_STEPS - 1 && (
             <div
-              style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: i < current ? '#7FA38A' : 'rgba(255,255,255,0.08)',
-                margin: '0 8px',
-                transition: 'background-color 0.3s ease',
-              }}
+              className={cn(
+                'flex-1 h-px mx-2 transition-colors duration-300',
+                i < current ? 'bg-[#7FA38A]' : 'bg-white/8'
+              )}
             />
           )}
         </div>
@@ -75,38 +63,19 @@ function OptionCard({ label, desc, selected, onClick }: OptionCardProps) {
     <button
       type="button"
       onClick={onClick}
-      style={{
-        width: '100%',
-        textAlign: 'left',
-        padding: '14px 16px',
-        borderRadius: 12,
-        border: selected ? '1px solid rgba(245,241,232,0.35)' : '1px solid rgba(255,255,255,0.08)',
-        backgroundColor: selected ? 'rgba(245,241,232,0.06)' : '#111522',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-      }}
+      className={cn(
+        'w-full text-left px-4 py-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between gap-3',
+        selected
+          ? 'border-[rgba(245,241,232,0.35)] bg-[rgba(245,241,232,0.06)]'
+          : 'border-white/8 bg-midnight hover:border-white/16'
+      )}
     >
       <div>
-        <p style={{ color: '#F5F1E8', fontSize: 14, fontWeight: 500, marginBottom: 2 }}>{label}</p>
-        <p style={{ color: '#8A9099', fontSize: 12 }}>{desc}</p>
+        <p className="text-ivory text-sm font-medium mb-0.5">{label}</p>
+        <p className="text-fog text-xs">{desc}</p>
       </div>
       {selected && (
-        <div
-          style={{
-            width: 20,
-            height: 20,
-            borderRadius: '50%',
-            backgroundColor: '#7FA38A',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
+        <div className="w-5 h-5 rounded-full bg-[#7FA38A] flex items-center justify-center shrink-0">
           <Check size={11} color="#0A0D14" />
         </div>
       )}
@@ -150,17 +119,9 @@ export function DiscoveryOnboarding() {
           .select('*')
           .eq('user_id', userId)
           .maybeSingle();
-
         if (!active) return;
-        if (error) {
-          console.error("Error fetching onboarding responses:", error);
-          setLoading(false);
-          return;
-        }
-        if (data?.completed_at) {
-          router.replace('/onboarding');
-          return;
-        }
+        if (error) { console.error('Error fetching onboarding responses:', error); setLoading(false); return; }
+        if (data?.completed_at) { router.replace('/onboarding'); return; }
         if (data) {
           if (data.acquisition_source) setSource(data.acquisition_source);
           if (data.role_selection) setRole(data.role_selection);
@@ -171,14 +132,12 @@ export function DiscoveryOnboarding() {
         }
         setLoading(false);
       } catch (err) {
-        console.error("Error in onboarding_responses query:", err);
+        console.error('Error in onboarding_responses query:', err);
         if (active) setLoading(false);
       }
     }
     checkOnboarding();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [user, router]);
 
   async function saveProgress(updates: Record<string, unknown>, nextStep: number) {
@@ -191,55 +150,29 @@ export function DiscoveryOnboarding() {
     setSaving(false);
   }
 
-  function goNext() {
-    setDirection(1);
-    setStep(s => s + 1);
-  }
-
-  function goBack() {
-    setDirection(-1);
-    setStep(s => s - 1);
-  }
+  function goNext() { setDirection(1); setStep(s => s + 1); }
+  function goBack() { setDirection(-1); setStep(s => s - 1); }
 
   async function handleSkip() {
     await saveProgress({}, step);
     router.push('/onboarding');
   }
 
-  async function handleStep1Next() {
-    await saveProgress({ acquisition_source: source }, 1);
-    goNext();
-  }
-
+  async function handleStep1Next() { await saveProgress({ acquisition_source: source }, 1); goNext(); }
   async function handleStep2Next() {
     await saveProgress({ role_selection: role }, 2);
     if (role && ROLE_MAP[role] && user) {
-      supabase
-        .from('user_profiles')
-        .update({ role: ROLE_MAP[role] })
-        .eq('user_id', user.id)
-        .then(() => {});
+      supabase.from('user_profiles').update({ role: ROLE_MAP[role] }).eq('user_id', user.id).then(() => {});
     }
     goNext();
   }
-
-  async function handleStep3Next() {
-    await saveProgress({ team_size: teamSize }, 3);
-    goNext();
-  }
+  async function handleStep3Next() { await saveProgress({ team_size: teamSize }, 3); goNext(); }
 
   async function handleFinish() {
     if (!user) return;
     setSaving(true);
     await supabase.from('onboarding_responses').upsert(
-      {
-        user_id: user.id,
-        priority_features: features,
-        main_goal: goal,
-        current_step: 4,
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
+      { user_id: user.id, priority_features: features, main_goal: goal, current_step: 4, completed_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       { onConflict: 'user_id' }
     );
     setSaving(false);
@@ -247,23 +180,13 @@ export function DiscoveryOnboarding() {
   }
 
   function toggleFeature(val: string) {
-    setFeatures(prev =>
-      prev.includes(val) ? prev.filter(f => f !== val) : [...prev, val]
-    );
+    setFeatures(prev => prev.includes(val) ? prev.filter(f => f !== val) : [...prev, val]);
   }
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          backgroundColor: '#0A0D14',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#F5F1E8', animation: 'spin 0.8s linear infinite' }} />
+      <div className="min-h-screen bg-[#0A0D14] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-ivory animate-spin" />
       </div>
     );
   }
@@ -271,18 +194,7 @@ export function DiscoveryOnboarding() {
   const stepLabels = d.steps;
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#0A0D14',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 24,
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
+    <div className="min-h-screen bg-[#0A0D14] flex items-center justify-center p-6 relative overflow-hidden">
       <FlickeringGrid
         className="absolute inset-0 z-0"
         color="#ffffff"
@@ -291,22 +203,12 @@ export function DiscoveryOnboarding() {
         gridGap={7}
         flickerChance={0.06}
       />
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 1,
-          pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 70% 60% at 50% 50%, transparent 20%, #0A0D14 100%)',
-        }}
-      />
+      <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_70%_60%_at_50%_50%,transparent_20%,#0A0D14_100%)]" />
 
-      <div style={{ width: '100%', maxWidth: 520, position: 'relative', zIndex: 2 }}>
-        <div style={{ marginBottom: 16 }}>
-          <p style={{ color: '#F5F1E8', fontSize: 13, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>
-            Minerva OS
-          </p>
-          <p style={{ color: '#8A9099', fontSize: 13 }}>
+      <div className="w-full max-w-[520px] relative z-[2]">
+        <div className="mb-4">
+          <p className="text-ivory text-[13px] font-semibold tracking-[2px] uppercase mb-1">Minerva OS</p>
+          <p className="text-fog text-[13px]">
             {d.stepLabel.replace('{{current}}', String(step + 1)).replace('{{total}}', String(TOTAL_STEPS))}
             {' · '}
             {stepLabels[step]}
@@ -326,79 +228,35 @@ export function DiscoveryOnboarding() {
             transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
           >
             {step === 0 && (
-              <StepWrapper
-                heading={d.step1.heading}
-                subheading={d.step1.subheading}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <StepWrapper heading={d.step1.heading} subheading={d.step1.subheading}>
+                <div className="flex flex-col gap-2.5">
                   {d.step1.options.map(opt => (
-                    <OptionCard
-                      key={opt.value}
-                      label={opt.label}
-                      desc={opt.desc}
-                      selected={source === opt.value}
-                      onClick={() => setSource(opt.value)}
-                    />
+                    <OptionCard key={opt.value} label={opt.label} desc={opt.desc} selected={source === opt.value} onClick={() => setSource(opt.value)} />
                   ))}
                 </div>
-                <NavRow
-                  onNext={handleStep1Next}
-                  canNext={!!source}
-                  saving={saving}
-                  nextLabel={d.continue}
-                />
+                <NavRow onNext={handleStep1Next} canNext={!!source} saving={saving} nextLabel={d.continue} />
               </StepWrapper>
             )}
 
             {step === 1 && (
-              <StepWrapper
-                heading={d.step2.heading}
-                subheading={d.step2.subheading}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <StepWrapper heading={d.step2.heading} subheading={d.step2.subheading}>
+                <div className="flex flex-col gap-2.5">
                   {d.step2.options.map(opt => (
-                    <OptionCard
-                      key={opt.value}
-                      label={opt.label}
-                      desc={opt.desc}
-                      selected={role === opt.value}
-                      onClick={() => setRole(opt.value)}
-                    />
+                    <OptionCard key={opt.value} label={opt.label} desc={opt.desc} selected={role === opt.value} onClick={() => setRole(opt.value)} />
                   ))}
                 </div>
-                <NavRow
-                  onBack={goBack}
-                  onNext={handleStep2Next}
-                  canNext={!!role}
-                  saving={saving}
-                  nextLabel={d.continue}
-                />
+                <NavRow onBack={goBack} onNext={handleStep2Next} canNext={!!role} saving={saving} nextLabel={d.continue} />
               </StepWrapper>
             )}
 
             {step === 2 && (
-              <StepWrapper
-                heading={d.step3.heading}
-                subheading={d.step3.subheading}
-              >
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <StepWrapper heading={d.step3.heading} subheading={d.step3.subheading}>
+                <div className="grid grid-cols-2 gap-2.5">
                   {d.step3.options.map(opt => (
-                    <OptionCard
-                      key={opt.value}
-                      label={opt.label}
-                      desc={opt.desc}
-                      selected={teamSize === opt.value}
-                      onClick={() => setTeamSize(opt.value)}
-                    />
+                    <OptionCard key={opt.value} label={opt.label} desc={opt.desc} selected={teamSize === opt.value} onClick={() => setTeamSize(opt.value)} />
                   ))}
                 </div>
-                <NavRow
-                  onBack={goBack}
-                  onNext={handleStep3Next}
-                  canNext={!!teamSize}
-                  saving={saving}
-                  nextLabel={d.continue}
-                />
+                <NavRow onBack={goBack} onNext={handleStep3Next} canNext={!!teamSize} saving={saving} nextLabel={d.continue} />
               </StepWrapper>
             )}
 
@@ -407,21 +265,15 @@ export function DiscoveryOnboarding() {
                 heading={isSMB ? t.smb.discovery.step4.heading : d.step4.heading}
                 subheading={isSMB ? t.smb.discovery.step4.subheading : d.step4.subheading}
               >
-                <p style={{ color: '#B8BDC7', fontSize: 12, marginBottom: 10 }}>
+                <p className="text-silver text-xs mb-2.5">
                   {isSMB ? t.smb.discovery.step4.featuresLabel : d.step4.featuresLabel}
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+                <div className="grid grid-cols-2 gap-2.5 mb-5">
                   {(isSMB ? t.smb.discovery.step4.options : d.step4.options).map(opt => (
-                    <OptionCard
-                      key={opt.value}
-                      label={opt.label}
-                      desc={opt.desc}
-                      selected={features.includes(opt.value)}
-                      onClick={() => toggleFeature(opt.value)}
-                    />
+                    <OptionCard key={opt.value} label={opt.label} desc={opt.desc} selected={features.includes(opt.value)} onClick={() => toggleFeature(opt.value)} />
                   ))}
                 </div>
-                <label style={{ color: '#B8BDC7', fontSize: 13, display: 'block', marginBottom: 6 }}>
+                <label className="text-silver text-[13px] block mb-1.5">
                   {isSMB ? t.smb.discovery.step4.goalLabel : d.step4.goalLabel}
                 </label>
                 <textarea
@@ -429,28 +281,10 @@ export function DiscoveryOnboarding() {
                   onChange={e => setGoal(e.target.value)}
                   placeholder={isSMB ? t.smb.discovery.step4.goalPlaceholder : d.step4.goalPlaceholder}
                   rows={3}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#111522',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 12,
-                    padding: '12px 16px',
-                    color: '#F5F1E8',
-                    fontSize: 14,
-                    outline: 'none',
-                    resize: 'none',
-                    boxSizing: 'border-box',
-                    marginBottom: 20,
-                  }}
+                  className="w-full bg-midnight border border-white/8 rounded-xl px-4 py-3 text-ivory text-sm outline-none resize-none box-border mb-5 focus:border-white/20"
+                  title="Main goal"
                 />
-                <NavRow
-                  onBack={goBack}
-                  onNext={handleFinish}
-                  canNext={true}
-                  saving={saving}
-                  nextLabel={d.finish}
-                  isFinish
-                />
+                <NavRow onBack={goBack} onNext={handleFinish} canNext={true} saving={saving} nextLabel={d.finish} isFinish />
               </StepWrapper>
             )}
           </motion.div>
@@ -458,15 +292,7 @@ export function DiscoveryOnboarding() {
 
         <button
           onClick={handleSkip}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#8A9099',
-            fontSize: 12,
-            cursor: 'pointer',
-            marginTop: 24,
-            display: 'block',
-          }}
+          className="bg-transparent border-none text-fog text-xs cursor-pointer mt-6 block hover:text-silver transition-colors"
         >
           {d.skip}
         </button>
@@ -478,8 +304,8 @@ export function DiscoveryOnboarding() {
 function StepWrapper({ heading, subheading, children }: { heading: string; subheading: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 style={{ color: '#F5F1E8', fontSize: 22, fontWeight: 600, marginBottom: 8 }}>{heading}</h2>
-      <p style={{ color: '#8A9099', fontSize: 14, marginBottom: 28 }}>{subheading}</p>
+      <h2 className="text-ivory text-[22px] font-semibold mb-2">{heading}</h2>
+      <p className="text-fog text-sm mb-7">{subheading}</p>
       {children}
     </div>
   );
@@ -500,43 +326,24 @@ function NavRow({
   nextLabel: string;
   isFinish?: boolean;
 }) {
-  const primaryBtn: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#F5F1E8',
-    color: '#0A0D14',
-    border: 'none',
-    borderRadius: 12,
-    padding: '12px 24px',
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: canNext && !saving ? 'pointer' : 'not-allowed',
-    opacity: canNext && !saving ? 1 : 0.45,
-    transition: 'opacity 0.2s ease',
-  };
-
-  const ghostBtn: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'transparent',
-    color: '#B8BDC7',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 12,
-    padding: '12px 24px',
-    fontSize: 14,
-    cursor: 'pointer',
-  };
-
   return (
-    <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+    <div className="flex gap-3 mt-6">
       {onBack && (
-        <button onClick={onBack} style={ghostBtn}>
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 bg-transparent text-silver border border-white/12 rounded-xl px-6 py-3 text-sm cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <ArrowLeft size={16} /> Back
         </button>
       )}
-      <button onClick={onNext} disabled={!canNext || saving} style={primaryBtn}>
+      <button
+        onClick={onNext}
+        disabled={!canNext || saving}
+        className={cn(
+          'inline-flex items-center gap-2 bg-ivory text-obsidian border-none rounded-xl px-6 py-3 text-sm font-semibold transition-opacity',
+          canNext && !saving ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-45'
+        )}
+      >
         {saving ? '...' : nextLabel}
         {!isFinish && <ArrowRight size={16} />}
         {isFinish && <Check size={16} />}

@@ -757,12 +757,13 @@ function SaveButton({ label, saved, onClick }: { label: string; saved: boolean; 
   );
 }
 
-function Toggle({ on }: { on: boolean }) {
+function Toggle({ on, label }: { on: boolean; label?: string }) {
   return (
     <div
       className={cn('w-9 h-5 rounded-full relative transition-colors duration-200 shrink-0', on ? 'bg-sage' : 'bg-white/10')}
       role="switch"
-      aria-checked={on}
+      aria-checked={on ? 'true' : 'false'}
+      title={label ?? (on ? 'On' : 'Off')}
     >
       <div
         className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200', on ? 'translate-x-4' : 'translate-x-0.5')}
@@ -1016,14 +1017,16 @@ function ApiTab() {
                 </tr>
               </thead>
               <tbody>
-                {keys.map((k, i) => (
+                {keys.map((k, i) => {
+                  const rowStyle = {
+                    backgroundColor: i % 2 === 0 ? '#111522' : '#0E1119',
+                    opacity: k.revokedAt ? 0.45 : 1,
+                  };
+                  return (
                   <tr
                     key={k.id}
                     className="border-b border-white/4"
-                    style={{
-                      backgroundColor: i % 2 === 0 ? '#111522' : '#0E1119',
-                      opacity: k.revokedAt ? 0.45 : 1,
-                    }}
+                    style={rowStyle}
                   >
                     <td className="px-4 py-3 text-silver">
                       <span>{k.name}</span>
@@ -1045,7 +1048,8 @@ function ApiTab() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1433,55 +1437,59 @@ function WebhooksTab() {
         </div>
       ) : (
         <div className="space-y-2">
-          {hooks.map(hook => (
-            <div
-              key={hook.id}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-[#111522] border-white/7"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-ivory truncate">{hook.url}</p>
-                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  <span
-                    className="text-[10px] font-medium px-2 py-0.5 rounded-full border"
-                    style={hook.active
-                      ? { color: '#7FA38A', backgroundColor: 'rgba(127,163,138,0.10)', borderColor: 'rgba(127,163,138,0.22)' }
-                      : { color: '#8A9099', backgroundColor: 'rgba(138,144,153,0.08)', borderColor: 'rgba(138,144,153,0.18)' }}
+          {hooks.map(hook => {
+            const hookStatusStyle = hook.active
+              ? { color: '#7FA38A', backgroundColor: 'rgba(127,163,138,0.10)', borderColor: 'rgba(127,163,138,0.22)' }
+              : { color: '#8A9099', backgroundColor: 'rgba(138,144,153,0.08)', borderColor: 'rgba(138,144,153,0.18)' };
+            return (
+              <div
+                key={hook.id}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-[#111522] border-white/7"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-ivory truncate">{hook.url}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <span
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-full border"
+                      style={hookStatusStyle}
+                    >
+                      {hook.active ? s.active : s.paused}
+                    </span>
+                    {(hook.events as string[]).map((ev: string) => (
+                      <span key={ev} className="text-[10px] text-fog">{(s.events as Record<string, string>)[ev] ?? ev}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleTest(hook)}
+                    disabled={testingId === hook.id}
+                    className="px-2.5 py-1.5 rounded-lg text-[11px] transition-all hover:-translate-y-0.5 text-fog border border-white/8 hover:text-silver"
                   >
-                    {hook.active ? s.active : s.paused}
-                  </span>
-                  {(hook.events as string[]).map((ev: string) => (
-                    <span key={ev} className="text-[10px] text-fog">{(s.events as Record<string, string>)[ev] ?? ev}</span>
-                  ))}
+                    {testedId === hook.id ? s.testSent : s.test}
+                  </button>
+                  <button
+                    onClick={() => handleToggle(hook)}
+                    className="px-2.5 py-1.5 rounded-lg text-[11px] transition-all hover:-translate-y-0.5 text-fog border border-white/8 hover:text-silver"
+                    aria-label={hook.active ? "Pause Webhook" : "Activate Webhook"}
+                  >
+                    {hook.active ? <Pause size={11} /> : <Play size={11} />}
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteHookId(hook.id)}
+                    className="p-1.5 rounded-lg transition-all hover:-translate-y-0.5 text-fog hover:text-rose"
+                    aria-label="Delete Webhook"
+                  >
+                    <Trash2 size={11} />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  onClick={() => handleTest(hook)}
-                  disabled={testingId === hook.id}
-                  className="px-2.5 py-1.5 rounded-lg text-[11px] transition-all hover:-translate-y-0.5 text-fog border border-white/8 hover:text-silver"
-                >
-                  {testedId === hook.id ? s.testSent : s.test}
-                </button>
-                <button
-                  onClick={() => handleToggle(hook)}
-                  className="px-2.5 py-1.5 rounded-lg text-[11px] transition-all hover:-translate-y-0.5 text-fog border border-white/8 hover:text-silver"
-                  aria-label={hook.active ? "Pause Webhook" : "Activate Webhook"}
-                >
-                  {hook.active ? <Pause size={11} /> : <Play size={11} />}
-                </button>
-                <button
-                  onClick={() => setConfirmDeleteHookId(hook.id)}
-                  className="p-1.5 rounded-lg transition-all hover:-translate-y-0.5 text-fog hover:text-rose"
-                  aria-label="Delete Webhook"
-                >
-                  <Trash2 size={11} />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
+
   );
 }
 
@@ -1524,7 +1532,7 @@ function PlanTab() {
         <div className="flex items-center gap-3">
           <span
             className="text-sm font-semibold px-3 py-1.5 rounded-full capitalize"
-            style={(() => { const st = tierColors; return st; })()}
+            style={tierColors}
           >
             {tier}
           </span>

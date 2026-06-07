@@ -190,7 +190,17 @@ const renderMarkdown = (text: string) => {
   );
 };
 
+function ProgressBar({ pct }: { pct: number }) {
+  return (
+    <div
+      className="bg-[#7FA38A] h-full transition-all duration-300 rounded"
+      ref={(node) => { if (node) node.style.width = `${pct}%`; }}
+    />
+  );
+}
+
 export default function AgentBuilder() {
+
   const router = useRouter();
   const params = useParams();
   const agentId = params?.id as string;
@@ -2109,11 +2119,9 @@ export default function AgentBuilder() {
                         <span>{testSuiteProgress}%</span>
                       </div>
                       <div className="w-full bg-black/30 h-1.5 rounded overflow-hidden">
-                        {(() => {
-                          const progressStyle = { width: `${testSuiteProgress}%` };
-                          return <div className="bg-[#7FA38A] h-full transition-all duration-300" style={progressStyle} />;
-                        })()}
+                        <ProgressBar pct={testSuiteProgress} />
                       </div>
+
                     </div>
                   )}
 
