@@ -204,6 +204,8 @@ function WorkspaceTab() {
   const { t, setLang, lang } = useLang();
   const s = t.app.settings.workspace;
   const { workspace, setWorkspaceProfile } = useWorkspace();
+  const { tier } = useTier();
+  const isStarter = tier === 'starter';
 
   const [wsRow, setWsRow] = useState<any>(null);
   const [studioName, setStudioName] = useState('Uprising Studio');
@@ -400,47 +402,49 @@ function WorkspaceTab() {
               </div>
             </SettingsField>
 
-            <SettingsField label={s.customDomain}>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customDomain}
-                  onChange={e => setCustomDomain(e.target.value)}
-                  onBlur={handleDomainBlur}
-                  placeholder="portal.myagency.com"
-                  className="flex-1 rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all placeholder:text-white/20 bg-midnight border border-border text-foreground"
-                />
-                <button
-                  onClick={handleCopyDomain}
-                  disabled={!customDomain}
-                  className="h-10 px-3 rounded-xl border border-border text-xs text-silver hover:text-ivory transition-colors disabled:opacity-40 flex items-center gap-1.5"
-                >
-                  <Copy size={12} />
-                  {domainCopied ? s.copied : s.copyDomain}
-                </button>
-              </div>
-              <p className="text-[10px] text-fog mt-1">{s.domainHint}</p>
-              {customDomain && (
-                <div className="mt-3 rounded-xl border border-white/6 p-4 space-y-3 bg-obsidian">
-                  <p className="text-[11px] font-semibold text-silver">{s.dnsSetupTitle}</p>
-                  <p className="text-[11px] text-fog leading-relaxed">{s.dnsSetupDesc}</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 rounded-lg px-3 py-2 border border-white/8 bg-midnight">
-                      <p className="text-[9px] text-fog uppercase tracking-widest mb-0.5">{s.dnsCnameLabel}</p>
-                      <code className="text-xs text-silver">{s.dnsCnameValue}</code>
-                    </div>
-                    <button
-                      onClick={handleCopyCname}
-                      className="flex items-center gap-1.5 h-[52px] px-3 rounded-xl border border-white/8 text-[11px] text-silver hover:text-ivory transition-colors"
-                    >
-                      {cnameCopied ? <Check size={11} className="text-sage" /> : <Copy size={11} />}
-                      {cnameCopied ? s.dnsCopied : s.dnsCopy}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-fog">{s.dnsNote}</p>
+            {!isStarter && (
+              <SettingsField label={s.customDomain}>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customDomain}
+                    onChange={e => setCustomDomain(e.target.value)}
+                    onBlur={handleDomainBlur}
+                    placeholder="portal.myagency.com"
+                    className="flex-1 rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all placeholder:text-white/20 bg-midnight border border-border text-foreground"
+                  />
+                  <button
+                    onClick={handleCopyDomain}
+                    disabled={!customDomain}
+                    className="h-10 px-3 rounded-xl border border-border text-xs text-silver hover:text-ivory transition-colors disabled:opacity-40 flex items-center gap-1.5"
+                  >
+                    <Copy size={12} />
+                    {domainCopied ? s.copied : s.copyDomain}
+                  </button>
                 </div>
-              )}
-            </SettingsField>
+                <p className="text-[10px] text-fog mt-1">{s.domainHint}</p>
+                {customDomain && (
+                  <div className="mt-3 rounded-xl border border-white/6 p-4 space-y-3 bg-obsidian">
+                    <p className="text-[11px] font-semibold text-silver">{s.dnsSetupTitle}</p>
+                    <p className="text-[11px] text-fog leading-relaxed">{s.dnsSetupDesc}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 rounded-lg px-3 py-2 border border-white/8 bg-midnight">
+                        <p className="text-[9px] text-fog uppercase tracking-widest mb-0.5">{s.dnsCnameLabel}</p>
+                        <code className="text-xs text-silver">{s.dnsCnameValue}</code>
+                      </div>
+                      <button
+                        onClick={handleCopyCname}
+                        className="flex items-center gap-1.5 h-[52px] px-3 rounded-xl border border-white/8 text-[11px] text-silver hover:text-ivory transition-colors"
+                      >
+                        {cnameCopied ? <Check size={11} className="text-sage" /> : <Copy size={11} />}
+                        {cnameCopied ? s.dnsCopied : s.dnsCopy}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-fog">{s.dnsNote}</p>
+                  </div>
+                )}
+              </SettingsField>
+            )}
           </div>
         </div>
       </div>

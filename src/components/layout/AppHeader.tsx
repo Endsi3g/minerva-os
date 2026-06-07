@@ -34,6 +34,9 @@ import { supabase } from '@/lib/supabase';
 
 const PAGE_LABELS: Record<string, string> = {
   '/app/dashboard': 'Dashboard',
+  '/app/growth': 'Growth',
+  '/app/operations': 'Operations',
+  '/app/client-space': 'Client Space',
   '/app/pipeline':  'Pipeline',
   '/app/clients':   'Clients',
   '/app/projects':  'Projects',

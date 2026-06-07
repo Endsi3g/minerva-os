@@ -1,6 +1,6 @@
 # Minerva OS
 
-![Version](https://img.shields.io/badge/version-5.0.0-ivory?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-6.0.0-ivory?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
 
 **The intelligent operating system for agencies and creative studios.**
 
@@ -203,6 +203,7 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions:
 
 | Version | Date | Highlights |
 |---|---|---|
+| `v6.0.0` | Jun 2026 | Unified Agency Platform: Cockpit Dashboard (Today Queue + Margin Gauge), consolidated workspaces (Growth, Operations, Client Space, Finance), and dynamic tier-based settings gating |
 | `v5.0.0` | Jun 2026 | Focus et contrôle: multi-role dashboard switcher, global Command Bar (CMD+K), and Relevance AI Agent Builder redesign |
 | `v4.7.0` | Jun 2026 | Marketplace Community Tier, submit flow, and Supabase integration migrations |
 | `v4.6.0` | Jun 2026 | Playwright audit coverage, critical JS bugfixes |
@@ -248,6 +249,6 @@ npx playwright test tests/audit/15-i18n-complete.spec.ts
 
 ## Roadmap
 
-Minerva v5 focuses on role-centric Command Center features — role-specific dashboards, client health scoring, and advanced tool pipelines for custom AI agents.
+Minerva v6 shifts the platform into a unified agency operating layer, consolidating workspace routes, providing Today-focused Cockpit queue views, and optimizing interface density dynamically based on tiers.
 
 See **[docs/ROADMAP.md](./docs/ROADMAP.md)** for the full plan and GitHub milestones.

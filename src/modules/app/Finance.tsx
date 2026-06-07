@@ -1,6 +1,8 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { Plus, Wallet, TrendingUp, TrendingDown, Calculator } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, TrendingDown, Calculator, FileText, Receipt } from 'lucide-react';
+import Billing from './Billing';
+import Expenses from './Expenses';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AnimatedNumber } from '@/components/ui/animated-number';
@@ -70,7 +72,7 @@ function FinanceSkeleton() {
   );
 }
 
-export default function Finance() {
+function Profitability() {
   const { t, lang } = useLang();
   const f = t.app.financeModule;
   
@@ -326,6 +328,47 @@ export default function Finance() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+type FinanceTab = 'profitability' | 'invoices' | 'expenses';
+
+export default function Finance() {
+  const [activeTab, setActiveTab] = useState<FinanceTab>('profitability');
+
+  return (
+    <div className="space-y-6 w-full">
+      {/* Sub navigation tabs */}
+      <div className="flex gap-1 border-b border-white/5 mb-6">
+        {[
+          { id: 'profitability', label: 'Profitability & Taxes', icon: Wallet },
+          { id: 'invoices', label: 'Invoices & Retainers', icon: FileText },
+          { id: 'expenses', label: 'Expenses Ledger', icon: Receipt },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 -mb-px transition-colors cursor-pointer',
+                isActive ? 'border-[#7FA38A] text-ivory' : 'border-transparent text-fog hover:text-silver'
+              )}
+            >
+              <Icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="transition-all duration-300">
+        {activeTab === 'profitability' && <Profitability />}
+        {activeTab === 'invoices' && <Billing />}
+        {activeTab === 'expenses' && <Expenses />}
+      </div>
     </div>
   );
 }
