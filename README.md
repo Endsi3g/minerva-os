@@ -1,6 +1,6 @@
 # Minerva OS
 
-![Version](https://img.shields.io/badge/version-3.3.0-ivory?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-5.0.0-ivory?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
 
 **The intelligent operating system for agencies and creative studios.**
 
@@ -203,6 +203,15 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for full instructions:
 
 | Version | Date | Highlights |
 |---|---|---|
+| `v5.0.0` | Jun 2026 | Focus et contrôle: multi-role dashboard switcher, global Command Bar (CMD+K), and Relevance AI Agent Builder redesign |
+| `v4.7.0` | Jun 2026 | Marketplace Community Tier, submit flow, and Supabase integration migrations |
+| `v4.6.0` | Jun 2026 | Playwright audit coverage, critical JS bugfixes |
+| `v4.5.0` | Jun 2026 | Daily AI briefing — MinervaDaily widget and Resend email digests |
+| `v4.4.0` | Jun 2026 | Client portal analytics, AI workflow suggestions, public REST API and webhooks |
+| `v4.3.0` | Jun 2026 | Quick Proposal templates, e-signature modal, custom domain portal |
+| `v4.2.0` | Jun 2026 | Solo Studio Mode — 3-item navigation, mandate terminology, quick start setup |
+| `v4.1.0` | Jun 2026 | Proposal Copilot — quick briefs, AI pricing estimations, PDF exports |
+| `v4.0.0` | Jun 2026 | AI Module Agents — CRM, PM, Finance, and dashboard integrations |
 | `v3.3.0` | Jun 2026 | SMB mode (simplified UX for 1-15 person teams), login glassmorphism, performance optimisation |
 | `v3.2.0` | Jun 2026 | Multi-tier system, workspace switcher, white-label portal, API keys, audit log |
 | `v3.1.0` | Jun 2026 | 6-space navigation, Finance Hub, Intelligence Hub, Support & Knowledge Hub |
@@ -239,6 +248,6 @@ npx playwright test tests/audit/15-i18n-complete.spec.ts
 
 ## Roadmap
 
-Minerva v4 focuses on becoming an **AI-native agency OS** — autonomous agents per module, an AI proposal copilot, and a dedicated mode for solo/duo freelance studios.
+Minerva v5 focuses on role-centric Command Center features — role-specific dashboards, client health scoring, and advanced tool pipelines for custom AI agents.
 
-See **[docs/ROADMAP.md](./docs/ROADMAP.md)** for the full v4 plan and GitHub milestones.
+See **[docs/ROADMAP.md](./docs/ROADMAP.md)** for the full plan and GitHub milestones.
