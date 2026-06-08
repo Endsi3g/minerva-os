@@ -1,10 +1,5 @@
-'use client';
-import Tasks from '@/modules/app/Tasks';
-import { ErrorBoundary } from '@/components/minerva/ErrorBoundary';
+import { redirect } from 'next/navigation';
+
 export default function TasksPage() {
-  return (
-    <ErrorBoundary>
-      <Tasks />
-    </ErrorBoundary>
-  );
+  redirect('/app/delivery?tab=tasks');
 }

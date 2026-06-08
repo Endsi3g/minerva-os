@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Search, Copy, Check, Users } from 'lucide-react';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Button } from '@/components/ui/button';
@@ -34,9 +35,18 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import CallPreps from './CallPreps';
+import Pipeline from './Pipeline';
+import Proposals from './Proposals';
 
-type ClientsView = 'clients' | 'call-preps';
+type ClientsView = 'pipeline' | 'accounts' | 'deals' | 'proposals' | 'billing';
+
+const CLIENT_TABS: { key: ClientsView; label: string }[] = [
+  { key: 'pipeline',  label: 'Pipeline' },
+  { key: 'accounts',  label: 'Accounts' },
+  { key: 'deals',     label: 'Deals' },
+  { key: 'proposals', label: 'Proposals' },
+  { key: 'billing',   label: 'Billing Snapshot' },
+];
 
 function ClientCardSkeleton() {
   return (
@@ -74,7 +84,27 @@ const EMPTY_FORM: NewClientForm = {
   company: '', industry: '', contact: '', email: '', monthlyValue: '', status: 'onboarding',
 };
 
-import { useSearchParams } from 'next/navigation';
+function DealsPlaceholder() {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center gap-4 rounded-xl border border-border p-8" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+      <p className="text-sm font-medium text-ivory">Deals</p>
+      <p className="text-xs max-w-xs" style={{ color: '#8A9099' }}>
+        Deal tracking and opportunity management coming soon.
+      </p>
+    </div>
+  );
+}
+
+function BillingSnapshot() {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center gap-4 rounded-xl border border-border p-8" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+      <p className="text-sm font-medium text-ivory">Billing Snapshot</p>
+      <p className="text-xs max-w-xs" style={{ color: '#8A9099' }}>
+        Client billing overview and invoice status will appear here.
+      </p>
+    </div>
+  );
+}
 
 export default function Clients() {
   const { t } = useLang();
@@ -89,13 +119,23 @@ export default function Clients() {
   const projects = useProjects(workspaceId);
   const addClient = useAddClient();
 
-  const [viewTab, setViewTab] = useState<ClientsView>('clients');
+  const searchParams = useSearchParams();
+
+  const initialTab = (): ClientsView => {
+    const tab = searchParams?.get('tab') as ClientsView | null;
+    return CLIENT_TABS.some(t => t.key === tab) ? (tab as ClientsView) : 'accounts';
+  };
+
+  const [viewTab, setViewTab] = useState<ClientsView>(initialTab);
   const [query, setQuery] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewClientForm>(EMPTY_FORM);
 
-  const searchParams = useSearchParams();
   useEffect(() => {
+    const tab = searchParams?.get('tab') as ClientsView | null;
+    if (tab && CLIENT_TABS.some(t => t.key === tab)) {
+      setViewTab(tab);
+    }
     if (searchParams?.get('create') === 'true' || searchParams?.get('new') === 'true') {
       setSheetOpen(true);
     }
@@ -286,7 +326,7 @@ export default function Clients() {
             {cKeys.stats.replace('{{count}}', String(clients ? clients.length : 0))}
           </p>
         </div>
-        {viewTab === 'clients' && (
+        {viewTab === 'accounts' && (
           <Button size="sm" id="btn-new-client" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }}>
             <Plus size={14} />
             {cKeys.addClient}
@@ -295,13 +335,13 @@ export default function Clients() {
       </div>
 
       {/* Tab switcher */}
-      <div className="flex items-center gap-1 border-b border-border mb-6">
-        {([['clients', cKeys.title], ['call-preps', t.app.sidebar.callPreps]] as [ClientsView, string][]).map(([key, label]) => (
+      <div className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto">
+        {CLIENT_TABS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setViewTab(key)}
             className={cn(
-              'px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors',
+              'px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
               viewTab === key ? 'border-sage text-sage' : 'border-transparent text-fog hover:text-silver'
             )}
           >
@@ -310,9 +350,12 @@ export default function Clients() {
         ))}
       </div>
 
-      {viewTab === 'call-preps' && <CallPreps />}
+      {viewTab === 'pipeline'  && <Pipeline />}
+      {viewTab === 'deals'     && <DealsPlaceholder />}
+      {viewTab === 'proposals' && <Proposals />}
+      {viewTab === 'billing'   && <BillingSnapshot />}
 
-      {viewTab === 'clients' && <>
+      {viewTab === 'accounts' && <>
       {/* Search */}
       <div className="relative mb-6 max-w-sm">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-fog pointer-events-none" />

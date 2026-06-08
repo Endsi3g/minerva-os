@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
-import Proposals from '@/modules/app/Proposals';
+import { redirect } from 'next/navigation';
+
 export default function ProposalsPage() {
-  return <Suspense><Proposals /></Suspense>;
+  redirect('/app/clients?tab=proposals');
 }

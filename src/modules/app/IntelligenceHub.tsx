@@ -9,6 +9,7 @@ import Reports from './Reports';
 import Cockpit from './Cockpit';
 import NPS from './NPS';
 import AgentOps from './AgentOps';
+import AgentsList from './AgentsList';
 
 /* ── PortalAnalytics ─────────────────────────────────────────────────────────── */
 
@@ -318,8 +319,9 @@ export default function IntelligenceHub() {
     { id: 1, label: h.tabs.reports,     content: <Reports /> },
     { id: 2, label: h.tabs.health,      content: <Cockpit /> },
     { id: 3, label: h.tabs.nps,         content: <NPS /> },
-    { id: 4, label: h.tabs.agentOps,    content: <AgentOps /> },
-    { id: 5, label: h.tabs.clientIntel, content: <PortalAnalytics workspaceId={workspaceId} /> },
+    { id: 4, label: h.tabs.agents,      content: <AgentsList /> },
+    { id: 5, label: h.tabs.agentOps,    content: <AgentOps /> },
+    { id: 6, label: h.tabs.clientIntel, content: <PortalAnalytics workspaceId={workspaceId} /> },
   ];
 
   return (

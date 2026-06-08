@@ -410,6 +410,7 @@ const translations = {
         operations: 'Operations',
         clientSpace: 'Client Space',
         financeSpace: 'Finance Space',
+        delivery: 'Delivery',
         pipeline: 'Pipeline',
         clients: 'Clients',
         projects: 'Projects',
@@ -1673,6 +1674,7 @@ const translations = {
           health: 'Health',
           nps: 'NPS',
           agentOps: 'Agent Ops',
+          agents: 'Agents',
           clientIntel: 'Client Intel',
         },
         overview: {
@@ -2657,6 +2659,7 @@ const translations = {
         operations: 'Opérations',
         clientSpace: 'Espace Client',
         financeSpace: 'Espace Finance',
+        delivery: 'Livraison',
         pipeline: 'Pipeline',
         clients: 'Clients',
         projects: 'Projets',
@@ -3920,6 +3923,7 @@ const translations = {
           health: 'Santé',
           nps: 'NPS',
           agentOps: 'Agent Ops',
+          agents: 'Agents',
           clientIntel: 'Intel Client',
         },
         overview: {

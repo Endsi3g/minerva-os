@@ -1,3 +1,5 @@
-﻿'use client';
-import Approvals from '@/modules/app/Approvals';
-export default function ApprovalsPage() { return <Approvals />; }
+import { redirect } from 'next/navigation';
+
+export default function ApprovalsPage() {
+  redirect('/app/delivery?tab=approvals');
+}

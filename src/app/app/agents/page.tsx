@@ -1,5 +1,5 @@
-'use client';
-import AgentsList from '@/modules/app/AgentsList';
+import { redirect } from 'next/navigation';
+
 export default function AgentsPage() {
-  return <AgentsList />;
+  redirect('/app/intelligence');
 }

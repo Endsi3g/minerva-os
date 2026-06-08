@@ -9,13 +9,13 @@ import { BottomBlur } from '@/components/ui/edge-blur';
 import { DynamicIsland } from './DynamicIsland';
 import Link from 'next/link';
 import {
-  Command,
+  Home,
+  Users,
   Layers,
   BarChart2,
-  Activity,
+  Brain,
   Search,
   Menu,
-  Users,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLang } from '@/i18n';
@@ -41,11 +41,11 @@ export const useSidebar = () => useContext(SidebarContext);
 export const useChat = () => useContext(ChatContext);
 
 const MOBILE_NAV_ITEMS = [
-  { href: '/app/command',      icon: Command,    label: 'Home' },
-  { href: '/app/clients',      icon: Users,      label: 'Revenue' },
-  { href: '/app/projects',     icon: Layers,     label: 'Delivery' },
+  { href: '/app/dashboard',    icon: Home,       label: 'Home' },
+  { href: '/app/clients',      icon: Users,      label: 'Clients' },
+  { href: '/app/delivery',     icon: Layers,     label: 'Delivery' },
   { href: '/app/finance-hub',  icon: BarChart2,  label: 'Finance' },
-  { href: '/app/intelligence', icon: Activity,   label: 'Intel' },
+  { href: '/app/intelligence', icon: Brain,      label: 'Intel' },
 ];
 
 function MobileBottomNav() {
