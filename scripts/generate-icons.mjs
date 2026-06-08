@@ -22,7 +22,7 @@ const img = await loadImage(SRC);
 function renderIcon(size, padding = 0) {
   const canvas = createCanvas(size, size);
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#0A0D14';
+  ctx.fillStyle = '#4F46E5';
   ctx.fillRect(0, 0, size, size);
   const p = Math.round(size * padding);
   ctx.drawImage(img, p, p, size - p * 2, size - p * 2);

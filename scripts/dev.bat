@@ -5,7 +5,7 @@ chcp 65001 >nul
 cls
 echo.
 echo   ======================================================
-echo     MINERVA OS  v1.7.0  -  Uprising Studio
+echo     MINERVA OS  v7.0.0  -  Uprising Studio
 echo   ======================================================
 echo.
 echo   Choisissez votre cible de developpement :
