@@ -11,11 +11,11 @@ import { InvoicePdf, downloadPdf } from '@/components/minerva/PdfExport';
 import { CommentSection } from '@/components/minerva/CommentSection';
 
 const STATUS_CONFIG: Record<InvoiceStatus, { label: string; class: string }> = {
-  draft:     { label: 'Draft',    class: 'text-[#8A9099] bg-[#8A9099]/10 border-[#8A9099]/20' },
-  sent:      { label: 'Due',      class: 'text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20' },
-  overdue:   { label: 'Overdue',  class: 'text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20' },
-  paid:      { label: 'Paid',     class: 'text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20' },
-  cancelled: { label: 'Cancelled',class: 'text-[#8A9099] bg-[#8A9099]/10 border-[#8A9099]/15' },
+  draft:     { label: 'Draft',     class: 'text-muted-foreground bg-muted border-border' },
+  sent:      { label: 'Due',       class: 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800' },
+  overdue:   { label: 'Overdue',   class: 'text-red-500 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' },
+  paid:      { label: 'Paid',      class: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' },
+  cancelled: { label: 'Cancelled', class: 'text-muted-foreground bg-muted border-border' },
 };
 
 function fmt(amount: number, currency: string) {
@@ -114,12 +114,12 @@ export default function PortalInvoices() {
       {/* Header */}
       <div>
         <h1
-          className="text-2xl font-normal"
-          style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}
+          className="text-2xl font-normal text-foreground"
+          style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '-0.02em' }}
         >
           {t.app.sidebar.billing}
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#8A9099' }}>
+        <p className="text-sm mt-1 text-muted-foreground">
           {lang === 'fr' ? 'Votre historique de facturation avec Minerva.' : 'Your billing history with Minerva.'}
         </p>
       </div>
@@ -127,17 +127,16 @@ export default function PortalInvoices() {
       {/* Summary strip */}
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: t.app.billing.summary.outstanding, value: outstanding > 0 ? fmt(outstanding, 'USD') : '—', sub: lang === 'fr' ? 'en attente de paiement' : 'awaiting payment', color: outstanding > 0 ? '#B89B6A' : '#7FA38A' },
-          { label: t.app.billing.summary.collected,  value: fmt(paid, 'USD'),   sub: lang === 'fr' ? 'au total' : 'all time',           color: '#7FA38A' },
+          { label: t.app.billing.summary.outstanding, value: outstanding > 0 ? fmt(outstanding, 'USD') : '—', sub: lang === 'fr' ? 'en attente de paiement' : 'awaiting payment', colorClass: outstanding > 0 ? 'text-amber-600' : 'text-emerald-600' },
+          { label: t.app.billing.summary.collected,  value: fmt(paid, 'USD'),   sub: lang === 'fr' ? 'au total' : 'all time',           colorClass: 'text-emerald-600' },
         ].map(s => (
           <div
             key={s.label}
-            className="rounded-[16px] border p-5"
-            style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+            className="rounded-[16px] border border-border bg-card p-5"
           >
-            <p className="text-2xl font-semibold tabular-nums" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-xs font-medium mt-1" style={{ color: '#F5F1E8' }}>{s.label}</p>
-            <p className="text-[11px] mt-0.5" style={{ color: '#8A9099' }}>{s.sub}</p>
+            <p className={`text-2xl font-semibold tabular-nums ${s.colorClass}`}>{s.value}</p>
+            <p className="text-xs font-medium mt-1 text-foreground">{s.label}</p>
+            <p className="text-[11px] mt-0.5 text-muted-foreground">{s.sub}</p>
           </div>
         ))}
       </div>
@@ -145,7 +144,7 @@ export default function PortalInvoices() {
       {/* Invoice list */}
       <div className="space-y-2">
         {invoices.length === 0 && (
-          <p className="text-sm text-center py-12" style={{ color: '#8A9099' }}>{t.app.billing.invoices.empty}</p>
+          <p className="text-sm text-center py-12 text-muted-foreground">{t.app.billing.invoices.empty}</p>
         )}
         {invoices.map((invoice: any, i: number) => {
           const sc = STATUS_CONFIG[invoice.status as InvoiceStatus] || STATUS_CONFIG.draft;
@@ -156,24 +155,23 @@ export default function PortalInvoices() {
               initial={{ opacity: 0, y: 12 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06, duration: 0.4 }}
-              className="rounded-[14px] border overflow-hidden transition-colors duration-200 hover:border-white/10"
-              style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+              className="rounded-[14px] border border-border bg-card overflow-hidden transition-colors duration-200 hover:border-foreground/15"
             >
               <div className="flex items-center gap-4 px-5 py-4">
                 {/* Number + project */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold tabular-nums" style={{ color: '#F5F1E8' }}>{invoice.number}</p>
+                    <p className="text-sm font-semibold tabular-nums text-foreground">{invoice.number}</p>
                     <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border', sc.class)}>{sc.label}</span>
                   </div>
-                  <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8A9099' }}>
+                  <p className="text-[11px] mt-0.5 truncate text-muted-foreground">
                     {invoice.project} · Issued {new Date(invoice.issuedDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
 
                 {/* Due date */}
                 <div className="hidden sm:block text-right shrink-0">
-                  <p className="text-xs" style={{ color: '#8A9099' }}>
+                  <p className="text-xs text-muted-foreground">
                     {invoice.status === 'paid' && invoice.paidDate
                       ? `Paid ${new Date(invoice.paidDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`
                       : `Due ${new Date(invoice.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`}
@@ -181,7 +179,7 @@ export default function PortalInvoices() {
                 </div>
 
                 {/* Amount */}
-                <p className="text-sm font-semibold tabular-nums shrink-0" style={{ color: '#F5F1E8' }}>
+                <p className="text-sm font-semibold tabular-nums shrink-0 text-foreground">
                   {fmt(invoice.amount, invoice.currency)}
                 </p>
 
@@ -189,18 +187,14 @@ export default function PortalInvoices() {
                 <div className="flex items-center gap-2 shrink-0">
                   {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'pending') && (
                     stripeAvailable === false
-                      ? <span className="text-[11px] px-2 py-1 rounded-lg" style={{ color: '#B89B6A', backgroundColor: 'rgba(184,155,106,0.08)', border: '1px solid rgba(184,155,106,0.18)' }}>
+                      ? <span className="text-[11px] px-2 py-1 rounded-lg text-amber-600 border border-amber-200 dark:border-amber-800" style={{ backgroundColor: 'rgba(184,155,106,0.08)' }}>
                           {t.portal.proposals.stripeNotConfigured}
                         </span>
                       : <button
                           onClick={() => handlePay(invoice)}
                           disabled={payingId !== null}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                          style={{
-                            backgroundColor: 'rgba(127,163,138,0.10)',
-                            border: '1px solid rgba(127,163,138,0.22)',
-                            color: '#7FA38A',
-                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-emerald-600 border border-emerald-200 dark:border-emerald-800"
+                          style={{ backgroundColor: 'rgba(5,150,105,0.08)' }}
                         >
                           <CreditCard size={12} />
                           {payingId === invoice.id ? 'Paying...' : 'Pay'}
@@ -208,16 +202,15 @@ export default function PortalInvoices() {
                   )}
                   <button
                     onClick={() => handleDownload(invoice)}
-                    className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-white/5 cursor-pointer"
+                    className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-accent cursor-pointer"
                     title={lang === 'fr' ? 'Télécharger PDF' : 'Download PDF'}
                     aria-label="Download invoice"
                   >
-                    <Download size={13} style={{ color: '#8A9099' }} />
+                    <Download size={13} className="text-muted-foreground" />
                   </button>
                   <button
                     onClick={() => setExpandedId(expandedId === invoice.id ? null : invoice.id)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#B8BDC7' }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 hover:-translate-y-0.5 cursor-pointer text-muted-foreground border border-border hover:bg-accent"
                   >
                     <MessageSquare size={11} />
                     {expandedId === invoice.id ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
@@ -232,8 +225,7 @@ export default function PortalInvoices() {
                     animate={{ height: 260, opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                    className="overflow-hidden border-t"
-                    style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+                    className="overflow-hidden border-t border-border"
                   >
                     <div className="p-5 h-full">
                       <CommentSection targetId={invoice.id} targetType="invoice" token={token} />

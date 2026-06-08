@@ -1,3 +1,4 @@
+'use client';
 import { useState, useMemo, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -73,12 +74,12 @@ const EMPTY_FORM: NewTaskForm = {
 
 function TaskRowSkeleton() {
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-midnight border border-white/5 animate-pulse">
-      <Skeleton className="h-4 w-4 rounded-full bg-white/5 shrink-0" />
-      <Skeleton className="h-4 w-1/3 bg-white/5 flex-1" />
-      <Skeleton className="h-4 w-20 bg-white/5 shrink-0 hidden sm:block" />
-      <Skeleton className="h-4 w-16 bg-white/5 shrink-0 hidden md:block" />
-      <Skeleton className="h-5 w-5 rounded-full bg-white/5 shrink-0" />
+    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-midnight border border-border animate-pulse">
+      <Skeleton className="h-4 w-4 rounded-full bg-secondary/60 shrink-0" />
+      <Skeleton className="h-4 w-1/3 bg-secondary/60 flex-1" />
+      <Skeleton className="h-4 w-20 bg-secondary/60 shrink-0 hidden sm:block" />
+      <Skeleton className="h-4 w-16 bg-secondary/60 shrink-0 hidden md:block" />
+      <Skeleton className="h-5 w-5 rounded-full bg-secondary/60 shrink-0" />
     </div>
   );
 }
@@ -153,7 +154,7 @@ export default function Tasks() {
       await updateTask({ id, status: nextStatus });
     } catch (err) {
       setOrderedTasks(originalTasks);
-      toast.error(lang === 'fr' ? 'Échec de la mise à jour du statut' : 'Failed to update task status');
+      toast.error('Failed to update task status');
     }
   }
 
@@ -196,10 +197,10 @@ export default function Tasks() {
       {!isLoading && totalTasksCount > 0 && (
         <div className="flex items-center gap-1.5 mb-4 overflow-x-auto">
           {[
-            { id: 'all' as const, label: lang === 'fr' ? 'Tous' : 'All Tasks' },
-            { id: 'my_tasks' as const, label: lang === 'fr' ? 'Mes tâches' : 'My Tasks' },
-            { id: 'overdue' as const, label: lang === 'fr' ? 'En retard' : 'Overdue' },
-            { id: 'blocked' as const, label: lang === 'fr' ? 'Bloqués' : 'Blocked' },
+            { id: 'all' as const, label: 'All Tasks' },
+            { id: 'my_tasks' as const, label: 'My Tasks' },
+            { id: 'overdue' as const, label: 'Overdue' },
+            { id: 'blocked' as const, label: 'Blocked' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -207,7 +208,7 @@ export default function Tasks() {
               className={cn(
                 "relative px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer select-none",
                 viewPreset === tab.id
-                  ? "bg-white/10 text-ivory border-white/15 shadow-sm"
+                  ? "bg-accent text-foreground border-border shadow-sm"
                   : "bg-transparent text-fog border-transparent hover:text-silver"
               )}
             >
@@ -249,13 +250,13 @@ export default function Tasks() {
             {[1, 2, 3, 4, 5].map(i => <TaskRowSkeleton key={i} />)}
           </div>
         ) : totalTasksCount === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-white/5 p-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-fog">
+          <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-border p-8">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/60 border border-border text-fog">
               <CheckCircle2 size={20} />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-medium text-ivory">{lang === 'fr' ? 'Aucune tâche trouvée' : 'No tasks found'}</p>
-              <p className="text-xs text-fog max-w-xs">{lang === 'fr' ? 'Créez votre première tâche pour commencer à collaborer.' : 'Create your first task to start collaborating.'}</p>
+              <p className="text-sm font-medium text-ivory">{'No tasks found'}</p>
+              <p className="text-xs text-fog max-w-xs">{'Create your first task to start collaborating.'}</p>
             </div>
             <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }} className="rounded-full">
               <Plus size={14} className="mr-1.5" />
@@ -275,7 +276,7 @@ export default function Tasks() {
                     key={task._id}
                     value={task}
                     onClick={() => setSelectedTask(task)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-card/80 transition-colors group cursor-grab active:cursor-grabbing bg-midnight border border-white/5 select-none"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-card/80 transition-colors group cursor-grab active:cursor-grabbing bg-midnight border border-border select-none"
                   >
                     {/* Status toggle */}
                     <button
@@ -284,7 +285,7 @@ export default function Tasks() {
                         cycleStatus(task._id, task.status as TaskStatus);
                       }}
                       className="shrink-0 transition-opacity hover:opacity-80 cursor-pointer"
-                      aria-label={lang === 'fr' ? 'Changer le statut' : 'Cycle status'}
+                      aria-label={'Cycle status'}
                     >
                       <StatusIcon size={16} className={STATUS_COLOR[task.status as TaskStatus]} />
                     </button>
@@ -319,7 +320,7 @@ export default function Tasks() {
             </Reorder.Group>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 px-1 py-2 border-t border-white/5">
+              <div className="flex items-center justify-between mt-4 px-1 py-2 border-t border-border">
                 <span className="text-xs text-fog">
                   Showing {Math.min((page - 1) * pageSize + 1, totalTasksCount)}-{Math.min(page * pageSize, totalTasksCount)} of {totalTasksCount} tasks
                 </span>
@@ -329,7 +330,7 @@ export default function Tasks() {
                     variant="outline"
                     onClick={() => setPage(p => Math.max(p - 1, 1))}
                     disabled={page === 1}
-                    className="border-white/10 text-fog hover:text-ivory"
+                    className="border-border text-fog hover:text-ivory"
                   >
                     Previous
                   </Button>
@@ -339,7 +340,7 @@ export default function Tasks() {
                     variant="outline"
                     onClick={() => setPage(p => Math.min(p + 1, totalPages))}
                     disabled={page === totalPages}
-                    className="border-white/10 text-fog hover:text-ivory"
+                    className="border-border text-fog hover:text-ivory"
                   >
                     Next
                   </Button>
@@ -353,8 +354,8 @@ export default function Tasks() {
 
       {/* Task detail sheet */}
       <Sheet open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <SheetContent side="right" className="w-full sm:w-[400px] bg-midnight border-white/5 flex flex-col p-0">
-          <SheetHeader className="p-6 border-b border-white/5">
+        <SheetContent side="right" className="w-full sm:w-[400px] bg-midnight border-border flex flex-col p-0">
+          <SheetHeader className="p-6 border-b border-border">
             <div className="flex items-center gap-2 mb-1">
               <span className={cn('text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full', PRIORITY_COLOR[selectedTask?.priority as TaskPriority])}>
                 {tk.priorities[selectedTask?.priority as TaskPriority]}

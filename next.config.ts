@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
   // tsconfig "paths" (@/* → src/*) are auto-resolved by Next.js — no extra aliases needed.
   experimental: {
     optimizePackageImports: [
-      '@thesvg/react',
       'lucide-react',
       '@radix-ui/react-avatar',
       '@radix-ui/react-dialog',
@@ -24,8 +23,6 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-slot',
       '@radix-ui/react-tooltip',
       'recharts',
-      'date-fns',
-      'motion',
     ],
   },
 };

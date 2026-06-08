@@ -40,8 +40,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <main
-      className="relative flex min-h-screen w-full items-center justify-center p-4 font-sans"
-      style={{ backgroundColor: '#0A0D14' }}
+      className="relative flex min-h-screen w-full items-center justify-center p-4 font-sans bg-background"
     >
       <motion.div
         className="w-full max-w-[420px]"
@@ -51,8 +50,8 @@ export default function ForgotPasswordPage() {
       >
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-10">
-          <Circle className="fill-white text-white h-4 w-4" />
-          <span className="text-base font-semibold tracking-tight text-white">Minerva OS</span>
+          <Circle className="fill-foreground text-foreground h-4 w-4" />
+          <span className="text-base font-semibold tracking-tight text-foreground">Minerva OS</span>
         </div>
 
         {submitted ? (
@@ -62,29 +61,23 @@ export default function ForgotPasswordPage() {
             transition={{ duration: 0.4 }}
             className="space-y-6"
           >
-            <div
-              className="rounded-2xl p-5"
-              style={{
-                backgroundColor: 'rgba(127,163,138,0.08)',
-                border: '1px solid rgba(127,163,138,0.25)',
-              }}
-            >
+            <div className="rounded-2xl p-5 bg-emerald-600/8 border border-emerald-600/25">
               <div className="flex items-start gap-3">
-                <Mail className="mt-0.5 flex-shrink-0 text-[#7FA38A]" size={18} />
+                <Mail className="mt-0.5 flex-shrink-0 text-emerald-600" size={18} />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-[#7FA38A]">{fp.successTitle}</p>
-                  <p className="text-sm leading-relaxed" style={{ color: '#8A9099' }}>
+                  <p className="text-sm font-medium text-emerald-600">{fp.successTitle}</p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
                     {fp.successBody}
                   </p>
                 </div>
               </div>
             </div>
-            <p className="text-center text-sm" style={{ color: '#8A9099' }}>
+            <p className="text-center text-sm text-muted-foreground">
               {fp.noEmail}{' '}
               <button
                 type="button"
                 onClick={() => { setSubmitted(false); setEmail(''); }}
-                className="text-white underline underline-offset-2 hover:text-white/80 transition-colors"
+                className="text-foreground underline underline-offset-2 hover:opacity-75 transition-opacity"
               >
                 {fp.tryAgain}
               </button>
@@ -93,33 +86,28 @@ export default function ForgotPasswordPage() {
         ) : (
           <div className="space-y-8">
             <div className="space-y-2">
-              <h1 className="text-3xl font-medium tracking-tight text-white">{fp.heading}</h1>
-              <p className="text-sm" style={{ color: '#8A9099' }}>{fp.subheading}</p>
+              <h1 className="text-3xl font-medium tracking-tight text-foreground">{fp.heading}</h1>
+              <p className="text-sm text-muted-foreground">{fp.subheading}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-white">{fp.emailLabel}</label>
+                <label className="block text-sm font-medium text-foreground">{fp.emailLabel}</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={fp.emailPlaceholder}
-                  className="w-full h-11 px-4 text-sm rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
-                  style={{
-                    backgroundColor: '#111522',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }}
+                  className="w-full h-11 px-4 text-sm rounded-xl text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-all bg-card border border-border"
                 />
               </div>
 
-              {error && <p className="text-sm px-1" style={{ color: '#A86A6A' }}>{error}</p>}
+              {error && <p className="text-sm px-1 text-red-500">{error}</p>}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
-                style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
+                className="w-full h-12 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 bg-foreground text-background"
               >
                 {loading ? fp.sending : fp.submit}
               </button>
@@ -130,8 +118,7 @@ export default function ForgotPasswordPage() {
         <div className="mt-8 text-center">
           <Link
             href="/login"
-            className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-white"
-            style={{ color: '#8A9099' }}
+            className="inline-flex items-center gap-1.5 text-sm transition-colors text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft size={14} />
             {fp.backToLogin}

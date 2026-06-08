@@ -57,11 +57,11 @@ function MobileBottomNav() {
   const navStyle = {
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    background: 'rgba(10,13,20,0.88)',
-    borderTop: '1px solid rgba(255,255,255,0.08)',
+    backgroundColor: 'var(--background)',
+    borderTop: '1px solid var(--border)',
     paddingBottom: 'env(safe-area-inset-bottom)',
   };
-  const sheetStyle = { background: 'var(--midnight)', maxHeight: '80vh' };
+  const sheetStyle = { backgroundColor: 'var(--background)', maxHeight: '80vh' };
 
   return (
     <nav
@@ -71,7 +71,7 @@ function MobileBottomNav() {
       <div className="flex items-center justify-around px-2 h-[60px]">
         {MOBILE_NAV_ITEMS.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/');
-          const linkStyle = { color: isActive ? '#7FA38A' : '#9FA8B5' };
+          const linkStyle = { color: isActive ? 'var(--primary)' : 'var(--muted-foreground)' };
           const spanStyle = { fontSize: 10, fontWeight: isActive ? 600 : 400 };
           return (
             <Link
@@ -89,7 +89,7 @@ function MobileBottomNav() {
         {/* Search */}
         <button
           onClick={() => openPalette(true)}
-          className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors text-[#9FA8B5]"
+          className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors text-muted-foreground"
           aria-label={t.app.searchCommands}
           title={t.app.searchCommands}
         >
@@ -101,7 +101,7 @@ function MobileBottomNav() {
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
           <SheetTrigger asChild>
             <button
-              className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors text-[#9FA8B5]"
+              className="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors text-muted-foreground"
               aria-label="More navigation"
             >
               <Menu size={20} strokeWidth={1.5} />
@@ -110,11 +110,11 @@ function MobileBottomNav() {
           </SheetTrigger>
           <SheetContent
             side="bottom"
-            className="rounded-t-2xl border-t border-white/10 p-0"
+            className="rounded-t-2xl border-t border-border p-0"
             style={sheetStyle}
           >
             <div className="px-4 pt-4 pb-2">
-              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4" />
+              <div className="w-10 h-1 rounded-full bg-border mx-auto mb-4" />
               <AppSidebar />
             </div>
           </SheetContent>
@@ -136,14 +136,14 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   }, [workspaceLoading, workspace, router]);
 
   return (
-    <div className="flex h-screen bg-void p-2 gap-2 overflow-hidden relative">
+    <div className="flex h-screen bg-background overflow-hidden relative">
       {/* Sidebar — desktop only */}
       <div className="hidden md:flex">
         <AppSidebar />
       </div>
 
       {/* Main area */}
-      <div className="relative flex-1 flex flex-col overflow-hidden rounded-2xl bg-background min-w-0">
+      <div className="relative flex-1 flex flex-col overflow-hidden bg-background min-w-0">
         <DynamicIsland />
         <AppHeader />
         <ScrollArea className="flex-1">

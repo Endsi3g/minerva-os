@@ -39,49 +39,39 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0D14', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="w-full max-w-[400px] text-center">
         {accepted ? (
           <>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✓</div>
-            <h1 style={{ color: '#7FA38A', fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Invitation accepted</h1>
-            <p style={{ color: '#8A9099', fontSize: 14 }}>Redirecting you to the dashboard...</p>
+            <div className="text-5xl mb-4">&#10003;</div>
+            <h1 className="text-[22px] font-semibold text-emerald-600 mb-2">Invitation accepted</h1>
+            <p className="text-sm text-muted-foreground">Redirecting you to the dashboard...</p>
           </>
         ) : (
           <>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✉</div>
-            <h1 style={{ color: '#F5F1E8', fontSize: 22, fontWeight: 600, marginBottom: 8 }}>You have been invited</h1>
-            <p style={{ color: '#8A9099', fontSize: 14, marginBottom: 32 }}>
+            <div className="text-5xl mb-4">&#9993;</div>
+            <h1 className="text-[22px] font-semibold text-foreground mb-2">You have been invited</h1>
+            <p className="text-sm text-muted-foreground mb-8">
               Accept this invitation to join the workspace. You must be signed in to continue.
             </p>
 
             {error && (
-              <div style={{ backgroundColor: 'rgba(168,106,106,0.12)', border: '1px solid rgba(168,106,106,0.3)', borderRadius: 12, padding: 16, marginBottom: 24 }}>
-                <p style={{ color: '#A86A6A', fontSize: 13, margin: 0 }}>{error}</p>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
+                <p className="text-[13px] text-red-500 m-0">{error}</p>
               </div>
             )}
 
             <button
               onClick={handleAccept}
               disabled={loading}
-              style={{
-                backgroundColor: '#F5F1E8',
-                color: '#0A0D14',
-                border: 'none',
-                borderRadius: 12,
-                padding: '13px 32px',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
-              }}
+              className="bg-foreground text-background border-none rounded-xl px-8 py-3 text-sm font-semibold transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? 'Accepting...' : 'Accept invitation'}
             </button>
 
-            <p style={{ color: '#8A9099', fontSize: 12, marginTop: 16 }}>
+            <p className="text-xs text-muted-foreground mt-4">
               Not signed in?{' '}
-              <a href={`/login?next=/invite/${token}`} style={{ color: '#F5F1E8' }}>Sign in first</a>
+              <a href={`/login?next=/invite/${token}`} className="text-foreground hover:underline">Sign in first</a>
             </p>
           </>
         )}

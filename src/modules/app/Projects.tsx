@@ -1,3 +1,4 @@
+"use client";
 import { useState, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UpgradeBanner } from '@/components/minerva/UpgradeBanner';
@@ -26,10 +27,10 @@ import { useLang } from '@/i18n';
 import { useWorkspaces, useProjects, useClients, useAddProject } from '@/lib/hooks/useSupabase';
 
 const STATUS_COLORS: Record<string, string> = {
-  active:    '#7FA38A',
-  completed: '#B89B6A',
-  paused:    '#8A9099',
-  cancelled: '#A86A6A',
+  active:    'var(--color-sage)',
+  completed: 'var(--color-amber)',
+  paused:    'var(--color-fog)',
+  cancelled: 'var(--color-rose)',
 };
 
 function GanttTimeline({ projects }: { projects: any[] }) {
@@ -93,7 +94,7 @@ function GanttTimeline({ projects }: { projects: any[] }) {
             const right = pct(dueTs);
             const width = Math.max(right - left, 1);
             const isOverdue = dueTs < today && project.status === 'active';
-            const barColor = isOverdue ? '#A86A6A' : STATUS_COLORS[project.status] ?? '#8A9099';
+            const barColor = isOverdue ? 'var(--color-rose)' : STATUS_COLORS[project.status] ?? 'var(--color-fog)';
 
             return (
               <div key={project._id} className="flex items-center gap-2 h-8">
@@ -103,11 +104,11 @@ function GanttTimeline({ projects }: { projects: any[] }) {
                 <div className="flex-1 relative h-full">
                   {/* Grid lines */}
                   {months.map(m => {
-                    const gridLineStyle = { left: `${m.pct}%`, borderColor: 'rgba(255,255,255,0.04)' };
+                    const gridLineStyle = { left: `${m.pct}%` };
                     return (
                       <div
                         key={m.label}
-                        className="absolute top-0 bottom-0 border-l"
+                        className="absolute top-0 bottom-0 border-l border-border"
                         style={gridLineStyle}
                       />
                     );
@@ -160,23 +161,23 @@ function ProjectCardSkeleton() {
     <div className="bg-card border border-border rounded-xl p-5 space-y-4 animate-pulse">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-2 flex-1">
-          <Skeleton className="h-4 w-3/4 bg-white/5" />
-          <Skeleton className="h-3 w-1/2 bg-white/5" />
+          <Skeleton className="h-4 w-3/4 bg-secondary/60" />
+          <Skeleton className="h-3 w-1/2 bg-secondary/60" />
         </div>
-        <Skeleton className="h-5 w-16 rounded-full shrink-0 bg-white/5" />
+        <Skeleton className="h-5 w-16 rounded-full shrink-0 bg-secondary/60" />
       </div>
       <div className="space-y-2">
-        <Skeleton className="h-2 w-full bg-white/5" />
+        <Skeleton className="h-2 w-full bg-secondary/60" />
       </div>
       <div className="space-y-2">
-        <Skeleton className="h-2 w-full bg-white/5" />
+        <Skeleton className="h-2 w-full bg-secondary/60" />
       </div>
       <div className="flex items-center justify-between pt-1">
         <div className="flex -space-x-1.5">
-          <Skeleton className="h-6 w-6 rounded-full bg-white/5" />
-          <Skeleton className="h-6 w-6 rounded-full bg-white/5" />
+          <Skeleton className="h-6 w-6 rounded-full bg-secondary/60" />
+          <Skeleton className="h-6 w-6 rounded-full bg-secondary/60" />
         </div>
-        <Skeleton className="h-3 w-20 bg-white/5" />
+        <Skeleton className="h-3 w-20 bg-secondary/60" />
       </div>
     </div>
   );
@@ -186,7 +187,7 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export default function Projects() {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const p = t.app.projects;
 
   const workspaces = useWorkspaces();
@@ -275,10 +276,10 @@ export default function Projects() {
         </div>
         <div className="flex items-center gap-2">
           {/* View toggle */}
-          <div className="flex items-center rounded-lg overflow-hidden border border-white/8">
+          <div className="flex items-center rounded-lg overflow-hidden border border-border">
             <button
               onClick={() => setViewTab('grid')}
-              className={cn('h-8 px-3 flex items-center gap-1.5 text-xs transition-colors', viewTab === 'grid' ? 'bg-white/10 text-ivory' : 'text-fog hover:text-silver')}
+              className={cn('h-8 px-3 flex items-center gap-1.5 text-xs transition-colors', viewTab === 'grid' ? 'bg-accent text-ivory' : 'text-fog hover:text-silver')}
               aria-label="Grid view"
               title="Grid view"
             >
@@ -286,7 +287,7 @@ export default function Projects() {
             </button>
             <button
               onClick={() => setViewTab('timeline')}
-              className={cn('h-8 px-3 flex items-center gap-1.5 text-xs transition-colors border-l border-white/8', viewTab === 'timeline' ? 'bg-white/10 text-ivory' : 'text-fog hover:text-silver')}
+              className={cn('h-8 px-3 flex items-center gap-1.5 text-xs transition-colors border-l border-border', viewTab === 'timeline' ? 'bg-accent text-ivory' : 'text-fog hover:text-silver')}
               aria-label="Timeline view"
               title="Timeline view"
             >
@@ -304,10 +305,10 @@ export default function Projects() {
       {!isLoading && totalCount > 0 && (
         <div className="flex items-center gap-1.5 mb-6 overflow-x-auto">
           {[
-            { id: 'all' as const, label: lang === 'fr' ? 'Tous' : 'All' },
-            { id: 'active' as const, label: lang === 'fr' ? 'Actifs' : 'Active' },
-            { id: 'at_risk' as const, label: lang === 'fr' ? 'À risque' : 'At Risk' },
-            { id: 'completed' as const, label: lang === 'fr' ? 'Complétés' : 'Completed' },
+            { id: 'all' as const, label: t.app.tasks.filters.all },
+            { id: 'active' as const, label: t.app.common.status.active },
+            { id: 'at_risk' as const, label: 'At Risk' },
+            { id: 'completed' as const, label: t.app.common.status.completed },
           ].map(tab => (
             <button
               key={tab.id}
@@ -315,7 +316,7 @@ export default function Projects() {
               className={cn(
                 "relative px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer select-none",
                 projectFilter === tab.id
-                  ? "bg-white/10 text-ivory border-white/15 shadow-sm"
+                  ? "bg-accent text-foreground border-border shadow-sm"
                   : "bg-transparent text-fog border-transparent hover:text-silver"
               )}
             >
@@ -332,13 +333,13 @@ export default function Projects() {
           {[1, 2, 3].map(i => <ProjectCardSkeleton key={i} />)}
         </div>
       ) : totalCount === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-white/5 p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-fog">
+        <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-border p-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/60 border border-border text-fog">
             <GanttChartSquare size={20} />
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-medium text-ivory">{lang === 'fr' ? 'Aucun projet trouvé' : 'No projects found'}</p>
-            <p className="text-xs text-fog max-w-xs">{lang === 'fr' ? 'Créez votre premier projet pour commencer à suivre votre travail.' : 'Create your first project to start tracking deliverables.'}</p>
+            <p className="text-sm font-medium text-ivory">{p.noProjects}</p>
+            <p className="text-xs text-fog max-w-xs">{'Create your first project to start tracking deliverables.'}</p>
           </div>
           <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }} className="rounded-full">
             <Plus size={14} className="mr-1.5" />

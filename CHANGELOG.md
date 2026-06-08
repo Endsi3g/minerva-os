@@ -5,6 +5,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [7.0.0] — 2026-06-08
+
+### Changed — StackAI Light Mode design system
+
+Complete visual redesign of Minerva OS from "Celestial Editorial Noir" (dark-first) to **StackAI Light Mode** — a clean, enterprise-grade light aesthetic with indigo accent, precise shadows, and full semantic token coverage.
+
+- **Design tokens** (`src/index.css`): Full `:root` palette rewrite — white background (`#FFFFFF`), indigo primary (`#4F46E5`), `#F8FAFC` sidebar, slate foreground (`#0F172A`), soft borders (`#E2E8F0`). Dark mode preserved with toggle, updated to indigo primary (`#818CF8`).
+- **Typography**: Playfair Display removed. Full Inter sans-serif across all surfaces.
+- **AppSidebar** (`src/components/layout/AppSidebar.tsx`): Complete rewrite — inline SVG "M" logo with indigo badge, three nav sections (Workspace / Intelligence / Finance), collapsed 56px icon mode with Radix tooltips, plan usage card.
+- **AppHeader** (`src/components/layout/AppHeader.tsx`): Light mode — white background, muted-foreground icons, semantic hover states.
+- **AppShell** (`src/components/layout/AppShell.tsx`): Mobile nav redesigned with CSS variable colors, removed hardcoded dark values.
+- **ChatSidebar** (`src/components/layout/ChatSidebar.tsx`): User bubbles indigo, assistant bubbles secondary, full light mode.
+- **All 40 app modules**: 179 hardcoded hex values (`#0A0D14`, `#111522`, `#F5F1E8`, etc.) replaced with semantic Tailwind tokens.
+- **All portal modules** (10 routes): Same hex-to-token migration.
+- **Auth pages** (forgot-password, reset-password, verify-email, invite, offline, not-found): Inline dark styles converted to CSS variable references.
+- **Theme default** (`src/theme.tsx`): `'dark'` → `'light'`.
+- **Viewport theme color** (`src/app/layout.tsx`): `#0A0D14` → `#FFFFFF`.
+
+### Added
+
+- **`src/lib/status.ts`**: Centralised status pill styles (`STATUS_STYLES`, `STATUS_STYLES_DARK`, `statusClass()`) — soft pastel pills replacing hardcoded color strings across all modules.
+- **i18n corrections**: Billing (21 toasts), Pipeline (1), Tasks (5), Projects (6) — replaced `lang === 'fr' ?` branching with `t.*` keys.
+
+### Fixed — Next.js 15 build compatibility
+
+- **`@thesvg/react` not installed**: Replaced `import { Google, Github }` in `SignUp.tsx` with inline SVG components.
+- **`date-fns` + `motion` in `optimizePackageImports`**: Removed from `next.config.ts` — caused `TypeError: Cannot read properties of undefined (reading 'length')` during webpack compilation.
+- **`/welcome/page.tsx`**: Converted `'use client'` redirect to server-side `redirect()` call.
+- **`/login/page.tsx`**: Converted to server component with `force-dynamic` and `<Suspense>` boundary.
+- **`/app/app/layout.tsx`**: Removed `'use client'`, added `export const dynamic = 'force-dynamic'` and `<Suspense>` — resolves `useSearchParams()` prerender errors across all `/app/*` routes.
+- **`'use client'` directives**: Added to `Billing.tsx`, `Projects.tsx`, `Pipeline.tsx`, `Tasks.tsx`, `Approvals.tsx`, `Reports.tsx` — previously missing, causing server component import errors.
+- **`/app/app/billing/page.tsx`**, **`/app/app/clients/page.tsx`**, **`/app/app/projects/page.tsx`**: Converted to server components with Suspense.
+
+---
+
 ## [4.7.0] — 2026-06-07
 
 ### Added

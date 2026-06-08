@@ -1,3 +1,4 @@
+"use client";
 import { useState, useMemo } from 'react';
 import { Search, Plus, ChevronDown, ChevronUp, FileDown, Link2, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,14 +30,14 @@ function printInvoice(invoice: any, client: any, lang: string) {
 
   const html = `<!DOCTYPE html><html><head><title>${invoice.invoiceNumber}</title>
   <style>
-    body{font-family:Inter,system-ui,sans-serif;color:#111;padding:48px;max-width:780px;margin:0 auto}
+    body{font-family:Inter,system-ui,sans-serif;background-color:#FFFFFF;color:#0F172A;padding:48px;max-width:780px;margin:0 auto}
     h1{font-size:28px;margin-bottom:4px}
-    .meta{color:#555;font-size:13px;margin-bottom:32px}
+    .meta{color:#374151;font-size:13px;margin-bottom:32px}
     table{width:100%;border-collapse:collapse;margin-top:24px}
-    th{border-bottom:2px solid #111;padding:8px 4px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
-    td{padding:8px 4px;font-size:13px;border-bottom:1px solid #eee}
-    .total-row td{font-weight:600;border-top:2px solid #111;border-bottom:none}
-    .footer{margin-top:48px;font-size:12px;color:#777}
+    th{border-bottom:2px solid #0F172A;padding:8px 4px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+    td{padding:8px 4px;font-size:13px;border-bottom:1px solid #E5E7EB}
+    .total-row td{font-weight:600;border-top:2px solid #0F172A;border-bottom:none}
+    .footer{margin-top:48px;font-size:12px;color:#6B7280}
     @media print{body{padding:0}}
   </style></head><body>
   <h1>${invoice.invoiceNumber}</h1>
@@ -118,11 +119,10 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
 
   return (
     <div
-      className="rounded-xl border overflow-hidden transition-colors duration-200"
-      style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+      className="rounded-xl border overflow-hidden transition-colors duration-200 bg-secondary/60 border-border"
     >
       <div
-        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.015]"
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent"
         onClick={() => setExpanded(e => !e)}
       >
         {/* Number */}
@@ -170,7 +170,7 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-3 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="px-4 pb-3 pt-1 border-t border-border">
               <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -183,7 +183,7 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
                 </thead>
                 <tbody>
                   {invoice.items.map((item: any, i: number) => (
-                    <tr key={i} className="border-t" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+                    <tr key={i} className="border-t border-border">
                       <td className="py-1.5 text-silver">{item.description}</td>
                       <td className="py-1.5 text-right text-fog tabular-nums">{item.quantity}</td>
                       <td className="py-1.5 text-right text-fog tabular-nums">{fmt(item.price, lang)}</td>
@@ -192,7 +192,7 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <tr className="border-t border-border">
                     <td colSpan={3} className="pt-2 text-right text-fog font-medium">Total</td>
                     <td className="pt-2 text-right text-ivory font-semibold tabular-nums">{fmt(invoice.amount, lang)}</td>
                   </tr>
@@ -201,10 +201,10 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
               </div>
 
               {/* Invoice actions */}
-              <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
                 <button
                   onClick={() => printInvoice(invoice, client, lang)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-fog hover:text-ivory transition-colors hover:bg-white/5"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-fog hover:text-ivory transition-colors hover:bg-accent"
                 >
                   <FileDown size={12} />
                   {b.actions.exportPdf}
@@ -219,7 +219,7 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
                         ? 'text-sage bg-sage/10'
                         : linkFeedback === 'error'
                           ? 'text-ember bg-ember/10'
-                          : 'text-fog hover:text-ivory hover:bg-white/5'
+                          : 'text-fog hover:text-ivory hover:bg-accent'
                     )}
                   >
                     {generatingLink
@@ -246,9 +246,9 @@ function InvoiceRow({ invoice, t, lang, clients }: { invoice: any; t: any; lang:
 function KpiSkeleton() {
   return (
     <div className="bg-card border border-border rounded-xl p-4 animate-pulse space-y-2">
-      <Skeleton className="h-6 w-24 bg-white/5" />
-      <Skeleton className="h-4 w-16 bg-white/5" />
-      <Skeleton className="h-3 w-32 bg-white/5" />
+      <Skeleton className="h-6 w-24 bg-secondary/60" />
+      <Skeleton className="h-4 w-16 bg-secondary/60" />
+      <Skeleton className="h-3 w-32 bg-secondary/60" />
     </div>
   );
 }
@@ -258,13 +258,13 @@ function RetainerCardSkeleton() {
     <div className="rounded-xl border border-border bg-card p-4 animate-pulse space-y-4">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <Skeleton className="h-4 w-28 bg-white/5" />
-          <Skeleton className="h-3 w-20 bg-white/5" />
+          <Skeleton className="h-4 w-28 bg-secondary/60" />
+          <Skeleton className="h-3 w-20 bg-secondary/60" />
         </div>
-        <Skeleton className="h-4 w-16 bg-white/5" />
+        <Skeleton className="h-4 w-16 bg-secondary/60" />
       </div>
       <div className="space-y-2">
-        <Skeleton className="h-2 w-full bg-white/5" />
+        <Skeleton className="h-2 w-full bg-secondary/60" />
       </div>
     </div>
   );
@@ -272,12 +272,12 @@ function RetainerCardSkeleton() {
 
 function InvoiceRowSkeleton() {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.01] px-4 py-3 flex items-center gap-4 animate-pulse">
-      <Skeleton className="h-4 w-24 bg-white/5 shrink-0" />
-      <Skeleton className="h-4 w-32 bg-white/5 flex-1" />
-      <Skeleton className="h-5 w-16 bg-white/5 rounded-full shrink-0" />
-      <Skeleton className="h-4 w-24 bg-white/5 shrink-0 hidden md:block" />
-      <Skeleton className="h-4 w-16 bg-white/5 shrink-0" />
+    <div className="rounded-xl border border-border bg-secondary/60 px-4 py-3 flex items-center gap-4 animate-pulse">
+      <Skeleton className="h-4 w-24 bg-secondary/60 shrink-0" />
+      <Skeleton className="h-4 w-32 bg-secondary/60 flex-1" />
+      <Skeleton className="h-5 w-16 bg-secondary/60 rounded-full shrink-0" />
+      <Skeleton className="h-4 w-24 bg-secondary/60 shrink-0 hidden md:block" />
+      <Skeleton className="h-4 w-16 bg-secondary/60 shrink-0" />
     </div>
   );
 }
@@ -327,7 +327,7 @@ export default function Billing() {
 
   async function handleAddInvoice() {
     if (!newInvoiceForm.clientId || !newInvoiceForm.amount) {
-      toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill all required fields');
+      toast.error('Please fill all required fields');
       return;
     }
     setAddingInvoice(true);
@@ -345,11 +345,11 @@ export default function Billing() {
         tps: 0,
         tvq: 0,
       });
-      toast.success(lang === 'fr' ? 'Facture créée.' : 'Invoice created.');
+      toast.success('Invoice created.');
       setInvoiceSheetOpen(false);
       setNewInvoiceForm({ clientId: '', description: '', amount: '', dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] });
     } catch {
-      toast.error(lang === 'fr' ? 'Impossible de créer la facture.' : 'Could not create invoice.');
+      toast.error('Could not create invoice.');
     } finally {
       setAddingInvoice(false);
     }
@@ -357,7 +357,7 @@ export default function Billing() {
 
   async function handleAddRetainer() {
     if (!newRetainerForm.clientId || !newRetainerForm.amount || !newRetainerForm.hoursIncluded) {
-      toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill all required fields');
+      toast.error('Please fill all required fields');
       return;
     }
     try {
@@ -383,7 +383,7 @@ export default function Billing() {
         hoursUsed: 0,
         notes: newRetainerForm.notes || undefined,
       });
-      toast.success(lang === 'fr' ? 'Forfait ajouté avec succès' : 'Retainer added successfully');
+      toast.success('Retainer added successfully');
       setRetainerSheetOpen(false);
       setNewRetainerForm({
         clientId: '',
@@ -395,7 +395,7 @@ export default function Billing() {
       });
     } catch (e) {
       console.error(e);
-      toast.error(lang === 'fr' ? "Erreur lors de la création du forfait" : "Failed to create retainer");
+      toast.error('Failed to create retainer');
     }
   }
 
@@ -474,8 +474,8 @@ export default function Billing() {
             {[1, 2, 3].map(i => <RetainerCardSkeleton key={i} />)}
           </div>
         ) : activeRetainersCount === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center gap-3 bg-midnight/20 rounded-xl border border-white/5 p-6">
-            <p className="text-sm text-silver font-medium">{lang === 'fr' ? 'Aucun contrat de forfait' : 'No retainer agreements'}</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center gap-3 bg-midnight/20 rounded-xl border border-border p-6">
+            <p className="text-sm text-silver font-medium">{'No retainer agreements'}</p>
             <p className="text-xs text-fog max-w-xs">{b.retainers.empty}</p>
             <Button size="sm" variant="outline" onClick={() => setRetainerSheetOpen(true)} className="rounded-full">
               <Plus size={14} className="mr-1.5" />
@@ -487,7 +487,7 @@ export default function Billing() {
             {retainers?.filter((r: any) => r.status === 'active').map((ret: any) => {
               const client = clients?.find((c: any) => c._id === ret.clientId);
               const pct = ret.hoursIncluded > 0 ? Math.round((ret.hoursUsed / ret.hoursIncluded) * 100) : 0;
-              const barColor = pct >= 100 ? '#A86A6A' : pct >= 80 ? '#B89B6A' : '#7FA38A';
+              const barColor = pct >= 100 ? 'var(--color-rose)' : pct >= 80 ? 'var(--color-amber)' : 'var(--color-sage)';
               return (
                 <div key={ret._id} className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-start justify-between mb-3">
@@ -537,8 +537,7 @@ export default function Billing() {
                 {filter === f.id && (
                   <motion.span
                     layoutId="billing-filter-pill"
-                    className="absolute inset-0 rounded-lg"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+                    className="absolute inset-0 rounded-lg bg-accent"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
                   />
                 )}
@@ -555,12 +554,7 @@ export default function Billing() {
               placeholder={b.invoices.searchPlaceholder}
               value={query}
               onChange={e => setQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 rounded-lg text-xs text-ivory placeholder:text-fog outline-none transition-colors"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                fontFamily: "'Inter', sans-serif",
-              }}
+              className="pl-8 pr-3 py-1.5 rounded-lg text-xs text-foreground placeholder:text-fog outline-none transition-colors bg-secondary/60 border border-border"
             />
           </div>
         </div>
@@ -571,8 +565,8 @@ export default function Billing() {
               {[1, 2, 3].map(i => <InvoiceRowSkeleton key={i} />)}
             </div>
           ) : visible.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center gap-3 bg-midnight/20 rounded-xl border border-white/5 p-6">
-              <p className="text-sm text-silver font-medium">{lang === 'fr' ? 'Aucune facture' : 'No invoices'}</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center gap-3 bg-midnight/20 rounded-xl border border-border p-6">
+              <p className="text-sm text-silver font-medium">{'No invoices'}</p>
               <p className="text-xs text-fog max-w-xs">{b.invoices.empty}</p>
             </div>
           ) : (
@@ -580,7 +574,7 @@ export default function Billing() {
               {visible.map((inv: any) => <InvoiceRow key={inv._id} invoice={inv} t={t} lang={lang} clients={clients} />)}
               
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4 px-1 py-2 border-t border-white/5">
+                <div className="flex items-center justify-between mt-4 px-1 py-2 border-t border-border">
                   <span className="text-xs text-fog">
                     Showing {Math.min((page - 1) * pageSize + 1, totalInvoicesCount)}-{Math.min(page * pageSize, totalInvoicesCount)} of {totalInvoicesCount} invoices
                   </span>
@@ -590,7 +584,7 @@ export default function Billing() {
                       variant="outline"
                       onClick={() => setPage(p => Math.max(p - 1, 1))}
                       disabled={page === 1}
-                      className="border-white/10 text-fog hover:text-ivory"
+                      className="border-border text-fog hover:text-ivory"
                     >
                       Previous
                     </Button>
@@ -600,7 +594,7 @@ export default function Billing() {
                       variant="outline"
                       onClick={() => setPage(p => Math.min(p + 1, totalPages))}
                       disabled={page === totalPages}
-                      className="border-white/10 text-fog hover:text-ivory"
+                      className="border-border text-fog hover:text-ivory"
                     >
                       Next
                     </Button>
@@ -627,7 +621,7 @@ export default function Billing() {
                 onValueChange={v => setNewRetainerForm(f => ({ ...f, clientId: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={lang === 'fr' ? 'Sélectionner un client' : 'Select a client'} />
+                  <SelectValue placeholder={'Select a client'} />
                 </SelectTrigger>
                 <SelectContent>
                   {clients?.map((c: any) => (
@@ -640,7 +634,7 @@ export default function Billing() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>{lang === 'fr' ? 'Montant (USD)' : 'Amount (USD)'}</Label>
+              <Label>{'Amount (USD)'}</Label>
               <Input
                 type="number"
                 placeholder="3000"
@@ -659,9 +653,9 @@ export default function Billing() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="monthly">{lang === 'fr' ? 'Mensuel' : 'Monthly'}</SelectItem>
-                  <SelectItem value="quarterly">{lang === 'fr' ? 'Trimestriel' : 'Quarterly'}</SelectItem>
-                  <SelectItem value="annual">{lang === 'fr' ? 'Annuel' : 'Annual'}</SelectItem>
+                  <SelectItem value="monthly">{'Monthly'}</SelectItem>
+                  <SelectItem value="quarterly">{'Quarterly'}</SelectItem>
+                  <SelectItem value="annual">{'Annual'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -677,7 +671,7 @@ export default function Billing() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>{lang === 'fr' ? 'Date de début' : 'Start Date'}</Label>
+              <Label>{'Start Date'}</Label>
               <Input
                 type="date"
                 value={newRetainerForm.startDate}
@@ -686,7 +680,7 @@ export default function Billing() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>{lang === 'fr' ? 'Notes (optionnel)' : 'Notes (optional)'}</Label>
+              <Label>{'Notes (optional)'}</Label>
               <Input
                 placeholder="..."
                 value={newRetainerForm.notes}
@@ -696,22 +690,22 @@ export default function Billing() {
           </div>
 
           <Button className="w-full" onClick={handleAddRetainer}>
-            {lang === 'fr' ? 'Créer le forfait' : 'Create Retainer'}
+            {'Create Retainer'}
           </Button>
         </SheetContent>
       </Sheet>
 
       <Sheet open={invoiceSheetOpen} onOpenChange={setInvoiceSheetOpen}>
-        <SheetContent side="right" className="w-80 bg-midnight border-l border-white/8">
-          <SheetHeader className="pb-4 border-b border-white/8">
+        <SheetContent side="right" className="w-80 bg-midnight border-l border-border">
+          <SheetHeader className="pb-4 border-b border-border">
             <SheetTitle className="text-base font-semibold text-ivory">{b.newInvoice}</SheetTitle>
           </SheetHeader>
           <div className="py-5 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-silver">{lang === 'fr' ? 'Client' : 'Client'} *</Label>
+              <Label className="text-xs font-medium text-silver">Client *</Label>
               <Select value={newInvoiceForm.clientId} onValueChange={v => setNewInvoiceForm(f => ({ ...f, clientId: v }))}>
                 <SelectTrigger className="rounded-xl bg-obsidian border-border text-ivory text-sm h-10">
-                  <SelectValue placeholder={lang === 'fr' ? 'Sélectionner un client' : 'Select client'} />
+                  <SelectValue placeholder={'Select client'} />
                 </SelectTrigger>
                 <SelectContent>
                   {(clients ?? []).map((c: any) => (
@@ -721,16 +715,16 @@ export default function Billing() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-silver">{lang === 'fr' ? 'Description' : 'Description'}</Label>
+              <Label className="text-xs font-medium text-silver">Description</Label>
               <Input
                 value={newInvoiceForm.description}
                 onChange={e => setNewInvoiceForm(f => ({ ...f, description: e.target.value }))}
-                placeholder={lang === 'fr' ? 'Services rendus' : 'Services rendered'}
+                placeholder={'Services rendered'}
                 className="rounded-xl bg-obsidian border-border text-ivory text-sm h-10"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-silver">{lang === 'fr' ? 'Montant (USD)' : 'Amount (USD)'} *</Label>
+              <Label className="text-xs font-medium text-silver">Amount (USD) *</Label>
               <Input
                 type="number"
                 value={newInvoiceForm.amount}
@@ -740,7 +734,7 @@ export default function Billing() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-silver">{lang === 'fr' ? 'Échéance' : 'Due Date'}</Label>
+              <Label className="text-xs font-medium text-silver">Due Date</Label>
               <Input
                 type="date"
                 value={newInvoiceForm.dueDate}
@@ -751,11 +745,11 @@ export default function Billing() {
           </div>
           <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setInvoiceSheetOpen(false)}>
-              {lang === 'fr' ? 'Annuler' : 'Cancel'}
+              {t.app.common.cancel}
             </Button>
             <Button className="flex-1 rounded-xl" onClick={handleAddInvoice} disabled={addingInvoice}>
               {addingInvoice ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-              {lang === 'fr' ? 'Créer' : 'Create'}
+              {'Create'}
             </Button>
           </div>
         </SheetContent>

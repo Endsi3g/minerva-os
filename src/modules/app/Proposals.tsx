@@ -47,7 +47,7 @@ type ProposalTemplate = { label: string; color: string; sections: Section[] };
 const PROPOSAL_TEMPLATES: Record<string, ProposalTemplate> = {
   brand_identity: {
     label: 'Brand Identity',
-    color: '#B89B6A',
+    color: 'var(--color-amber)',
     sections: [
       { type: 'intro', content: 'We are pleased to present this brand identity proposal. This engagement covers the complete development of a visual identity system — from strategic positioning through final asset delivery.' },
       { type: 'scope', content: '· Brand strategy and positioning workshop\n· Logo system: primary, secondary, and icon marks\n· Colour palette, typography system, and spacing guidelines\n· Brand guidelines document (digital PDF)\n· Core asset package: business card, letterhead, email signature\n\nExclusions: Website design, photography, video production, social media templates.' },
@@ -58,7 +58,7 @@ const PROPOSAL_TEMPLATES: Record<string, ProposalTemplate> = {
   },
   web_design: {
     label: 'Web Design',
-    color: '#7FA38A',
+    color: 'var(--color-sage)',
     sections: [
       { type: 'intro', content: 'We are pleased to present this website design proposal. This engagement covers strategic design and user experience from discovery through developer-ready handoff.' },
       { type: 'scope', content: '· UX strategy and site map definition\n· Wireframes for all key page templates\n· High-fidelity design in Figma (desktop + mobile)\n· Design system: components, states, and interaction notes\n· Developer handoff package with specs and assets\n\nExclusions: Frontend development, CMS setup, copywriting, photography.' },
@@ -69,7 +69,7 @@ const PROPOSAL_TEMPLATES: Record<string, ProposalTemplate> = {
   },
   web_development: {
     label: 'Web Development',
-    color: '#8A9099',
+    color: 'var(--color-fog)',
     sections: [
       { type: 'intro', content: 'We are pleased to present this web development proposal. This engagement covers full-stack implementation from technical setup through deployment and handoff.' },
       { type: 'scope', content: '· Technical architecture and stack selection\n· Frontend development (Next.js / React)\n· Backend API development and database setup\n· CMS integration and content entry\n· Staging environment and QA testing\n· Production deployment and DNS configuration\n\nExclusions: Ongoing maintenance (available as retainer), third-party API costs, copywriting.' },
@@ -80,7 +80,7 @@ const PROPOSAL_TEMPLATES: Record<string, ProposalTemplate> = {
   },
   content_strategy: {
     label: 'Content Strategy',
-    color: '#B8BDC7',
+    color: 'var(--color-silver)',
     sections: [
       { type: 'intro', content: 'We are pleased to present this content strategy proposal. This engagement defines content direction, voice, and execution roadmap to build a consistent, high-impact brand presence.' },
       { type: 'scope', content: '· Content audit and competitive analysis\n· Brand voice and tone guidelines\n· Content pillars and messaging framework\n· 90-day content calendar with topic suggestions\n· Copywriting for up to 4 core web pages\n\nExclusions: Ongoing content production, paid media, social media management.' },
@@ -91,7 +91,7 @@ const PROPOSAL_TEMPLATES: Record<string, ProposalTemplate> = {
   },
   ux_audit: {
     label: 'UX Audit',
-    color: '#A86A6A',
+    color: 'var(--color-rose)',
     sections: [
       { type: 'intro', content: 'We are pleased to present this UX audit proposal. This engagement delivers a structured expert review of your current product, identifying friction points and prioritized opportunities to improve conversion and user satisfaction.' },
       { type: 'scope', content: '· Heuristic evaluation against 10 established UX principles\n· User flow mapping and friction point identification\n· Accessibility assessment (WCAG 2.1 AA)\n· Annotated audit report with severity ratings (critical / major / minor)\n· Prioritized recommendations roadmap\n\nExclusions: User testing recruitment and sessions, implementation of recommendations.' },
@@ -102,7 +102,7 @@ const PROPOSAL_TEMPLATES: Record<string, ProposalTemplate> = {
   },
   retainer: {
     label: 'Retainer',
-    color: '#7FA38A',
+    color: 'var(--color-sage)',
     sections: [
       { type: 'intro', content: 'We are pleased to present this retainer agreement. This ongoing engagement provides dedicated, priority access to our team for a defined monthly scope — enabling faster delivery and a consistent creative partnership.' },
       { type: 'scope', content: '· Up to 40 hours of creative and strategic work per month\n· Priority turnaround (48-hr response guarantee)\n· Weekly check-in call (30 minutes)\n· Monthly reporting summary\n· Access to all service disciplines: strategy, design, development\n\nExclusions: Out-of-scope work beyond monthly hours (billed at overage rate). Hours do not roll over.' },
@@ -203,7 +203,7 @@ function ProposalCopilot({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Sparkles size={13} className="text-sage animate-pulse" />
             <span className="text-sm font-semibold text-ivory">Quick Proposal</span>
@@ -252,7 +252,7 @@ function ProposalCopilot({
                         'px-3 py-1.5 rounded-full text-xs border transition-colors',
                         serviceType === s
                           ? 'bg-sage/15 text-sage border-sage/30'
-                          : 'text-fog border-white/10 hover:border-white/20 hover:text-silver'
+                          : 'text-fog border-border hover:border-border hover:text-silver'
                       )}
                     >
                       {s}
@@ -465,7 +465,7 @@ function ProposalForm({
         className="w-full max-w-2xl rounded-2xl flex flex-col max-h-[90vh] bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-5 border-b border-white/5">
+        <div className="flex items-center justify-between p-5 border-b border-border">
           <h2 className="text-sm font-semibold text-ivory">{t.app.proposals.newProposal}</h2>
           <button type="button" onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
@@ -498,7 +498,7 @@ function ProposalForm({
                     'px-2.5 py-1 rounded-full text-xs transition-all border',
                     activeTemplate === key
                       ? 'border-transparent font-medium'
-                      : 'text-fog border-white/10 hover:border-white/20'
+                      : 'text-fog border-border hover:border-border'
                   )}
                   style={(() => {
                     const templateStyle = activeTemplate === key ? { backgroundColor: `${tpl.color}20`, color: tpl.color, borderColor: `${tpl.color}40` } : {};
@@ -536,7 +536,7 @@ function ProposalForm({
                 disabled={generating || !aiBrief.trim()}
                 size="sm"
                 variant="outline"
-                className="text-[10px] h-7 border-white/10 font-sans"
+                className="text-[10px] h-7 border-border font-sans"
               >
                 {generating ? (
                   <>
@@ -567,7 +567,7 @@ function ProposalForm({
                       'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors border',
                       selectedServices.includes(s._id)
                         ? 'bg-sage/15 text-sage border-sage/30'
-                        : 'text-fog border-white/10 hover:border-white/20'
+                        : 'text-fog border-border hover:border-border'
                     )}
                   >
                     {selectedServices.includes(s._id) && <Check size={10} />}
@@ -580,7 +580,7 @@ function ProposalForm({
 
           {/* Section tabs */}
           <div>
-            <div className="flex gap-1 border-b border-white/5 mb-3">
+            <div className="flex gap-1 border-b border-border mb-3">
               {sections.map(s => (
                 <button
                   key={s.type}
@@ -610,7 +610,7 @@ function ProposalForm({
           </div>
         </div>
 
-        <div className="flex gap-2 p-5 border-t border-white/5">
+        <div className="flex gap-2 p-5 border-t border-border">
           <button type="button" onClick={onClose} className="flex-1 py-2 text-xs text-fog hover:text-silver">{f.cancel}</button>
           <Button type="submit" size="sm" className="flex-1" disabled={saving}>{f.save}</Button>
         </div>
@@ -818,7 +818,7 @@ export default function Proposals() {
             return (
               <div
                 key={proposal._id}
-                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-white/15 bg-midnight border-border"
+                className="flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors hover:border-border bg-midnight border-border"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-ivory truncate">{proposal.title}</p>
@@ -844,7 +844,7 @@ export default function Proposals() {
                     onClick={() => copyLink(proposal)}
                     className={cn(
                       'h-7 w-7 flex items-center justify-center rounded-md transition-colors',
-                      isCopied ? 'text-sage bg-sage/10' : 'text-fog hover:text-ivory hover:bg-white/5'
+                      isCopied ? 'text-sage bg-sage/10' : 'text-fog hover:text-ivory hover:bg-accent'
                     )}
                     title={isCopied ? p.actions.linkCopied : p.actions.copyLink}
                   >
@@ -853,7 +853,7 @@ export default function Proposals() {
                   <button
                     onClick={() => exportPDF(proposal)}
                     disabled={exportingId === proposal._id}
-                    className="h-7 w-7 flex items-center justify-center rounded-md text-fog hover:text-ivory hover:bg-white/5 transition-colors disabled:opacity-40"
+                    className="h-7 w-7 flex items-center justify-center rounded-md text-fog hover:text-ivory hover:bg-accent transition-colors disabled:opacity-40"
                     title="Export PDF"
                   >
                     {exportingId === proposal._id

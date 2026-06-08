@@ -23,47 +23,47 @@ function FinanceSkeleton() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <Skeleton className="h-8 w-48 bg-white/5" />
-          <Skeleton className="h-4 w-32 bg-white/5" />
+          <Skeleton className="h-8 w-48 bg-secondary/60" />
+          <Skeleton className="h-4 w-32 bg-secondary/60" />
         </div>
-        <Skeleton className="h-9 w-28 bg-white/5 rounded-full" />
+        <Skeleton className="h-9 w-28 bg-secondary/60 rounded-full" />
       </div>
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-white/5 bg-midnight p-6 space-y-3">
-            <Skeleton className="h-3 w-20 bg-white/5" />
-            <Skeleton className="h-8 w-28 bg-white/5" />
+          <div key={i} className="rounded-xl border border-border bg-midnight p-6 space-y-3">
+            <Skeleton className="h-3 w-20 bg-secondary/60" />
+            <Skeleton className="h-8 w-28 bg-secondary/60" />
           </div>
         ))}
       </div>
 
       {/* Tax box */}
-      <div className="bg-dusk/30 rounded-2xl p-6 border border-white/5 space-y-4">
-        <Skeleton className="h-5 w-48 bg-white/5" />
+      <div className="bg-dusk/30 rounded-2xl p-6 border border-border space-y-4">
+        <Skeleton className="h-5 w-48 bg-secondary/60" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
           <div className="space-y-2">
-            <Skeleton className="h-4 w-3/4 bg-white/5" />
-            <Skeleton className="h-2 w-full bg-white/5 rounded-full" />
+            <Skeleton className="h-4 w-3/4 bg-secondary/60" />
+            <Skeleton className="h-2 w-full bg-secondary/60 rounded-full" />
           </div>
           <div className="space-y-2">
-            <Skeleton className="h-4 w-3/4 bg-white/5" />
-            <Skeleton className="h-2 w-full bg-white/5 rounded-full" />
+            <Skeleton className="h-4 w-3/4 bg-secondary/60" />
+            <Skeleton className="h-2 w-full bg-secondary/60 rounded-full" />
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-midnight rounded-2xl border border-white/5 overflow-hidden">
-        <div className="h-10 bg-white/[0.02] border-b border-white/5" />
+      <div className="bg-midnight rounded-2xl border border-border overflow-hidden">
+        <div className="h-10 bg-secondary/60 border-b border-border" />
         <div className="divide-y divide-white/5">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="p-6 flex justify-between gap-4">
-              <Skeleton className="h-4 w-20 bg-white/5" />
-              <Skeleton className="h-4 w-40 bg-white/5" />
-              <Skeleton className="h-4 w-16 bg-white/5" />
-              <Skeleton className="h-4 w-12 bg-white/5" />
+              <Skeleton className="h-4 w-20 bg-secondary/60" />
+              <Skeleton className="h-4 w-40 bg-secondary/60" />
+              <Skeleton className="h-4 w-16 bg-secondary/60" />
+              <Skeleton className="h-4 w-12 bg-secondary/60" />
             </div>
           ))}
         </div>
@@ -170,7 +170,7 @@ function Profitability() {
 
       {/* Summary Cards - Notion Style */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-midnight border-white/5 shadow-card spotlight-amber">
+        <Card className="bg-midnight border-border shadow-card spotlight-amber">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-fog uppercase tracking-wider flex items-center justify-between">
               {f.revenue} <TrendingUp size={14} className="text-sage" />
@@ -181,7 +181,7 @@ function Profitability() {
           </CardContent>
         </Card>
 
-        <Card className="bg-midnight border-white/5 shadow-card spotlight-rose">
+        <Card className="bg-midnight border-border shadow-card spotlight-rose">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-fog uppercase tracking-wider flex items-center justify-between">
               {f.expenses} <TrendingDown size={14} className="text-ember" />
@@ -192,7 +192,7 @@ function Profitability() {
           </CardContent>
         </Card>
 
-        <Card className="bg-midnight border-white/5 shadow-card ring-1 ring-sage/20 spotlight-sage">
+        <Card className="bg-midnight border-border shadow-card ring-1 ring-sage/20 spotlight-sage">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-fog uppercase tracking-wider flex items-center justify-between">
               {f.netProfit} <Wallet size={14} className="text-sage" />
@@ -205,7 +205,7 @@ function Profitability() {
       </div>
 
       {/* Tax Report Section */}
-      <div className="bg-dusk/30 rounded-2xl p-6 border border-white/5">
+      <div className="bg-dusk/30 rounded-2xl p-6 border border-border">
         <div className="flex items-center gap-2 mb-4 text-ivory">
           <Calculator size={18} className="text-warm" />
           <TextAnimate text={f.qcTaxSummary} type="fadeIn" className="text-lg font-medium" />
@@ -218,7 +218,7 @@ function Profitability() {
                 {fmt(totals.tpsNet)}
               </span>
             </div>
-            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+            <div className="w-full h-1 bg-secondary/60 rounded-full overflow-hidden">
               <div className="h-full bg-warm" style={{ width: '40%' }} />
             </div>
           </div>
@@ -229,7 +229,7 @@ function Profitability() {
                 {fmt(totals.tvqNet)}
               </span>
             </div>
-            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+            <div className="w-full h-1 bg-secondary/60 rounded-full overflow-hidden">
               <div className="h-full bg-warm" style={{ width: '60%' }} />
             </div>
           </div>
@@ -237,10 +237,10 @@ function Profitability() {
       </div>
 
       {/* Transactions Table */}
-      <div className="bg-midnight rounded-2xl border border-white/5 overflow-hidden">
+      <div className="bg-midnight rounded-2xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="bg-white/[0.02] border-b border-white/5">
+          <thead className="bg-secondary/60 border-b border-border">
             <tr>
               <th className="px-6 py-4 text-xs font-medium text-fog uppercase tracking-wider">Date</th>
               <th className="px-6 py-4 text-xs font-medium text-fog uppercase tracking-wider">Description</th>
@@ -259,11 +259,11 @@ function Profitability() {
               </tr>
             ) : (
               finances?.map((entry: any) => (
-                <tr key={entry._id} className="hover:bg-white/[0.01] transition-colors">
+                <tr key={entry._id} className="hover:bg-accent transition-colors">
                   <td className="px-6 py-4 text-sm text-silver">{entry.date}</td>
                   <td className="px-6 py-4 text-sm text-ivory font-medium">{entry.description}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-dusk text-fog border border-white/5">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-dusk text-fog border border-border">
                       {entry.category}
                     </span>
                   </td>
@@ -283,7 +283,7 @@ function Profitability() {
       {/* Add Entry Modal - Notion Minimalist */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-midnight border border-white/10 rounded-2xl p-6 shadow-2xl">
+          <div className="w-full max-w-md bg-midnight border border-border rounded-2xl p-6 shadow-2xl">
             <h2 className="text-xl font-serif text-ivory mb-6">{f.newTransaction}</h2>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -307,7 +307,7 @@ function Profitability() {
                   value={form.description} 
                   onChange={e => setForm({ ...form, description: e.target.value })}
                   placeholder="e.g. Client Monthly Retainer"
-                  className="bg-obsidian border-white/5"
+                  className="bg-obsidian border-border"
                 />
               </div>
               <div className="space-y-2">
@@ -317,7 +317,7 @@ function Profitability() {
                   value={form.amount} 
                   onChange={e => setForm({ ...form, amount: e.target.value })}
                   placeholder="0.00"
-                  className="bg-obsidian border-white/5"
+                  className="bg-obsidian border-border"
                 />
               </div>
               <div className="flex justify-end gap-3 mt-8">
@@ -340,7 +340,7 @@ export default function Finance() {
   return (
     <div className="space-y-6 w-full">
       {/* Sub navigation tabs */}
-      <div className="flex gap-1 border-b border-white/5 mb-6">
+      <div className="flex gap-1 border-b border-border mb-6">
         {[
           { id: 'profitability', label: 'Profitability & Taxes', icon: Wallet },
           { id: 'invoices', label: 'Invoices & Retainers', icon: FileText },
@@ -354,10 +354,10 @@ export default function Finance() {
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 -mb-px transition-colors cursor-pointer',
-                isActive ? 'border-[#7FA38A] text-ivory' : 'border-transparent text-fog hover:text-silver'
+                isActive ? 'border-sage text-foreground' : 'border-transparent text-fog hover:text-silver'
               )}
             >
-              <Icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+              <Icon size={14} className={isActive ? 'text-sage' : 'text-fog'} />
               <span>{tab.label}</span>
             </button>
           );

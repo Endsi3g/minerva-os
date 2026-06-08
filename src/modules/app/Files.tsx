@@ -28,7 +28,7 @@ function FileCard({ file, onDelete }: { file: any; onDelete: () => void }) {
   const cfg = TYPE_CONFIG[file.type] || TYPE_CONFIG.other;
   const Icon = cfg.icon;
   return (
-    <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 group hover:border-white/15 hover:bg-dusk/30 transition-colors relative">
+    <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 group hover:border-border hover:bg-dusk/30 transition-colors relative">
       <button
         onClick={onDelete}
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-fog hover:text-ember transition-all h-6 w-6 flex items-center justify-center rounded-md hover:bg-ember/10"
@@ -180,7 +180,7 @@ export default function Files() {
           'border-2 border-dashed rounded-xl p-4 mb-6 text-center transition-colors cursor-pointer',
           dragOver
             ? 'border-sage/50 bg-sage/5 text-sage'
-            : 'border-white/5 text-fog hover:border-white/10'
+            : 'border-border text-fog hover:border-border'
         )}
         onClick={() => fileInputRef.current?.click()}
       >

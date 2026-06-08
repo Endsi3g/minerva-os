@@ -33,8 +33,7 @@ export default function VerifyEmailPage() {
 
   return (
     <main
-      className="relative flex min-h-screen w-full items-center justify-center p-4"
-      style={{ backgroundColor: '#0A0D14' }}
+      className="relative flex min-h-screen w-full items-center justify-center p-4 bg-background"
     >
       <motion.div
         className="w-full max-w-md text-center space-y-8"
@@ -43,35 +42,32 @@ export default function VerifyEmailPage() {
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         <motion.div
-          className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)' }}
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-card border border-border"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.4, ease: 'easeOut', delay: 0.1 }}
         >
-          <Mail size={28} style={{ color: '#F5F1E8' }} />
+          <Mail size={28} className="text-foreground" />
         </motion.div>
 
         <div className="space-y-3">
-          <h1 className="text-3xl font-medium tracking-tight" style={{ color: '#F5F1E8' }}>
+          <h1 className="text-3xl font-medium tracking-tight text-foreground">
             {v.heading}
           </h1>
-          <p className="text-sm leading-relaxed mx-auto max-w-xs" style={{ color: '#8A9099' }}>
+          <p className="text-sm leading-relaxed mx-auto max-w-xs text-muted-foreground">
             {v.subheading}
           </p>
         </div>
 
         <div
-          className="rounded-2xl p-6 space-y-4"
-          style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="rounded-2xl p-6 space-y-4 bg-card border border-border"
         >
-          <p className="text-sm" style={{ color: '#B8BDC7' }}>{v.didNotReceive}</p>
+          <p className="text-sm text-muted-foreground">{v.didNotReceive}</p>
           <button
             type="button"
             onClick={handleResend}
             disabled={isResending}
-            className="inline-flex items-center gap-2 text-sm font-medium transition-colors disabled:opacity-50"
-            style={{ color: '#F5F1E8' }}
+            className="inline-flex items-center gap-2 text-sm font-medium transition-colors disabled:opacity-50 text-foreground"
           >
             <RefreshCw size={14} className={isResending ? 'animate-spin' : ''} />
             {isResending ? '...' : v.resend}
@@ -80,8 +76,7 @@ export default function VerifyEmailPage() {
 
         <Link
           href="/signup"
-          className="inline-flex items-center gap-2 text-sm transition-colors"
-          style={{ color: '#8A9099' }}
+          className="inline-flex items-center gap-2 text-sm transition-colors text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft size={14} />
           {v.backToSignup}

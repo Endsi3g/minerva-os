@@ -15,7 +15,7 @@ function getInitialTheme(): Theme {
     const saved = localStorage.getItem('minerva-theme') as Theme;
     if (saved === 'dark' || saved === 'light') return saved;
   }
-  return 'dark';
+  return 'light';
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

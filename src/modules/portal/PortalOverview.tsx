@@ -18,7 +18,7 @@ const fadeInUp = {
 function ProgressBar({ value, max, color = '#7FA38A' }: { value: number; max: number; color?: string }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
-    <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+    <div className="w-full h-1 rounded-full overflow-hidden bg-muted">
       <div
         className="h-full rounded-full transition-all duration-700"
         style={{ width: `${pct}%`, backgroundColor: color }}
@@ -54,9 +54,9 @@ export default function PortalOverview() {
     .slice(0, 4);
 
   const stats = [
-    { label: po.stats.activeProjects,    value: String(activeProjects),  sub: po.stats.activeProjectsSub, color: 'text-[#7FA38A]' },
-    { label: po.stats.pendingApprovals,  value: String(pendingApprovals), sub: po.stats.pendingApprovalsSub, color: pendingApprovals > 0 ? 'text-[#B89B6A]' : 'text-[#7FA38A]' },
-    { label: po.stats.outstanding,        value: outstandingTotal > 0 ? `$${outstandingTotal.toLocaleString()}` : '—', sub: po.stats.outstandingSub, color: outstandingTotal > 0 ? 'text-[#B89B6A]' : 'text-[#7FA38A]' },
+    { label: po.stats.activeProjects,    value: String(activeProjects),  sub: po.stats.activeProjectsSub, color: 'text-emerald-600' },
+    { label: po.stats.pendingApprovals,  value: String(pendingApprovals), sub: po.stats.pendingApprovalsSub, color: pendingApprovals > 0 ? 'text-amber-600' : 'text-emerald-600' },
+    { label: po.stats.outstanding,        value: outstandingTotal > 0 ? `$${outstandingTotal.toLocaleString()}` : '—', sub: po.stats.outstandingSub, color: outstandingTotal > 0 ? 'text-amber-600' : 'text-emerald-600' },
   ];
 
   function plural(count: number, single: string, plural: string) {
@@ -88,16 +88,16 @@ export default function PortalOverview() {
     <div className="space-y-10">
       {/* Welcome */}
       <motion.div custom={0} variants={fadeInUp} initial="hidden" animate="visible">
-        <p className="text-xs tracking-[0.18em] uppercase mb-2" style={{ color: '#7FA38A', opacity: 0.7 }}>
+        <p className="text-xs tracking-[0.18em] uppercase mb-2 text-emerald-600 opacity-70">
           {pc.welcomeBack}
         </p>
         <h1
-          className="text-3xl font-normal"
-          style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}
+          className="text-3xl font-normal text-foreground"
+          style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '-0.02em' }}
         >
           {clientName}
         </h1>
-        <p className="text-sm mt-2" style={{ color: '#8A9099' }}>
+        <p className="text-sm mt-2 text-muted-foreground">
           {pc.snapshot}
         </p>
       </motion.div>
@@ -111,12 +111,11 @@ export default function PortalOverview() {
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
-            className="rounded-[16px] p-5 border"
-            style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+            className="rounded-[16px] p-5 border border-border bg-card"
           >
             <p className={cn('text-3xl font-semibold tabular-nums mb-1', s.color)}>{s.value}</p>
-            <p className="text-xs font-medium" style={{ color: '#F5F1E8' }}>{s.label}</p>
-            <p className="text-[11px] mt-0.5" style={{ color: '#8A9099' }}>{s.sub}</p>
+            <p className="text-xs font-medium text-foreground">{s.label}</p>
+            <p className="text-[11px] mt-0.5 text-muted-foreground">{s.sub}</p>
           </motion.div>
         ))}
       </div>
@@ -125,27 +124,27 @@ export default function PortalOverview() {
       {pendingDecisionsCount > 0 && (
         <motion.div custom={4} variants={fadeInUp} initial="hidden" animate="visible">
           <div
-            className="rounded-[16px] border p-5 space-y-3"
-            style={{ backgroundColor: 'rgba(184,155,106,0.04)', borderColor: 'rgba(184,155,106,0.22)' }}
+            className="rounded-[16px] border p-5 space-y-3 border-amber-200 dark:border-amber-800"
+            style={{ backgroundColor: 'rgba(184,155,106,0.04)' }}
           >
-            <p className="text-sm font-semibold" style={{ color: '#B89B6A' }}>{po.decisions.title}</p>
+            <p className="text-sm font-semibold text-amber-600">{po.decisions.title}</p>
             <div className="space-y-2">
               {pendingApprovals > 0 && (
-                <Link href={`/portal/${token}/deliverables`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-white/5" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
-                  <span className="text-sm" style={{ color: '#F5F1E8' }}>{plural(pendingApprovals, po.decisions.pendingApprovals, po.decisions.pendingApprovalsPlural)}</span>
-                  <ArrowRight size={13} style={{ color: '#B89B6A' }} />
+                <Link href={`/portal/${token}/deliverables`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card">
+                  <span className="text-sm text-foreground">{plural(pendingApprovals, po.decisions.pendingApprovals, po.decisions.pendingApprovalsPlural)}</span>
+                  <ArrowRight size={13} className="text-amber-600" />
                 </Link>
               )}
               {outstandingInvoices.length > 0 && (
-                <Link href={`/portal/${token}/invoices`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-white/5" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
-                  <span className="text-sm" style={{ color: '#F5F1E8' }}>{plural(outstandingInvoices.length, po.decisions.unpaidInvoices, po.decisions.unpaidInvoicesPlural)}</span>
-                  <ArrowRight size={13} style={{ color: '#B89B6A' }} />
+                <Link href={`/portal/${token}/invoices`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card">
+                  <span className="text-sm text-foreground">{plural(outstandingInvoices.length, po.decisions.unpaidInvoices, po.decisions.unpaidInvoicesPlural)}</span>
+                  <ArrowRight size={13} className="text-amber-600" />
                 </Link>
               )}
               {unsignedProposals > 0 && (
-                <Link href={`/portal/${token}/proposals`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-white/5" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
-                  <span className="text-sm" style={{ color: '#F5F1E8' }}>{plural(unsignedProposals, po.decisions.openProposals, po.decisions.openProposalsPlural)}</span>
-                  <ArrowRight size={13} style={{ color: '#B89B6A' }} />
+                <Link href={`/portal/${token}/proposals`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card">
+                  <span className="text-sm text-foreground">{plural(unsignedProposals, po.decisions.openProposals, po.decisions.openProposalsPlural)}</span>
+                  <ArrowRight size={13} className="text-amber-600" />
                 </Link>
               )}
             </div>
@@ -155,7 +154,7 @@ export default function PortalOverview() {
 
       {/* Active projects */}
       <motion.div custom={5} variants={fadeInUp} initial="hidden" animate="visible">
-        <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>{po.projects.title}</h2>
+        <h2 className="text-sm font-semibold mb-4 text-foreground">{po.projects.title}</h2>
         <div className="space-y-3">
           {projects.filter((p: any) => p.status === 'active').map((project: any) => {
             const projectTasks = tasks.filter((t: any) => t.projectId === project._id);
@@ -165,25 +164,21 @@ export default function PortalOverview() {
             return (
               <div
                 key={project._id}
-                className="rounded-[14px] border p-4"
-                style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                className="rounded-[14px] border border-border bg-card p-4"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{project.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: '#8A9099' }}>
+                    <p className="text-sm font-medium text-foreground">{project.name}</p>
+                    <p className="text-xs mt-0.5 text-muted-foreground">
                       {po.projects.due} {new Date(project.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
-                  <span
-                    className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: 'rgba(127,163,138,0.12)', color: '#7FA38A' }}
-                  >
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full text-emerald-600" style={{ backgroundColor: 'rgba(5,150,105,0.10)' }}>
                     {pct}% {po.projects.done}
                   </span>
                 </div>
                 <ProgressBar value={doneTasks} max={totalTasks} />
-                <p className="text-[11px] mt-2" style={{ color: '#8A9099' }}>
+                <p className="text-[11px] mt-2 text-muted-foreground">
                   {po.projects.tasksComplete
                     .replace('{{done}}', String(doneTasks))
                     .replace('{{total}}', String(totalTasks))}
@@ -197,7 +192,7 @@ export default function PortalOverview() {
       {/* Upcoming milestones */}
       {upcomingMilestones.length > 0 && (
         <motion.div custom={6} variants={fadeInUp} initial="hidden" animate="visible">
-          <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F1E8' }}>{po.milestones.title}</h2>
+          <h2 className="text-sm font-semibold mb-4 text-foreground">{po.milestones.title}</h2>
           <div className="space-y-2">
             {upcomingMilestones.map((m: any) => {
               const project = projects.find((p: any) => p._id === m.projectId);
@@ -209,24 +204,20 @@ export default function PortalOverview() {
               return (
                 <div
                   key={m._id}
-                  className="flex items-center gap-4 px-4 py-3 rounded-[12px] border"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.015)', borderColor: 'rgba(255,255,255,0.05)' }}
+                  className="flex items-center gap-4 px-4 py-3 rounded-[12px] border border-border bg-card"
                 >
                   {isOverdue ? (
-                    <AlertCircle size={14} style={{ color: '#A86A6A', flexShrink: 0 }} />
+                    <AlertCircle size={14} className="text-red-500 shrink-0" />
                   ) : isNear ? (
-                    <Clock size={14} style={{ color: '#B89B6A', flexShrink: 0 }} />
+                    <Clock size={14} className="text-amber-600 shrink-0" />
                   ) : (
-                    <CheckCircle2 size={14} style={{ color: '#7FA38A', opacity: 0.5, flexShrink: 0 }} />
+                    <CheckCircle2 size={14} className="text-emerald-600 opacity-50 shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate" style={{ color: '#F5F1E8' }}>{m.title}</p>
-                    <p className="text-[11px]" style={{ color: '#8A9099' }}>{project?.name || '...'}</p>
+                    <p className="text-sm truncate text-foreground">{m.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{project?.name || '...'}</p>
                   </div>
-                  <span
-                    className="text-[10px] shrink-0"
-                    style={{ color: isOverdue ? '#A86A6A' : isNear ? '#B89B6A' : '#8A9099' }}
-                  >
+                  <span className={`text-[10px] shrink-0 ${isOverdue ? 'text-red-500' : isNear ? 'text-amber-600' : 'text-muted-foreground'}`}>
                     {isOverdue
                       ? `${Math.abs(daysLeft)}${po.milestones.overdueSuffix}`
                       : daysLeft === 0
@@ -242,22 +233,18 @@ export default function PortalOverview() {
 
       {/* Monthly Summary */}
       <motion.div custom={7} variants={fadeInUp} initial="hidden" animate="visible">
-        <div
-          className="rounded-[16px] border p-5"
-          style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
-        >
+        <div className="rounded-[16px] border border-border bg-card p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">
-              <Sparkles size={13} style={{ color: '#B89B6A' }} />
-              <p className="text-sm font-semibold" style={{ color: '#F5F1E8' }}>{po.summary.title}</p>
+              <Sparkles size={13} className="text-amber-600" />
+              <p className="text-sm font-semibold text-foreground">{po.summary.title}</p>
             </div>
             <div className="flex items-center gap-2">
               {summary && (
                 <button
                   onClick={() => generateSummary(true)}
                   disabled={summaryGenerating}
-                  className="text-[11px] flex items-center gap-1 transition-opacity duration-200 hover:opacity-70 disabled:opacity-40 cursor-pointer"
-                  style={{ color: '#8A9099' }}
+                  className="text-[11px] flex items-center gap-1 transition-opacity duration-200 hover:opacity-70 disabled:opacity-40 cursor-pointer text-muted-foreground"
                 >
                   <RefreshCw size={10} className={summaryGenerating ? 'animate-spin' : ''} />
                   {po.summary.regenerate}
@@ -268,11 +255,11 @@ export default function PortalOverview() {
 
           {!summary && !summaryGenerating && (
             <div>
-              <p className="text-xs mb-3" style={{ color: '#8A9099' }}>{po.summary.subtitle}</p>
+              <p className="text-xs mb-3 text-muted-foreground">{po.summary.subtitle}</p>
               <button
                 onClick={() => generateSummary(false)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
-                style={{ backgroundColor: 'rgba(184,155,106,0.10)', border: '1px solid rgba(184,155,106,0.22)', color: '#B89B6A' }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 cursor-pointer text-amber-600 border border-amber-200 dark:border-amber-800"
+                style={{ backgroundColor: 'rgba(184,155,106,0.08)' }}
               >
                 <Sparkles size={11} />
                 {po.summary.generate}
@@ -283,17 +270,17 @@ export default function PortalOverview() {
           {summaryGenerating && !summary && (
             <div className="space-y-2">
               {[1, 2].map(i => (
-                <div key={i} className="h-3 rounded-full animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.06)', width: i === 1 ? '100%' : '70%' }} />
+                <div key={i} className="h-3 rounded-full animate-pulse bg-muted" style={{ width: i === 1 ? '100%' : '70%' }} />
               ))}
-              <p className="text-[11px] mt-1" style={{ color: '#8A9099' }}>{po.summary.generating}</p>
+              <p className="text-[11px] mt-1 text-muted-foreground">{po.summary.generating}</p>
             </div>
           )}
 
           {summary && (
             <div>
-              <p className="text-sm leading-relaxed" style={{ color: '#B8BDC7' }}>{summary}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{summary}</p>
               {summaryDate && (
-                <p className="text-[10px] mt-3" style={{ color: '#8A9099' }}>
+                <p className="text-[10px] mt-3 text-muted-foreground">
                   {po.summary.generatedOn} {new Date(summaryDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long' })}
                 </p>
               )}

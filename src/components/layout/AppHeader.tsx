@@ -154,20 +154,20 @@ export function AppHeader() {
   }
 
   return (
-    <header className="h-14 flex items-center px-4 gap-3 border-b border-border shrink-0">
+    <header className="h-14 flex items-center px-4 gap-3 bg-background border-b border-border shrink-0">
       {/* Collapse toggle */}
       <Button
         variant="ghost"
         size="icon"
         onClick={toggle}
-        className="text-fog hover:text-ivory"
+        className="text-muted-foreground hover:text-foreground"
         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
       </Button>
 
       {/* Breadcrumb */}
-      <span className="text-sm font-medium text-ivory">{pageLabel}</span>
+      <span className="text-sm font-medium text-foreground">{pageLabel}</span>
 
       {/* Spacer */}
       <div className="flex-1" />
@@ -176,14 +176,14 @@ export function AppHeader() {
       <Button
         variant="ghost"
         onClick={() => openPalette(true)}
-        className="text-fog hover:text-ivory h-8 px-3 gap-2 text-xs hidden sm:flex items-center"
+        className="text-muted-foreground hover:text-foreground h-8 px-3 gap-2 text-xs hidden sm:flex items-center"
         aria-label="Search"
       >
         <Search size={14} />
         <span>Search</span>
-        <kbd className="ml-1 text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 font-mono">⌘K</kbd>
+        <kbd className="ml-1 text-[9px] bg-secondary px-1.5 py-0.5 rounded border border-border font-mono">⌘K</kbd>
       </Button>
-      <Button variant="ghost" size="icon" className="text-fog hover:text-ivory sm:hidden" onClick={() => openPalette(true)} aria-label="Search">
+      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground sm:hidden" onClick={() => openPalette(true)} aria-label="Search">
         <Search size={16} />
       </Button>
       
@@ -191,7 +191,7 @@ export function AppHeader() {
         variant="ghost" 
         size="icon" 
         onClick={toggleChat}
-        className="text-fog hover:text-sage transition-colors" 
+        className="text-muted-foreground hover:text-primary transition-colors"
         aria-label="AI Chat"
       >
         <MessageSquare size={16} />
@@ -201,7 +201,7 @@ export function AppHeader() {
         variant="ghost"
         size="icon"
         onClick={toggleTheme}
-        className="text-fog hover:text-ivory"
+        className="text-muted-foreground hover:text-foreground"
         aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
@@ -209,23 +209,23 @@ export function AppHeader() {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-fog hover:text-ivory relative" aria-label="Notifications">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative" aria-label="Notifications">
             <Bell size={16} />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-sage" />
+              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-80 bg-midnight border-white/5 p-0">
-          <div className="p-3 border-b border-white/5 flex items-center justify-between">
-            <span className="text-xs font-semibold text-ivory">Notifications</span>
+        <DropdownMenuContent align="end" className="w-80 p-0">
+          <div className="p-3 border-b border-border flex items-center justify-between">
+            <span className="text-xs font-semibold text-foreground">Notifications</span>
             {unreadCount > 0 && (
-              <span className="text-[10px] text-sage">{unreadCount} new</span>
+              <span className="text-[10px] text-primary">{unreadCount} new</span>
             )}
           </div>
           <ScrollArea className="h-[300px]">
             {notifications.length === 0 ? (
-              <div className="p-10 text-center text-fog text-xs opacity-50">
+              <div className="p-10 text-center text-muted-foreground text-xs opacity-50">
                 No notifications yet.
               </div>
             ) : (
@@ -233,14 +233,14 @@ export function AppHeader() {
                 <div
                   key={n._id}
                   className={cn(
-                    "p-3 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors cursor-pointer",
-                    !n.read && "bg-sage/5"
+                    "p-3 border-b border-border last:border-0 hover:bg-secondary/60 transition-colors cursor-pointer",
+                    !n.read && "bg-primary/5"
                   )}
                   onClick={() => handleMarkRead(n._id)}
                 >
-                  <p className="text-xs font-medium text-ivory">{n.title}</p>
-                  <p className="text-[11px] text-fog mt-0.5 leading-relaxed">{n.message}</p>
-                  <p className="text-[9px] text-fog/60 mt-1">
+                  <p className="text-xs font-medium text-foreground">{n.title}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                  <p className="text-[9px] text-muted-foreground/60 mt-1">
                     {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>

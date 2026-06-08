@@ -44,15 +44,11 @@ export default function ResetPasswordPage() {
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    backgroundColor: '#111522',
-    border: '1px solid rgba(255,255,255,0.08)',
-  };
+  const inputClass = "w-full h-11 px-4 pr-10 text-sm rounded-xl text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-all bg-card border border-border";
 
   return (
     <main
-      className="relative flex min-h-screen w-full items-center justify-center p-4 font-sans"
-      style={{ backgroundColor: '#0A0D14' }}
+      className="relative flex min-h-screen w-full items-center justify-center p-4 font-sans bg-background"
     >
       <motion.div
         className="w-full max-w-[420px]"
@@ -62,20 +58,20 @@ export default function ResetPasswordPage() {
       >
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-10">
-          <Circle className="fill-white text-white h-4 w-4" />
-          <span className="text-base font-semibold tracking-tight text-white">Minerva OS</span>
+          <Circle className="fill-foreground text-foreground h-4 w-4" />
+          <span className="text-base font-semibold tracking-tight text-foreground">Minerva OS</span>
         </div>
 
         <div className="space-y-8">
           <div className="space-y-2">
-            <h1 className="text-3xl font-medium tracking-tight text-white">{rp.heading}</h1>
-            <p className="text-sm" style={{ color: '#8A9099' }}>{rp.subheading}</p>
+            <h1 className="text-3xl font-medium tracking-tight text-foreground">{rp.heading}</h1>
+            <p className="text-sm text-muted-foreground">{rp.subheading}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* New password */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-white">{rp.newPassword}</label>
+              <label className="block text-sm font-medium text-foreground">{rp.newPassword}</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -83,13 +79,12 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full h-11 px-4 pr-10 text-sm rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
-                  style={inputStyle}
+                  className={inputClass}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -99,7 +94,7 @@ export default function ResetPasswordPage() {
 
             {/* Confirm password */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-white">{rp.confirmPassword}</label>
+              <label className="block text-sm font-medium text-foreground">{rp.confirmPassword}</label>
               <div className="relative">
                 <input
                   type={showConfirm ? 'text' : 'password'}
@@ -107,13 +102,12 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setConfirm(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full h-11 px-4 pr-10 text-sm rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
-                  style={inputStyle}
+                  className={inputClass}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                   aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
                 >
                   {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -121,25 +115,18 @@ export default function ResetPasswordPage() {
               </div>
             </div>
 
-            <p className="text-xs pl-1 -mt-1" style={{ color: '#8A9099' }}>{rp.hint}</p>
+            <p className="text-xs pl-1 -mt-1 text-muted-foreground">{rp.hint}</p>
 
             {error && (
-              <div
-                className="rounded-xl p-3"
-                style={{
-                  backgroundColor: 'rgba(168,106,106,0.08)',
-                  border: '1px solid rgba(168,106,106,0.2)',
-                }}
-              >
-                <p className="text-sm" style={{ color: '#A86A6A' }}>{error}</p>
+              <div className="rounded-xl p-3 bg-red-500/8 border border-red-500/20">
+                <p className="text-sm text-red-500">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 mt-2"
-              style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
+              className="w-full h-12 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 mt-2 bg-foreground text-background"
             >
               {loading ? rp.updating : rp.submit}
             </button>
@@ -149,8 +136,7 @@ export default function ResetPasswordPage() {
         <div className="mt-8 text-center">
           <Link
             href="/login"
-            className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-white"
-            style={{ color: '#8A9099' }}
+            className="inline-flex items-center gap-1.5 text-sm transition-colors text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft size={14} />
             {rp.backToLogin}

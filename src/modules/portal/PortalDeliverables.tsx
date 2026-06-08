@@ -28,10 +28,10 @@ function DeliverableRow({
   const common = t.app.common;
 
   const TYPE_CONFIG: Record<DeliverableType, { label: string; icon: React.ElementType; class: string }> = {
-    design:   { label: common.types.design,   icon: Palette,  class: 'text-[#B8BDC7] bg-[#B8BDC7]/10' },
-    copy:     { label: common.types.copy,     icon: FileText, class: 'text-[#B89B6A] bg-[#B89B6A]/10' },
-    video:    { label: common.types.video,    icon: Video,    class: 'text-[#8A9099] bg-[#8A9099]/10'  },
-    document: { label: common.types.document, icon: File,     class: 'text-[#D8DDE6] bg-[#D8DDE6]/10' },
+    design:   { label: common.types.design,   icon: Palette,  class: 'text-slate-500 bg-slate-100 dark:text-slate-400 dark:bg-slate-800' },
+    copy:     { label: common.types.copy,     icon: FileText, class: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20' },
+    video:    { label: common.types.video,    icon: Video,    class: 'text-muted-foreground bg-muted' },
+    document: { label: common.types.document, icon: File,     class: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' },
   };
 
   const ps = t.portal.status;
@@ -42,8 +42,7 @@ function DeliverableRow({
   return (
     <motion.div
       layout
-      className="rounded-[14px] border overflow-hidden"
-      style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+      className="rounded-[14px] border border-border bg-card overflow-hidden"
     >
       {/* Row */}
       <div className="flex items-center gap-4 px-5 py-4">
@@ -54,8 +53,8 @@ function DeliverableRow({
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate" style={{ color: '#F5F1E8' }}>{approval.name}</p>
-          <p className="text-[11px] mt-0.5" style={{ color: '#8A9099' }}>
+          <p className="text-sm font-medium truncate text-foreground">{approval.name}</p>
+          <p className="text-[11px] mt-0.5 text-muted-foreground">
             {approval.project} · {pd.submitted} {new Date(approval.submittedDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
           </p>
         </div>
@@ -86,12 +85,8 @@ function DeliverableRow({
           {approval.status === 'pending' && (
             <button
               onClick={() => onAction(approval._id, 'approved')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
-              style={{
-                backgroundColor: 'rgba(127,163,138,0.12)',
-                border: '1px solid rgba(127,163,138,0.25)',
-                color: '#7FA38A',
-              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 text-emerald-600 border border-emerald-200 dark:border-emerald-800"
+              style={{ backgroundColor: 'rgba(5,150,105,0.08)' }}
             >
               <Check size={12} />
               {pd.actions.approve}
@@ -99,12 +94,7 @@ function DeliverableRow({
           )}
           <button
             onClick={() => setExpanded(e => !e)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#B8BDC7',
-            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 text-muted-foreground border border-border hover:bg-accent"
           >
             <MessageSquare size={12} />
             {pd.actions.discuss || 'Discussion'}
@@ -121,7 +111,7 @@ function DeliverableRow({
             animate={{ height: 500, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden border-t border-white/5"
+            className="overflow-hidden border-t border-border"
           >
             <div className="h-full p-5 flex flex-col overflow-y-auto md:overflow-hidden">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 h-full">
@@ -206,12 +196,12 @@ export default function PortalDeliverables() {
       {/* Header */}
       <div>
         <h1
-          className="text-2xl font-normal"
-          style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}
+          className="text-2xl font-normal text-foreground"
+          style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '-0.02em' }}
         >
           {pd.title}
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#8A9099' }}>
+        <p className="text-sm mt-1 text-muted-foreground">
           {pd.subtitle}
         </p>
       </div>
@@ -219,7 +209,7 @@ export default function PortalDeliverables() {
       {/* Pending */}
       {pending.length > 0 && (
         <section>
-          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: '#B89B6A' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 text-amber-600">
             {pd.pendingTitle} · {pending.length}
           </p>
           <div className="space-y-2">
@@ -232,19 +222,19 @@ export default function PortalDeliverables() {
 
       {pending.length === 0 && (
         <div
-          className="rounded-[16px] border p-10 text-center"
-          style={{ backgroundColor: 'rgba(127,163,138,0.04)', borderColor: 'rgba(127,163,138,0.15)' }}
+          className="rounded-[16px] border p-10 text-center border-emerald-200 dark:border-emerald-800"
+          style={{ backgroundColor: 'rgba(5,150,105,0.04)' }}
         >
-          <Check size={24} className="mx-auto mb-3" style={{ color: '#7FA38A', opacity: 0.6 }} />
-          <p className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{pd.empty.title}</p>
-          <p className="text-xs mt-1" style={{ color: '#8A9099' }}>{pd.empty.desc}</p>
+          <Check size={24} className="mx-auto mb-3 text-emerald-600 opacity-60" />
+          <p className="text-sm font-medium text-foreground">{pd.empty.title}</p>
+          <p className="text-xs mt-1 text-muted-foreground">{pd.empty.desc}</p>
         </div>
       )}
 
       {/* Resolved */}
       {resolved.length > 0 && (
         <section>
-          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: '#8A9099' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 text-muted-foreground">
             {pd.resolvedTitle} · {resolved.length}
           </p>
           <div className="space-y-2">

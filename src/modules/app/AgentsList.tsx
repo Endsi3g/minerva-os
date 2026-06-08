@@ -22,7 +22,6 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { TextureOverlay } from '@/components/ui/texture-overlay';
 import { AgentOrbit } from '@/components/agents/AgentOrbit';
 import { CreateAgentModal } from '@/components/agents/CreateAgentModal';
 
@@ -60,7 +59,7 @@ export default function AgentsList() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-ivory tracking-tight flex items-center gap-2">
-            <Bot className="text-[#7FA38A]" />
+            <Bot className="text-emerald-600" />
             Workforce Agents
           </h1>
           <p className="text-xs text-fog max-w-xl leading-relaxed">
@@ -77,7 +76,7 @@ export default function AgentsList() {
       </header>
 
       {/* Search Bar */}
-      <div className="relative max-w-md w-full bg-[#111522] border border-white/5 rounded-xl overflow-hidden group">
+      <div className="relative max-w-md w-full bg-card border border-border rounded-xl overflow-hidden group">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fog group-focus-within:text-silver transition-colors" size={14} />
         <Input
           type="text"
@@ -97,8 +96,7 @@ export default function AgentsList() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <Card className="bg-[#111522] border border-white/5 rounded-xl hover:border-white/10 transition-all flex flex-col justify-between h-72 shadow-sm relative overflow-hidden group">
-              <TextureOverlay texture="dots" opacity={0.05} />
+            <Card className="bg-card border border-border rounded-xl hover:border-border transition-all flex flex-col justify-between h-72 shadow-sm relative overflow-hidden group">
               
               <CardContent className="pt-6 text-center relative z-10 flex-1">
                 {/* Orbit Bubble */}
@@ -113,11 +111,11 @@ export default function AgentsList() {
                 <p className="text-xs text-silver mt-2 line-clamp-2 px-4 leading-relaxed font-sans">{agent.description}</p>
               </CardContent>
 
-              <div className="p-4 border-t border-white/5 relative z-10 flex items-center justify-between bg-white/[0.01]">
+              <div className="p-4 border-t border-border relative z-10 flex items-center justify-between bg-secondary/60">
                 <div className="flex items-center gap-1.5">
                   <span className={cn(
                     "h-1.5 w-1.5 rounded-full shrink-0",
-                    agent.status === 'active' ? 'bg-[#7FA38A] animate-pulse' : 'bg-fog'
+                    agent.status === 'active' ? 'bg-emerald-600 animate-pulse' : 'bg-fog'
                   )} />
                   <span className="text-[10px] text-fog capitalize font-semibold">{agent.status}</span>
                 </div>
@@ -126,7 +124,7 @@ export default function AgentsList() {
                   onClick={() => router.push(`/app/agents/${agent.id}`)}
                   variant="ghost"
                   size="sm"
-                  className="text-xs font-bold text-[#7FA38A] hover:bg-white/5 hover:text-white rounded-lg flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-emerald-600 hover:bg-accent hover:text-foreground rounded-lg flex items-center gap-1 cursor-pointer"
                 >
                   <span>Open Builder</span>
                   <ArrowRight size={12} />

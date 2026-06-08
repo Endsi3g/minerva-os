@@ -9,10 +9,10 @@ import React from 'react';
 import { useLang } from '@/i18n';
 
 const TYPE_CONFIG: Record<FileType, { icon: React.ElementType; class: string; bg: string }> = {
-  image:    { icon: Image,    class: 'text-[#7FA38A]', bg: 'bg-[#7FA38A]/10' },
-  video:    { icon: Video,    class: 'text-[#B89B6A]', bg: 'bg-[#B89B6A]/10' },
-  document: { icon: FileText, class: 'text-[#B8BDC7]', bg: 'bg-[#B8BDC7]/10' },
-  archive:  { icon: Archive,  class: 'text-[#8A9099]', bg: 'bg-[#8A9099]/10' },
+  image:    { icon: Image,    class: 'text-emerald-600',    bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+  video:    { icon: Video,    class: 'text-amber-600',      bg: 'bg-amber-50 dark:bg-amber-900/20' },
+  document: { icon: FileText, class: 'text-muted-foreground', bg: 'bg-muted' },
+  archive:  { icon: Archive,  class: 'text-muted-foreground', bg: 'bg-muted' },
 };
 
 const FOLDERS: DocumentFolder[] = [
@@ -81,17 +81,16 @@ export default function PortalFiles() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1
-            className="text-2xl font-normal"
-            style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}
+            className="text-2xl font-normal text-foreground"
+            style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '-0.02em' }}
           >
             {pf.title}
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#8A9099' }}>
+          <p className="text-sm mt-1 text-muted-foreground">
             {activeFolder ? (
               <button
                 onClick={() => setActiveFolder(null)}
-                className="hover:underline transition-colors"
-                style={{ color: '#7FA38A' }}
+                className="hover:underline transition-colors text-emerald-600"
               >
                 {pf.backToFolders}
               </button>
@@ -102,12 +101,12 @@ export default function PortalFiles() {
 
       {/* Breadcrumb */}
       {activeFolder && (
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: '#8A9099' }}>
-          <button onClick={() => setActiveFolder(null)} className="hover:text-white/60 transition-colors cursor-pointer">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <button onClick={() => setActiveFolder(null)} className="hover:text-foreground transition-colors cursor-pointer">
             {pf.title}
           </button>
           <ChevronRight size={12} />
-          <span style={{ color: '#F5F1E8' }}>{folderLabelMap[activeFolder as DocumentFolder]}</span>
+          <span className="text-foreground">{folderLabelMap[activeFolder as DocumentFolder]}</span>
         </div>
       )}
 
@@ -121,18 +120,16 @@ export default function PortalFiles() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07, duration: 0.4 }}
               onClick={() => setActiveFolder(folder)}
-              className="rounded-[14px] border p-4 text-left transition-all duration-200 hover:border-white/15 hover:-translate-y-0.5 group cursor-pointer"
-              style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}
+              className="rounded-[14px] border border-border bg-card p-4 text-left transition-all duration-200 hover:border-foreground/20 hover:-translate-y-0.5 group cursor-pointer"
             >
               <Folder
                 size={20}
-                className="mb-3"
-                style={{ color: 'rgba(184,189,199,0.5)' }}
+                className="mb-3 text-muted-foreground/50"
               />
-              <p className="text-xs font-medium leading-snug" style={{ color: '#F5F1E8' }}>
+              <p className="text-xs font-medium leading-snug text-foreground">
                 {folderLabelMap[folder]}
               </p>
-              <p className="text-[10px] mt-1" style={{ color: '#8A9099' }}>
+              <p className="text-[10px] mt-1 text-muted-foreground">
                 {pf.folderCount.replace('{{count}}', String(folderCounts[folder]))}
               </p>
             </motion.button>
@@ -143,19 +140,14 @@ export default function PortalFiles() {
       {/* Search — shown when folder is selected */}
       {activeFolder && (
         <div className="relative max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#8A9099' }} />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
           <input
             type="text"
             placeholder={t.app.files.searchPlaceholder}
             value={query}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none transition-colors duration-200"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#F5F1E8',
-              fontFamily: "'Inter', sans-serif",
-            }}
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none transition-colors duration-200 bg-card border border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-foreground/10"
+            style={{ fontFamily: "'Inter', sans-serif" }}
           />
         </div>
       )}
@@ -173,26 +165,25 @@ export default function PortalFiles() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35 }}
-                  className="rounded-[14px] border p-4 flex flex-col gap-3 transition-all duration-200 hover:border-white/12 group"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                  className="rounded-[14px] border border-border bg-card p-4 flex flex-col gap-3 transition-all duration-200 hover:border-foreground/20 group"
                 >
                   <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center', cfg.bg)}>
                     <Icon size={17} className={cfg.class} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate leading-snug" style={{ color: '#F5F1E8' }} title={file.name}>
+                    <p className="text-xs font-medium truncate leading-snug text-foreground" title={file.name}>
                       {file.name}
                     </p>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                    <span className="text-[10px]" style={{ color: '#8A9099' }}>{file.size}</span>
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <span className="text-[10px] text-muted-foreground">{file.size}</span>
                     <button
                       onClick={() => handleDownload(file)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-lg hover:bg-white/5 cursor-pointer"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-lg hover:bg-accent cursor-pointer"
                       title={lang === 'fr' ? 'Télécharger' : 'Download'}
                       aria-label="Download file"
                     >
-                      <Download size={12} style={{ color: '#B8BDC7' }} />
+                      <Download size={12} className="text-muted-foreground" />
                     </button>
                   </div>
                 </motion.div>
@@ -201,13 +192,13 @@ export default function PortalFiles() {
           </div>
         ) : (
           <div className="py-16 text-center">
-            <p className="text-sm" style={{ color: '#8A9099' }}>
+            <p className="text-sm text-muted-foreground">
               {query
                 ? `${t.app.files.noFiles} "${query}"`
                 : (lang === 'fr' ? 'Aucun fichier dans ce dossier.' : 'No files in this folder.')}
             </p>
             {query && (
-              <button onClick={() => setQuery('')} className="text-xs mt-2 hover:underline cursor-pointer" style={{ color: '#7FA38A' }}>
+              <button onClick={() => setQuery('')} className="text-xs mt-2 hover:underline cursor-pointer text-emerald-600">
                 {t.app.clients.clearSearch}
               </button>
             )}

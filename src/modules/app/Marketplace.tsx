@@ -57,20 +57,11 @@ function MarketplaceCard({ item, installed, installing, onInstall, onUninstall, 
     <motion.div
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-      style={{
-        backgroundColor: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 12,
-        padding: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-        fontFamily: "'Inter', sans-serif",
-      }}
+      className="bg-secondary/60 border border-border rounded-xl p-5 flex flex-col gap-3 font-sans"
     >
       {/* Top row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
           <div style={{ padding: 6, borderRadius: 8, backgroundColor: badge.bg }}>
             <Icon size={14} style={{ color: badge.color }} />
           </div>
@@ -78,7 +69,7 @@ function MarketplaceCard({ item, installed, installing, onInstall, onUninstall, 
             {m.types[item.type]}
           </span>
           {item.isBuiltIn && (
-            <span style={{ fontSize: 11, fontWeight: 500, color: '#7FA38A', backgroundColor: 'rgba(127,163,138,0.10)', borderRadius: 6, padding: '2px 7px' }}>
+            <span className="text-[11px] font-medium text-emerald-600 bg-emerald-600/10 rounded-md px-2 py-0.5">
               {m.builtIn}
             </span>
           )}
@@ -87,38 +78,29 @@ function MarketplaceCard({ item, installed, installing, onInstall, onUninstall, 
 
       {/* Name + description */}
       <div>
-        <p style={{ fontSize: 14, fontWeight: 600, color: '#F5F1E8', marginBottom: 4 }}>{item.name}</p>
-        <p style={{ fontSize: 12, color: '#8A9099', lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        <p className="text-sm font-semibold text-foreground mb-1">{item.name}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
           {item.description}
         </p>
       </div>
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 11, color: '#8A9099', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '2px 7px', textTransform: 'capitalize' }}>
+      <div className="flex items-center justify-between mt-auto">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-muted-foreground bg-secondary/60 rounded-md px-2 py-0.5 capitalize">
             {m.categories[item.category]}
           </span>
-          <span style={{ fontSize: 11, color: '#8A9099' }}>
+          <span className="text-[11px] text-muted-foreground">
             {m.usage.replace('{{count}}', String(item.usageCount))}
           </span>
         </div>
         <button
           onClick={installed ? onUninstall : onInstall}
           disabled={installing}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            fontSize: 12, fontWeight: 500, padding: '5px 12px', borderRadius: 8,
-            cursor: installing ? 'wait' : 'pointer',
-            border: `1px solid ${installed ? 'rgba(127,163,138,0.30)' : 'rgba(255,255,255,0.10)'}`,
-            backgroundColor: installed ? 'rgba(127,163,138,0.10)' : 'transparent',
-            color: installed ? '#7FA38A' : '#B8BDC7',
-            opacity: installing ? 0.6 : 1,
-            transition: 'all 0.2s ease',
-          }}
+          className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer transition-all ${installing ? 'opacity-60 cursor-wait' : ''} ${installed ? 'border border-emerald-600/30 bg-emerald-600/10 text-emerald-600' : 'border border-border bg-transparent text-muted-foreground'}`}
         >
           {installing
-            ? <Loader2 size={11} style={{ animation: 'spin 1s linear infinite' }} />
+            ? <Loader2 size={11} className="animate-spin" />
             : installed
               ? <CheckCircle2 size={12} />
               : null}
@@ -261,28 +243,23 @@ export default function Marketplace() {
   const filtered = filteredItems;
 
   return (
-    <div style={{ padding: '32px 32px 48px', fontFamily: "'Inter', sans-serif", minHeight: '100vh' }}>
+    <div className="px-8 pt-8 pb-12 font-sans min-h-screen">
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: '#F5F1E8', marginBottom: 6 }}>
+      <div className="mb-7">
+        <h1 className="font-playfair text-3xl font-bold text-foreground mb-1.5">
           {m.title}
         </h1>
-        <p style={{ fontSize: 14, color: '#8A9099' }}>{m.subtitle}</p>
+        <p className="text-sm text-muted-foreground">{m.subtitle}</p>
       </div>
 
       {/* Tab switcher + Contribute button */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ display: 'flex', gap: 4, backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 4 }}>
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+        <div className="flex gap-1 bg-secondary/60 border border-border rounded-[10px] p-1">
           {(['builtin', 'community'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              style={{
-                fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                backgroundColor: activeTab === tab ? 'rgba(255,255,255,0.07)' : 'transparent',
-                color: activeTab === tab ? '#F5F1E8' : '#8A9099',
-                transition: 'all 0.18s ease',
-              }}
+              className={`text-xs font-medium px-3.5 py-1.5 rounded-[7px] border-none cursor-pointer transition-all ${activeTab === tab ? 'bg-accent text-foreground' : 'bg-transparent text-muted-foreground'}`}
             >
               {tab === 'builtin' ? m.tabBuiltIn : m.tabCommunity}
             </button>
@@ -291,14 +268,7 @@ export default function Marketplace() {
         {activeTab === 'community' && (
           <button
             onClick={() => setShowContribute(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              fontSize: 12, fontWeight: 500, padding: '6px 14px', borderRadius: 8, cursor: 'pointer',
-              border: '1px solid rgba(127,163,138,0.30)',
-              backgroundColor: 'rgba(127,163,138,0.08)',
-              color: '#7FA38A',
-              transition: 'all 0.2s ease',
-            }}
+            className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-1.5 rounded-lg cursor-pointer border border-emerald-600/30 bg-emerald-600/8 text-emerald-600 transition-all"
           >
             <Upload size={12} />
             {m.contribute}
@@ -307,34 +277,25 @@ export default function Marketplace() {
       </div>
 
       {/* Filter bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 4, backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 4 }}>
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="flex gap-1 bg-secondary/60 border border-border rounded-[10px] p-1">
           {FILTER_TYPES.map(type => (
             <button
               key={type}
               onClick={() => setActiveType(type)}
-              style={{
-                fontSize: 12, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                backgroundColor: activeType === type ? 'rgba(255,255,255,0.07)' : 'transparent',
-                color: activeType === type ? '#F5F1E8' : '#8A9099',
-                transition: 'all 0.18s ease',
-              }}
+              className={`text-xs font-medium px-3 py-1.5 rounded-[7px] border-none cursor-pointer transition-all ${activeType === type ? 'bg-accent text-foreground' : 'bg-transparent text-muted-foreground'}`}
             >
               {type === 'all' ? m.all : m.types[type as MarketplaceItemType]}
             </button>
           ))}
         </div>
-        <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320 }}>
-          <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8A9099', pointerEvents: 'none' }} />
+        <div className="relative flex-1 min-w-[200px] max-w-[320px]">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={m.searchPlaceholder}
-            style={{
-              width: '100%', paddingLeft: 32, paddingRight: 12, paddingTop: 7, paddingBottom: 7,
-              backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10,
-              color: '#F5F1E8', fontSize: 13, outline: 'none', boxSizing: 'border-box',
-            }}
+            className="w-full pl-8 pr-3 py-1.5 bg-card border border-border rounded-[10px] text-foreground text-[13px] outline-none box-border"
           />
         </div>
       </div>
@@ -346,12 +307,7 @@ export default function Marketplace() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 50,
-              backgroundColor: 'rgba(10,13,20,0.80)',
-              backdropFilter: 'blur(10px)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-            }}
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-[10px] flex items-center justify-center p-6"
             onClick={closeContribute}
           >
             <motion.div
@@ -360,105 +316,90 @@ export default function Marketplace() {
               exit={{ opacity: 0, y: 12, scale: 0.97 }}
               transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              style={{
-                backgroundColor: '#111522',
-                border: '1px solid rgba(255,255,255,0.09)',
-                borderRadius: 16,
-                padding: 28,
-                width: '100%',
-                maxWidth: 480,
-                fontFamily: "'Inter', sans-serif",
-              }}
+              className="bg-card border border-border rounded-2xl p-7 w-full max-w-[480px] font-sans"
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div className="flex items-start justify-between mb-5">
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 600, color: '#F5F1E8', marginBottom: 4 }}>{m.contributeModal.title}</h2>
-                  <p style={{ fontSize: 13, color: '#8A9099' }}>{m.contributeModal.subtitle}</p>
+                  <h2 className="text-lg font-semibold text-foreground mb-1">{m.contributeModal.title}</h2>
+                  <p className="text-[13px] text-muted-foreground">{m.contributeModal.subtitle}</p>
                 </div>
-                <button onClick={closeContribute} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8A9099', padding: 4 }}>
+                <button onClick={closeContribute} className="bg-transparent border-none cursor-pointer text-muted-foreground p-1" aria-label="Close modal">
                   <X size={16} />
                 </button>
               </div>
 
               {submitSuccess ? (
-                <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                  <CheckCircle2 size={40} style={{ color: '#7FA38A', marginBottom: 12 }} />
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#F5F1E8', marginBottom: 8 }}>{m.contributeModal.successTitle}</p>
-                  <p style={{ fontSize: 13, color: '#8A9099', lineHeight: 1.6 }}>{m.contributeModal.successBody}</p>
+                <div className="text-center py-8">
+                  <CheckCircle2 size={40} className="text-emerald-600 mb-3 mx-auto" />
+                  <p className="text-[15px] font-semibold text-foreground mb-2">{m.contributeModal.successTitle}</p>
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">{m.contributeModal.successBody}</p>
                   <button
                     onClick={closeContribute}
-                    style={{ marginTop: 20, fontSize: 13, fontWeight: 500, padding: '8px 20px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.12)', backgroundColor: 'transparent', color: '#B8BDC7' }}
+                    className="mt-5 text-[13px] font-medium px-5 py-2 rounded-lg cursor-pointer border border-border bg-transparent text-muted-foreground"
                   >
                     {m.contributeModal.cancel}
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div className="flex flex-col gap-3.5">
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 500, color: '#B8BDC7', display: 'block', marginBottom: 6 }}>{m.contributeModal.nameLabel}</label>
+                    <label className="text-xs font-medium text-muted-foreground block mb-1.5">{m.contributeModal.nameLabel}</label>
                     <input
                       value={submitName}
                       onChange={e => setSubmitName(e.target.value)}
                       placeholder={m.contributeModal.namePlaceholder}
-                      style={{ width: '100%', padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: '#F5F1E8', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                      className="w-full px-3 py-2 bg-secondary/60 border border-border rounded-lg text-foreground text-[13px] outline-none box-border"
                     />
                   </div>
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 12, fontWeight: 500, color: '#B8BDC7', display: 'block', marginBottom: 6 }}>{m.contributeModal.typeLabel}</label>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-xs font-medium text-muted-foreground block mb-1.5">{m.contributeModal.typeLabel}</label>
                       <select
                         value={submitType}
                         onChange={e => setSubmitType(e.target.value as MarketplaceItemType)}
-                        style={{ width: '100%', padding: '8px 12px', backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: '#F5F1E8', fontSize: 13, outline: 'none' }}
+                        className="w-full px-3 py-2 bg-card border border-border rounded-lg text-foreground text-[13px] outline-none"
                       >
                         {(['template', 'automation', 'view', 'playbook'] as MarketplaceItemType[]).map(t => (
-                          <option key={t} value={t} style={{ backgroundColor: '#111522' }}>{m.types[t]}</option>
+                          <option key={t} value={t}>{m.types[t]}</option>
                         ))}
                       </select>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 12, fontWeight: 500, color: '#B8BDC7', display: 'block', marginBottom: 6 }}>{m.contributeModal.categoryLabel}</label>
+                    <div className="flex-1">
+                      <label className="text-xs font-medium text-muted-foreground block mb-1.5">{m.contributeModal.categoryLabel}</label>
                       <select
                         value={submitCategory}
                         onChange={e => setSubmitCategory(e.target.value)}
-                        style={{ width: '100%', padding: '8px 12px', backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: '#F5F1E8', fontSize: 13, outline: 'none' }}
+                        className="w-full px-3 py-2 bg-card border border-border rounded-lg text-foreground text-[13px] outline-none"
                       >
                         {Object.entries(m.categories).map(([k, label]) => (
-                          <option key={k} value={k} style={{ backgroundColor: '#111522' }}>{label}</option>
+                          <option key={k} value={k}>{label}</option>
                         ))}
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 500, color: '#B8BDC7', display: 'block', marginBottom: 6 }}>{m.contributeModal.descriptionLabel}</label>
+                    <label className="text-xs font-medium text-muted-foreground block mb-1.5">{m.contributeModal.descriptionLabel}</label>
                     <textarea
                       value={submitDescription}
                       onChange={e => setSubmitDescription(e.target.value)}
                       placeholder={m.contributeModal.descriptionPlaceholder}
                       rows={3}
-                      style={{ width: '100%', padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: '#F5F1E8', fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }}
+                      className="w-full px-3 py-2 bg-secondary/60 border border-border rounded-lg text-foreground text-[13px] outline-none resize-y box-border font-sans"
                     />
                   </div>
-                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+                  <div className="flex gap-2.5 justify-end mt-1">
                     <button
                       onClick={closeContribute}
-                      style={{ fontSize: 13, fontWeight: 500, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.10)', backgroundColor: 'transparent', color: '#B8BDC7' }}
+                      className="text-[13px] font-medium px-4 py-2 rounded-lg cursor-pointer border border-border bg-transparent text-muted-foreground"
                     >
                       {m.contributeModal.cancel}
                     </button>
                     <button
                       onClick={handleContribute}
                       disabled={!submitName || submitting}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        fontSize: 13, fontWeight: 500, padding: '8px 18px', borderRadius: 8, cursor: !submitName || submitting ? 'not-allowed' : 'pointer',
-                        border: 'none',
-                        backgroundColor: !submitName || submitting ? 'rgba(245,241,232,0.3)' : '#F5F1E8',
-                        color: '#0A0D14',
-                        transition: 'all 0.2s ease',
-                      }}
+                      className="flex items-center gap-1.5 text-[13px] font-medium px-4.5 py-2 rounded-lg border-none transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-foreground text-background"
                     >
-                      {submitting ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : null}
+                      {submitting ? <Loader2 size={12} className="animate-spin" /> : null}
                       {submitting ? m.contributeModal.submitting : m.contributeModal.submit}
                     </button>
                   </div>
@@ -475,7 +416,7 @@ export default function Marketplace() {
           initial="hidden"
           animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}
+          className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4"
         >
           {filtered.map(item => (
             <motion.div
@@ -494,7 +435,7 @@ export default function Marketplace() {
           ))}
         </motion.div>
       ) : (
-        <div style={{ textAlign: 'center', padding: '64px 0', color: '#8A9099', fontSize: 14 }}>
+        <div className="text-center py-16 text-muted-foreground text-sm">
           {activeTab === 'community' ? m.communityEmpty : m.empty}
         </div>
       )}

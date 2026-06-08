@@ -1,3 +1,4 @@
+'use client';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
@@ -182,8 +183,7 @@ export default function Reports() {
         </div>
         <div className="flex items-center gap-2">
           <span
-            className="text-[10px] px-3 py-1.5 rounded-full border text-fog"
-            style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)' }}
+            className="text-[10px] px-3 py-1.5 rounded-full border text-fog bg-secondary/60 border-border"
           >
             {new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { month: 'long', year: 'numeric' })}
           </span>
@@ -191,7 +191,7 @@ export default function Reports() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-white/5 mb-6">
+      <div className="flex items-center gap-1 border-b border-border mb-6">
         {([
           ['overview', 'Overview'],
           ['profitability', 'Profitability'],
@@ -387,7 +387,7 @@ export default function Reports() {
             ) : (
               <div className="overflow-x-auto">
               <div className="min-w-[420px] space-y-2">
-                <div className="grid grid-cols-5 gap-2 text-[10px] text-fog uppercase tracking-widest px-1 pb-2 border-b border-white/5">
+                <div className="grid grid-cols-5 gap-2 text-[10px] text-fog uppercase tracking-widest px-1 pb-2 border-b border-border">
                   <span className="col-span-2">Client</span>
                   <span className="text-right">Revenue</span>
                   <span className="text-right">Costs</span>

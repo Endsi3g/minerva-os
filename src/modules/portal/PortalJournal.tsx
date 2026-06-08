@@ -12,19 +12,19 @@ const fadeInUp = {
 };
 
 function DecisionIcon({ type }: { type: string }) {
-  if (type === 'invoice') return <FileText size={13} style={{ color: '#B8BDC7' }} />;
-  if (type === 'proposal') return <FileSignature size={13} style={{ color: '#B8BDC7' }} />;
-  return <Check size={13} style={{ color: '#B8BDC7' }} />;
+  if (type === 'invoice') return <FileText size={13} className="text-muted-foreground" />;
+  if (type === 'proposal') return <FileSignature size={13} className="text-muted-foreground" />;
+  return <Check size={13} className="text-muted-foreground" />;
 }
 
-function decisionColor(decision: string): { color: string; bg: string; border: string } {
+function decisionColor(decision: string): { colorClass: string; bgStyle: string; borderStyle: string } {
   if (decision === 'approved' || decision === 'paid' || decision === 'signed') {
-    return { color: '#7FA38A', bg: 'rgba(127,163,138,0.10)', border: 'rgba(127,163,138,0.22)' };
+    return { colorClass: 'text-emerald-600', bgStyle: 'rgba(5,150,105,0.08)', borderStyle: 'rgba(5,150,105,0.22)' };
   }
   if (decision === 'revision' || decision === 'declined') {
-    return { color: '#A86A6A', bg: 'rgba(168,106,106,0.10)', border: 'rgba(168,106,106,0.22)' };
+    return { colorClass: 'text-red-500', bgStyle: 'rgba(239,68,68,0.08)', borderStyle: 'rgba(239,68,68,0.22)' };
   }
-  return { color: '#8A9099', bg: 'rgba(138,144,153,0.10)', border: 'rgba(138,144,153,0.20)' };
+  return { colorClass: 'text-muted-foreground', bgStyle: 'rgba(0,0,0,0.04)', borderStyle: 'rgba(0,0,0,0.12)' };
 }
 
 export default function PortalJournal() {
@@ -71,24 +71,24 @@ export default function PortalJournal() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-normal" style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}>
+        <h1 className="text-2xl font-normal text-foreground" style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '-0.02em' }}>
           {pj.title}
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#8A9099' }}>{pj.subtitle}</p>
+        <p className="text-sm mt-1 text-muted-foreground">{pj.subtitle}</p>
       </div>
 
       {loading && (
         <div className="space-y-2">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-16 rounded-[12px] animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }} />
+            <div key={i} className="h-16 rounded-[12px] animate-pulse bg-muted" />
           ))}
         </div>
       )}
 
       {!loading && entries.length === 0 && (
-        <div className="rounded-[16px] border p-12 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}>
-          <RefreshCcw size={22} className="mx-auto mb-3" style={{ color: '#8A9099', opacity: 0.4 }} />
-          <p className="text-sm" style={{ color: '#8A9099' }}>{pj.empty}</p>
+        <div className="rounded-[16px] border border-border bg-card p-12 text-center">
+          <RefreshCcw size={22} className="mx-auto mb-3 text-muted-foreground opacity-40" />
+          <p className="text-sm text-muted-foreground">{pj.empty}</p>
         </div>
       )}
 
@@ -103,37 +103,39 @@ export default function PortalJournal() {
                 variants={fadeInUp}
                 initial="hidden"
                 animate="visible"
-                className="flex items-start gap-4 px-4 py-3.5 rounded-[12px] border"
-                style={{ backgroundColor: 'rgba(255,255,255,0.015)', borderColor: 'rgba(255,255,255,0.06)' }}
+                className="flex items-start gap-4 px-4 py-3.5 rounded-[12px] border border-border bg-card"
               >
                 {/* Icon */}
-                <div className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+                <div className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 bg-muted">
                   <DecisionIcon type={entry.objectType} />
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium truncate" style={{ color: '#F5F1E8' }}>{entry.objectName}</p>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full border font-medium" style={{ color: dc.color, backgroundColor: dc.bg, borderColor: dc.border }}>
+                    <p className="text-sm font-medium truncate text-foreground">{entry.objectName}</p>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${dc.colorClass}`}
+                      style={{ backgroundColor: dc.bgStyle, borderColor: dc.borderStyle }}
+                    >
                       {decisionLabel[entry.decision] || entry.decision}
                     </span>
                   </div>
-                  <p className="text-[11px] mt-0.5" style={{ color: '#8A9099' }}>
+                  <p className="text-[11px] mt-0.5 text-muted-foreground">
                     {typeLabel[entry.objectType] || entry.objectType}
                     {entry.decidedBy !== 'system' && (
                       <> · {pj.decidedBy} {entry.decidedBy}</>
                     )}
                   </p>
                   {entry.note && (
-                    <p className="text-xs mt-1.5 px-3 py-1.5 rounded-lg" style={{ color: '#B8BDC7', backgroundColor: 'rgba(255,255,255,0.04)' }}>
+                    <p className="text-xs mt-1.5 px-3 py-1.5 rounded-lg text-muted-foreground bg-muted">
                       {entry.note}
                     </p>
                   )}
                 </div>
 
                 {/* Timestamp */}
-                <span className="text-[11px] shrink-0 mt-0.5" style={{ color: '#8A9099' }}>
+                <span className="text-[11px] shrink-0 mt-0.5 text-muted-foreground">
                   {relativeDate(entry.timestamp)}
                 </span>
               </motion.div>

@@ -16,7 +16,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspaces, useProjects, useInvoices, useApprovals, useTasks } from '@/lib/hooks/useSupabase';
-import { TextureOverlay } from '@/components/ui/texture-overlay';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -24,16 +23,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 w-full animate-pulse px-4 py-6 max-w-[1400px] mx-auto">
-      <Skeleton className="h-44 w-full rounded-xl bg-white/5" />
+      <Skeleton className="h-44 w-full rounded-xl bg-secondary/60" />
       <div className="space-y-2">
-        <Skeleton className="h-8 w-64 bg-white/5" />
-        <Skeleton className="h-4 w-96 bg-white/5" />
+        <Skeleton className="h-8 w-64 bg-secondary/60" />
+        <Skeleton className="h-4 w-96 bg-secondary/60" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <Skeleton className="h-80 rounded-xl bg-white/5" />
+          <Skeleton className="h-80 rounded-xl bg-secondary/60" />
         </div>
-        <Skeleton className="h-80 rounded-xl bg-white/5" />
+        <Skeleton className="h-80 rounded-xl bg-secondary/60" />
       </div>
     </div>
   );
@@ -83,7 +82,7 @@ export default function Dashboard() {
       type: 'invoice',
       label: 'Invoice INV-2026-004 is overdue by 5 days (Client Acme Corp · $4,500)',
       badge: 'Overdue Invoice',
-      color: 'text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20',
+      color: 'text-red-500 bg-red-500/10 border-red-500/20',
       route: '/app/finance'
     },
     {
@@ -91,7 +90,7 @@ export default function Dashboard() {
       type: 'approval',
       label: 'Bolt Tech requires wireframe guidelines v2 approval sign-off',
       badge: 'Pending Approval',
-      color: 'text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20',
+      color: 'text-emerald-600 bg-emerald-600/10 border-emerald-600/20',
       route: '/app/client-space'
     },
     {
@@ -99,7 +98,7 @@ export default function Dashboard() {
       type: 'task',
       label: 'Database performance schema migration is blocked by staging setup delay',
       badge: 'Blocked Work',
-      color: 'text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20',
+      color: 'text-amber-600 bg-amber-600/10 border-amber-600/20',
       route: '/app/operations'
     }
   ];
@@ -108,7 +107,7 @@ export default function Dashboard() {
     <div className="space-y-8 w-full px-6 py-6 max-w-[1400px] mx-auto select-none">
       
       {/* Greetings Row */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-5">
         <div className="space-y-1">
           <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-2xl font-serif text-ivory tracking-tight" />
           <p className="text-xs text-fog max-w-2xl leading-relaxed">
@@ -121,7 +120,7 @@ export default function Dashboard() {
           onClick={() => { setActiveAgentType('proposal'); setAiSheetOpen(true); }}
           className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90 text-xs font-semibold px-4 h-9 flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
-          <Sparkles size={13} className="text-[#7FA38A] animate-pulse" />
+          <Sparkles size={13} className="text-emerald-600 animate-pulse" />
           Ask Minerva AI Agent
         </Button>
       </div>
@@ -132,11 +131,10 @@ export default function Dashboard() {
         {/* Today Action Queue Checklist (Left & Center) */}
         <div className="lg:col-span-2 space-y-6">
           
-          <Card className="bg-midnight border-white/5 shadow-card overflow-hidden relative">
-            <TextureOverlay texture="dots" opacity={0.03} />
-            <CardHeader className="pb-4 border-b border-white/5 relative z-10 flex flex-row items-center justify-between">
+          <Card className="bg-midnight border-border shadow-card overflow-hidden relative">
+            <CardHeader className="pb-4 border-b border-border relative z-10 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-[#B89B6A] animate-pulse" />
+                <Sparkles size={14} className="text-amber-600 animate-pulse" />
                 <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">
                   Today · Priority Operating Queue
                 </CardTitle>
@@ -150,7 +148,7 @@ export default function Dashboard() {
                 <div
                   key={item.id}
                   onClick={() => router.push(item.route)}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/2 hover:bg-white/4 border border-white/5 hover:border-white/10 rounded-xl transition-all cursor-pointer group"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/2 hover:bg-white/4 border border-border hover:border-border rounded-xl transition-all cursor-pointer group"
                 >
                   <div className="flex items-start sm:items-center gap-3">
                     <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border tracking-wide uppercase shrink-0 font-sans", item.color)}>
@@ -180,12 +178,12 @@ export default function Dashboard() {
                 key={agent.type}
                 onClick={() => { setActiveAgentType(agent.type); setAiSheetOpen(true); }}
                 className={cn(
-                  "bg-midnight border border-white/5 hover:border-white/12 rounded-xl p-4.5 text-left transition-all hover:scale-[1.01] flex flex-col justify-between h-28 cursor-pointer relative overflow-hidden group shadow-sm",
+                  "bg-midnight border border-border hover:border-white/12 rounded-xl p-4.5 text-left transition-all hover:scale-[1.01] flex flex-col justify-between h-28 cursor-pointer relative overflow-hidden group shadow-sm",
                   agent.color
                 )}
               >
                 <div className="flex justify-between items-start w-full">
-                  <div className="p-1.5 rounded-lg bg-white/5 text-silver group-hover:text-ivory transition-colors">
+                  <div className="p-1.5 rounded-lg bg-secondary/60 text-silver group-hover:text-ivory transition-colors">
                     <Bot size={14} />
                   </div>
                   <Zap size={10} className="text-fog group-hover:text-silver opacity-60 transition-opacity" />
@@ -204,7 +202,7 @@ export default function Dashboard() {
         <div className="space-y-6">
           
           {/* Margin Gauge Thermometer */}
-          <Card className="bg-midnight border-white/5 shadow-card spotlight-sage">
+          <Card className="bg-midnight border-border shadow-card spotlight-sage">
             <CardHeader className="pb-3">
               <CardTitle className="text-xs uppercase tracking-wider font-semibold text-fog">
                 Agency Margin Thermometer
@@ -214,7 +212,7 @@ export default function Dashboard() {
               <div className="flex items-end justify-between">
                 <div>
                   <span className="text-[9px] uppercase tracking-wider font-semibold text-fog">Current Avg Margin</span>
-                  <p className="text-3xl font-bold font-mono text-[#7FA38A] leading-none mt-1">
+                  <p className="text-3xl font-bold font-mono text-emerald-600 leading-none mt-1">
                     {projectMargin}%
                   </p>
                 </div>
@@ -226,12 +224,12 @@ export default function Dashboard() {
 
               {/* Visual Horizontal Thermometer Bar */}
               <div className="space-y-2">
-                <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden border border-white/5 p-0.5">
+                <div className="w-full bg-secondary/60 h-3 rounded-full overflow-hidden border border-border p-0.5">
                   {(() => {
                     const thermometerStyle = { width: `${projectMargin}%` };
                     return (
                       <div
-                        className="h-full rounded-full transition-all duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)] bg-[#7FA38A]"
+                        className="h-full rounded-full transition-all duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)] bg-emerald-600"
                         style={thermometerStyle}
                       />
                     );
@@ -245,8 +243,8 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="rounded-lg bg-white/2 border border-white/5 p-3 flex gap-2 items-start">
-                <AlertTriangle size={13} className="text-[#B89B6A] shrink-0 mt-0.5" />
+              <div className="rounded-lg bg-white/2 border border-border p-3 flex gap-2 items-start">
+                <AlertTriangle size={13} className="text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[10px] text-silver leading-relaxed">
                   Bolt Tech project budget burn is approaching threshold limits. Adjust freelance needs to protect profitability.
                 </p>
@@ -255,14 +253,14 @@ export default function Dashboard() {
           </Card>
 
           {/* Quick Client Sentiment Tracker */}
-          <Card className="bg-midnight border-white/5 shadow-card">
+          <Card className="bg-midnight border-border shadow-card">
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-xs uppercase tracking-wider font-semibold text-fog">
                 Portfolio Status
               </CardTitle>
-              <button 
+              <button
                 onClick={() => router.push('/app/client-space')}
-                className="text-[9px] text-[#7FA38A] hover:underline transition-all cursor-pointer font-semibold"
+                className="text-[9px] text-emerald-600 hover:underline transition-all cursor-pointer font-semibold"
               >
                 Open Hub
               </button>
@@ -272,14 +270,14 @@ export default function Dashboard() {
                 { client: 'Acme Corp', health: 92, status: 'Active Retainer' },
                 { client: 'Bolt Tech', health: 58, status: 'Milestone Delayed' },
               ].map((c, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2.5 bg-white/2 border border-white/5 rounded-xl text-xs">
+                <div key={idx} className="flex items-center justify-between p-2.5 bg-white/2 border border-border rounded-xl text-xs">
                   <div>
                     <span className="font-semibold text-ivory block">{c.client}</span>
                     <span className="text-[10px] text-fog">{c.status}</span>
                   </div>
                   <span className={cn(
                     "text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border",
-                    c.health >= 80 ? "text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20" : "text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20"
+                    c.health >= 80 ? "text-emerald-600 bg-emerald-600/10 border-emerald-600/20" : "text-red-500 bg-red-500/10 border-red-500/20"
                   )}>
                     {c.health}% Score
                   </span>
@@ -297,10 +295,10 @@ export default function Dashboard() {
 
       {/* AI Agents Interactive Sheet */}
       <Sheet open={aiSheetOpen} onOpenChange={setAiSheetOpen}>
-        <SheetContent side="right" className="w-full sm:w-[480px] bg-midnight border-white/5 p-6 flex flex-col h-full gap-6">
-          <SheetHeader className="border-b border-white/5 pb-4">
+        <SheetContent side="right" className="w-full sm:w-[480px] bg-midnight border-border p-6 flex flex-col h-full gap-6">
+          <SheetHeader className="border-b border-border pb-4">
             <SheetTitle className="text-lg font-serif text-ivory flex items-center gap-2">
-              <Sparkles size={16} className="text-[#7FA38A] animate-pulse" />
+              <Sparkles size={16} className="text-emerald-600 animate-pulse" />
               <span>Minerva Operating Agent</span>
             </SheetTitle>
           </SheetHeader>
@@ -309,7 +307,7 @@ export default function Dashboard() {
             
             {activeAgentType === 'proposal' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-[#B89B6A]/20 bg-[#B89B6A]/5">
+                <div className="p-4 rounded-xl border border-amber-600/20 bg-amber-600/5">
                   <h4 className="text-xs font-semibold text-ivory">AI Proposal Agent</h4>
                   <p className="text-[11px] text-silver mt-1 leading-relaxed">
                     Provide raw details for an agency proposal, and Minerva will compile services, estimated phases, timeline scopes, and payment terms in seconds.
@@ -318,13 +316,13 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div>
                     <label className="text-[10px] uppercase font-semibold text-fog">Client Brand</label>
-                    <input type="text" placeholder="e.g. Acme Corp" className="w-full text-xs bg-obsidian border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none mt-1 focus:border-[#7FA38A]" />
+                    <input type="text" placeholder="e.g. Acme Corp" className="w-full text-xs bg-obsidian border border-border rounded-lg px-3 py-2 text-ivory outline-none mt-1 focus:border-emerald-600" />
                   </div>
                   <div>
                     <label className="text-[10px] uppercase font-semibold text-fog">Project Scope Brief</label>
-                    <textarea rows={3} placeholder="Describe deliverables, phases, and key outcomes..." className="w-full text-xs bg-obsidian border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none mt-1 resize-none focus:border-[#7FA38A]" />
+                    <textarea rows={3} placeholder="Describe deliverables, phases, and key outcomes..." className="w-full text-xs bg-obsidian border border-border rounded-lg px-3 py-2 text-ivory outline-none mt-1 resize-none focus:border-emerald-600" />
                   </div>
-                  <Button onClick={() => { setAiSheetOpen(false); router.push('/app/growth?tab=proposals'); }} className="w-full bg-[#7FA38A] text-obsidian hover:bg-[#7FA38A]/90 mt-2 font-semibold">
+                  <Button onClick={() => { setAiSheetOpen(false); router.push('/app/growth?tab=proposals'); }} className="w-full bg-emerald-600 text-obsidian hover:bg-emerald-600/90 mt-2 font-semibold">
                     Launch Proposal Generator
                   </Button>
                 </div>
@@ -333,7 +331,7 @@ export default function Dashboard() {
 
             {activeAgentType === 'callprep' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-[#7FA38A]/20 bg-[#7FA38A]/5">
+                <div className="p-4 rounded-xl border border-emerald-600/20 bg-emerald-600/5">
                   <h4 className="text-xs font-semibold text-ivory">AI Call Prepper</h4>
                   <p className="text-[11px] text-silver mt-1 leading-relaxed">
                     Prepares a comprehensive briefing summary containing deliverables, last emails, pending approvals, and active risk alerts before a sync session.
@@ -342,7 +340,7 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div>
                     <label className="text-[10px] uppercase font-semibold text-fog">Select Meeting Client</label>
-                    <select title="Select Meeting Client" className="w-full text-xs bg-obsidian border border-white/5 rounded-lg px-3 py-2 text-ivory outline-none mt-1 focus:border-[#7FA38A]">
+                    <select title="Select Meeting Client" className="w-full text-xs bg-obsidian border border-border rounded-lg px-3 py-2 text-ivory outline-none mt-1 focus:border-emerald-600">
                       <option>Acme Corp</option>
                       <option>Bolt Tech</option>
                       <option>Zenith Lab</option>
@@ -357,14 +355,14 @@ export default function Dashboard() {
 
             {activeAgentType === 'audit' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-[#A86A6A]/20 bg-[#A86A6A]/5">
+                <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5">
                   <h4 className="text-xs font-semibold text-ivory">SLA Risk Audit</h4>
                   <p className="text-[11px] text-silver mt-1 leading-relaxed">
                     Audits active project progress speeds, average client approval response, and overdue billing invoices to flag operations bottlenecks.
                   </p>
                 </div>
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-white/5 p-3.5 bg-obsidian space-y-3">
+                  <div className="rounded-xl border border-border p-3.5 bg-obsidian space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-silver">Average SLA speed</span>
                       <span className="text-sage font-bold font-mono">1.8d (Healthy)</span>
@@ -374,7 +372,7 @@ export default function Dashboard() {
                       <span className="text-amber font-bold font-mono">74% (Action needed)</span>
                     </div>
                   </div>
-                  <Button onClick={() => { setAiSheetOpen(false); router.push('/app/client-space'); }} className="w-full bg-[#7FA38A] text-obsidian hover:bg-[#7FA38A]/90 font-semibold">
+                  <Button onClick={() => { setAiSheetOpen(false); router.push('/app/client-space'); }} className="w-full bg-emerald-600 text-obsidian hover:bg-emerald-600/90 font-semibold">
                     View Health Cockpit
                   </Button>
                 </div>
@@ -383,7 +381,7 @@ export default function Dashboard() {
 
           </div>
 
-          <div className="border-t border-white/5 pt-4">
+          <div className="border-t border-border pt-4">
             <Button variant="ghost" onClick={() => setAiSheetOpen(false)} className="w-full text-fog hover:text-silver">
               Close Panel
             </Button>

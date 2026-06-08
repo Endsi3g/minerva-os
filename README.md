@@ -1,6 +1,6 @@
 # Minerva OS
 
-![Version](https://img.shields.io/badge/version-6.0.0-ivory?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-7.0.0-indigo?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
 
 **The intelligent operating system for agencies and creative studios.**
 
@@ -117,7 +117,7 @@ The Client Portal is Minerva's flagship feature — a token-scoped, white-labele
 | Mobile | Expo SDK 54 + React Native 0.81 + NativeWind v4 |
 | Desktop | Electron 42 |
 | Backend | Supabase (PostgreSQL + Auth + Storage) |
-| Styling | Tailwind CSS v4 + shadcn/ui (Celestial Editorial Noir) |
+| Styling | Tailwind CSS v4 + shadcn/ui (StackAI Light Mode) |
 | Animation | motion/react (Framer Motion v11+) |
 | AI | Anthropic SDK · claude-sonnet-4-6 · prompt caching |
 | Email | Resend (portal notifications + digests) |
@@ -127,23 +127,28 @@ The Client Portal is Minerva's flagship feature — a token-scoped, white-labele
 
 ---
 
-## Design system — Celestial Editorial Noir
+## Design system — StackAI Light Mode
 
-Dark-first editorial aesthetic. No neon, no generic SaaS gradients.
+Clean enterprise aesthetic — white surfaces, indigo accent, precise shadows. Dark mode available via toggle.
 
-| Token | Hex | Use |
+| Token | Value | Use |
 |---|---|---|
-| `obsidian` | `#0A0D14` | Page background |
-| `midnight` | `#111522` | Cards, inputs, surfaces |
-| `dusk` | `#171C2A` | Elevated surfaces |
-| `ivory` | `#F5F1E8` | Primary text, CTA buttons |
-| `silver` | `#B8BDC7` | Secondary text |
-| `fog` | `#8A9099` | Metadata, tertiary labels |
-| `sage` | `#7FA38A` | Success, active indicators |
-| `amber` | `#B89B6A` | Warning |
-| `rose` | `#A86A6A` | Error, danger |
+| `background` | `#FFFFFF` | Page background |
+| `card` | `#FFFFFF` | Cards, popovers |
+| `sidebar` | `#F8FAFC` | Sidebar surface |
+| `secondary` | `#F1F5F9` | Muted surfaces, inputs |
+| `foreground` | `#0F172A` | Primary text |
+| `muted-foreground` | `#64748B` | Secondary text, labels |
+| `primary` | `#4F46E5` | Accent, buttons, active states |
+| `border` | `#E2E8F0` | All borders |
+| `accent` | `#EEF2FF` | Hover backgrounds |
+| `sage` | `#10B981` | Success indicators |
+| `amber` | `#F59E0B` | Warning |
+| `rose` | `#EF4444` | Error, danger |
 
-Typography: **Playfair Display** (display / headings) · **Inter** (all UI text).
+**Dark mode**: `#090909` / `#141414` surfaces · `#818CF8` indigo primary · toggled via sun/moon button in header.
+
+Typography: **Inter** (all surfaces — display, UI, data).
 
 ---
 

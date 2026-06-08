@@ -90,7 +90,7 @@ const PRESET_CONFIGS: Record<string, {
     initials: 'MP',
     triggers: [
       { id: 'trig-calendar', name: 'Google Calendar Sync', type: 'calendar', icon: Calendar, color: 'text-warm bg-warm/10 border-warm/20', desc: 'Fires 10 mins before sync workshops' },
-      { id: 'trig-schedule', name: 'Schedule Trigger', type: 'schedule', icon: Clock, color: 'text-silver bg-white/5 border-white/10', desc: 'Runs every weekday at 8:00 AM' }
+      { id: 'trig-schedule', name: 'Schedule Trigger', type: 'schedule', icon: Clock, color: 'text-silver bg-secondary/60 border-border', desc: 'Runs every weekday at 8:00 AM' }
     ],
     tools: [
       { name: 'Fetch CRM Dossier', icon: Users, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', desc: 'Retrieve profile background and notes.' },
@@ -193,7 +193,7 @@ const renderMarkdown = (text: string) => {
 function ProgressBar({ pct }: { pct: number }) {
   return (
     <div
-      className="bg-[#7FA38A] h-full transition-all duration-300 rounded"
+      className="bg-emerald-600 h-full transition-all duration-300 rounded"
       ref={(node) => { if (node) node.style.width = `${pct}%`; }}
     />
   );
@@ -345,9 +345,9 @@ export default function AgentBuilder() {
 
   if (!agent) {
     return (
-      <div className="h-[calc(100vh-100px)] flex items-center justify-center bg-[#0A0D14] text-silver select-none">
+      <div className="h-[calc(100vh-100px)] flex items-center justify-center bg-background text-silver select-none">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-[#7FA38A]" />
+          <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
           <span className="text-xs">Loading Agent Workspace...</span>
         </div>
       </div>
@@ -543,14 +543,14 @@ export default function AgentBuilder() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] w-full select-none bg-[#0A0D14] font-sans">
+    <div className="flex flex-col h-[calc(100vh-64px)] w-full select-none bg-background font-sans">
       
       {/* Top Workspace Header Bar */}
-      <header className="shrink-0 flex items-center justify-between px-6 py-3 border-b border-white/5 bg-[#111522]/50 relative z-30">
+      <header className="shrink-0 flex items-center justify-between px-6 py-3 border-b border-border bg-card/50 relative z-30">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push('/app/agents')}
-            className="p-1.5 hover:bg-white/5 rounded-lg border border-white/10 text-fog hover:text-silver transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-accent rounded-lg border border-border text-fog hover:text-silver transition-colors cursor-pointer"
             aria-label="Back to agents list"
           >
             <ChevronLeft size={14} />
@@ -564,14 +564,14 @@ export default function AgentBuilder() {
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-transparent border-none text-xs font-bold text-ivory outline-none focus:bg-white/5 px-1 py-0.5 rounded transition-all"
+                className="bg-transparent border-none text-xs font-bold text-ivory outline-none focus:bg-secondary/60 px-1 py-0.5 rounded transition-all"
                 title="Agent Name"
                 placeholder="Agent Name"
               />
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={cn(
                   "h-1.5 w-1.5 rounded-full",
-                  isPublished ? "bg-[#7FA38A]" : "bg-warm"
+                  isPublished ? "bg-emerald-600" : "bg-warm"
                 )} />
                 <span className="text-[9px] font-bold text-fog tracking-wider uppercase">
                   {isPublished ? 'Published' : 'Unpublished'}
@@ -582,12 +582,12 @@ export default function AgentBuilder() {
         </div>
 
         {/* Center Build / Run / Evaluate Tabs (matching image copy 5.png) */}
-        <div className="flex items-center bg-black/30 border border-white/5 rounded-lg p-0.5">
+        <div className="flex items-center bg-black/30 border border-border rounded-lg p-0.5">
           <button
             onClick={() => { setActiveTab('build'); setSelectedToolId(null); }}
             className={cn(
               "px-4 py-1 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all cursor-pointer flex items-center gap-1.5",
-              activeTab === 'build' ? "bg-white/10 text-ivory" : "text-fog hover:text-silver"
+              activeTab === 'build' ? "bg-accent text-ivory" : "text-fog hover:text-silver"
             )}
           >
             <Wrench size={10} /> Build
@@ -596,7 +596,7 @@ export default function AgentBuilder() {
             onClick={() => setActiveTab('run')}
             className={cn(
               "px-4 py-1 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all cursor-pointer flex items-center gap-1.5",
-              activeTab === 'run' ? "bg-white/10 text-ivory" : "text-fog hover:text-silver"
+              activeTab === 'run' ? "bg-accent text-ivory" : "text-fog hover:text-silver"
             )}
           >
             <Play size={10} /> Run
@@ -605,7 +605,7 @@ export default function AgentBuilder() {
             onClick={() => setActiveTab('evaluate')}
             className={cn(
               "px-4 py-1 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all cursor-pointer flex items-center gap-1.5",
-              activeTab === 'evaluate' ? "bg-white/10 text-ivory" : "text-fog hover:text-silver"
+              activeTab === 'evaluate' ? "bg-accent text-ivory" : "text-fog hover:text-silver"
             )}
           >
             <Star size={10} /> Evaluate
@@ -619,21 +619,21 @@ export default function AgentBuilder() {
               navigator.clipboard.writeText(window.location.href);
               toast.success('Agent link copied!');
             }}
-            className="flex items-center gap-1 text-[10px] font-bold text-fog hover:text-silver border border-white/10 px-2.5 py-1 rounded-lg hover:bg-white/5 transition-all cursor-pointer"
+            className="flex items-center gap-1 text-[10px] font-bold text-fog hover:text-silver border border-border px-2.5 py-1 rounded-lg hover:bg-accent transition-all cursor-pointer"
           >
             <Share2 size={10} /> Share
           </button>
-          
+
           <button
             onClick={handleSave}
-            className="flex items-center gap-1 text-[10px] font-bold text-fog hover:text-silver border border-white/10 px-2.5 py-1 rounded-lg hover:bg-white/5 transition-all cursor-pointer"
+            className="flex items-center gap-1 text-[10px] font-bold text-fog hover:text-silver border border-border px-2.5 py-1 rounded-lg hover:bg-accent transition-all cursor-pointer"
           >
             <Save size={10} /> Save
           </button>
 
           <Button
             onClick={handlePublish}
-            className="bg-[#7FA38A] text-midnight hover:bg-[#7FA38A]/90 rounded-lg text-[10px] font-bold h-7 px-3 cursor-pointer shadow-md"
+            className="bg-emerald-600 text-midnight hover:bg-emerald-600/90 rounded-lg text-[10px] font-bold h-7 px-3 cursor-pointer shadow-md"
           >
             Publish
           </Button>
@@ -642,8 +642,8 @@ export default function AgentBuilder() {
             onClick={() => setRightPanelOpen(!rightPanelOpen)}
             title="Toggle Right Panel"
             className={cn(
-              "p-1.5 hover:bg-white/5 rounded-lg text-fog hover:text-silver border border-white/10 transition-colors cursor-pointer",
-              rightPanelOpen && "bg-white/5 text-silver"
+              "p-1.5 hover:bg-accent rounded-lg text-fog hover:text-silver border border-border transition-colors cursor-pointer",
+              rightPanelOpen && "bg-secondary/60 text-silver"
             )}
           >
             <Layout size={13} />
@@ -656,7 +656,7 @@ export default function AgentBuilder() {
         
         {/* Left Sidebar Menu */}
         <div className={cn(
-          "shrink-0 bg-[#111522]/20 border-r border-white/5 p-2 flex flex-col justify-between transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "shrink-0 bg-card/20 border-r border-border p-2 flex flex-col justify-between transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]",
           leftSidebarExpanded ? "w-52" : "w-14"
         )}>
           <div className="space-y-0.5">
@@ -676,7 +676,7 @@ export default function AgentBuilder() {
                 className={cn(
                   "w-full flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors cursor-pointer",
                   activeTab === 'build' && activeSubTab === tab.id
-                    ? "text-[#7FA38A] bg-white/5 border border-white/5"
+                    ? "text-emerald-600 bg-secondary/60 border border-border"
                     : "text-fog hover:text-silver hover:bg-white/3 border border-transparent"
                 )}
               >
@@ -690,7 +690,7 @@ export default function AgentBuilder() {
               </button>
             ))}
 
-            <div className="border-t border-white/5 my-2" />
+            <div className="border-t border-border my-2" />
 
             {[
               { id: 'alerts', label: 'Alerts', icon: Bell },
@@ -707,7 +707,7 @@ export default function AgentBuilder() {
                 className={cn(
                   "w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-left transition-colors cursor-pointer",
                   activeTab === 'build' && activeSubTab === tab.id
-                    ? "text-[#7FA38A] bg-white/5 border border-white/5"
+                    ? "text-emerald-600 bg-secondary/60 border border-border"
                     : "text-fog hover:text-silver hover:bg-white/3 border border-transparent"
                 )}
               >
@@ -719,7 +719,7 @@ export default function AgentBuilder() {
             ))}
           </div>
 
-          <div className="space-y-0.5 pt-2 border-t border-white/5">
+          <div className="space-y-0.5 pt-2 border-t border-border">
             {leftSidebarExpanded && (
               <div className="px-2.5 py-1 text-[9px] font-bold text-fog tracking-wider uppercase">
                 System
@@ -760,7 +760,7 @@ export default function AgentBuilder() {
               {activeSubTab === 'prompt' && (
                 <div className="space-y-6">
                   {/* Agent Header Profile Block */}
-                  <div className="flex items-start justify-between bg-[#111522]/40 border border-white/5 rounded-xl p-5 relative">
+                  <div className="flex items-start justify-between bg-card/40 border border-border rounded-xl p-5 relative">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
                         <Bot size={24} />
@@ -773,14 +773,14 @@ export default function AgentBuilder() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => toast.info('Refining prompts with AI model...')}
-                        className="flex items-center gap-1.5 text-[10px] font-bold text-silver hover:text-ivory bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 text-[10px] font-bold text-silver hover:text-ivory bg-secondary/60 border border-border px-2.5 py-1.5 rounded-lg hover:bg-accent transition-all cursor-pointer"
                       >
-                        <Sparkles size={11} className="text-[#7FA38A]" />
+                        <Sparkles size={11} className="text-emerald-600" />
                         <span>Refine with AI</span>
                       </button>
                       <button
                         onClick={() => setActiveTab('run')}
-                        className="flex items-center gap-1.5 text-[10px] font-bold text-silver hover:text-ivory bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 text-[10px] font-bold text-silver hover:text-ivory bg-secondary/60 border border-border px-2.5 py-1.5 rounded-lg hover:bg-accent transition-all cursor-pointer"
                       >
                         <Play size={11} className="text-blue-400" />
                         <span>Test agent</span>
@@ -789,7 +789,7 @@ export default function AgentBuilder() {
                   </div>
 
                   {/* Goal instructions panel */}
-                  <Card className="bg-[#111522]/85 border border-white/5 rounded-xl shadow-none">
+                  <Card className="bg-card/85 border border-border rounded-xl shadow-none">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-xs uppercase tracking-wider font-bold text-ivory">Goal</CardTitle>
                     </CardHeader>
@@ -799,11 +799,11 @@ export default function AgentBuilder() {
                         onChange={(e) => setGoal(e.target.value)}
                         placeholder="Write details on what you want your agent to accomplish..."
                         rows={2}
-                        className="bg-black/30 border-white/5 text-xs text-silver rounded-xl resize-none focus:ring-1 focus:ring-[#7FA38A]/30"
+                        className="bg-black/30 border-border text-xs text-silver rounded-xl resize-none focus:ring-1 focus:ring-emerald-600/30"
                       />
                       {goal && (
                         <div className="bg-black/10 border border-white/3 rounded-lg p-3 space-y-1">
-                          <div className="text-[10px] font-bold text-[#7FA38A] uppercase">Current Objective</div>
+                          <div className="text-[10px] font-bold text-emerald-600 uppercase">Current Objective</div>
                           <p className="text-xs text-silver italic leading-relaxed">{goal}</p>
                         </div>
                       )}
@@ -811,7 +811,7 @@ export default function AgentBuilder() {
                   </Card>
 
                   {/* Tools badges panel */}
-                  <Card className="bg-[#111522]/85 border border-white/5 rounded-xl shadow-none">
+                  <Card className="bg-card/85 border border-border rounded-xl shadow-none">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-xs uppercase tracking-wider font-bold text-ivory">Tools</CardTitle>
                     </CardHeader>
@@ -825,7 +825,7 @@ export default function AgentBuilder() {
                           </div>
                         ))}
                       </div>
-                      <div className="bg-black/20 border border-dashed border-white/5 p-3 rounded-lg text-[10px] text-fog italic flex items-center gap-2">
+                      <div className="bg-black/20 border border-dashed border-border p-3 rounded-lg text-[10px] text-fog italic flex items-center gap-2">
                         <span className="text-amber-500 font-bold">💡</span>
                         <span>You can also add comments like this that don&apos;t get sent to the agent.</span>
                       </div>
@@ -833,15 +833,15 @@ export default function AgentBuilder() {
                   </Card>
 
                   {/* Rules instructions panel */}
-                  <Card className="bg-[#111522]/85 border border-white/5 rounded-xl shadow-none">
+                  <Card className="bg-card/85 border border-border rounded-xl shadow-none">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-xs uppercase tracking-wider font-bold text-ivory flex items-center justify-between w-full">
                         <span>Rules</span>
-                        <span className="text-[9px] text-[#7FA38A] lowercase font-normal italic">guidelines & guardrails</span>
+                        <span className="text-[9px] text-emerald-600 lowercase font-normal italic">guidelines & guardrails</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="bg-black/20 border border-dashed border-white/5 p-3 rounded-lg text-[10px] text-fog italic flex items-center gap-2">
+                      <div className="bg-black/20 border border-dashed border-border p-3 rounded-lg text-[10px] text-fog italic flex items-center gap-2">
                         <span className="text-blue-500 font-bold">💡</span>
                         <span>If your agent isn&apos;t working like you want it to, prompting is how you can guide it!</span>
                       </div>
@@ -851,7 +851,7 @@ export default function AgentBuilder() {
                       ) : (
                         <div className="space-y-2">
                           {rules.map((rule, idx) => (
-                            <div key={idx} className="flex items-center justify-between bg-black/20 border border-white/5 px-3 py-1.5 rounded-lg text-xs text-silver">
+                            <div key={idx} className="flex items-center justify-between bg-black/20 border border-border px-3 py-1.5 rounded-lg text-xs text-silver">
                               <span className="flex items-center gap-2 font-mono text-xs">
                                 <span className="text-fog">{idx + 1}.</span> {rule}
                               </span>
@@ -868,10 +868,10 @@ export default function AgentBuilder() {
                           value={newRule}
                           onChange={(e) => setNewRule(e.target.value)}
                           placeholder="e.g. Always respond using markdown formatting..."
-                          className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-8"
+                          className="bg-black/30 border-border text-xs text-ivory rounded-lg h-8"
                           onKeyDown={(e) => e.key === 'Enter' && handleAddRule()}
                         />
-                        <Button onClick={handleAddRule} className="bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg text-xs text-silver h-8 px-3 cursor-pointer">
+                        <Button onClick={handleAddRule} className="bg-secondary/60 border border-border hover:bg-accent rounded-lg text-xs text-silver h-8 px-3 cursor-pointer">
                           Add Rule
                         </Button>
                       </div>
@@ -879,7 +879,7 @@ export default function AgentBuilder() {
                   </Card>
 
                   {/* Optional extras templates */}
-                  <div className="border border-white/5 rounded-xl p-5 bg-[#111522]/40 relative overflow-hidden">
+                  <div className="border border-border rounded-xl p-5 bg-card/40 relative overflow-hidden">
                     <TextureOverlay texture="dots" opacity={0.06} />
                     <div className="relative z-10 flex items-center justify-between mb-4">
                       <div className="space-y-0.5">
@@ -890,13 +890,13 @@ export default function AgentBuilder() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
                       {/* Web Researcher */}
-                      <div className="rounded-xl border border-white/5 p-3.5 flex flex-col justify-between h-40 bg-gradient-to-br from-red-950/20 to-blue-950/20 hover:border-white/10 transition-colors">
+                      <div className="rounded-xl border border-border p-3.5 flex flex-col justify-between h-40 bg-gradient-to-br from-red-950/20 to-blue-950/20 hover:border-border transition-colors">
                         <div className="space-y-1">
                           <span className="text-xs font-bold text-ivory block">Web Researcher</span>
                           <span className="text-[10px] text-silver leading-relaxed line-clamp-2">Search the web and summarize usability findings.</span>
                         </div>
                         {/* Custom SVG node flow mapping */}
-                        <div className="flex items-center gap-1.5 justify-center bg-black/40 py-2 px-2.5 rounded-lg border border-white/5">
+                        <div className="flex items-center gap-1.5 justify-center bg-black/40 py-2 px-2.5 rounded-lg border border-border">
                           <div className="h-5 w-5 rounded bg-red-500/10 flex items-center justify-center text-red-400">
                             <Globe size={11} />
                           </div>
@@ -911,20 +911,20 @@ export default function AgentBuilder() {
                         </div>
                         <button
                           onClick={() => applyTemplate('web_researcher')}
-                          className="text-[10px] font-bold text-[#7FA38A] hover:underline self-start cursor-pointer mt-1"
+                          className="text-[10px] font-bold text-emerald-600 hover:underline self-start cursor-pointer mt-1"
                         >
                           Use template
                         </button>
                       </div>
 
                       {/* Meeting Prepper */}
-                      <div className="rounded-xl border border-white/5 p-3.5 flex flex-col justify-between h-40 bg-gradient-to-br from-amber-950/20 to-orange-950/20 hover:border-white/10 transition-colors">
+                      <div className="rounded-xl border border-border p-3.5 flex flex-col justify-between h-40 bg-gradient-to-br from-amber-950/20 to-orange-950/20 hover:border-border transition-colors">
                         <div className="space-y-1">
                           <span className="text-xs font-bold text-ivory block">Meeting Prepper</span>
                           <span className="text-[10px] text-silver leading-relaxed line-clamp-2">Prepare for meetings and send follow-ups.</span>
                         </div>
                         {/* Custom SVG node flow mapping */}
-                        <div className="flex items-center gap-1.5 justify-center bg-black/40 py-2 px-2.5 rounded-lg border border-white/5">
+                        <div className="flex items-center gap-1.5 justify-center bg-black/40 py-2 px-2.5 rounded-lg border border-border">
                           <div className="h-5 w-5 rounded bg-amber-500/10 flex items-center justify-center text-amber-400">
                             <Calendar size={11} />
                           </div>
@@ -939,20 +939,20 @@ export default function AgentBuilder() {
                         </div>
                         <button
                           onClick={() => applyTemplate('meeting_prepper')}
-                          className="text-[10px] font-bold text-[#7FA38A] hover:underline self-start cursor-pointer mt-1"
+                          className="text-[10px] font-bold text-emerald-600 hover:underline self-start cursor-pointer mt-1"
                         >
                           Use template
                         </button>
                       </div>
 
                       {/* Email Assistant */}
-                      <div className="rounded-xl border border-white/5 p-3.5 flex flex-col justify-between h-40 bg-gradient-to-br from-purple-950/20 to-pink-950/20 hover:border-white/10 transition-colors">
+                      <div className="rounded-xl border border-border p-3.5 flex flex-col justify-between h-40 bg-gradient-to-br from-purple-950/20 to-pink-950/20 hover:border-border transition-colors">
                         <div className="space-y-1">
                           <span className="text-xs font-bold text-ivory block">Email Assistant</span>
                           <span className="text-[10px] text-silver leading-relaxed line-clamp-2">Draft and respond to checkins professionally.</span>
                         </div>
                         {/* Custom SVG node flow mapping */}
-                        <div className="flex items-center gap-1.5 justify-center bg-black/40 py-2 px-2.5 rounded-lg border border-white/5">
+                        <div className="flex items-center gap-1.5 justify-center bg-black/40 py-2 px-2.5 rounded-lg border border-border">
                           <div className="h-5 w-5 rounded bg-blue-500/10 flex items-center justify-center text-blue-400">
                             <Mail size={11} />
                           </div>
@@ -967,7 +967,7 @@ export default function AgentBuilder() {
                         </div>
                         <button
                           onClick={() => applyTemplate('email_assistant')}
-                          className="text-[10px] font-bold text-[#7FA38A] hover:underline self-start cursor-pointer mt-1"
+                          className="text-[10px] font-bold text-emerald-600 hover:underline self-start cursor-pointer mt-1"
                         >
                           Use template
                         </button>
@@ -976,11 +976,11 @@ export default function AgentBuilder() {
                   </div>
 
                   {/* Custom API Keys Block */}
-                  <Card className="bg-[#111522]/85 border border-white/5 rounded-xl shadow-none">
+                  <Card className="bg-card/85 border border-border rounded-xl shadow-none">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-xs uppercase tracking-wider font-bold text-ivory flex items-center gap-1.5">
-                          <Key size={13} className="text-[#B89B6A]" />
+                          <Key size={13} className="text-amber-600" />
                           Custom LLM Keys
                         </CardTitle>
                         {isStarter && (
@@ -994,7 +994,7 @@ export default function AgentBuilder() {
                       {isStarter ? (
                         <div className="text-center py-4 space-y-2">
                           <p className="text-xs text-silver max-w-md mx-auto leading-relaxed">
-                            Adding custom API keys forces the agent to run directly on your own billing quotas. Upgrade to <span className="text-[#7FA38A] font-bold">Growth</span> or <span className="text-[#B89B6A] font-bold">Scale</span> plans to unlock this configuration.
+                            Adding custom API keys forces the agent to run directly on your own billing quotas. Upgrade to <span className="text-emerald-600 font-bold">Growth</span> or <span className="text-amber-600 font-bold">Scale</span> plans to unlock this configuration.
                           </p>
                           <Button
                             onClick={() => router.push('/app/billing')}
@@ -1012,7 +1012,7 @@ export default function AgentBuilder() {
                               value={openaiKey}
                               onChange={(e) => setOpenaiKey(e.target.value)}
                               placeholder="sk-..."
-                              className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9"
+                              className="bg-black/30 border-border text-xs text-ivory rounded-lg h-9"
                             />
                           </div>
                           <div className="space-y-1.5">
@@ -1022,7 +1022,7 @@ export default function AgentBuilder() {
                               value={anthropicKey}
                               onChange={(e) => setAnthropicKey(e.target.value)}
                               placeholder="sk-ant-..."
-                              className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9"
+                              className="bg-black/30 border-border text-xs text-ivory rounded-lg h-9"
                             />
                           </div>
                         </div>
@@ -1043,9 +1043,9 @@ export default function AgentBuilder() {
                   </div>
 
                   {/* Search and Table list */}
-                  <Card className="bg-[#111522]/80 border border-white/5 rounded-xl shadow-none">
+                  <Card className="bg-card/80 border border-border rounded-xl shadow-none">
                     <CardHeader className="pb-2">
-                      <div className="relative max-w-sm w-full bg-black/20 border border-white/5 rounded-lg overflow-hidden group h-8 flex items-center">
+                      <div className="relative max-w-sm w-full bg-black/20 border border-border rounded-lg overflow-hidden group h-8 flex items-center">
                         <Search className="absolute left-2.5 text-fog" size={12} />
                         <Input
                           value={searchKnowledgeQuery}
@@ -1067,9 +1067,9 @@ export default function AgentBuilder() {
                           .map((table) => (
                             <div key={table.id} className="grid grid-cols-3 items-center py-2.5 text-xs text-silver">
                               <div className="flex items-center gap-2 min-w-0">
-                                <FileText size={13} className="text-[#7FA38A] shrink-0" />
+                                <FileText size={13} className="text-emerald-600 shrink-0" />
                                 <span className="font-mono truncate">{table.title}</span>
-                                <span className="text-[9px] bg-[#7FA38A]/10 text-[#7FA38A] border border-[#7FA38A]/20 px-1.5 py-0.2 rounded font-bold">
+                                <span className="text-[9px] bg-emerald-600/10 text-emerald-600 border border-emerald-600/20 px-1.5 py-0.2 rounded font-bold">
                                   {table.status}
                                 </span>
                               </div>
@@ -1080,7 +1080,7 @@ export default function AgentBuilder() {
                                     setKnowledgeTables(prev => prev.filter(t => t.id !== table.id));
                                     toast.success('Knowledge table disconnected.');
                                   }}
-                                  className="text-fog hover:text-ember p-1 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                                  className="text-fog hover:text-ember p-1 rounded hover:bg-accent transition-colors cursor-pointer"
                                   aria-label="Remove knowledge table"
                                 >
                                   <X size={12} />
@@ -1093,7 +1093,7 @@ export default function AgentBuilder() {
                   </Card>
 
                   {/* Upload box */}
-                  <div className="border border-dashed border-white/10 rounded-xl p-8 bg-[#111522]/20 text-center relative hover:bg-white/[0.01] transition-colors group">
+                  <div className="border border-dashed border-border rounded-xl p-8 bg-card/20 text-center relative hover:bg-accent transition-colors group">
                     <input
                       type="file"
                       onChange={handleUploadFile}
@@ -1115,7 +1115,7 @@ export default function AgentBuilder() {
                       { label: 'Add Google Drive', icon: Globe, color: 'text-blue-400' },
                       { label: 'Add Sharepoint', icon: Network, color: 'text-green-400' },
                       { label: 'Add Notion', icon: Layers, color: 'text-purple-400' },
-                      { label: 'Add existing knowledge', icon: Database, color: 'text-[#B89B6A]' },
+                      { label: 'Add existing knowledge', icon: Database, color: 'text-amber-600' },
                       { label: 'Import website', icon: Globe, color: 'text-cyan-400' },
                       { label: 'Blank table', icon: Grid, color: 'text-fog' },
                       { label: 'Markdown/Text', icon: FileText, color: 'text-pink-400' },
@@ -1123,7 +1123,7 @@ export default function AgentBuilder() {
                       <button
                         key={btn.label}
                         onClick={() => toast.info(`${btn.label} wizard activated.`)}
-                        className="flex items-center gap-2 px-3 py-2 bg-[#111522] border border-white/5 rounded-lg text-[10px] font-bold text-silver hover:bg-white/5 transition-all cursor-pointer"
+                        className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg text-[10px] font-bold text-silver hover:bg-accent transition-all cursor-pointer"
                       >
                         <btn.icon size={11} className={btn.color} />
                         <span className="truncate">{btn.label}</span>
@@ -1145,7 +1145,7 @@ export default function AgentBuilder() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setSelectedToolId(null)}
-                            className="p-1 hover:bg-white/5 rounded text-fog hover:text-silver cursor-pointer"
+                            className="p-1 hover:bg-accent rounded text-fog hover:text-silver cursor-pointer"
                             aria-label="Back to tools list"
                           >
                             <ChevronLeft size={14} />
@@ -1153,13 +1153,13 @@ export default function AgentBuilder() {
                           <h4 className="text-xs font-bold text-ivory">Back to tools list</h4>
                         </div>
 
-                        <div className="bg-[#111522]/80 border border-white/5 rounded-xl p-4 space-y-4 text-xs">
+                        <div className="bg-card/80 border border-border rounded-xl p-4 space-y-4 text-xs">
                           <div>
                             <div className="text-[10px] font-bold text-fog uppercase">Tool Title</div>
                             <div className="text-ivory font-bold mt-1 text-xs">Summarize PDF and Extract Key Actions</div>
                           </div>
                           
-                          <div className="border-t border-white/5 pt-3 space-y-2">
+                          <div className="border-t border-border pt-3 space-y-2">
                             <div>
                               <div className="text-[10px] font-bold text-fog uppercase">Owner</div>
                               <div className="text-silver mt-0.5">Responsible party (if mentioned)</div>
@@ -1170,7 +1170,7 @@ export default function AgentBuilder() {
                             </div>
                           </div>
 
-                          <div className="border-t border-white/5 pt-3">
+                          <div className="border-t border-border pt-3">
                             <div className="text-[10px] font-bold text-fog uppercase mb-1">Structured Output</div>
                             <ul className="list-disc pl-4 space-y-1 text-silver text-[11px]">
                               <li>Summary text</li>
@@ -1179,7 +1179,7 @@ export default function AgentBuilder() {
                             </ul>
                           </div>
 
-                          <div className="border-t border-white/5 pt-3">
+                          <div className="border-t border-border pt-3">
                             <div className="text-[10px] font-bold text-fog uppercase mb-1">Tool Inputs</div>
                             <ul className="list-disc pl-4 space-y-1 text-silver text-[11px]">
                               <li>PDF File URL (required): The URL of the PDF to process</li>
@@ -1187,7 +1187,7 @@ export default function AgentBuilder() {
                             </ul>
                           </div>
 
-                          <div className="border-t border-white/5 pt-3">
+                          <div className="border-t border-border pt-3">
                             <div className="text-[10px] font-bold text-fog uppercase mb-1">Assumptions Made</div>
                             <ul className="list-disc pl-4 space-y-1 text-silver text-[11px]">
                               <li>The PDF file is accessible via a public URL</li>
@@ -1198,10 +1198,10 @@ export default function AgentBuilder() {
 
                           <button
                             onClick={handleRunTool}
-                            className="w-full flex items-center justify-between bg-black/40 border border-white/5 px-3 py-2 rounded-lg text-silver hover:bg-white/5 hover:text-ivory text-[11px]"
+                            className="w-full flex items-center justify-between bg-black/40 border border-border px-3 py-2 rounded-lg text-silver hover:bg-accent hover:text-ivory text-[11px]"
                           >
                             <span className="font-semibold">Suggested next action</span>
-                            <div className="flex items-center gap-1 text-[#7FA38A]">
+                            <div className="flex items-center gap-1 text-emerald-600">
                               <span>Run tool</span>
                               <ArrowRight size={12} />
                             </div>
@@ -1209,9 +1209,9 @@ export default function AgentBuilder() {
                         </div>
 
                         {/* Ask Inventor component at the bottom left */}
-                        <div className="bg-[#111522]/80 border border-[#7FA38A]/20 rounded-xl p-3.5 space-y-2">
-                          <label className="text-[10px] font-bold text-[#7FA38A] uppercase">AI Inventor Builder</label>
-                          <div className="flex gap-2 bg-black/30 border border-white/5 rounded-lg p-1">
+                        <div className="bg-card/80 border border-emerald-600/20 rounded-xl p-3.5 space-y-2">
+                          <label className="text-[10px] font-bold text-emerald-600 uppercase">AI Inventor Builder</label>
+                          <div className="flex gap-2 bg-black/30 border border-border rounded-lg p-1">
                             <textarea
                               placeholder="Ask Inventor to build anything..."
                               rows={1}
@@ -1231,22 +1231,22 @@ export default function AgentBuilder() {
                       {/* Right main builder area */}
                       <div className="lg:col-span-2 space-y-6">
                         {/* SOP standard operating procedure panel */}
-                        <Card className="bg-[#111522]/80 border border-white/5 rounded-xl shadow-none">
-                          <CardHeader className="pb-2 border-b border-white/5 flex flex-row items-center justify-between">
+                        <Card className="bg-card/80 border border-border rounded-xl shadow-none">
+                          <CardHeader className="pb-2 border-b border-border flex flex-row items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <FileText size={14} className="text-[#B89B6A]" />
+                              <FileText size={14} className="text-amber-600" />
                               <CardTitle className="text-xs uppercase tracking-wider font-bold text-ivory">Standard Operating Procedure</CardTitle>
                             </div>
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => setToolViewMode('build')}
-                                className={cn("px-2.5 py-1 rounded text-[10px] font-bold", toolViewMode === 'build' ? 'bg-white/10 text-ivory' : 'text-fog hover:text-silver')}
+                                className={cn("px-2.5 py-1 rounded text-[10px] font-bold", toolViewMode === 'build' ? 'bg-accent text-ivory' : 'text-fog hover:text-silver')}
                               >
                                 Build
                               </button>
                               <button
                                 onClick={() => setToolViewMode('logs')}
-                                className={cn("px-2.5 py-1 rounded text-[10px] font-bold", toolViewMode === 'logs' ? 'bg-white/10 text-ivory' : 'text-fog hover:text-silver')}
+                                className={cn("px-2.5 py-1 rounded text-[10px] font-bold", toolViewMode === 'logs' ? 'bg-accent text-ivory' : 'text-fog hover:text-silver')}
                               >
                                 Logs
                               </button>
@@ -1255,7 +1255,7 @@ export default function AgentBuilder() {
                           <CardContent className="pt-4 space-y-4">
                             {toolViewMode === 'build' ? (
                               <div className="space-y-4 text-xs leading-relaxed text-silver font-sans select-text">
-                                <div className="bg-black/20 p-3 rounded-lg border border-white/5 space-y-1">
+                                <div className="bg-black/20 p-3 rounded-lg border border-border space-y-1">
                                   <div className="font-bold text-ivory">**Tool Purpose:**</div>
                                   <p className="text-fog">Extract text from a PDF file, generate a comprehensive summary, and identify all key actions that need to be completed.</p>
                                 </div>
@@ -1284,7 +1284,7 @@ export default function AgentBuilder() {
                                 </div>
                               </div>
                             ) : (
-                              <div className="space-y-3 font-mono text-[10px] text-[#7FA38A] bg-black/30 p-3.5 rounded-lg border border-white/5 min-h-[200px]">
+                              <div className="space-y-3 font-mono text-[10px] text-emerald-600 bg-black/30 p-3.5 rounded-lg border border-border min-h-[200px]">
                                 <div>[16:34:10] Initialization completed.</div>
                                 <div>[16:34:11] Connected to model standard quota.</div>
                                 <div>[16:34:15] Memory cache loaded.</div>
@@ -1295,7 +1295,7 @@ export default function AgentBuilder() {
                         </Card>
 
                         {/* Execute Sandbox component inside tool */}
-                        <Card className="bg-[#111522]/80 border border-white/5 rounded-xl shadow-none">
+                        <Card className="bg-card/80 border border-border rounded-xl shadow-none">
                           <CardHeader>
                             <CardTitle className="text-xs uppercase tracking-wider font-bold text-ivory">Summarize PDF and Extract Key Actions</CardTitle>
                           </CardHeader>
@@ -1306,7 +1306,7 @@ export default function AgentBuilder() {
                                 value={pdfUrl}
                                 onChange={(e) => setPdfUrl(e.target.value)}
                                 placeholder="https://example.com/document.pdf"
-                                className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9"
+                                className="bg-black/30 border-border text-xs text-ivory rounded-lg h-9"
                               />
                             </div>
 
@@ -1315,7 +1315,7 @@ export default function AgentBuilder() {
                               <select
                                 value={summaryLength}
                                 onChange={(e) => setSummaryLength(e.target.value)}
-                                className="w-full bg-black/30 border border-white/5 text-xs text-silver rounded-lg h-9 px-3 outline-none focus:border-white/10"
+                                className="w-full bg-black/30 border border-border text-xs text-silver rounded-lg h-9 px-3 outline-none focus:border-border"
                                 title="Summary Length"
                               >
                                 <option value="brief">Brief (1-2 paragraphs)</option>
@@ -1327,7 +1327,7 @@ export default function AgentBuilder() {
                             <Button
                               onClick={handleRunTool}
                               disabled={isRunning}
-                              className="w-full bg-[#7FA38A] text-midnight hover:bg-[#7FA38A]/90 rounded-lg text-xs font-bold h-9 cursor-pointer flex items-center justify-center gap-1.5 shadow-md mt-2"
+                              className="w-full bg-emerald-600 text-midnight hover:bg-emerald-600/90 rounded-lg text-xs font-bold h-9 cursor-pointer flex items-center justify-center gap-1.5 shadow-md mt-2"
                             >
                               {isRunning ? (
                                 <>
@@ -1342,7 +1342,7 @@ export default function AgentBuilder() {
 
                             {/* Execution Terminal */}
                             {runLogs.length > 0 && (
-                              <div className="bg-black/40 border border-white/5 rounded-xl p-3.5 font-mono text-[9px] text-[#7FA38A] space-y-1 min-h-[120px] select-text">
+                              <div className="bg-black/40 border border-border rounded-xl p-3.5 font-mono text-[9px] text-emerald-600 space-y-1 min-h-[120px] select-text">
                                 <div className="text-fog mb-2 text-[8px] font-sans font-bold">Execution Logs</div>
                                 {runLogs.map((log, idx) => (
                                   <div key={idx} className="leading-relaxed whitespace-pre-wrap">{log}</div>
@@ -1365,7 +1365,7 @@ export default function AgentBuilder() {
                       </div>
 
                       {/* Visual nodes sequential diagram */}
-                      <div className="flex flex-col items-center bg-black/30 p-6 rounded-xl border border-white/5 max-w-md mx-auto space-y-3">
+                      <div className="flex flex-col items-center bg-black/30 p-6 rounded-xl border border-border max-w-md mx-auto space-y-3">
                         {toolsWorkflow.length === 0 ? (
                           <div className="text-center py-6 text-silver text-xs italic">No tools connected to agent. Add a tool node to begin.</div>
                         ) : (
@@ -1377,9 +1377,9 @@ export default function AgentBuilder() {
                                   <polyline points="19 12 12 19 5 12" />
                                 </svg>
                               )}
-                              <div className="flex items-center justify-between w-full bg-[#111522] border border-white/8 rounded-xl p-3.5 hover:border-[#7FA38A]/20 transition-all group relative">
+                              <div className="flex items-center justify-between w-full bg-card border border-border rounded-xl p-3.5 hover:border-emerald-600/20 transition-all group relative">
                                 <div className="flex items-center gap-3">
-                                  <div className="h-6 w-6 rounded bg-[#7FA38A]/10 border border-[#7FA38A]/20 flex items-center justify-center text-[#7FA38A]">
+                                  <div className="h-6 w-6 rounded bg-emerald-600/10 border border-emerald-600/20 flex items-center justify-center text-emerald-600">
                                     <Zap size={12} />
                                   </div>
                                   <div className="text-left">
@@ -1392,7 +1392,7 @@ export default function AgentBuilder() {
                                     setToolsWorkflow(prev => prev.filter((_, idx) => idx !== index));
                                     toast.success(`Removed ${nodeName} from workflow`);
                                   }}
-                                  className="text-fog hover:text-ember opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/5 cursor-pointer"
+                                  className="text-fog hover:text-ember opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent cursor-pointer"
                                   aria-label={`Remove ${nodeName} step`}
                                 >
                                   <X size={12} />
@@ -1413,17 +1413,17 @@ export default function AgentBuilder() {
                         </Button>
                         <Button
                           onClick={() => setShowAddMcpModal(true)}
-                          className="bg-white/5 border border-white/10 hover:bg-white/10 text-silver rounded-lg text-xs font-bold h-9 px-4 cursor-pointer flex items-center gap-1.5"
+                          className="bg-secondary/60 border border-border hover:bg-accent text-silver rounded-lg text-xs font-bold h-9 px-4 cursor-pointer flex items-center gap-1.5"
                         >
                           <Plus size={13} /> Add MCP
                         </Button>
                       </div>
 
                       {/* Popular tools section at the bottom */}
-                      <div className="border-t border-white/5 pt-6 space-y-4">
+                      <div className="border-t border-border pt-6 space-y-4">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold text-ivory">or try popular tools:</h4>
-                          <div className="relative max-w-xs bg-black/20 border border-white/5 rounded-lg overflow-hidden group h-7 flex items-center">
+                          <div className="relative max-w-xs bg-black/20 border border-border rounded-lg overflow-hidden group h-7 flex items-center">
                             <Search className="absolute left-2 text-fog" size={11} />
                             <Input
                               value={popularToolQuery}
@@ -1453,10 +1453,10 @@ export default function AgentBuilder() {
                                   setToolsWorkflow(prev => [...prev, tool.name]);
                                   toast.success(`Added ${tool.name} to tools workflow!`);
                                 }}
-                                className="flex flex-col justify-between p-3 bg-[#111522] border border-white/5 rounded-xl hover:border-white/10 hover:bg-white/[0.01] transition-all text-left h-24 cursor-pointer"
+                                className="flex flex-col justify-between p-3 bg-card border border-border rounded-xl hover:border-border hover:bg-accent transition-all text-left h-24 cursor-pointer"
                               >
                                 <span className="text-[10px] font-bold text-ivory leading-snug line-clamp-2">{tool.name}</span>
-                                <span className="text-[8px] bg-white/5 border border-white/5 px-2 py-0.5 rounded text-fog font-mono font-bold uppercase self-start mt-2">{tool.category}</span>
+                                <span className="text-[8px] bg-secondary/60 border border-border px-2 py-0.5 rounded text-fog font-mono font-bold uppercase self-start mt-2">{tool.category}</span>
                               </button>
                             ))}
                         </div>
@@ -1477,7 +1477,7 @@ export default function AgentBuilder() {
                   </div>
 
                   {/* Radiating Star Connectors Visualization diagram matching image copy 7.png */}
-                  <div className="relative h-64 w-full flex items-center justify-center bg-black/20 rounded-xl border border-white/5 overflow-hidden">
+                  <div className="relative h-64 w-full flex items-center justify-center bg-black/20 rounded-xl border border-border overflow-hidden">
                     {/* Visual connecting lines */}
                     <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
                       <line x1="25%" y1="12%" x2="50%" y2="50%" stroke="white" strokeWidth="1.5" strokeDasharray="4" />
@@ -1536,7 +1536,7 @@ export default function AgentBuilder() {
                           setShowAddTriggerModal(true);
                           toast.info('Selecting Slack connector as default trigger setup.');
                         }}
-                        className="bg-white/5 border border-white/10 hover:bg-white/10 text-silver rounded-lg text-xs font-bold h-9 px-4 cursor-pointer flex items-center gap-1.5"
+                        className="bg-secondary/60 border border-border hover:bg-accent text-silver rounded-lg text-xs font-bold h-9 px-4 cursor-pointer flex items-center gap-1.5"
                       >
                         <MessageSquare size={13} className="text-purple-400 animate-pulse" /> Trigger in Slack
                       </Button>
@@ -1544,11 +1544,11 @@ export default function AgentBuilder() {
                   </div>
 
                   {/* Active Triggers list */}
-                  <div className="space-y-3 border-t border-white/5 pt-6">
+                  <div className="space-y-3 border-t border-border pt-6">
                     <h4 className="text-xs font-bold text-ivory">Active Connected Triggers</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {activeTriggers.map((trig) => (
-                        <Card key={trig.id} className="bg-[#111522]/80 border border-white/5 rounded-xl shadow-none">
+                        <Card key={trig.id} className="bg-card/80 border border-border rounded-xl shadow-none">
                           <CardContent className="pt-5 space-y-4">
                             <div className="flex items-start justify-between">
                               <div className="flex items-center gap-3">
@@ -1567,7 +1567,7 @@ export default function AgentBuilder() {
                                 onClick={() => toggleTriggerStatus(trig.id)}
                                 className={cn(
                                   "text-xs px-2.5 py-1 rounded font-bold transition-colors cursor-pointer border",
-                                  trig.status === 'active' ? "bg-[#7FA38A]/10 text-[#7FA38A] border-[#7FA38A]/20" : "bg-white/5 text-fog border-white/10"
+                                  trig.status === 'active' ? "bg-emerald-600/10 text-emerald-600 border-emerald-600/20" : "bg-secondary/60 text-fog border-border"
                                 )}
                               >
                                 {trig.status === 'active' ? 'Enabled' : 'Disabled'}
@@ -1580,7 +1580,7 @@ export default function AgentBuilder() {
                   </div>
 
                   {/* Schedule messages card (matching image copy 7.png) */}
-                  <div className="bg-[#111522]/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                  <div className="bg-card/40 border border-border rounded-xl p-5 flex items-center justify-between">
                     <div className="space-y-1">
                       <h4 className="text-xs font-bold text-ivory">Schedule messages</h4>
                       <p className="text-[10px] text-fog">Allow your agent to schedule future actions.</p>
@@ -1605,13 +1605,13 @@ export default function AgentBuilder() {
                     </p>
                   </div>
 
-                  <Card className="bg-[#111522]/85 border border-white/5 rounded-xl shadow-none">
+                  <Card className="bg-card/85 border border-border rounded-xl shadow-none">
                     <CardContent className="pt-4 divide-y divide-white/5">
                       {alerts.map((al) => (
                         <div key={al.id} className="flex items-center justify-between py-3">
                           <div className="flex items-center gap-3">
                             <AlertCircle size={14} className={cn(
-                              al.type === 'error' ? 'text-rose-400' : al.type === 'warning' ? 'text-amber-400' : 'text-[#7FA38A]'
+                              al.type === 'error' ? 'text-rose-400' : al.type === 'warning' ? 'text-amber-400' : 'text-emerald-600'
                             )} />
                             <span className="text-xs text-silver font-mono">{al.msg}</span>
                           </div>
@@ -1633,11 +1633,11 @@ export default function AgentBuilder() {
                     </p>
                   </div>
 
-                  <Card className="bg-[#111522]/85 border border-white/5 rounded-xl shadow-none">
+                  <Card className="bg-card/85 border border-border rounded-xl shadow-none">
                     <CardContent className="pt-4 space-y-4">
                       <div className="space-y-2">
                         {memories.map((mem, i) => (
-                          <div key={i} className="flex items-center justify-between bg-black/20 border border-white/5 px-3 py-2 rounded-lg text-xs text-silver">
+                          <div key={i} className="flex items-center justify-between bg-black/20 border border-border px-3 py-2 rounded-lg text-xs text-silver">
                             <span>{mem}</span>
                             <button
                               onClick={() => setMemories(prev => prev.filter((_, idx) => idx !== i))}
@@ -1655,7 +1655,7 @@ export default function AgentBuilder() {
                           value={newMemory}
                           onChange={(e) => setNewMemory(e.target.value)}
                           placeholder="Add custom context/memory string..."
-                          className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-8"
+                          className="bg-black/30 border-border text-xs text-ivory rounded-lg h-8"
                         />
                         <Button
                           onClick={() => {
@@ -1664,7 +1664,7 @@ export default function AgentBuilder() {
                             setNewMemory('');
                             toast.success('Memory record added.');
                           }}
-                          className="bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg text-xs text-silver h-8 px-3 cursor-pointer"
+                          className="bg-secondary/60 border border-border hover:bg-accent rounded-lg text-xs text-silver h-8 px-3 cursor-pointer"
                         >
                           Add memory
                         </Button>
@@ -1684,10 +1684,10 @@ export default function AgentBuilder() {
                     </p>
                   </div>
 
-                  <Card className="bg-[#111522]/85 border border-white/5 rounded-xl shadow-none">
+                  <Card className="bg-card/85 border border-border rounded-xl shadow-none">
                     <CardContent className="pt-4 space-y-4">
                       <div className="space-y-2">
-                        <div className="grid grid-cols-2 text-[10px] font-bold text-fog uppercase border-b border-white/5 pb-1">
+                        <div className="grid grid-cols-2 text-[10px] font-bold text-fog uppercase border-b border-border pb-1">
                           <span>Key</span>
                           <span>Value</span>
                         </div>
@@ -1708,19 +1708,19 @@ export default function AgentBuilder() {
                         ))}
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-white/5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border">
                         <Input
                           value={newVarKey}
                           onChange={(e) => setNewVarKey(e.target.value)}
                           placeholder="VARIABLE_KEY"
-                          className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-8"
+                          className="bg-black/30 border-border text-xs text-ivory rounded-lg h-8"
                         />
                         <div className="flex gap-2">
                           <Input
                             value={newVarVal}
                             onChange={(e) => setNewVarVal(e.target.value)}
                             placeholder="Value"
-                            className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-8 flex-1"
+                            className="bg-black/30 border-border text-xs text-ivory rounded-lg h-8 flex-1"
                           />
                           <Button
                             onClick={() => {
@@ -1730,7 +1730,7 @@ export default function AgentBuilder() {
                               setNewVarVal('');
                               toast.success('Variable created.');
                             }}
-                            className="bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg text-xs text-silver h-8 px-3 cursor-pointer"
+                            className="bg-secondary/60 border border-border hover:bg-accent rounded-lg text-xs text-silver h-8 px-3 cursor-pointer"
                           >
                             Add
                           </Button>
@@ -1752,7 +1752,7 @@ export default function AgentBuilder() {
                   
                   {/* Centered Identity Card */}
                   <div className="text-center space-y-4">
-                    <div className="mx-auto h-16 w-16 rounded-full border border-white/10 flex items-center justify-center text-ivory text-lg font-bold shadow-lg bg-[#111522]/80">
+                    <div className="mx-auto h-16 w-16 rounded-full border border-border flex items-center justify-center text-ivory text-lg font-bold shadow-lg bg-card/80">
                       <div className={cn("h-12 w-12 rounded-full flex items-center justify-center font-bold text-white text-base", PRESET_CONFIGS[activePreset]?.avatar || 'bg-blue-600')}>
                         {PRESET_CONFIGS[activePreset]?.initials || 'A'}
                       </div>
@@ -1768,7 +1768,7 @@ export default function AgentBuilder() {
                   </div>
 
                   {/* Prompt Card Box */}
-                  <div className="bg-[#111522] border border-white/5 rounded-2xl p-4 shadow-xl relative focus-within:border-[#7FA38A]/30 transition-all duration-300">
+                  <div className="bg-card border border-border rounded-2xl p-4 shadow-xl relative focus-within:border-emerald-600/30 transition-all duration-300">
                     <textarea
                       value={promptInput}
                       onChange={(e) => setPromptInput(e.target.value)}
@@ -1787,15 +1787,15 @@ export default function AgentBuilder() {
                       }}
                     />
                     
-                    <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
+                    <div className="flex items-center justify-between pt-3 border-t border-border mt-2">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => {
                             toast.info('File attachment is simulated.');
                           }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/5 bg-white/2 hover:bg-white/5 text-[10px] text-silver hover:text-ivory transition-colors cursor-pointer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-white/2 hover:bg-accent text-[10px] text-silver hover:text-ivory transition-colors cursor-pointer"
                         >
-                          <Plus size={11} className="text-[#7FA38A]" />
+                          <Plus size={11} className="text-emerald-600" />
                           <span>{t.app.agentBuilder.attachFiles}</span>
                         </button>
                       </div>
@@ -1812,7 +1812,7 @@ export default function AgentBuilder() {
                             "p-2 rounded-full border transition-all cursor-pointer",
                             micActive 
                               ? "bg-rose-500/10 border-rose-500/30 text-rose-400" 
-                              : "bg-white/2 border-white/5 text-fog hover:text-silver hover:bg-white/5"
+                              : "bg-white/2 border-border text-fog hover:text-silver hover:bg-accent"
                           )}
                           title="Voice input"
                         >
@@ -1840,17 +1840,17 @@ export default function AgentBuilder() {
                         <>
                           <div
                             onClick={() => handleStartExecution(t.app.agentBuilder.quickPromptWeb1)}
-                            className="bg-[#111522] hover:bg-[#171C2A] border border-white/5 rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
+                            className="bg-card hover:bg-secondary border border-border rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
                           >
                             <span className="font-semibold pr-2">{t.app.agentBuilder.quickPromptWeb1}</span>
-                            <ArrowRight size={12} className="text-fog group-hover:text-[#7FA38A] group-hover:translate-x-1 transition-all shrink-0" />
+                            <ArrowRight size={12} className="text-fog group-hover:text-emerald-600 group-hover:translate-x-1 transition-all shrink-0" />
                           </div>
                           <div
                             onClick={() => handleStartExecution(t.app.agentBuilder.quickPromptWeb2)}
-                            className="bg-[#111522] hover:bg-[#171C2A] border border-white/5 rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
+                            className="bg-card hover:bg-secondary border border-border rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
                           >
                             <span className="font-semibold pr-2">{t.app.agentBuilder.quickPromptWeb2}</span>
-                            <ArrowRight size={12} className="text-fog group-hover:text-[#7FA38A] group-hover:translate-x-1 transition-all shrink-0" />
+                            <ArrowRight size={12} className="text-fog group-hover:text-emerald-600 group-hover:translate-x-1 transition-all shrink-0" />
                           </div>
                         </>
                       )}
@@ -1858,17 +1858,17 @@ export default function AgentBuilder() {
                         <>
                           <div
                             onClick={() => handleStartExecution(t.app.agentBuilder.quickPromptMeeting1)}
-                            className="bg-[#111522] hover:bg-[#171C2A] border border-white/5 rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
+                            className="bg-card hover:bg-secondary border border-border rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
                           >
                             <span className="font-semibold pr-2">{t.app.agentBuilder.quickPromptMeeting1}</span>
-                            <ArrowRight size={12} className="text-fog group-hover:text-[#7FA38A] group-hover:translate-x-1 transition-all shrink-0" />
+                            <ArrowRight size={12} className="text-fog group-hover:text-emerald-600 group-hover:translate-x-1 transition-all shrink-0" />
                           </div>
                           <div
                             onClick={() => handleStartExecution(t.app.agentBuilder.quickPromptMeeting2)}
-                            className="bg-[#111522] hover:bg-[#171C2A] border border-white/5 rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
+                            className="bg-card hover:bg-secondary border border-border rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
                           >
                             <span className="font-semibold pr-2">{t.app.agentBuilder.quickPromptMeeting2}</span>
-                            <ArrowRight size={12} className="text-fog group-hover:text-[#7FA38A] group-hover:translate-x-1 transition-all shrink-0" />
+                            <ArrowRight size={12} className="text-fog group-hover:text-emerald-600 group-hover:translate-x-1 transition-all shrink-0" />
                           </div>
                         </>
                       )}
@@ -1876,17 +1876,17 @@ export default function AgentBuilder() {
                         <>
                           <div
                             onClick={() => handleStartExecution(t.app.agentBuilder.quickPromptEmail1)}
-                            className="bg-[#111522] hover:bg-[#171C2A] border border-white/5 rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
+                            className="bg-card hover:bg-secondary border border-border rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
                           >
                             <span className="font-semibold pr-2">{t.app.agentBuilder.quickPromptEmail1}</span>
-                            <ArrowRight size={12} className="text-fog group-hover:text-[#7FA38A] group-hover:translate-x-1 transition-all shrink-0" />
+                            <ArrowRight size={12} className="text-fog group-hover:text-emerald-600 group-hover:translate-x-1 transition-all shrink-0" />
                           </div>
                           <div
                             onClick={() => handleStartExecution(t.app.agentBuilder.quickPromptEmail2)}
-                            className="bg-[#111522] hover:bg-[#171C2A] border border-white/5 rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
+                            className="bg-card hover:bg-secondary border border-border rounded-xl p-3.5 text-left text-xs text-silver hover:text-ivory transition-all duration-300 cursor-pointer flex items-center justify-between group shadow-sm"
                           >
                             <span className="font-semibold pr-2">{t.app.agentBuilder.quickPromptEmail2}</span>
-                            <ArrowRight size={12} className="text-fog group-hover:text-[#7FA38A] group-hover:translate-x-1 transition-all shrink-0" />
+                            <ArrowRight size={12} className="text-fog group-hover:text-emerald-600 group-hover:translate-x-1 transition-all shrink-0" />
                           </div>
                         </>
                       )}
@@ -1897,7 +1897,7 @@ export default function AgentBuilder() {
                 <div className="max-w-2xl mx-auto space-y-6 pb-12">
                   
                   {/* Top Status Header */}
-                  <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                  <div className="flex items-center justify-between border-b border-border pb-4">
                     <div className="flex items-center gap-3">
                       <div className={cn("h-8 w-8 rounded-full flex items-center justify-center font-bold text-white text-xs", PRESET_CONFIGS[activePreset]?.avatar || 'bg-blue-600')}>
                         {PRESET_CONFIGS[activePreset]?.initials || 'A'}
@@ -1907,7 +1907,7 @@ export default function AgentBuilder() {
                         <div className="text-[10px] text-fog mt-0.5 flex items-center gap-1.5">
                           <span className={cn(
                             "h-1.5 w-1.5 rounded-full animate-pulse",
-                            executionState === 'running' ? "bg-[#7FA38A]" : "bg-blue-400 animate-none"
+                            executionState === 'running' ? "bg-emerald-600" : "bg-blue-400 animate-none"
                           )} />
                           <span>
                             {executionState === 'running' ? t.app.agentBuilder.runStateRunning : t.app.agentBuilder.runStateCompleted}
@@ -1921,7 +1921,7 @@ export default function AgentBuilder() {
                         onClick={handleResetExecution}
                         variant="outline"
                         size="sm"
-                        className="border-white/10 hover:bg-white/5 text-[10px] font-bold text-silver hover:text-ivory h-7 cursor-pointer"
+                        className="border-border hover:bg-accent text-[10px] font-bold text-silver hover:text-ivory h-7 cursor-pointer"
                       >
                         <RotateCcw size={11} className="mr-1.5" /> {t.app.agentBuilder.runAgain}
                       </Button>
@@ -1957,8 +1957,8 @@ export default function AgentBuilder() {
                           <div 
                             key={toolIdx}
                             className={cn(
-                              "bg-[#111522] border rounded-xl p-4 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                              status === 'running' ? "border-[#7FA38A]/30 shadow-md scale-[1.01]" : "border-white/5 opacity-80",
+                              "bg-card border rounded-xl p-4 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                              status === 'running' ? "border-emerald-600/30 shadow-md scale-[1.01]" : "border-border opacity-80",
                               status === 'pending' && "opacity-40"
                             )}
                           >
@@ -1966,9 +1966,9 @@ export default function AgentBuilder() {
                               <div className="flex items-center gap-3">
                                 <div className={cn(
                                   "h-7 w-7 rounded-lg flex items-center justify-center border shrink-0 transition-colors duration-300",
-                                  status === 'completed' ? "bg-[#7FA38A]/10 border-[#7FA38A]/30 text-[#7FA38A]" :
+                                  status === 'completed' ? "bg-emerald-600/10 border-emerald-600/30 text-emerald-600" :
                                   status === 'running' ? "bg-blue-500/10 border-blue-500/30 text-blue-400" :
-                                  "bg-white/2 border-white/5 text-fog"
+                                  "bg-white/2 border-border text-fog"
                                 )}>
                                   {status === 'completed' ? (
                                     <Check size={13} />
@@ -1992,12 +1992,12 @@ export default function AgentBuilder() {
 
                             {/* Inner Terminal Step logs for this node */}
                             {toolLogs.length > 0 && (
-                              <div className="mt-3.5 bg-black/40 border border-white/5 rounded-lg p-3 font-mono text-[9px] text-[#7FA38A]/95 space-y-1.5">
+                              <div className="mt-3.5 bg-black/40 border border-border rounded-lg p-3 font-mono text-[9px] text-emerald-600/95 space-y-1.5">
                                 {toolLogs.map((log, lIdx) => (
                                   <div key={lIdx} className="leading-relaxed whitespace-pre-wrap">{log}</div>
                                 ))}
                                 {status === 'running' && (
-                                  <span className="inline-block w-1 h-3 bg-[#7FA38A] animate-[pulse_0.8s_infinite] ml-1" />
+                                  <span className="inline-block w-1 h-3 bg-emerald-600 animate-[pulse_0.8s_infinite] ml-1" />
                                 )}
                               </div>
                             )}
@@ -2014,19 +2014,19 @@ export default function AgentBuilder() {
                         Response Output
                       </div>
 
-                      <div className="bg-[#111522] border border-[#7FA38A]/20 rounded-xl p-5 shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 right-0 h-16 w-16 bg-[#7FA38A]/3 blur-xl pointer-events-none rounded-full" />
+                      <div className="bg-card border border-emerald-600/20 rounded-xl p-5 shadow-lg relative overflow-hidden">
+                        <div className="absolute top-0 right-0 h-16 w-16 bg-emerald-600/3 blur-xl pointer-events-none rounded-full" />
                         
-                        <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
+                        <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
                           <div className="flex items-center gap-2">
-                            <Sparkles size={13} className="text-[#7FA38A]" />
+                            <Sparkles size={13} className="text-emerald-600" />
                             <span className="text-[10px] font-bold text-fog uppercase tracking-wider">Structured Markdown Result</span>
                           </div>
                           
                           <div className="flex items-center gap-2">
                             <button
                               onClick={handleCopyOutput}
-                              className="flex items-center gap-1.5 text-[10px] font-bold text-silver hover:text-ivory border border-white/10 px-2.5 py-1.5 rounded-lg hover:bg-white/5 transition-all cursor-pointer"
+                              className="flex items-center gap-1.5 text-[10px] font-bold text-silver hover:text-ivory border border-border px-2.5 py-1.5 rounded-lg hover:bg-accent transition-all cursor-pointer"
                             >
                               <Share2 size={11} />
                               <span>{copiedText ? t.app.agentBuilder.copied : t.app.agentBuilder.copyOutput}</span>
@@ -2059,29 +2059,29 @@ export default function AgentBuilder() {
 
               {/* Benchmark metrics scorecards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="bg-[#111522]/80 border border-white/5 rounded-xl p-4 shadow-none space-y-2">
+                <Card className="bg-card/80 border border-border rounded-xl p-4 shadow-none space-y-2">
                   <div className="text-[9px] font-bold text-fog uppercase">Accuracy / Precision</div>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl font-bold text-ivory">98.2%</span>
-                    <span className="text-[9px] bg-[#7FA38A]/10 text-[#7FA38A] border border-[#7FA38A]/20 px-2 py-0.5 rounded-full font-bold">optimal</span>
+                    <span className="text-[9px] bg-emerald-600/10 text-emerald-600 border border-emerald-600/20 px-2 py-0.5 rounded-full font-bold">optimal</span>
                   </div>
                   <div className="w-full bg-black/30 h-1 rounded overflow-hidden">
-                    <div className="bg-[#7FA38A] h-full w-[98.2%]" />
+                    <div className="bg-emerald-600 h-full w-[98.2%]" />
                   </div>
                 </Card>
 
-                <Card className="bg-[#111522]/80 border border-white/5 rounded-xl p-4 shadow-none space-y-2">
+                <Card className="bg-card/80 border border-border rounded-xl p-4 shadow-none space-y-2">
                   <div className="text-[9px] font-bold text-fog uppercase">Avg. Response Latency</div>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-ivory">1.84s</span>
-                    <span className="text-[9px] text-[#7FA38A] font-semibold">-0.12s delta</span>
+                    <span className="text-[9px] text-emerald-600 font-semibold">-0.12s delta</span>
                   </div>
                   <div className="w-full bg-black/30 h-1 rounded overflow-hidden">
-                    <div className="bg-[#7FA38A] h-full w-[82%]" />
+                    <div className="bg-emerald-600 h-full w-[82%]" />
                   </div>
                 </Card>
 
-                <Card className="bg-[#111522]/80 border border-white/5 rounded-xl p-4 shadow-none space-y-2">
+                <Card className="bg-card/80 border border-border rounded-xl p-4 shadow-none space-y-2">
                   <div className="text-[9px] font-bold text-fog uppercase">Rule Compliance Index</div>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl font-bold text-ivory">100%</span>
@@ -2094,13 +2094,13 @@ export default function AgentBuilder() {
               </div>
 
               {/* Test cases list table */}
-              <Card className="bg-[#111522]/85 border border-white/5 rounded-xl shadow-none">
-                <CardHeader className="pb-2 border-b border-white/5 flex flex-row items-center justify-between">
+              <Card className="bg-card/85 border border-border rounded-xl shadow-none">
+                <CardHeader className="pb-2 border-b border-border flex flex-row items-center justify-between">
                   <CardTitle className="text-xs uppercase tracking-wider font-bold text-ivory">Benchmark Evaluation Suite</CardTitle>
                   <Button
                     onClick={runMockTestSuite}
                     disabled={isTestingSuite}
-                    className="bg-[#7FA38A] text-midnight hover:bg-[#7FA38A]/90 rounded-lg text-[10px] font-bold h-7 px-4"
+                    className="bg-emerald-600 text-midnight hover:bg-emerald-600/90 rounded-lg text-[10px] font-bold h-7 px-4"
                   >
                     {isTestingSuite ? (
                       <>
@@ -2114,7 +2114,7 @@ export default function AgentBuilder() {
                 <CardContent className="pt-4 space-y-4">
                   {isTestingSuite && (
                     <div className="space-y-1.5">
-                      <div className="flex justify-between text-[10px] font-mono text-[#7FA38A]">
+                      <div className="flex justify-between text-[10px] font-mono text-emerald-600">
                         <span>Running tests...</span>
                         <span>{testSuiteProgress}%</span>
                       </div>
@@ -2161,11 +2161,11 @@ export default function AgentBuilder() {
 
         {/* Right collapsible options pane matching image copy 5.png */}
         {rightPanelOpen && !collapsed && (
-          <div className="shrink-0 w-56 bg-[#111522]/30 border-l border-white/5 p-4 space-y-6 overflow-y-auto scrollbar-thin">
+          <div className="shrink-0 w-56 bg-card/30 border-l border-border p-4 space-y-6 overflow-y-auto scrollbar-thin">
             
             {/* Triggers Section */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-white/5 pb-1">
+              <div className="flex items-center justify-between border-b border-border pb-1">
                 <span className="text-[10px] font-bold text-ivory uppercase tracking-wider">{t.app.agentBuilder.triggersTitle}</span>
                 <button
                   onClick={() => {
@@ -2173,7 +2173,7 @@ export default function AgentBuilder() {
                     setActiveSubTab('triggers');
                     setSelectedToolId(null);
                   }}
-                  className="text-[#7FA38A] hover:underline text-[9px] font-bold cursor-pointer flex items-center gap-0.5"
+                  className="text-emerald-600 hover:underline text-[9px] font-bold cursor-pointer flex items-center gap-0.5"
                 >
                   <Plus size={8} /> Add
                 </button>
@@ -2182,7 +2182,7 @@ export default function AgentBuilder() {
               {/* Dynamic triggers config per preset */}
               {activePreset === 'web_researcher' && (
                 <div className="space-y-2.5">
-                  <div className="bg-black/40 border border-white/5 rounded-lg p-2.5 space-y-1.5">
+                  <div className="bg-black/40 border border-border rounded-lg p-2.5 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-bold text-ivory flex items-center gap-1">
                         <Zap size={10} className="text-green-400" />
@@ -2193,7 +2193,7 @@ export default function AgentBuilder() {
                           navigator.clipboard.writeText('https://api.minerva.io/v1/webhooks/wr_abc123');
                           toast.success('Webhook URL copied!');
                         }}
-                        className="text-[#7FA38A] hover:text-[#7FA38A]/80 text-[8px] font-bold cursor-pointer"
+                        className="text-emerald-600 hover:text-emerald-600/80 text-[8px] font-bold cursor-pointer"
                       >
                         {t.app.agentBuilder.webhookCopy}
                       </button>
@@ -2203,7 +2203,7 @@ export default function AgentBuilder() {
                     </div>
                   </div>
                   
-                  <div className="bg-black/40 border border-white/5 rounded-lg p-2.5 flex items-center gap-2">
+                  <div className="bg-black/40 border border-border rounded-lg p-2.5 flex items-center gap-2">
                     <MessageSquare size={11} className="text-purple-400 shrink-0" />
                     <div>
                       <div className="text-[9px] font-bold text-ivory">Slack channel trigger</div>
@@ -2215,10 +2215,10 @@ export default function AgentBuilder() {
 
               {activePreset === 'meeting_prepper' && (
                 <div className="space-y-2.5">
-                  <div className="bg-black/40 border border-white/5 rounded-lg p-2.5 space-y-2">
+                  <div className="bg-black/40 border border-border rounded-lg p-2.5 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-bold text-ivory flex items-center gap-1">
-                        <Calendar size={10} className="text-[#B89B6A]" />
+                        <Calendar size={10} className="text-amber-600" />
                         <span>{t.app.agentBuilder.calendarSelect}</span>
                       </span>
                     </div>
@@ -2226,19 +2226,19 @@ export default function AgentBuilder() {
                     <select
                       defaultValue="work"
                       title="Select calendar"
-                      className="w-full bg-black/50 border border-white/5 rounded px-1.5 py-1 text-[9px] text-silver outline-none"
+                      className="w-full bg-black/50 border border-border rounded px-1.5 py-1 text-[9px] text-silver outline-none"
                     >
                       <option value="work">Work Calendar</option>
                       <option value="bolt">Bolt Tech Syncs</option>
                     </select>
 
                     <label className="flex items-center gap-2 text-[8px] text-fog cursor-pointer select-none">
-                      <input type="checkbox" defaultChecked title="Fires 10 mins before event" className="rounded border-white/5 bg-black/50 text-[#7FA38A] focus:ring-0 w-2.5 h-2.5 cursor-pointer" />
+                      <input type="checkbox" defaultChecked title="Fires 10 mins before event" className="rounded border-border bg-black/50 text-emerald-600 focus:ring-0 w-2.5 h-2.5 cursor-pointer" />
                       <span>Fires 10 mins before event</span>
                     </label>
                   </div>
                   
-                  <div className="bg-black/40 border border-white/5 rounded-lg p-2.5 flex items-center gap-2">
+                  <div className="bg-black/40 border border-border rounded-lg p-2.5 flex items-center gap-2">
                     <Clock size={11} className="text-silver shrink-0" />
                     <div>
                       <div className="text-[9px] font-bold text-ivory">Schedule Trigger</div>
@@ -2250,7 +2250,7 @@ export default function AgentBuilder() {
 
               {activePreset === 'email_assistant' && (
                 <div className="space-y-2.5">
-                  <div className="bg-black/40 border border-white/5 rounded-lg p-2.5 space-y-2">
+                  <div className="bg-black/40 border border-border rounded-lg p-2.5 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-bold text-ivory flex items-center gap-1">
                         <Mail size={10} className="text-rose-400" />
@@ -2265,12 +2265,12 @@ export default function AgentBuilder() {
                         defaultValue="Acme Corp Feedback"
                         title="Subject Filter"
                         placeholder="Subject Filter"
-                        className="w-full bg-black/50 border border-white/5 rounded px-1.5 py-1 text-[9px] text-silver outline-none"
+                        className="w-full bg-black/50 border border-border rounded px-1.5 py-1 text-[9px] text-silver outline-none"
                       />
                     </div>
 
                     <label className="flex items-center gap-2 text-[8px] text-fog cursor-pointer select-none">
-                      <input type="checkbox" defaultChecked title="Auto-draft replies" className="rounded border-white/5 bg-black/50 text-[#7FA38A] focus:ring-0 w-2.5 h-2.5 cursor-pointer" />
+                      <input type="checkbox" defaultChecked title="Auto-draft replies" className="rounded border-border bg-black/50 text-emerald-600 focus:ring-0 w-2.5 h-2.5 cursor-pointer" />
                       <span>Auto-draft replies</span>
                     </label>
                   </div>
@@ -2280,7 +2280,7 @@ export default function AgentBuilder() {
 
             {/* Tools Section */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-white/5 pb-1">
+              <div className="flex items-center justify-between border-b border-border pb-1">
                 <span className="text-[10px] font-bold text-ivory uppercase tracking-wider">{t.app.agentBuilder.toolsTitle}</span>
                 <button
                   onClick={() => {
@@ -2288,7 +2288,7 @@ export default function AgentBuilder() {
                     setActiveSubTab('tools');
                     setSelectedToolId(null);
                   }}
-                  className="text-[#7FA38A] hover:underline text-[9px] font-bold cursor-pointer flex items-center gap-0.5"
+                  className="text-emerald-600 hover:underline text-[9px] font-bold cursor-pointer flex items-center gap-0.5"
                 >
                   <Plus size={8} /> Add
                 </button>
@@ -2302,13 +2302,13 @@ export default function AgentBuilder() {
                       setActiveSubTab('tools');
                       setSelectedToolId(tool.name);
                     }}
-                    className="flex items-center justify-between bg-black/20 hover:bg-white/5 border border-white/5 px-2.5 py-1.5 rounded-lg text-[10px] text-silver font-semibold cursor-pointer transition-colors"
+                    className="flex items-center justify-between bg-black/20 hover:bg-accent border border-border px-2.5 py-1.5 rounded-lg text-[10px] text-silver font-semibold cursor-pointer transition-colors"
                   >
                     <span className="truncate flex-1 pr-1 font-mono flex items-center gap-1.5">
                       <tool.icon size={10} className="text-blue-400 shrink-0" />
                       <span className="truncate">{tool.name}</span>
                     </span>
-                    <Wrench size={10} className="text-[#7FA38A] shrink-0" />
+                    <Wrench size={10} className="text-emerald-600 shrink-0" />
                   </div>
                 ))}
               </div>
@@ -2316,7 +2316,7 @@ export default function AgentBuilder() {
 
             {/* Knowledge Section */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-white/5 pb-1">
+              <div className="flex items-center justify-between border-b border-border pb-1">
                 <span className="text-[10px] font-bold text-ivory uppercase tracking-wider">Knowledge</span>
                 <button
                   onClick={() => {
@@ -2324,13 +2324,13 @@ export default function AgentBuilder() {
                     setActiveSubTab('knowledge');
                     setSelectedToolId(null);
                   }}
-                  className="text-[#7FA38A] hover:underline text-[9px] font-bold cursor-pointer flex items-center gap-0.5"
+                  className="text-emerald-600 hover:underline text-[9px] font-bold cursor-pointer flex items-center gap-0.5"
                 >
                   <Plus size={8} /> Add
                 </button>
               </div>
               
-              <div className="border border-dashed border-white/10 rounded-lg p-3 text-center bg-black/20 hover:bg-white/[0.01] transition-colors relative">
+              <div className="border border-dashed border-border rounded-lg p-3 text-center bg-black/20 hover:bg-accent transition-colors relative">
                 <input
                   type="file"
                   onChange={handleUploadFile}
@@ -2349,9 +2349,9 @@ export default function AgentBuilder() {
                       setActiveTab('build');
                       setActiveSubTab('knowledge');
                     }}
-                    className="flex items-center gap-1.5 text-[9px] text-silver truncate bg-black/20 border border-white/3 px-2 py-1 rounded hover:bg-white/5 cursor-pointer transition-colors"
+                    className="flex items-center gap-1.5 text-[9px] text-silver truncate bg-black/20 border border-white/3 px-2 py-1 rounded hover:bg-accent cursor-pointer transition-colors"
                   >
-                    <Database size={10} className="text-[#7FA38A] shrink-0" />
+                    <Database size={10} className="text-emerald-600 shrink-0" />
                     <span className="font-mono truncate">{tbl.title}</span>
                   </div>
                 ))}
@@ -2360,11 +2360,11 @@ export default function AgentBuilder() {
 
             {/* Variables Section */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-white/5 pb-1">
+              <div className="flex items-center justify-between border-b border-border pb-1">
                 <span className="text-[10px] font-bold text-ivory uppercase tracking-wider">Variables</span>
               </div>
               <p className="text-[9px] text-fog leading-relaxed">
-                Want to reuse values throughout your agent? Turn them into a variable with <code className="text-[#7FA38A] font-mono bg-white/5 px-1 py-0.5 rounded">{"Cmd + \\"}</code> that you can access with <code className="text-blue-400 font-mono">{"{{"}</code>.
+                Want to reuse values throughout your agent? Turn them into a variable with <code className="text-emerald-600 font-mono bg-secondary/60 px-1 py-0.5 rounded">{"Cmd + \\"}</code> that you can access with <code className="text-blue-400 font-mono">{"{{"}</code>.
               </p>
               <div className="space-y-1.5 pt-1">
                 {variables.slice(0, 2).map((v, i) => (
@@ -2385,8 +2385,8 @@ export default function AgentBuilder() {
       {/* 1. Add Tool Modal */}
       {showAddToolModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#111522] border border-white/8 rounded-xl p-5 w-full max-w-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+          <div className="bg-card border border-border rounded-xl p-5 w-full max-w-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-ivory">Add new tool</h3>
               <button onClick={() => setShowAddToolModal(false)} className="text-fog hover:text-silver cursor-pointer" aria-label="Close dialog"><X size={14} /></button>
             </div>
@@ -2395,7 +2395,7 @@ export default function AgentBuilder() {
               <select
                 id="add-tool-select"
                 title="Select tool definition"
-                className="w-full bg-black/30 border border-white/5 rounded-lg text-xs text-silver h-9 px-3 outline-none"
+                className="w-full bg-black/30 border border-border rounded-lg text-xs text-silver h-9 px-3 outline-none"
               >
                 <option value="Analyze CSV Data">Analyze CSV Data</option>
                 <option value="Extract Company Insights from Website">Extract Company Insights from Website</option>
@@ -2405,7 +2405,7 @@ export default function AgentBuilder() {
               </select>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button onClick={() => setShowAddToolModal(false)} className="bg-white/5 border border-white/10 hover:bg-white/10 text-silver rounded-lg text-xs px-4 h-8">Cancel</Button>
+              <Button onClick={() => setShowAddToolModal(false)} className="bg-secondary/60 border border-border hover:bg-accent text-silver rounded-lg text-xs px-4 h-8">Cancel</Button>
               <Button
                 onClick={() => {
                   const selectEl = document.getElementById('add-tool-select') as HTMLSelectElement;
@@ -2415,7 +2415,7 @@ export default function AgentBuilder() {
                   }
                   setShowAddToolModal(false);
                 }}
-                className="bg-[#7FA38A] hover:bg-[#7FA38A]/90 text-midnight rounded-lg text-xs px-4 h-8"
+                className="bg-emerald-600 hover:bg-emerald-600/90 text-midnight rounded-lg text-xs px-4 h-8"
               >
                 Add to flow
               </Button>
@@ -2427,23 +2427,23 @@ export default function AgentBuilder() {
       {/* 2. Add MCP Modal */}
       {showAddMcpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#111522] border border-white/8 rounded-xl p-5 w-full max-w-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+          <div className="bg-card border border-border rounded-xl p-5 w-full max-w-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-ivory">Add MCP Server Connection</h3>
               <button onClick={() => setShowAddMcpModal(false)} className="text-fog hover:text-silver cursor-pointer" aria-label="Close dialog"><X size={14} /></button>
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-fog uppercase">Server Name</label>
-                <Input id="mcp-server-name" title="Server Name" placeholder="e.g. github-mcp" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
+                <Input id="mcp-server-name" title="Server Name" placeholder="e.g. github-mcp" className="bg-black/30 border-border text-xs text-ivory rounded-lg h-9" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-fog uppercase">SSE Endpoint URL</label>
-                <Input id="mcp-server-url" title="SSE Endpoint URL" placeholder="http://localhost:3001/sse" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
+                <Input id="mcp-server-url" title="SSE Endpoint URL" placeholder="http://localhost:3001/sse" className="bg-black/30 border-border text-xs text-ivory rounded-lg h-9" />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button onClick={() => setShowAddMcpModal(false)} className="bg-white/5 border border-white/10 hover:bg-white/10 text-silver rounded-lg text-xs px-4 h-8">Cancel</Button>
+              <Button onClick={() => setShowAddMcpModal(false)} className="bg-secondary/60 border border-border hover:bg-accent text-silver rounded-lg text-xs px-4 h-8">Cancel</Button>
               <Button
                 onClick={() => {
                   const nameEl = document.getElementById('mcp-server-name') as HTMLInputElement;
@@ -2453,7 +2453,7 @@ export default function AgentBuilder() {
                   }
                   setShowAddMcpModal(false);
                 }}
-                className="bg-[#7FA38A] hover:bg-[#7FA38A]/90 text-midnight rounded-lg text-xs px-4 h-8"
+                className="bg-emerald-600 hover:bg-emerald-600/90 text-midnight rounded-lg text-xs px-4 h-8"
               >
                 Connect Server
               </Button>
@@ -2465,22 +2465,22 @@ export default function AgentBuilder() {
       {/* 3. Add Trigger Modal */}
       {showAddTriggerModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#111522] border border-white/8 rounded-xl p-5 w-full max-w-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+          <div className="bg-card border border-border rounded-xl p-5 w-full max-w-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-ivory">Add Event Trigger</h3>
               <button onClick={() => setShowAddTriggerModal(false)} className="text-fog hover:text-silver cursor-pointer" aria-label="Close dialog"><X size={14} /></button>
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-fog uppercase">Trigger Name</label>
-                <Input id="trig-name" title="Trigger Name" placeholder="e.g. New Ticket Slack Alert" className="bg-black/30 border-white/5 text-xs text-ivory rounded-lg h-9" />
+                <Input id="trig-name" title="Trigger Name" placeholder="e.g. New Ticket Slack Alert" className="bg-black/30 border-border text-xs text-ivory rounded-lg h-9" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-fog uppercase">Trigger Type</label>
                 <select
                   id="trig-type"
                   title="Trigger Type"
-                  className="w-full bg-black/30 border border-white/5 rounded-lg text-xs text-silver h-9 px-3 outline-none"
+                  className="w-full bg-black/30 border border-border rounded-lg text-xs text-silver h-9 px-3 outline-none"
                 >
                   <option value="slack">Slack Channel Activity</option>
                   <option value="webhook">Incoming HTTP Webhook</option>
@@ -2489,7 +2489,7 @@ export default function AgentBuilder() {
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button onClick={() => setShowAddTriggerModal(false)} className="bg-white/5 border border-white/10 hover:bg-white/10 text-silver rounded-lg text-xs px-4 h-8">Cancel</Button>
+              <Button onClick={() => setShowAddTriggerModal(false)} className="bg-secondary/60 border border-border hover:bg-accent text-silver rounded-lg text-xs px-4 h-8">Cancel</Button>
               <Button
                 onClick={() => {
                   const nameEl = document.getElementById('trig-name') as HTMLInputElement;
@@ -2507,7 +2507,7 @@ export default function AgentBuilder() {
                   }
                   setShowAddTriggerModal(false);
                 }}
-                className="bg-[#7FA38A] hover:bg-[#7FA38A]/90 text-midnight rounded-lg text-xs px-4 h-8"
+                className="bg-emerald-600 hover:bg-emerald-600/90 text-midnight rounded-lg text-xs px-4 h-8"
               >
                 Save Trigger
               </Button>

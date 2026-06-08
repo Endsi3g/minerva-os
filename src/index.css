@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -9,7 +9,7 @@
 @theme {
   /* Fonts */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-serif: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   /* Named palette — use bg-obsidian, text-ivory, etc. */
   --color-obsidian:   var(--obsidian);
@@ -41,10 +41,10 @@
   --tracking-heading:    -0.025em;
   --tracking-subheading: -0.01em;
 
-  /* Elevation shadow system */
-  --shadow-card:   0 1px 2px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
-  --shadow-raised: 0 4px 16px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08);
-  --shadow-float:  0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.10);
+  /* Elevation shadow system — light mode (StackAI) */
+  --shadow-card:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-raised: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-float:  0 10px 15px rgba(0,0,0,0.10), 0 4px 6px rgba(0,0,0,0.05);
 
   /* Gradient spotlight surfaces */
   --gradient-sage-spot:  linear-gradient(135deg, rgba(127,163,138,0.18) 0%, rgba(127,163,138,0.04) 100%);
@@ -91,45 +91,51 @@
 @layer base {
   /* ── CSS token values ─────────────────────────────────────────────────── */
   :root {
-    --background:               #ffffff;
-    --foreground:               #030303;
-    --card:                     #ffffff;
-    --card-foreground:          #030303;
-    --popover:                  #ffffff;
-    --popover-foreground:       #030303;
-    --primary:                  #000000;
-    --primary-foreground:       #ffffff;
-    --secondary:                #fefefe;
-    --secondary-foreground:     #1a1a1a;
-    --muted:                    #e7eaf0;
-    --muted-foreground:         #676f7b;
-    --accent:                   #e7eaf0;
-    --accent-foreground:        #000000;
-    --destructive:              #a86a6a;
-    --destructive-foreground:   #ffffff;
-    --border:                   #e7eaf0;
-    --input:                    #ffffff;
-    --ring:                     rgba(0, 0, 0, 0.1);
+    /* ── StackAI Light Mode ─────────────────────────────────────────────── */
+    --background:               #FFFFFF;
+    --foreground:               #0F172A;
+    --card:                     #FFFFFF;
+    --card-foreground:          #0F172A;
+    --popover:                  #FFFFFF;
+    --popover-foreground:       #0F172A;
+    --primary:                  #4F46E5;
+    --primary-foreground:       #FFFFFF;
+    --secondary:                #F1F5F9;
+    --secondary-foreground:     #334155;
+    --muted:                    #F8FAFC;
+    --muted-foreground:         #64748B;
+    --accent:                   #EEF2FF;
+    --accent-foreground:        #4F46E5;
+    --destructive:              #EF4444;
+    --destructive-foreground:   #FFFFFF;
+    --border:                   #E2E8F0;
+    --input:                    #FFFFFF;
+    --ring:                     #4F46E5;
     --radius:                   0.5rem;
 
-    /* RunwayML light variables */
-    --obsidian:                 #ffffff;
-    --midnight:                 #ffffff;
-    --dusk:                     #fefefe;
-    --ivory:                    #030303;
-    --silver:                   #404040;
-    --fog:                      #676f7b;
-    --void:                     #ffffff;
+    /* Minerva named tokens — light mode */
+    --obsidian:                 #FFFFFF;
+    --midnight:                 #FFFFFF;
+    --dusk:                     #F8FAFC;
+    --ivory:                    #0F172A;
+    --silver:                   #475569;
+    --fog:                      #94A3B8;
+    --void:                     #FFFFFF;
 
-    /* Sidebar — warm gray */
-    --sidebar:                        #fefefe;
-    --sidebar-foreground:             #1a1a1a;
-    --sidebar-primary:                #000000;
-    --sidebar-primary-foreground:     #ffffff;
-    --sidebar-accent:                 #e7eaf0;
-    --sidebar-accent-foreground:      #000000;
-    --sidebar-border:                 #e7eaf0;
-    --sidebar-ring:                   rgba(0, 0, 0, 0.1);
+    /* Status */
+    --sage:                     #10B981;
+    --amber:                    #F59E0B;
+    --rose:                     #EF4444;
+
+    /* Sidebar — StackAI light */
+    --sidebar:                        #F8FAFC;
+    --sidebar-foreground:             #334155;
+    --sidebar-primary:                #4F46E5;
+    --sidebar-primary-foreground:     #FFFFFF;
+    --sidebar-accent:                 #EEF2FF;
+    --sidebar-accent-foreground:      #4F46E5;
+    --sidebar-border:                 #E2E8F0;
+    --sidebar-ring:                   #4F46E5;
   }
 
   /* ── Dark mode (Framer-inspired Dark Canvas) ───────────────────────────── */
@@ -140,19 +146,19 @@
     --card-foreground:          #ffffff;
     --popover:                  #141414;
     --popover-foreground:       #ffffff;
-    --primary:                  #ffffff;
-    --primary-foreground:       #000000;
+    --primary:                  #818CF8;
+    --primary-foreground:       #0F172A;
     --secondary:                #1c1c1c;
     --secondary-foreground:     #e7eaf0;
     --muted:                    #1c1c1c;
     --muted-foreground:         #999999;
-    --accent:                   #1c1c1c;
-    --accent-foreground:        #ffffff;
-    --destructive:              #a86a6a;
+    --accent:                   #312E81;
+    --accent-foreground:        #C7D2FE;
+    --destructive:              #EF4444;
     --destructive-foreground:   #ffffff;
     --border:                   #262626;
     --input:                    #141414;
-    --ring:                     rgba(255, 255, 255, 0.15);
+    --ring:                     #818CF8;
 
     /* Minerva dark variables (Framer-aligned) */
     --obsidian:                 #090909;
@@ -163,14 +169,19 @@
     --fog:                      #999999;
     --void:                     #090909;
 
+    /* Status */
+    --sage:                     #34D399;
+    --amber:                    #FBBF24;
+    --rose:                     #F87171;
+
     --sidebar:                        #090909;
     --sidebar-foreground:             #e7eaf0;
-    --sidebar-primary:                #ffffff;
-    --sidebar-primary-foreground:     #000000;
-    --sidebar-accent:                 #1c1c1c;
-    --sidebar-accent-foreground:      #ffffff;
+    --sidebar-primary:                #818CF8;
+    --sidebar-primary-foreground:     #0F172A;
+    --sidebar-accent:                 #1e1b4b;
+    --sidebar-accent-foreground:      #C7D2FE;
     --sidebar-border:                 #262626;
-    --sidebar-ring:                   rgba(255, 255, 255, 0.15);
+    --sidebar-ring:                   #818CF8;
   }
 
   body {
@@ -191,7 +202,7 @@
   }
 
   ::selection {
-    background-color: rgba(245,241,232,0.2);
+    background-color: rgba(79,70,229,0.15);
   }
 
   @supports (scrollbar-width: none) {
@@ -243,6 +254,11 @@
   .shadow-card   { box-shadow: var(--shadow-card); }
   .shadow-raised { box-shadow: var(--shadow-raised); }
   .shadow-float  { box-shadow: var(--shadow-float); }
+
+  /* Dark mode — heavier shadows */
+  .dark .shadow-card   { box-shadow: 0 1px 2px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06); }
+  .dark .shadow-raised { box-shadow: 0 4px 16px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08); }
+  .dark .shadow-float  { box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.10); }
 
   /* Spotlight gradient surfaces */
   .spotlight-sage  { background: var(--gradient-sage-spot); }
@@ -325,27 +341,7 @@
   .c5-animated-gradient { animation: none; }
 }
 
-:root {
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
-
-.dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
+/* sidebar tokens already defined in @layer base :root above */
 
 @theme inline {
   --color-sidebar: var(--sidebar);

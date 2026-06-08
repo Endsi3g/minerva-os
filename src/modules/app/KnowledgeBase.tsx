@@ -58,7 +58,7 @@ function ArticleCard({
       {article.tags?.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-3">
           {article.tags.slice(0, 4).map((tag) => (
-            <span key={tag} className="flex items-center gap-0.5 text-[10px] text-fog/70 bg-white/3 px-1.5 py-0.5 rounded-full">
+            <span key={tag} className="flex items-center gap-0.5 text-[10px] text-fog/70 bg-secondary/60 px-1.5 py-0.5 rounded-full">
               <Tag size={9} />
               {tag}
             </span>
@@ -154,7 +154,7 @@ function ArticleModal({
         className="w-full max-w-xl rounded-2xl flex flex-col max-h-[90vh] bg-midnight border border-border"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-5 border-b border-white/5">
+        <div className="flex items-center justify-between p-5 border-b border-border">
           <h2 className="text-sm font-semibold text-ivory">{isEdit ? f.editTitle : f.newTitle}</h2>
           <button type="button" onClick={onClose} aria-label="Close dialog"><X size={14} className="text-fog hover:text-ivory" /></button>
         </div>
@@ -178,7 +178,7 @@ function ArticleModal({
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {tags.map(tag => (
-                  <span key={tag} className="flex items-center gap-1 text-[11px] text-fog bg-white/5 px-2 py-0.5 rounded-full">
+                  <span key={tag} className="flex items-center gap-1 text-[11px] text-fog bg-secondary/60 px-2 py-0.5 rounded-full">
                     {tag}
                     <button type="button" onClick={() => setTags(prev => prev.filter(t => t !== tag))} aria-label={`Remove tag ${tag}`}><X size={9} /></button>
                   </span>
@@ -187,7 +187,7 @@ function ArticleModal({
             )}
           </div>
         </div>
-        <div className="flex gap-2 p-5 border-t border-white/5">
+        <div className="flex gap-2 p-5 border-t border-border">
           <button type="button" onClick={onClose} className="flex-1 py-2 text-xs text-fog hover:text-silver">{f.cancel}</button>
           <Button type="submit" size="sm" className="flex-1" disabled={saving}>{f.save}</Button>
         </div>
@@ -199,11 +199,11 @@ function ArticleModal({
 function ArticleCardSkeleton() {
   return (
     <div className="rounded-xl border border-border bg-card p-4 animate-pulse space-y-3">
-      <Skeleton className="h-4 w-16 bg-white/5 rounded-full" />
-      <Skeleton className="h-4 w-3/4 bg-white/5" />
+      <Skeleton className="h-4 w-16 bg-secondary/60 rounded-full" />
+      <Skeleton className="h-4 w-3/4 bg-secondary/60" />
       <div className="space-y-2">
-        <Skeleton className="h-3 w-full bg-white/5" />
-        <Skeleton className="h-3 w-5/6 bg-white/5" />
+        <Skeleton className="h-3 w-full bg-secondary/60" />
+        <Skeleton className="h-3 w-5/6 bg-secondary/60" />
       </div>
     </div>
   );
@@ -346,7 +346,7 @@ export default function KnowledgeBase() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveCategory(null)}
-            className={cn('px-3 py-1 rounded-lg text-xs transition-colors', !activeCategory ? 'bg-sage/20 text-sage' : 'text-fog hover:text-ivory hover:bg-white/5')}
+            className={cn('px-3 py-1 rounded-lg text-xs transition-colors', !activeCategory ? 'bg-sage/20 text-sage' : 'text-fog hover:text-ivory hover:bg-secondary/60')}
           >
             {kb.all}
           </button>
@@ -354,7 +354,7 @@ export default function KnowledgeBase() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat === activeCategory ? null : cat)}
-              className={cn('px-3 py-1 rounded-lg text-xs transition-colors', activeCategory === cat ? 'bg-sage/20 text-sage' : 'text-fog hover:text-ivory hover:bg-white/5')}
+              className={cn('px-3 py-1 rounded-lg text-xs transition-colors', activeCategory === cat ? 'bg-sage/20 text-sage' : 'text-fog hover:text-ivory hover:bg-secondary/60')}
             >
               {cat}
             </button>

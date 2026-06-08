@@ -47,7 +47,7 @@ export function ChatSidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={toggleChat}
-            className="fixed inset-0 bg-void/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
           />
 
           {/* Sidebar */}
@@ -56,12 +56,12 @@ export function ChatSidebar() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed top-2 right-2 bottom-2 w-96 bg-midnight border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
+            className="fixed top-2 right-2 bottom-2 w-96 bg-background border border-border rounded-2xl shadow-float z-50 flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="h-14 px-4 flex items-center justify-between border-b border-border bg-dusk/50 backdrop-blur-md">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-sage/20 flex items-center justify-center text-sage">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <Bot size={18} />
                 </div>
                 <div>
@@ -77,7 +77,7 @@ export function ChatSidebar() {
                   variant="ghost" 
                   size="icon" 
                   onClick={clearMessages}
-                  className="text-fog hover:text-ivory h-8 w-8"
+                  className="text-muted-foreground hover:text-foreground h-8 w-8"
                   title="Clear conversation"
                 >
                   <Eraser size={14} />
@@ -86,7 +86,7 @@ export function ChatSidebar() {
                   variant="ghost" 
                   size="icon" 
                   onClick={toggleChat}
-                  className="text-fog hover:text-ivory h-8 w-8"
+                  className="text-muted-foreground hover:text-foreground h-8 w-8"
                 >
                   <X size={16} />
                 </Button>
@@ -122,9 +122,9 @@ export function ChatSidebar() {
                     <div
                       className={cn(
                         "px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm",
-                        msg.role === 'user' 
-                          ? "bg-sage text-midnight font-medium rounded-tr-none" 
-                          : "bg-dusk text-ivory border border-border/50 rounded-tl-none"
+                        msg.role === 'user'
+                          ? "bg-primary text-primary-foreground font-medium rounded-tr-none"
+                          : "bg-secondary text-foreground border border-border rounded-tl-none"
                       )}
                     >
                       {msg.content}
@@ -137,14 +137,14 @@ export function ChatSidebar() {
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-[10px] font-medium text-sage uppercase tracking-widest">Hermes</span>
                     </div>
-                    <div className="bg-dusk text-ivory border border-border/50 rounded-2xl rounded-tl-none px-4 py-3 flex flex-col gap-2">
+                    <div className="bg-secondary text-foreground border border-border rounded-2xl rounded-tl-none px-4 py-3 flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        <Loader2 size={14} className="animate-spin text-sage" />
-                        <span className="text-xs text-fog italic">Thinking...</span>
+                        <Loader2 size={14} className="animate-spin text-primary" />
+                        <span className="text-xs text-muted-foreground italic">Thinking...</span>
                       </div>
-                      <div className="flex items-center gap-2 px-2 py-1 rounded bg-void/50 border border-border/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-sage animate-pulse" />
-                        <span className="text-[10px] text-fog font-mono uppercase tracking-tight">Accessing Terminal</span>
+                      <div className="flex items-center gap-2 px-2 py-1 rounded bg-muted border border-border">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-tight">Accessing Terminal</span>
                       </div>
                     </div>
                   </div>
@@ -161,7 +161,7 @@ export function ChatSidebar() {
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-4 border-t border-border bg-midnight">
+            <div className="p-4 border-t border-border bg-background">
               <div className="relative">
                 <textarea
                   value={input}
@@ -169,16 +169,16 @@ export function ChatSidebar() {
                   onKeyDown={handleKeyPress}
                   placeholder={t.app.chat.placeholder}
                   rows={1}
-                  className="w-full bg-dusk text-ivory text-sm rounded-xl py-3 pl-4 pr-12 border border-border focus:border-sage/50 focus:ring-1 focus:ring-sage/20 outline-none transition-all resize-none placeholder:text-fog/50"
+                  className="w-full bg-secondary text-foreground text-sm rounded-xl py-3 pl-4 pr-12 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all resize-none placeholder:text-muted-foreground/60"
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
                   className={cn(
                     "absolute right-2 top-1.5 h-8 w-8 rounded-lg flex items-center justify-center transition-all",
-                    input.trim() && !isLoading 
-                      ? "bg-sage text-midnight hover:scale-105" 
-                      : "bg-void/50 text-fog cursor-not-allowed"
+                    input.trim() && !isLoading
+                      ? "bg-primary text-primary-foreground hover:scale-105"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
                   )}
                 >
                   <Send size={14} />

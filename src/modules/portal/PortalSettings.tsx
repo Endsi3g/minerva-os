@@ -81,7 +81,7 @@ export default function PortalSettings() {
   return (
     <div className="space-y-8 max-w-lg">
       <div>
-        <h1 className="text-2xl font-normal" style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}>
+        <h1 className="text-2xl font-normal text-foreground" style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '-0.02em' }}>
           {ps.title}
         </h1>
       </div>
@@ -89,14 +89,14 @@ export default function PortalSettings() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-12 rounded-[12px] animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }} />
+            <div key={i} className="h-12 rounded-[12px] animate-pulse bg-muted" />
           ))}
         </div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-8">
           {/* Frequency */}
           <section>
-            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: '#8A9099' }}>
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4 text-muted-foreground">
               {ps.frequency.label}
             </h2>
             <div className="space-y-2">
@@ -106,17 +106,17 @@ export default function PortalSettings() {
                   onClick={() => setFrequency(opt.value)}
                   className="w-full flex items-center gap-4 px-4 py-3.5 rounded-[12px] border text-left transition-all duration-200 cursor-pointer"
                   style={{
-                    backgroundColor: frequency === opt.value ? 'rgba(127,163,138,0.07)' : 'rgba(255,255,255,0.02)',
-                    borderColor: frequency === opt.value ? 'rgba(127,163,138,0.30)' : 'rgba(255,255,255,0.06)',
+                    backgroundColor: frequency === opt.value ? 'rgba(5,150,105,0.06)' : undefined,
+                    borderColor: frequency === opt.value ? 'rgba(5,150,105,0.30)' : undefined,
                   }}
+                  data-state={frequency === opt.value ? 'active' : undefined}
                 >
                   <div
-                    className="h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors duration-200"
-                    style={{ borderColor: frequency === opt.value ? '#7FA38A' : 'rgba(255,255,255,0.20)' }}
+                    className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors duration-200 ${frequency === opt.value ? 'border-emerald-600' : 'border-border'}`}
                   >
-                    {frequency === opt.value && <div className="h-2 w-2 rounded-full" style={{ backgroundColor: '#7FA38A' }} />}
+                    {frequency === opt.value && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
                   </div>
-                  <p className="text-sm font-medium" style={{ color: '#F5F1E8' }}>{opt.label}</p>
+                  <p className="text-sm font-medium text-foreground">{opt.label}</p>
                 </button>
               ))}
             </div>
@@ -124,7 +124,7 @@ export default function PortalSettings() {
 
           {/* Enabled types */}
           <section>
-            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: '#8A9099' }}>
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4 text-muted-foreground">
               {ps.types.label}
             </h2>
             <div className="space-y-2">
@@ -134,21 +134,13 @@ export default function PortalSettings() {
                   <button
                     key={type}
                     onClick={() => toggleType(type)}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-[12px] border transition-all duration-200 cursor-pointer"
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.02)',
-                      borderColor: 'rgba(255,255,255,0.06)',
-                    }}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-[12px] border border-border bg-card transition-all duration-200 cursor-pointer hover:bg-accent"
                   >
-                    <span className="text-sm" style={{ color: active ? '#F5F1E8' : '#8A9099' }}>{typeLabels[type]}</span>
+                    <span className={`text-sm ${active ? 'text-foreground' : 'text-muted-foreground'}`}>{typeLabels[type]}</span>
                     <div
-                      className="h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all duration-200"
-                      style={{
-                        backgroundColor: active ? '#7FA38A' : 'transparent',
-                        borderColor: active ? '#7FA38A' : 'rgba(255,255,255,0.15)',
-                      }}
+                      className={`h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all duration-200 ${active ? 'bg-emerald-600 border-emerald-600' : 'border-border bg-transparent'}`}
                     >
-                      {active && <Check size={11} style={{ color: '#0A0D14' }} />}
+                      {active && <Check size={11} className="text-white" />}
                     </div>
                   </button>
                 );
@@ -159,8 +151,7 @@ export default function PortalSettings() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 cursor-pointer"
-            style={{ backgroundColor: '#F5F1E8', color: '#0A0D14' }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 cursor-pointer bg-foreground text-background"
           >
             {saved ? <><Check size={14} />{ps.saved}</> : saving ? '...' : ps.save}
           </button>

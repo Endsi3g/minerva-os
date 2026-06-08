@@ -10,8 +10,7 @@ export default function NotFound() {
 
   return (
     <main
-      className="min-h-screen w-full flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden"
-      style={{ backgroundColor: '#0A0D14' }}
+      className="min-h-screen w-full flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden bg-background"
     >
       {/* Decorative subtle background gradient */}
       <div
@@ -33,8 +32,7 @@ export default function NotFound() {
             className="text-8xl md:text-9xl font-bold tracking-tighter block"
             style={{
               fontFamily: 'Playfair Display, serif',
-              color: '#F5F1E8',
-              backgroundImage: 'linear-gradient(to bottom, #F5F1E8, #8A9099)',
+              backgroundImage: 'linear-gradient(to bottom, var(--color-foreground, #F5F1E8), var(--color-muted-foreground, #8A9099))',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}
@@ -42,8 +40,7 @@ export default function NotFound() {
             404
           </span>
           <h1
-            className="text-xl md:text-2xl font-medium text-ivory tracking-tight"
-            style={{ color: '#F5F1E8' }}
+            className="text-xl md:text-2xl font-medium text-foreground tracking-tight"
           >
             {nf.heading}
           </h1>
@@ -54,8 +51,7 @@ export default function NotFound() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="text-sm md:text-base leading-relaxed"
-          style={{ color: '#B8BDC7' }}
+          className="text-sm md:text-base leading-relaxed text-muted-foreground"
         >
           {nf.subheading}
         </motion.p>
@@ -68,11 +64,7 @@ export default function NotFound() {
         >
           <Link
             href="/app/dashboard"
-            className="inline-block px-8 py-3 rounded-full text-sm font-medium tracking-wide transition-all shadow-lg active:scale-95 cursor-pointer"
-            style={{
-              backgroundColor: '#F5F1E8',
-              color: '#0A0D14',
-            }}
+            className="inline-block px-8 py-3 rounded-full text-sm font-medium tracking-wide transition-all shadow-lg active:scale-95 cursor-pointer bg-foreground text-background"
           >
             {nf.backHome}
           </Link>

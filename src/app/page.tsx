@@ -19,7 +19,7 @@ export default function RootPage() {
   }, [user, authLoading, router]);
 
   return (
-    <div className="min-h-screen w-full bg-[#0A0D14]" />
+    <div className="min-h-screen w-full bg-background" />
 
   );
 }

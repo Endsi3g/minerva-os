@@ -29,9 +29,9 @@ export function AgentSandboxChat({
   agentName,
 }: AgentSandboxChatProps) {
   return (
-    <div className="flex flex-col h-[400px] bg-[#111522]/80 border border-white/5 rounded-xl overflow-hidden shadow-lg">
-      <div className="shrink-0 p-3.5 border-b border-white/5 flex items-center gap-2">
-        <MessageSquare size={13} className="text-[#7FA38A]" />
+    <div className="flex flex-col h-[400px] bg-card/80 border border-border rounded-xl overflow-hidden shadow-lg">
+      <div className="shrink-0 p-3.5 border-b border-border flex items-center gap-2">
+        <MessageSquare size={13} className="text-emerald-600" />
         <span className="text-xs font-bold text-ivory">Simulation Sandbox Chat</span>
       </div>
 
@@ -53,7 +53,7 @@ export function AgentSandboxChat({
                 )}>
                   {msg.role === 'user' ? 'You' : agentName}
                 </span>
-                <div className="bg-black/20 border border-white/5 rounded-xl p-3 text-xs text-silver leading-relaxed whitespace-pre-wrap font-sans">
+                <div className="bg-black/20 border border-border rounded-xl p-3 text-xs text-silver leading-relaxed whitespace-pre-wrap font-sans">
                   {msg.content}
                 </div>
               </div>
@@ -63,24 +63,24 @@ export function AgentSandboxChat({
         {isChatTyping && (
           <div className="space-y-1 text-left">
             <span className="text-[10px] font-bold text-purple-400">Agent</span>
-            <div className="bg-black/20 border border-white/5 rounded-xl p-3 text-xs text-fog italic flex items-center gap-1.5">
-              <Loader2 className="h-3 w-3 animate-spin text-[#7FA38A]" /> Thinking...
+            <div className="bg-black/20 border border-border rounded-xl p-3 text-xs text-fog italic flex items-center gap-1.5">
+              <Loader2 className="h-3 w-3 animate-spin text-emerald-600" /> Thinking...
             </div>
           </div>
         )}
       </div>
 
       {/* Input box */}
-      <div className="shrink-0 p-3 border-t border-white/5 bg-black/20">
+      <div className="shrink-0 p-3 border-t border-border bg-black/20">
         <div className="flex gap-2">
           <Input
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Ask sandbox..."
-            className="bg-black/30 border-white/5 text-xs text-ivory placeholder-fog rounded-lg h-8"
+            className="bg-black/30 border-border text-xs text-ivory placeholder-fog rounded-lg h-8"
             onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
           />
-          <Button onClick={handleSendChatMessage} className="bg-[#7FA38A] hover:bg-[#7FA38A]/90 text-midnight rounded-lg px-3 h-8 flex items-center justify-center cursor-pointer shadow-md">
+          <Button onClick={handleSendChatMessage} className="bg-emerald-600 hover:bg-emerald-600/90 text-midnight rounded-lg px-3 h-8 flex items-center justify-center cursor-pointer shadow-md">
             <Send size={11} />
           </Button>
         </div>

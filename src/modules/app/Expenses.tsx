@@ -194,7 +194,7 @@ export default function Expenses() {
             return (
               <div
                 key={expense._id}
-                className="flex items-center gap-3 px-3 sm:px-4 py-3 rounded-xl border transition-colors hover:border-white/15 group bg-midnight border-border"
+                className="flex items-center gap-3 px-3 sm:px-4 py-3 rounded-xl border transition-colors hover:border-white/15 group bg-card border-border"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-ivory truncate">{expense.description}</p>

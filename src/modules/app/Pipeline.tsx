@@ -1,3 +1,4 @@
+'use client';
 import { useState, useMemo, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -49,19 +50,19 @@ function KanbanSkeleton() {
   return (
     <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6">
       {[1, 2, 3, 4].map(i => (
-        <div key={i} className="flex flex-col shrink-0 w-64 rounded-xl border border-white/5 bg-card/20 p-3 gap-3">
+        <div key={i} className="flex flex-col shrink-0 w-64 rounded-xl border border-border bg-card/20 p-3 gap-3">
           <div className="flex items-center justify-between px-1">
-            <Skeleton className="h-4 w-24 bg-white/5" />
-            <Skeleton className="h-4 w-8 rounded-full bg-white/5" />
+            <Skeleton className="h-4 w-24 bg-secondary/60" />
+            <Skeleton className="h-4 w-8 rounded-full bg-secondary/60" />
           </div>
           <div className="flex flex-col gap-2 flex-1">
             {[1, 2].map(j => (
-              <div key={j} className="bg-midnight border border-white/5 rounded-xl p-4 space-y-3 animate-pulse">
-                <Skeleton className="h-4 w-3/4 bg-white/5" />
-                <Skeleton className="h-3 w-1/2 bg-white/5" />
+              <div key={j} className="bg-midnight border border-border rounded-xl p-4 space-y-3 animate-pulse">
+                <Skeleton className="h-4 w-3/4 bg-secondary/60" />
+                <Skeleton className="h-3 w-1/2 bg-secondary/60" />
                 <div className="flex justify-between pt-1">
-                  <Skeleton className="h-3 w-12 bg-white/5" />
-                  <Skeleton className="h-3 w-16 bg-white/5" />
+                  <Skeleton className="h-3 w-12 bg-secondary/60" />
+                  <Skeleton className="h-3 w-16 bg-secondary/60" />
                 </div>
               </div>
             ))}
@@ -185,7 +186,7 @@ export default function Pipeline() {
       await updateStage({ id: leadId, stage: stageId });
     } catch (err) {
       setLocalLeads(originalLeads);
-      toast.error(lang === 'fr' ? "Échec du déplacement de l'opportunité" : "Failed to move deal");
+      toast.error("Failed to move deal");
     }
   };
 
@@ -301,7 +302,7 @@ export default function Pipeline() {
               {/* Add deal */}
               <button
                 onClick={() => openSheet(stage.id)}
-                className="flex items-center gap-1.5 text-xs text-fog hover:text-silver transition-colors px-1 py-1.5 rounded-lg hover:bg-white/5 mt-1"
+                className="flex items-center gap-1.5 text-xs text-fog hover:text-silver transition-colors px-1 py-1.5 rounded-lg hover:bg-accent mt-1"
               >
                 <Plus size={12} />
                 {p.addDeal}
@@ -361,7 +362,7 @@ export default function Pipeline() {
             </div>
 
             {emailDraft && (
-              <div className="border border-white/5 bg-obsidian/40 rounded-2xl p-4 mt-2 space-y-3 relative overflow-hidden transition-all duration-300">
+              <div className="border border-border bg-obsidian/40 rounded-2xl p-4 mt-2 space-y-3 relative overflow-hidden transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs text-warm font-semibold">
                     <Sparkles size={13} className="text-warm animate-pulse" />
@@ -374,7 +375,7 @@ export default function Pipeline() {
                   <div className="space-y-1">
                     <Label className="text-[10px] text-fog">Subject</Label>
                     <Input
-                      className="h-8 text-xs bg-midnight border-white/5 text-ivory focus-visible:ring-1"
+                      className="h-8 text-xs bg-midnight border-border text-ivory focus-visible:ring-1"
                       value={emailDraft.subject}
                       onChange={e => setEmailDraft(prev => prev ? { ...prev, subject: e.target.value } : null)}
                       title="Subject"
@@ -384,7 +385,7 @@ export default function Pipeline() {
                     <Label className="text-[10px] text-fog">Body</Label>
                     <textarea
                       rows={5}
-                      className="w-full rounded-md border border-white/5 bg-midnight px-2 py-1.5 text-xs text-silver placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none font-sans"
+                      className="w-full rounded-md border border-border bg-midnight px-2 py-1.5 text-xs text-silver placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none font-sans"
                       value={emailDraft.body}
                       onChange={e => setEmailDraft(prev => prev ? { ...prev, body: e.target.value } : null)}
                       title="Body"

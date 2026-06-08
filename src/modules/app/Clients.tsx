@@ -42,20 +42,20 @@ function ClientCardSkeleton() {
   return (
     <div className="bg-card border border-border rounded-xl p-5 space-y-4 animate-pulse">
       <div className="flex items-start justify-between gap-3">
-        <Skeleton className="h-10 w-10 rounded-full bg-white/5 shrink-0" />
-        <Skeleton className="h-5 w-16 rounded-full shrink-0 bg-white/5" />
+        <Skeleton className="h-10 w-10 rounded-full bg-secondary/60 shrink-0" />
+        <Skeleton className="h-5 w-16 rounded-full shrink-0 bg-secondary/60" />
       </div>
       <div className="space-y-2">
-        <Skeleton className="h-4 w-3/4 bg-white/5" />
-        <Skeleton className="h-3 w-1/2 bg-white/5" />
+        <Skeleton className="h-4 w-3/4 bg-secondary/60" />
+        <Skeleton className="h-3 w-1/2 bg-secondary/60" />
       </div>
       <div className="space-y-1">
-        <Skeleton className="h-3 w-1/3 bg-white/5" />
-        <Skeleton className="h-3 w-1/2 bg-white/5" />
+        <Skeleton className="h-3 w-1/3 bg-secondary/60" />
+        <Skeleton className="h-3 w-1/2 bg-secondary/60" />
       </div>
-      <div className="flex items-center justify-between border-t border-white/5 pt-3">
-        <Skeleton className="h-4 w-20 bg-white/5" />
-        <Skeleton className="h-4 w-16 bg-white/5" />
+      <div className="flex items-center justify-between border-t border-border pt-3">
+        <Skeleton className="h-4 w-20 bg-secondary/60" />
+        <Skeleton className="h-4 w-16 bg-secondary/60" />
       </div>
     </div>
   );
@@ -295,7 +295,7 @@ export default function Clients() {
       </div>
 
       {/* Tab switcher */}
-      <div className="flex items-center gap-1 border-b border-white/5 mb-6">
+      <div className="flex items-center gap-1 border-b border-border mb-6">
         {([['clients', cKeys.title], ['call-preps', t.app.sidebar.callPreps]] as [ClientsView, string][]).map(([key, label]) => (
           <button
             key={key}
@@ -352,8 +352,8 @@ export default function Clients() {
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-white/5 p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-fog">
+        <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-border p-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/60 border border-border text-fog">
             <Users size={20} />
           </div>
           <div className="space-y-1">
@@ -427,7 +427,7 @@ export default function Clients() {
 
       {/* Portal link dialog */}
       <Dialog open={portalDialogOpen} onOpenChange={setPortalDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-midnight border-white/10">
+        <DialogContent className="sm:max-w-md bg-midnight border-border">
           <DialogHeader>
             <DialogTitle className="text-ivory">{pKeys.dialogTitle}</DialogTitle>
             <DialogDescription className="text-fog">{pKeys.dialogDesc}</DialogDescription>
@@ -443,19 +443,19 @@ export default function Clients() {
               {portalUrl && (
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-ivory flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#7FA38A]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                     {pKeys.activeLink}
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
                       readOnly
                       value={portalUrl}
-                      className="text-xs text-silver bg-dusk border-white/5 flex-1"
+                      className="text-xs text-silver bg-dusk border-border flex-1"
                     />
                     <Button
                       size="sm"
                       variant="outline"
-                      className="shrink-0 border-white/10 text-fog hover:text-ivory gap-1.5"
+                      className="shrink-0 border-border text-fog hover:text-ivory gap-1.5"
                       onClick={handleCopy}
                     >
                       {copied ? <Check size={14} className="text-sage" /> : <Copy size={14} />}
@@ -473,7 +473,7 @@ export default function Clients() {
               {/* Scopes Section */}
               <div className="space-y-3">
                 <Label className="text-xs font-semibold text-ivory">{pKeys.scopes}</Label>
-                <div className="space-y-2.5 rounded-xl border border-white/5 bg-dusk/50 p-4">
+                <div className="space-y-2.5 rounded-xl border border-border bg-dusk/50 p-4">
                   {[
                     { id: 'approvals', label: pKeys.scopeApprovals },
                     { id: 'files', label: pKeys.scopeFiles },
@@ -486,7 +486,7 @@ export default function Clients() {
                         type="checkbox"
                         checked={selectedScopes.includes(s.id)}
                         onChange={() => handleScopeToggle(s.id)}
-                        className="rounded border-white/10 bg-midnight text-sage focus:ring-0 focus:ring-offset-0 accent-[#7FA38A] h-3.5 w-3.5"
+                        className="rounded border-border bg-midnight text-sage focus:ring-0 focus:ring-offset-0 accent-emerald-600 h-3.5 w-3.5"
                       />
                       <span>{s.label}</span>
                     </label>
@@ -499,10 +499,10 @@ export default function Clients() {
                 <Label className="text-xs font-semibold text-ivory">{pKeys.expiry}</Label>
                 <div className="flex gap-2">
                   <Select value={expiryOption} onValueChange={setExpiryOption}>
-                    <SelectTrigger className="flex-1 text-xs bg-dusk border-white/5 text-silver">
+                    <SelectTrigger className="flex-1 text-xs bg-dusk border-border text-silver">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-midnight border-white/10">
+                    <SelectContent className="bg-midnight border-border">
                       <SelectItem value="7">{pKeys.days7}</SelectItem>
                       <SelectItem value="30">{pKeys.days30}</SelectItem>
                       <SelectItem value="90">{pKeys.days90}</SelectItem>
@@ -515,7 +515,7 @@ export default function Clients() {
                       type="date"
                       value={customExpiryDate}
                       onChange={e => setCustomExpiryDate(e.target.value)}
-                      className="text-xs text-silver bg-dusk border-white/5 max-w-[150px]"
+                      className="text-xs text-silver bg-dusk border-border max-w-[150px]"
                     />
                   )}
                 </div>
@@ -527,7 +527,7 @@ export default function Clients() {
                   <Button
                     variant="ghost"
                     onClick={handleRevokeLink}
-                    className="flex-1 text-xs text-[#A86A6A] hover:bg-[#A86A6A]/10 hover:text-[#A86A6A] border border-[#A86A6A]/20"
+                    className="flex-1 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-500 border border-red-500/20"
                   >
                     {pKeys.revoke}
                   </Button>

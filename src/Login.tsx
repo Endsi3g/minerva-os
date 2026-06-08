@@ -60,10 +60,10 @@ export default function Login() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full bg-black selection:bg-white/30 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4 font-sans">
+    <main className="relative flex min-h-screen w-full bg-background selection:bg-foreground/20 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4 font-sans">
 
       {/* ── Left Column — Video ────────────────────────────────────────────── */}
-      <div className="relative hidden w-[52%] flex-col items-center justify-center px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex">
+      <div className="relative hidden w-[52%] flex-col items-center justify-center px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex" style={{ backgroundColor: '#111522' }}>
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
           autoPlay
@@ -74,9 +74,9 @@ export default function Login() {
           <source src={BG_VIDEO} type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/20 z-0" />
-        
+
         {/* Glassmorphic overlay panel */}
-        <div className="absolute inset-0 bg-[#0A0D14]/40 backdrop-blur-sm z-0" />
+        <div className="absolute inset-0 backdrop-blur-sm z-0" style={{ backgroundColor: 'rgba(10,13,20,0.40)' }} />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
@@ -109,7 +109,7 @@ export default function Login() {
       </div>
 
       {/* ── Right Column — Login Form ──────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center py-12 lg:py-6 px-4 sm:px-12 lg:px-16 xl:px-24 overflow-y-auto lg:overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center py-12 lg:py-6 px-4 sm:px-12 lg:px-16 xl:px-24 overflow-y-auto lg:overflow-hidden bg-background">
         <motion.div
           className="w-full max-w-xl space-y-8 lg:space-y-6 sm:space-y-10"
           initial={{ opacity: 0 }}
@@ -117,10 +117,10 @@ export default function Login() {
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
           <div className="space-y-2">
-            <h2 className="text-3xl font-medium tracking-tight text-white">
+            <h2 className="text-3xl font-medium tracking-tight text-foreground">
               {l.heading}
             </h2>
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-muted-foreground">
               {l.subheading}
             </p>
           </div>
@@ -139,10 +139,10 @@ export default function Login() {
 
             <div className="space-y-1.5 text-left w-full">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-white">{l.password}</label>
+                <label className="block text-sm font-medium text-foreground">{l.password}</label>
                 <Link
                   href="/forgot-password"
-                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {l.forgot}
                 </Link>
@@ -154,12 +154,12 @@ export default function Login() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  className="w-full bg-[#1A1A1A] border-none rounded-xl h-11 px-4 pr-11 text-white placeholder:text-white/20 focus:ring-2 focus:ring-white/20 focus:outline-none transition-all text-sm"
+                  className="w-full bg-card border border-border rounded-xl h-11 px-4 pr-11 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-foreground/20 focus:outline-none transition-all text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -167,12 +167,12 @@ export default function Login() {
               </div>
             </div>
 
-            {error && <p className="text-sm text-[#A86A6A] px-1">{error}</p>}
+            {error && <p className="text-sm text-red-500 px-1">{error}</p>}
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 bg-white text-black font-semibold rounded-xl hover:bg-white/90 active:scale-[0.98] mt-4 transition-all duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full h-14 bg-foreground text-background font-semibold rounded-xl hover:bg-foreground/90 active:scale-[0.98] mt-4 transition-all duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isLoading
                 ? <Loader2 size={18} className="animate-spin" />
@@ -180,11 +180,11 @@ export default function Login() {
               }
             </button>
 
-            <p className="text-center text-sm text-white/50">
+            <p className="text-center text-sm text-muted-foreground">
               {l.footer}{' '}
               <Link
                 href="/signup"
-                className="text-white hover:text-white/80 transition-colors underline underline-offset-2"
+                className="text-foreground hover:text-foreground/80 transition-colors underline underline-offset-2"
               >
                 {l.footerLink}
               </Link>
@@ -203,10 +203,11 @@ function FeatureItem({ text }: { text: string }) {
     <div
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 w-full',
-        'bg-[#111522]/40 backdrop-blur-md text-[#B8BDC7] border border-white/5',
+        'backdrop-blur-md text-white/70 border border-white/10',
       )}
+      style={{ backgroundColor: 'rgba(17,21,34,0.40)' }}
     >
-      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 bg-white/5 text-[#8A9099]">
+      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 text-white/50" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
         ·
       </span>
       <span className="text-sm font-medium">{text}</span>
@@ -225,13 +226,13 @@ interface InputGroupProps {
 function InputGroup({ label, placeholder, type, value, onChange }: InputGroupProps) {
   return (
     <div className="space-y-1.5 text-left w-full">
-      <label className="block text-sm font-medium text-white">{label}</label>
+      <label className="block text-sm font-medium text-foreground">{label}</label>
       <input
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full bg-[#1A1A1A] border-none rounded-xl h-11 px-4 text-white placeholder:text-white/20 focus:ring-2 focus:ring-white/20 focus:outline-none transition-all text-sm"
+        className="w-full bg-card border border-border rounded-xl h-11 px-4 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-foreground/20 focus:outline-none transition-all text-sm"
       />
     </div>
   );

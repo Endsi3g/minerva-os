@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from 'react';
 import { Check, RotateCcw, Palette, FileText, Video, File, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -217,8 +218,8 @@ export default function Approvals() {
 
       {/* Threaded Comments & Tally Sheet */}
       <Sheet open={!!selectedId} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <SheetContent side="right" className="w-full sm:w-[420px] md:w-[480px] bg-midnight border-white/5 flex flex-col p-0 overflow-y-auto">
-          <SheetHeader className="p-6 border-b border-white/5 shrink-0">
+        <SheetContent side="right" className="w-full sm:w-[420px] md:w-[480px] bg-card border-border flex flex-col p-0 overflow-y-auto">
+          <SheetHeader className="p-6 border-b border-border shrink-0">
             <SheetTitle className="text-xl font-playfair text-ivory">Review & Discussion</SheetTitle>
           </SheetHeader>
           
@@ -227,20 +228,20 @@ export default function Approvals() {
               <>
                 {/* Client Committee Votes & Design Option Poll */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#7FA38A]">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-600">
                     {t.app.approvals.poll.committeeTally}
                   </h4>
                   <VoteTally approvalId={selectedId} isAdmin={true} />
                   
-                  <div className="border-t border-white/5 pt-4">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#7FA38A] mb-3">
+                  <div className="border-t border-border pt-4">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-3">
                       Design Option Poll
                     </h4>
                     <ChoicePoll approvalId={selectedId} isAdmin={true} />
                   </div>
                 </div>
 
-                <div className="border-t border-white/5 pt-4">
+                <div className="border-t border-border pt-4">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-fog mb-3">
                     Discussion Thread
                   </h4>

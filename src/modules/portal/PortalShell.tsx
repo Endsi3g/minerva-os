@@ -13,35 +13,31 @@ import { supabase } from '@/lib/supabase';
 
 function PortalLoadingSkeleton() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-background" style={{ fontFamily: "'Inter', sans-serif" }}>
       <header
-        className="sticky top-0 z-50"
-        style={{
-          backgroundColor: 'rgba(10,13,20,0.96)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(16px)',
-        }}
+        className="sticky top-0 z-50 bg-background/95 border-b border-border"
+        style={{ backdropFilter: 'blur(16px)' }}
       >
         <div className="max-w-5xl mx-auto px-5">
           <div className="h-14 flex items-center gap-3">
             <div className="flex items-center gap-2.5 shrink-0">
-              <div className="h-6 w-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F1E8' }}>
-                <span className="text-[10px] font-bold" style={{ color: '#0A0D14' }}>M</span>
+              <div className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 bg-foreground">
+                <span className="text-[10px] font-bold text-background">M</span>
               </div>
-              <span className="text-sm font-semibold tracking-wide" style={{ color: '#F5F1E8' }}>Minerva</span>
+              <span className="text-sm font-semibold tracking-wide text-foreground">Minerva</span>
             </div>
-            <div className="h-4 w-px" style={{ backgroundColor: 'rgba(255,255,255,0.10)' }} />
-            <span className="text-sm" style={{ color: '#8A9099' }}>Client Portal</span>
+            <div className="h-4 w-px bg-border" />
+            <span className="text-sm text-muted-foreground">Client Portal</span>
           </div>
         </div>
       </header>
       <main className="max-w-5xl mx-auto px-5 py-10">
         <div className="space-y-4">
-          <div className="h-8 w-48 rounded-xl animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }} />
-          <div className="h-4 w-72 rounded-xl animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }} />
+          <div className="h-8 w-48 rounded-xl animate-pulse bg-muted" />
+          <div className="h-4 w-72 rounded-xl animate-pulse bg-muted" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-28 rounded-xl animate-pulse" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }} />
+              <div key={i} className="h-28 rounded-xl animate-pulse bg-muted" />
             ))}
           </div>
         </div>
@@ -126,17 +122,13 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
   return (
     <div
-      className="min-h-screen"
-      style={{ backgroundColor: '#0A0D14', fontFamily: "'Inter', sans-serif", '--portal-accent': accentColor } as React.CSSProperties}
+      className="min-h-screen bg-background"
+      style={{ fontFamily: "'Inter', sans-serif", '--portal-accent': accentColor } as React.CSSProperties}
     >
       {/* Sticky header */}
       <header
-        className="sticky top-0 z-50"
-        style={{
-          backgroundColor: 'rgba(10,13,20,0.96)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(16px)',
-        }}
+        className="sticky top-0 z-50 bg-background/95 border-b border-border"
+        style={{ backdropFilter: 'blur(16px)' }}
       >
         <div className="max-w-5xl mx-auto px-5">
           {/* Top bar */}
@@ -154,22 +146,18 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                   {wsInitials}
                 </div>
               )}
-              <span className="text-sm font-semibold tracking-wide" style={{ color: '#F5F1E8' }}>
+              <span className="text-sm font-semibold tracking-wide text-foreground">
                 {wsName ?? 'Minerva'}
               </span>
             </div>
 
-            <div className="h-4 w-px" style={{ backgroundColor: 'rgba(255,255,255,0.10)' }} />
-            <span className="text-sm" style={{ color: '#8A9099' }}>Client Portal</span>
+            <div className="h-4 w-px bg-border" />
+            <span className="text-sm text-muted-foreground">Client Portal</span>
 
             {/* Client badge */}
             <div
-              className="px-2.5 py-1 rounded-full text-xs font-medium"
-              style={{
-                backgroundColor: 'rgba(127,163,138,0.10)',
-                border: '1px solid rgba(127,163,138,0.22)',
-                color: '#7FA38A',
-              }}
+              className="px-2.5 py-1 rounded-full text-xs font-medium text-emerald-600 border"
+              style={{ backgroundColor: 'rgba(5,150,105,0.08)', borderColor: 'rgba(5,150,105,0.22)' }}
             >
               {clientName}
             </div>
@@ -184,15 +172,14 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               variant="ghost"
               size="sm"
               onClick={() => setLang(lang === 'en' ? 'fr' : 'en')}
-              className="text-xs text-[#8A9099] hover:text-[#F5F1E8] border border-white/5 h-8 px-2.5 rounded-lg"
+              className="text-xs text-muted-foreground hover:text-foreground border border-border h-8 px-2.5 rounded-lg"
             >
               {lang === 'en' ? 'FR' : 'EN'}
             </Button>
 
             <Link
               href="/"
-              className="text-xs transition-colors duration-200 hover:text-white/60"
-              style={{ color: '#8A9099' }}
+              className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
             >
               &larr; {t.nav.back}
             </Link>
@@ -210,7 +197,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                   key={tab.path}
                   href={href}
                   className={`px-4 py-2.5 text-sm border-b-2 transition-colors duration-200 whitespace-nowrap ${
-                    isActive ? 'text-[#F5F1E8] font-medium' : 'border-transparent text-[#8A9099] hover:text-[#B8BDC7]'
+                    isActive ? 'text-foreground font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                   style={isActive ? { borderColor: accentColor } : {}}
                 >
