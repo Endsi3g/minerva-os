@@ -63,6 +63,20 @@ const translations = {
         },
         releases: [
           {
+            version: 'v2.4.0',
+            date: 'Jun 2026',
+            tag: 'Major',
+            items: [
+              'Navigation simplified from 11 items to 5 — Dashboard, Clients, Delivery, Finance, Intelligence',
+              'New Delivery hub with tabbed Projects, Tasks, Approvals and Files in a single space',
+              'Clients unified — Pipeline, Accounts, Deals, Proposals and Billing Snapshot in one view',
+              'Intelligence enriched with Agents tab alongside existing AgentOps and Reports',
+              'Copilot removed from primary nav — Hermes accessible via chat panel and Command+K',
+              'All removed routes redirect cleanly to their new hub locations',
+              'Mobile bottom nav aligned to the new 5-item structure',
+            ] as string[],
+          },
+          {
             version: 'v2.3.0',
             date: 'Jun 2026',
             tag: 'Security',
@@ -2311,6 +2325,20 @@ const translations = {
           },
         },
         releases: [
+          {
+            version: 'v2.4.0',
+            date: 'Jun 2026',
+            tag: 'Majeur',
+            items: [
+              'Navigation simplifiee de 11 items a 5 — Dashboard, Clients, Livraison, Finance, Intelligence',
+              'Nouveau hub Livraison avec onglets Projets, Taches, Approbations et Fichiers reunis',
+              'Clients unifie — Pipeline, Comptes, Deals, Propositions et Snapshot Facturation en une vue',
+              'Intelligence enrichi avec onglet Agents aux cotes d\'AgentOps et Rapports existants',
+              'Copilot retire de la nav principale — Hermes accessible via panneau chat et Command+K',
+              'Toutes les routes retirees redirigent proprement vers leurs nouveaux hubs',
+              'Nav mobile alignee sur la nouvelle structure a 5 elements',
+            ] as string[],
+          },
           {
             version: 'v2.3.0',
             date: 'Jun 2026',
