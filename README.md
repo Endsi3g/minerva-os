@@ -1,6 +1,6 @@
 # Minerva OS
 
-![Version](https://img.shields.io/badge/version-7.0.0-indigo?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-7.0.1-indigo?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
 
 **Minerva OS is the operating system for creative agencies** — one workspace that replaces your CRM, project tracker, client portal, billing software, and AI tools.
 

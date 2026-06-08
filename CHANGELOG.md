@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [7.0.1] — 2026-06-08
+
+### Changed
+- **README.md**: Complete rewrite for clarity — "two sides of Minerva" framing, architecture overview with data flow, roles table, condensed releases table, cleaner quick start.
+- **scripts/dev.bat** · **scripts/dev.sh**: Version bump v1.7.0 → v7.0.0, removed duplicate pnpm check in dev.sh.
+- **scripts/generate-icons.mjs**: PWA icon background color `#0A0D14` → `#4F46E5` (StackAI indigo).
+- **public/sw.js**: Rebuilt service worker from updated Next.js production build.
+
+---
+
 ## [7.0.0] — 2026-06-08
 
 ### Changed — StackAI Light Mode design system
