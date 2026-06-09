@@ -6,7 +6,6 @@ import { AppHeader } from './AppHeader';
 import { ChatSidebar } from './ChatSidebar';
 import { CommandPaletteProvider, useCommandPalette } from './CommandPalette';
 import { BottomBlur } from '@/components/ui/edge-blur';
-import { DynamicIsland } from './DynamicIsland';
 import Link from 'next/link';
 import {
   Home,
@@ -127,6 +126,7 @@ function MobileBottomNav() {
 function AppShellContent({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const router = useRouter();
+  const pathname = usePathname();
   const { workspace, isLoading: workspaceLoading } = useWorkspace();
 
   useEffect(() => {
@@ -144,9 +144,8 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 
       {/* Main area */}
       <div className="relative flex-1 flex flex-col overflow-hidden bg-background min-w-0">
-        <DynamicIsland />
         <AppHeader />
-        <ScrollArea className="flex-1">
+        <ScrollArea className={`flex-1 ${pathname === '/app/dashboard' ? 'no-scrollbar' : ''}`}>
           <div className={isMobile ? 'p-4 pb-[80px]' : 'p-6 pb-24'}>
             <div className="w-full">
               {children}

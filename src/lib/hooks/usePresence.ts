@@ -60,7 +60,7 @@ export function usePresence(location?: string) {
       });
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
       if (user?.email) {
         supabase.from('presence').update({
           status: 'offline',

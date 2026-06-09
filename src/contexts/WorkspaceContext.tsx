@@ -63,17 +63,10 @@ function mapWorkspace(ws: any, onboardingComplete: boolean): WorkspaceProfile {
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const cachedTier = getCachedTier();
 
   const [workspaces, setWorkspaces] = useState<WorkspaceProfile[]>([]);
-  const [workspace, setWorkspace] = useState<WorkspaceProfile | null>(
-    cachedTier ? {
-      id: getCachedActiveId() ?? '', name: '', tier: cachedTier, agencyType: null,
-      onboardingComplete: true, teamSize: null, priorityGoals: [],
-      setupKitApplied: true,
-    } : null
-  );
-  const [isLoading, setIsLoading] = useState(!cachedTier);
+  const [workspace, setWorkspace] = useState<WorkspaceProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   async function fetchWorkspace() {
     if (!user) { setWorkspace(null); setWorkspaces([]); setIsLoading(false); return; }
@@ -116,7 +109,18 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    setIsLoading(true);
+    const cachedTier = getCachedTier();
+    const cachedId = getCachedActiveId();
+    if (cachedTier) {
+      setWorkspace({
+        id: cachedId ?? '', name: '', tier: cachedTier, agencyType: null,
+        onboardingComplete: true, teamSize: null, priorityGoals: [],
+        setupKitApplied: true,
+      });
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
     fetchWorkspace();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);

@@ -6,8 +6,6 @@ import {
   PanelLeftOpen,
   Search,
   Bell,
-  Sun,
-  Moon,
   User,
   LogOut,
   Settings,
@@ -23,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useSidebar, useChat } from './AppShell';
-import { useTheme } from '@/theme';
+
 import { cn } from '@/lib/utils';
 import { PresenceAvatars } from '../minerva/PresenceAvatars';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -63,7 +61,7 @@ const PAGE_LABELS: Record<string, string> = {
 export function AppHeader() {
   const { collapsed, toggle } = useSidebar();
   const { toggleChat } = useChat();
-  const { theme, toggleTheme } = useTheme();
+
   const { user } = useAuth();
   const { setOpen: openPalette } = useCommandPalette();
   const pathname = usePathname();
@@ -197,15 +195,7 @@ export function AppHeader() {
         <MessageSquare size={16} />
       </Button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={toggleTheme}
-        className="text-muted-foreground hover:text-foreground"
-        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-      </Button>
+
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -274,7 +264,7 @@ export function AppHeader() {
             Settings
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push('/login')} className="text-ember">
+          <DropdownMenuItem onClick={() => router.push('/login')} className="text-destructive">
             <LogOut size={14} />
             Sign out
           </DropdownMenuItem>

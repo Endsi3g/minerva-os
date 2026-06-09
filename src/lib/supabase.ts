@@ -27,8 +27,11 @@ function initMockDb() {
   try {
     const saved = localStorage.getItem('minerva_mock_db');
     if (saved) {
-      mockDb = JSON.parse(saved);
-      return;
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.workspaces && parsed.workspaces.length > 0) {
+        mockDb = parsed;
+        return;
+      }
     }
   } catch {
     // Ignore
@@ -203,7 +206,22 @@ function getMockUser() {
   if (typeof window === 'undefined') return null;
   try {
     const u = localStorage.getItem('minerva_mock_user');
-    return u ? JSON.parse(u) : null;
+    if (u) return JSON.parse(u);
+
+    if (document.cookie.includes('minerva_mock_logged_in=true')) {
+      const defaultUser = {
+        id: 'demo-user-01',
+        email: 'demo@uprising.studio',
+        user_metadata: { name: 'Demo User' },
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        created_at: new Date().toISOString()
+      };
+      localStorage.setItem('minerva_mock_user', JSON.stringify(defaultUser));
+      return defaultUser;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -356,7 +374,7 @@ class MockQueryBuilder {
     return this;
   }
 
-  async then(onfulfilled: (res: any) => void) {
+  async then(onfulfilled: (res: any) => void = () => {}) {
     const list = mockDb[this.table] || [];
     let result: any = null;
 
@@ -505,11 +523,15 @@ function createMockSupabaseClient() {
       return new MockQueryBuilder(table);
     },
     channel: () => {
-      return {
+      const ch = {
         on: function() { return this; },
-        subscribe: () => ({})
+        presenceState: () => ({}),
+        track: async () => {},
+        subscribe: function(_cb?: (status: string) => void) { return this; },
       };
+      return ch;
     },
+    removeChannel: async () => {},
     rpc: async (fnName: string, args: any) => {
       initMockDb();
       if (fnName === 'match_knowledge_base') {

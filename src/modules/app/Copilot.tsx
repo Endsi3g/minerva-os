@@ -1,12 +1,14 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Sparkles, FileText, Copy, Trash2, Sidebar } from 'lucide-react';
+import { Bot, Send, Sparkles, FileText, Plus, MessageSquare, Trash2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { toast } from 'sonner';
 import { TextureOverlay } from '@/components/ui/texture-overlay';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessage {
   id: string;
@@ -15,75 +17,148 @@ interface ChatMessage {
   timestamp: number;
 }
 
+interface Conversation {
+  id: string;
+  title: string;
+  createdAt: number;
+  messages: ChatMessage[];
+}
+
+const PROMPT_CARDS = [
+  {
+    icon: '🗂️',
+    label: 'Projets',
+    prompt: 'Quel est l\'état de mes projets en cours ?',
+  },
+  {
+    icon: '📊',
+    label: 'CRM',
+    prompt: 'Résume mon pipeline de ventes et les opportunités prioritaires.',
+  },
+  {
+    icon: '💳',
+    label: 'Finance',
+    prompt: 'Montre-moi les factures impayées et le chiffre d\'affaires du mois.',
+  },
+  {
+    icon: '⚙️',
+    label: 'Opérations',
+    prompt: 'Quelles tâches sont en retard et qui les a en charge ?',
+  },
+];
+
+function groupConversations(conversations: Conversation[]) {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+  const today: Conversation[] = [];
+  const yesterday: Conversation[] = [];
+  const older: Conversation[] = [];
+
+  for (const c of [...conversations].sort((a, b) => b.createdAt - a.createdAt)) {
+    if (c.createdAt >= todayStart.getTime()) today.push(c);
+    else if (c.createdAt >= yesterdayStart.getTime()) yesterday.push(c);
+    else older.push(c);
+  }
+
+  return { today, yesterday, older };
+}
+
 export default function Copilot() {
   const { user } = useAuth();
   const { workspace } = useWorkspace();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: "Hello! I am Lucifee, the Hermes Agent co-pilot. I can help you review CRM pipeline, project timelines, invoice statuses, and coordinate your team. What would you like to build or check today?",
-      timestamp: Date.now(),
-    },
-  ]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const displayName = user?.name ?? 'JS';
-  const userInitials = displayName
+  const displayName = user?.name?.split(' ')[0] ?? 'vous';
+  const userInitials = (user?.name ?? 'U')
     .split(' ')
-    .map(n => n[0])
+    .map((n: string) => n[0])
     .join('')
     .slice(0, 2)
     .toUpperCase();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const activeConv = conversations.find(c => c.id === activeConvId) ?? null;
+  const messages = activeConv?.messages ?? [];
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isTyping) return;
+  const startNewChat = () => {
+    setActiveConvId(null);
+    setInput('');
+  };
 
-    const userMsgText = input.trim();
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isTyping) return;
+
+    const msgText = text.trim();
     setInput('');
 
     const userMessage: ChatMessage = {
       id: Math.random().toString(36).substring(7),
       role: 'user',
-      content: userMsgText,
+      content: msgText,
       timestamp: Date.now(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    let convId = activeConvId;
+
+    if (!convId) {
+      convId = Math.random().toString(36).substring(7);
+      const newConv: Conversation = {
+        id: convId,
+        title: msgText.slice(0, 42) + (msgText.length > 42 ? '…' : ''),
+        createdAt: Date.now(),
+        messages: [userMessage],
+      };
+      setConversations(prev => [newConv, ...prev]);
+      setActiveConvId(convId);
+    } else {
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === convId ? { ...c, messages: [...c.messages, userMessage] } : c
+        )
+      );
+    }
+
     setIsTyping(true);
 
     const assistantMsgId = Math.random().toString(36).substring(7);
-    const initialAssistantMessage: ChatMessage = {
+    const placeholderMsg: ChatMessage = {
       id: assistantMsgId,
       role: 'assistant',
       content: '',
       timestamp: Date.now(),
     };
 
-    setMessages(prev => [...prev, initialAssistantMessage]);
+    const finalConvId = convId;
+
+    setConversations(prev =>
+      prev.map(c =>
+        c.id === finalConvId ? { ...c, messages: [...c.messages, placeholderMsg] } : c
+      )
+    );
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
     try {
-      // Gather context
-      const context = `User name is ${displayName}. Active workspace is ${workspace?.name ?? 'AS Mobbin'}.`;
-      
-      const payloadMessages = [...messages, userMessage].map(m => ({
+      const context = `User name is ${user?.name ?? displayName}. Active workspace is ${workspace?.name ?? 'Minerva'}.`;
+      const historyMsgs = (activeConv?.messages ?? []).concat(userMessage);
+      const payloadMessages = historyMsgs.map(m => ({
         role: m.role === 'user' ? ('user' as const) : ('assistant' as const),
-        content: m.content
+        content: m.content,
       }));
 
       const response = await fetch('/api/ai/chat', {
@@ -93,9 +168,7 @@ export default function Copilot() {
         signal: controller.signal,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch reply');
-      }
+      if (!response.ok) throw new Error('Failed to fetch reply');
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -105,27 +178,37 @@ export default function Copilot() {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-
-          const chunk = decoder.decode(value);
-          streamedContent += chunk;
-
-          setMessages(prev =>
-            prev.map(m =>
-              m.id === assistantMsgId ? { ...m, content: streamedContent } : m
+          streamedContent += decoder.decode(value);
+          setConversations(prev =>
+            prev.map(c =>
+              c.id === finalConvId
+                ? {
+                    ...c,
+                    messages: c.messages.map(m =>
+                      m.id === assistantMsgId ? { ...m, content: streamedContent } : m
+                    ),
+                  }
+                : c
             )
           );
         }
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        toast.info('Response generation stopped');
+        toast.info('Génération arrêtée');
       } else {
-        console.error('Chat error:', err);
-        setMessages(prev =>
-          prev.map(m =>
-            m.id === assistantMsgId
-              ? { ...m, content: 'Sorry, I encountered an error. Please try again.' }
-              : m
+        setConversations(prev =>
+          prev.map(c =>
+            c.id === finalConvId
+              ? {
+                  ...c,
+                  messages: c.messages.map(m =>
+                    m.id === assistantMsgId
+                      ? { ...m, content: 'Une erreur est survenue. Veuillez réessayer.' }
+                      : m
+                  ),
+                }
+              : c
           )
         );
       }
@@ -136,195 +219,311 @@ export default function Copilot() {
   };
 
   const handleStopWriting = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      setIsTyping(false);
-    }
-  };
-
-  const handleClearChat = () => {
-    setMessages([
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: "Hello! I am Lucifee, the Hermes Agent co-pilot. I can help you review CRM pipeline, project timelines, invoice statuses, and coordinate your team. What would you like to build or check today?",
-        timestamp: Date.now(),
-      },
-    ]);
-    toast.success('Conversation history cleared');
-  };
-
-  const handleCopyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
+    abortControllerRef.current?.abort();
+    setIsTyping(false);
   };
 
   const handleCreateDoc = async (content: string) => {
     toast.promise(
       (async () => {
         if (!workspace?.id) throw new Error('No workspace selected');
-        // Insert a mock file in knowledge base
         const { error } = await supabase.from('knowledge_base').insert({
           workspace_id: workspace.id,
           title: `AI Draft — ${new Date().toLocaleDateString()}`,
           category: 'references_briefs',
-          content: content,
+          content,
         });
         if (error) throw error;
       })(),
       {
-        loading: 'Creating document...',
-        success: 'Document created successfully in Knowledge Base!',
-        error: 'Failed to create document.',
+        loading: 'Création du document…',
+        success: 'Document créé dans la base de connaissances !',
+        error: 'Échec de la création.',
       }
     );
   };
 
-  const handleMagicWand = () => {
-    setInput("Suggest three ways to improve our current project execution rate.");
+  const handleDeleteConv = (id: string) => {
+    setConversations(prev => prev.filter(c => c.id !== id));
+    if (activeConvId === id) setActiveConvId(null);
   };
 
+  const { today, yesterday, older } = groupConversations(conversations);
+
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] w-full max-w-4xl mx-auto px-6 py-4 select-none">
-      
-      {/* Top Header Bar */}
-      <div className="shrink-0 flex items-center justify-between pb-3 border-b border-white/5 mb-4">
-        <div className="flex items-center gap-2">
-          <Bot size={16} className="text-[#7FA38A]" />
-          <h1 className="text-sm font-semibold text-ivory tracking-tight">Hermes Agent</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleClearChat}
-            className="flex items-center gap-1 text-[11px] font-semibold text-fog hover:text-silver hover:bg-white/5 border border-white/10 px-2.5 py-1 rounded-md transition-all cursor-pointer"
-          >
-            <Trash2 size={11} />
-            <span>Clear Chat</span>
-          </button>
-          <button
-            onClick={handleMagicWand}
-            title="Auto Suggestion"
-            className="p-1.5 hover:bg-white/5 rounded-md text-fog hover:text-silver border border-white/10 transition-colors cursor-pointer"
-          >
-            <Sparkles size={12} />
-          </button>
-          <button
-            title="Toggle Sidebar"
-            className="p-1.5 hover:bg-white/5 rounded-md text-fog hover:text-silver border border-white/10 transition-colors cursor-pointer"
-          >
-            <Sidebar size={12} />
-          </button>
-        </div>
-      </div>
+    <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden bg-background p-4">
 
-      {/* Message List */}
-      <div className="flex-1 overflow-y-auto pr-2 space-y-6 scrollbar-thin">
-        {messages.map((msg) => (
-          <div key={msg.id} className="flex items-start gap-4">
-            
-            {/* Avatar */}
-            {msg.role === 'user' ? (
-              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0 mt-0.5 shadow-md">
-                {userInitials}
-              </div>
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-bold text-white shrink-0 mt-0.5 shadow-md">
-                H
-              </div>
+      {/* ── Sidebar ── */}
+      <aside
+        className={cn(
+          "shrink-0 flex flex-col bg-sidebar border border-border rounded-2xl overflow-hidden transition-all duration-300 shadow-sm",
+          sidebarOpen ? "w-[260px] opacity-100 mr-4" : "w-0 opacity-0 pointer-events-none border-none mr-0"
+        )}
+      >
+        <div className="p-3 shrink-0 flex items-center justify-between gap-2 border-b border-border bg-surface-alt/50">
+          <button
+            onClick={startNewChat}
+            className="flex-1 flex items-center justify-center gap-2 bg-primary text-white text-xs font-semibold rounded-full py-2 px-4 hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            <Plus size={13} />
+            Nouvelle conversation
+          </button>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-2 rounded-lg text-muted-foreground hover:bg-surface-alt hover:text-foreground transition-colors cursor-pointer shrink-0"
+            title="Masquer le menu"
+          >
+            <PanelLeftClose size={14} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-2 py-3 space-y-4 scrollbar-thin">
+          {conversations.length === 0 && (
+            <p className="text-[11px] text-muted-foreground text-center mt-8 px-4 leading-relaxed">
+              Tes conversations apparaîtront ici.
+            </p>
+          )}
+
+          {today.length > 0 && (
+            <ConvGroup label="Aujourd'hui" items={today} activeId={activeConvId} onSelect={setActiveConvId} onDelete={handleDeleteConv} />
+          )}
+          {yesterday.length > 0 && (
+            <ConvGroup label="Hier" items={yesterday} activeId={activeConvId} onSelect={setActiveConvId} onDelete={handleDeleteConv} />
+          )}
+          {older.length > 0 && (
+            <ConvGroup label="Plus tôt" items={older} activeId={activeConvId} onSelect={setActiveConvId} onDelete={handleDeleteConv} />
+          )}
+        </div>
+
+        {/* Agent badge */}
+        <div className="p-3 border-t border-border flex items-center gap-2 shrink-0 bg-surface-alt/50">
+          <div className="h-7 w-7 rounded-full bg-primary/20 border border-primary-soft-border flex items-center justify-center shrink-0">
+            <Bot size={13} className="text-primary" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-foreground leading-none">Hermes Agent</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Co-pilote IA</p>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Main area ── */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-surface border border-border rounded-2xl shadow-sm">
+
+        {/* Universal Header */}
+        <div className="shrink-0 flex items-center justify-between px-6 py-3.5 border-b border-border bg-surface">
+          <div className="flex items-center gap-2 min-w-0">
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:bg-surface-alt hover:text-foreground transition-colors mr-1 cursor-pointer shrink-0"
+                title="Afficher le menu"
+              >
+                <PanelLeftOpen size={16} />
+              </button>
             )}
+            <MessageSquare size={13} className="text-muted-foreground shrink-0" />
+            <span className="text-xs font-semibold text-foreground truncate">
+              {activeConv ? activeConv.title : "Copilot IA"}
+            </span>
+          </div>
+          {activeConv && (
+            <button
+              onClick={() => handleDeleteConv(activeConv.id)}
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground border border-border hover:bg-white/5 px-2.5 py-1 rounded-md transition-all cursor-pointer shrink-0"
+            >
+              <Trash2 size={11} />
+              <span>Effacer</span>
+            </button>
+          )}
+        </div>
 
-            {/* Content box */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-ivory">
-                  {msg.role === 'user' ? 'You' : 'Hermes'}
-                </span>
-                <span className="text-[9px] text-fog">
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-              <p className="text-xs text-silver leading-relaxed whitespace-pre-wrap font-sans mt-1 bg-white/2 border border-white/3 rounded-xl p-3.5 shadow-sm">
-                {msg.content || (
-                  <span className="flex items-center gap-1.5 text-fog italic animate-pulse">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Thinking...
-                  </span>
+        {/* Input bar (moved to top) */}
+        <div className="shrink-0 px-6 py-4 border-b border-border bg-surface-alt/40">
+          <div className="relative bg-surface border border-border rounded-xl p-3 shadow-sm max-w-xl mx-auto">
+            <TextureOverlay texture="dots" opacity={0.05} />
+            <div className="flex items-end gap-3 relative z-10">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(input);
+                  }
+                }}
+                placeholder="Envoie un message à Hermes…"
+                rows={1}
+                className="flex-1 bg-transparent text-xs text-foreground placeholder-fog resize-none outline-none border-none min-h-[24px] max-h-[120px] scrollbar-none py-1.5"
+              />
+              <button
+                onClick={() => sendMessage(input)}
+                disabled={!input.trim() || isTyping}
+                className={cn(
+                  'h-7 w-7 rounded-full flex items-center justify-center shrink-0 transition-all mb-0.5',
+                  input.trim() && !isTyping
+                    ? 'bg-primary text-white cursor-pointer hover:opacity-90 shadow-md'
+                    : 'bg-white/5 text-muted-foreground cursor-not-allowed'
                 )}
-              </p>
+              >
+                <Send size={11} className={input.trim() && !isTyping ? 'translate-x-[0.5px] -translate-y-[0.5px]' : ''} />
+              </button>
+            </div>
+          </div>
+        </div>
 
-              {/* Action Buttons under Assistant messages */}
-              {msg.role === 'assistant' && msg.content && (
-                <div className="flex items-center gap-2 mt-2">
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin">
+          {activeConv ? (
+            /* Messages */
+            <div className="px-6 py-5 space-y-6">
+              {messages.map(msg => (
+                <div key={msg.id} className="flex items-start gap-3">
+                  {msg.role === 'user' ? (
+                    <div className="h-7 w-7 rounded-full bg-blue-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5">
+                      {userInitials}
+                    </div>
+                  ) : (
+                    <div className="h-7 w-7 rounded-full bg-primary/20 border border-primary-soft-border flex items-center justify-center shrink-0 mt-0.5">
+                      <Bot size={12} className="text-primary" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-xs font-semibold text-foreground">
+                        {msg.role === 'user' ? 'Vous' : 'Hermes'}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="bg-background border border-border rounded-xl p-3.5">
+                      {!msg.content ? (
+                        <span className="flex items-center gap-1.5 text-muted-foreground italic text-xs">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Réflexion en cours…
+                        </span>
+                      ) : msg.role === 'assistant' ? (
+                        <div className="minerva-prose">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content + (isTyping && messages[messages.length - 1]?.id === msg.id ? '▍' : '')}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      )}
+                    </div>
+                    {msg.role === 'assistant' && msg.content && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => handleCreateDoc(msg.content)}
+                          className="flex items-center gap-1 text-[10px] font-semibold bg-amber-50 border border-amber-200 hover:bg-amber-100 text-warning px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                        >
+                          <FileText size={10} />
+                          <span>Créer un doc</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {isTyping && (
+                <div className="flex items-center justify-between bg-surface/60 border border-border px-4 py-2.5 rounded-xl">
+                  <span className="text-xs text-muted-foreground italic flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                    Hermes rédige…
+                  </span>
                   <button
-                    onClick={() => handleCreateDoc(msg.content)}
-                    className="flex items-center gap-1 text-[10px] font-bold bg-[#B89B6A]/10 border border-[#B89B6A]/20 hover:bg-[#B89B6A]/20 text-[#B89B6A] px-2.5 py-1 rounded-md transition-all cursor-pointer shadow-sm"
+                    onClick={handleStopWriting}
+                    className="text-[10px] font-semibold text-foreground border border-border px-2 py-0.5 rounded hover:bg-white/5 transition-colors cursor-pointer"
                   >
-                    <FileText size={10} />
-                    <span>Create a doc</span>
-                  </button>
-                  <button
-                    onClick={() => handleCopyToClipboard(msg.content)}
-                    className="flex items-center gap-1 text-[10px] font-bold bg-[#7FA38A]/10 border border-[#7FA38A]/20 hover:bg-[#7FA38A]/20 text-[#7FA38A] px-2.5 py-1 rounded-md transition-all cursor-pointer shadow-sm"
-                  >
-                    <Copy size={10} />
-                    <span>Copy to clipboard</span>
+                    Arrêter
                   </button>
                 </div>
               )}
 
+              <div ref={messagesEndRef} />
             </div>
-          </div>
-        ))}
+          ) : (
+            /* Welcome state */
+            <div className="flex flex-col items-center justify-center px-8 py-12">
+              <div className="w-full max-w-xl">
+                <div className="mb-8 text-center">
+                  <h1 className="font-display text-3xl text-foreground mb-2">
+                    Bonjour, {displayName} 👋
+                  </h1>
+                  <p className="text-sm text-muted-foreground">Que puis-je faire pour toi aujourd'hui ?</p>
+                </div>
 
-        {/* Typing indicator */}
-        {isTyping && (
-          <div className="flex items-center justify-between bg-[#111522]/30 border border-white/5 px-4 py-2.5 rounded-xl">
-            <span className="text-xs text-fog italic flex items-center gap-1.5">
-              <Loader2 className="h-3 w-3 animate-spin text-[#7FA38A]" /> Hermes is typing...
-            </span>
+                <div className="grid grid-cols-2 gap-3 mb-8">
+                  {PROMPT_CARDS.map(card => (
+                    <button
+                      key={card.label}
+                      onClick={() => sendMessage(card.prompt)}
+                      className="group text-left bg-surface-alt border border-border hover:border-primary-soft-border hover:bg-surface/80 rounded-xl p-4 transition-all duration-200 cursor-pointer"
+                    >
+                      <span className="text-xl block mb-2">{card.icon}</span>
+                      <p className="text-xs font-semibold text-foreground mb-1">{card.label}</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">{card.prompt}</p>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <Sparkles size={12} className="text-primary" />
+                  <span className="text-[11px] text-muted-foreground">Ou pose ta propre question…</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function ConvGroup({
+  label,
+  items,
+  activeId,
+  onSelect,
+  onDelete,
+}: {
+  label: string;
+  items: Conversation[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-1">{label}</p>
+      <div className="space-y-0.5">
+        {items.map(conv => (
+          <div
+            key={conv.id}
+            className={cn(
+              'group flex items-center gap-2 w-full rounded-lg px-2 py-2 cursor-pointer transition-all',
+              activeId === conv.id
+                ? 'bg-primary-soft/60 text-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-surface-alt'
+            )}
+            onClick={() => onSelect(conv.id)}
+          >
+            <MessageSquare size={11} className="shrink-0 opacity-60" />
+            <span className="text-[11px] flex-1 truncate leading-snug">{conv.title}</span>
             <button
-              onClick={handleStopWriting}
-              className="text-[10px] font-bold text-silver border border-white/10 px-2 py-0.5 rounded hover:bg-white/5 transition-colors cursor-pointer"
+              onClick={e => { e.stopPropagation(); onDelete(conv.id); }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-danger shrink-0 cursor-pointer"
             >
-              Stop writing
+              <Trash2 size={10} />
             </button>
           </div>
-        )}
-
-        <div ref={messagesEndRef} />
+        ))}
       </div>
-
-      {/* Input Form Box */}
-      <div className="shrink-0 mt-4 relative bg-[#111522] border border-white/5 rounded-xl p-3.5 shadow-lg group">
-        <TextureOverlay texture="dots" opacity={0.06} />
-        <div className="flex items-end gap-3 relative z-10">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Send a message about Marketing..."
-            rows={2}
-            className="flex-1 bg-transparent text-xs text-ivory placeholder-fog resize-none outline-none border-none min-h-[40px] scrollbar-none"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isTyping}
-            className={cn(
-              "h-7 w-7 rounded-full flex items-center justify-center shrink-0 transition-all",
-              input.trim() && !isTyping
-                ? 'bg-[#7FA38A] text-obsidian cursor-pointer hover:opacity-90 shadow-md'
-                : 'bg-white/5 text-fog cursor-not-allowed'
-            )}
-          >
-            <Send size={11} className={input.trim() && !isTyping ? 'translate-x-[0.5px] -translate-y-[0.5px]' : ''} />
-          </button>
-        </div>
-      </div>
-
     </div>
   );
 }

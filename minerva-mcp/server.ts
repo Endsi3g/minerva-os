@@ -39,6 +39,7 @@ import { tasksTools } from './tools/tasks.js';
 import { pipelineTools } from './tools/pipeline.js';
 import { billingTools } from './tools/billing.js';
 import { reportsTools } from './tools/reports.js';
+import { agentsTools } from './tools/agents.js';
 import { browserTools } from './tools/browser.js';
 import { closeBrowser } from './browser-session.js';
 
@@ -50,6 +51,7 @@ const ALL_TOOLS = [
   ...pipelineTools,
   ...billingTools,
   ...reportsTools,
+  ...agentsTools,
   ...browserTools,
 ];
 

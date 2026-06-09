@@ -4,6 +4,10 @@ import { createClient as createServerClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
+    if (process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      return NextResponse.json({ workspaceId: 'mock-workspace-123' });
+    }
+
     // 1. Authenticate — verify the caller is a logged-in user
     const supabaseServer = await createServerClient();
     const { data: { user }, error: authError } = await supabaseServer.auth.getUser();

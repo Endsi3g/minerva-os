@@ -48,8 +48,8 @@ function RootLayout() {
         <AuthProvider>
           <ErrorBoundary>
             <OfflineBanner />
-            <StatusBar style="light" backgroundColor="#0A0D14" />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0D14' } }}>
+            <StatusBar style="dark" backgroundColor="#FFFFFF" />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FFFFFF' } }}>
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(app)" />
             </Stack>

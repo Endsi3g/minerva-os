@@ -247,7 +247,7 @@ export function useClients(workspaceId: string | undefined | null) {
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId]);
 
@@ -310,7 +310,7 @@ export function useProjects(workspaceId: string | undefined | null) {
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId]);
 
@@ -395,7 +395,7 @@ export function useTasks(
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId, projectId, page, pageSize]);
 
@@ -458,7 +458,7 @@ export function useDeals(workspaceId: string | undefined | null) {
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId]);
 
@@ -542,7 +542,7 @@ export function useInvoices(
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId, page, pageSize]);
 
@@ -595,7 +595,7 @@ export function useRetainers(workspaceId: string | undefined | null) {
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId]);
 
@@ -645,7 +645,7 @@ export function useFinances(workspaceId: string | undefined | null) {
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId]);
 
@@ -705,7 +705,7 @@ export function useApprovals(workspaceId?: string | undefined | null) {
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId]);
 
@@ -756,7 +756,7 @@ export function useActivity(workspaceId: string | undefined | null) {
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [workspaceId]);
 
@@ -810,7 +810,7 @@ export function useUserProfileByEmail(email: string | undefined | null) {
 
     return () => {
       active = false;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [email]);
 
@@ -1298,7 +1298,7 @@ export function useWorkflows(workspaceId: string | null) {
       .channel(`workflows-realtime-${workspaceId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'workflows' }, fetch)
       .subscribe();
-    return () => { channel.unsubscribe(); };
+    return () => { supabase.removeChannel(channel); };
   }, [workspaceId]);
 
   return workflows;
@@ -1326,7 +1326,7 @@ export function useWorkflowRuns(workspaceId: string | null, limit = 20) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'workflow_runs',
         filter: `workspace_id=eq.${workspaceId}` }, fetch)
       .subscribe();
-    return () => { channel.unsubscribe(); };
+    return () => { supabase.removeChannel(channel); };
   }, [workspaceId, limit]);
 
   return runs;
@@ -1355,7 +1355,7 @@ export function useHandoffs(workspaceId: string | null, projectId?: string) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'handoffs',
         filter: `workspace_id=eq.${workspaceId}` }, fetch)
       .subscribe();
-    return () => { channel.unsubscribe(); };
+    return () => { supabase.removeChannel(channel); };
   }, [workspaceId, projectId]);
 
   return handoffs;

@@ -331,6 +331,8 @@ const translations = {
       knowledge: 'Knowledge',
       tickets: 'Tickets',
       profile: 'Profile',
+      cockpit: 'Cockpit',
+      agentOps: 'Agent Ops',
     },
   },
   fr: {
@@ -660,6 +662,8 @@ const translations = {
       knowledge: 'Connaissances',
       tickets: 'Tickets',
       profile: 'Profil',
+      cockpit: 'Cockpit',
+      agentOps: 'Opérations Agents',
     },
   },
 } as const;

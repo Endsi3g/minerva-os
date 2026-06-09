@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 function TabIcon({ Icon, focused, badge }: { Icon: typeof LayoutDashboard; focused: boolean; badge?: number }) {
-  const color = focused ? '#7FA38A' : '#8A9099';
+  const color = focused ? '#4F46E5' : '#94A3B8';
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
       <Icon size={22} color={color} />
@@ -17,7 +17,7 @@ function TabIcon({ Icon, focused, badge }: { Icon: typeof LayoutDashboard; focus
           position: 'absolute',
           top: -4,
           right: -8,
-          backgroundColor: '#A86A6A',
+          backgroundColor: '#EF4444',
           borderRadius: 99,
           minWidth: 16,
           height: 16,
@@ -70,15 +70,15 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#111522',
-          borderTopColor: 'rgba(255,255,255,0.06)',
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E2E8F0',
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 80 : 60,
           paddingBottom: Platform.OS === 'ios' ? 20 : 8,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#7FA38A',
-        tabBarInactiveTintColor: '#8A9099',
+        tabBarActiveTintColor: '#4F46E5',
+        tabBarInactiveTintColor: '#94A3B8',
         tabBarLabelStyle: { fontSize: 10, fontWeight: '500' },
       }}
     >
@@ -124,6 +124,7 @@ export default function AppLayout() {
         'time-entries', 'expenses/index', 'expenses/new',
         'proposals/index', 'proposals/[id]',
         'knowledge/index', 'tickets/index', 'tickets/new', 'files',
+        'cockpit', 'agent-ops',
       ].map(name => (
         <Tabs.Screen key={name} name={name} options={{ href: null }} />
       ))}
