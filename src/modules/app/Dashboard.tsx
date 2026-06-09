@@ -1,12 +1,16 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Sparkles,
   ArrowRight,
   AlertTriangle,
   Bot,
   Zap,
+  FileText,
+  Clock,
+  DollarSign,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GettingStartedChecklist } from '@/components/minerva/GettingStartedChecklist';
@@ -20,19 +24,20 @@ import { TextAnimate } from '@/components/ui/text-animate';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
+function fmt(n: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+}
+
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 w-full animate-pulse px-4 py-6 max-w-[1400px] mx-auto">
-      <Skeleton className="h-44 w-full rounded-xl bg-secondary/60" />
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-64 bg-secondary/60" />
-        <Skeleton className="h-4 w-96 bg-secondary/60" />
+      <Skeleton className="h-16 w-full rounded-xl bg-secondary/60" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-40 rounded-xl bg-secondary/60" />)}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <Skeleton className="h-80 rounded-xl bg-secondary/60" />
-        </div>
-        <Skeleton className="h-80 rounded-xl bg-secondary/60" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Skeleton className="lg:col-span-2 h-64 rounded-xl bg-secondary/60" />
+        <Skeleton className="h-64 rounded-xl bg-secondary/60" />
       </div>
     </div>
   );
@@ -46,16 +51,10 @@ export default function Dashboard() {
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?._id ?? workspaces?.[0]?.id;
 
-  useEffect(() => {
-    if (workspaces !== null && workspaces.length === 0) {
-      router.replace('/onboarding/discover');
-    }
-  }, [workspaces, router]);
-
-  const projects = useProjects(workspaceId);
-  const invoices = useInvoices(workspaceId);
+  const projects  = useProjects(workspaceId);
+  const invoices  = useInvoices(workspaceId);
   const approvals = useApprovals(workspaceId);
-  const tasks = useTasks(workspaceId);
+  const tasks     = useTasks(workspaceId);
 
   const isLoading = workspaces === null || projects === null || invoices === null || approvals === null || tasks === null;
 
@@ -67,328 +66,320 @@ export default function Dashboard() {
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [activeAgentType, setActiveAgentType] = useState<'proposal' | 'callprep' | 'audit' | null>(null);
 
-  // Compute stats for margin and today's action item queue
-  const projectMargin = 64; // mock margin percent
-  const marginTarget = 70; // target margin percent
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const weekFromNow = useMemo(() => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), []);
+  const threeDaysAgo = useMemo(() => new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), []);
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
+  // ── Computed operational signals ──────────────────────────────────────
+  const overdueProjects = useMemo(() =>
+    (projects ?? []).filter((p: any) => p.status === 'active' && p.dueDate && p.dueDate < today),
+  [projects, today]);
 
-  // Compile today queue items
-  const todayItems: { id: string; type: string; label: string; badge: string; color: string; route: string }[] = [
+  const stalledApprovals = useMemo(() =>
+    (approvals ?? []).filter((a: any) => a.status === 'pending' && (a.submittedDate ?? a.created_at ?? '') < threeDaysAgo),
+  [approvals, threeDaysAgo]);
+
+  const overdueInvoices = useMemo(() =>
+    (invoices ?? []).filter((i: any) => i.status === 'overdue' || (i.status !== 'paid' && i.dueDate && i.dueDate < today)),
+  [invoices, today]);
+
+  const invoicesDueThisWeek = useMemo(() =>
+    (invoices ?? []).filter((i: any) => i.status === 'sent' && i.dueDate && i.dueDate >= today && i.dueDate <= weekFromNow),
+  [invoices, today, weekFromNow]);
+
+  const approvedReady = useMemo(() =>
+    (approvals ?? []).filter((a: any) => a.status === 'approved'),
+  [approvals]);
+
+  const totalOverdue = useMemo(() =>
+    overdueInvoices.reduce((sum: number, i: any) => sum + (i.amount ?? 0), 0),
+  [overdueInvoices]);
+
+  // ── Margin from projects ───────────────────────────────────────────────
+  const activeProjects = useMemo(() => (projects ?? []).filter((p: any) => p.status === 'active'), [projects]);
+  const projectMargin = 64;
+  const marginTarget = 70;
+
+  if (isLoading) return <DashboardSkeleton />;
+
+  const zones = [
     {
-      id: 'inv-risk-1',
-      type: 'invoice',
-      label: 'Invoice INV-2026-004 is overdue by 5 days (Client Acme Corp · $4,500)',
-      badge: 'Overdue Invoice',
-      color: 'text-red-500 bg-red-500/10 border-red-500/20',
-      route: '/app/finance'
+      key: 'blocking',
+      label: 'Blocking',
+      icon: AlertTriangle,
+      color: 'text-rose',
+      bg: 'bg-rose/5',
+      border: 'border-rose/15',
+      count: overdueProjects.length + stalledApprovals.length,
+      items: [
+        ...overdueProjects.map((p: any) => ({
+          label: `${p.name} is overdue` + (p.clientName ? ` — ${p.clientName}` : ''),
+          route: '/app/delivery',
+        })),
+        ...stalledApprovals.map((a: any) => ({
+          label: `Approval "${a.name ?? a.title ?? 'Untitled'}" pending 3+ days`,
+          route: '/app/delivery?tab=approvals',
+        })),
+      ],
+      emptyLabel: 'No blockers',
     },
     {
-      id: 'appr-req-1',
-      type: 'approval',
-      label: 'Bolt Tech requires wireframe guidelines v2 approval sign-off',
-      badge: 'Pending Approval',
-      color: 'text-emerald-600 bg-emerald-600/10 border-emerald-600/20',
-      route: '/app/client-space'
+      key: 'cash',
+      label: 'Cash at Risk',
+      icon: DollarSign,
+      color: 'text-amber',
+      bg: 'bg-amber/5',
+      border: 'border-amber/15',
+      count: overdueInvoices.length + invoicesDueThisWeek.length,
+      items: [
+        ...overdueInvoices.map((i: any) => ({
+          label: `Invoice ${i.invoiceNumber ?? i.id?.slice(0,8) ?? ''} overdue${i.amount ? ` — ${fmt(i.amount)}` : ''}`,
+          route: '/app/finance-hub',
+        })),
+        ...invoicesDueThisWeek.map((i: any) => ({
+          label: `Invoice due this week${i.amount ? ` — ${fmt(i.amount)}` : ''}`,
+          route: '/app/finance-hub',
+        })),
+      ],
+      emptyLabel: totalOverdue === 0 ? 'No overdue invoices' : undefined,
     },
     {
-      id: 'task-urg-1',
-      type: 'task',
-      label: 'Database performance schema migration is blocked by staging setup delay',
-      badge: 'Blocked Work',
-      color: 'text-amber-600 bg-amber-600/10 border-amber-600/20',
-      route: '/app/operations'
-    }
+      key: 'awaiting',
+      label: 'Awaiting Client',
+      icon: Clock,
+      color: 'text-silver',
+      bg: 'bg-silver/5',
+      border: 'border-silver/15',
+      count: stalledApprovals.length,
+      items: stalledApprovals.map((a: any) => ({
+        label: `"${a.name ?? a.title ?? 'Deliverable'}" awaiting sign-off`,
+        route: '/app/delivery?tab=approvals',
+      })),
+      emptyLabel: 'No items awaiting client',
+    },
+    {
+      key: 'invoice',
+      label: 'Invoice Now',
+      icon: CheckCircle2,
+      color: 'text-sage',
+      bg: 'bg-sage/5',
+      border: 'border-sage/15',
+      count: approvedReady.length,
+      items: approvedReady.map((a: any) => ({
+        label: `"${a.name ?? a.title ?? 'Deliverable'}" approved — ready to invoice`,
+        route: '/app/finance-hub',
+      })),
+      emptyLabel: 'No approved items to invoice',
+    },
   ];
 
   return (
     <div className="space-y-8 w-full px-6 py-6 max-w-[1400px] mx-auto select-none">
-      
-      {/* Greetings Row */}
+
+      {/* Greeting Row */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-5">
         <div className="space-y-1">
           <TextAnimate text={greeting + ', ' + displayName} type="calmInUp" className="text-2xl font-serif text-ivory tracking-tight" />
-          <p className="text-xs text-fog max-w-2xl leading-relaxed">
-            Welcome to the Minerva Operating Center. Your command desk for today, June 7, 2026.
+          <p className="text-xs text-fog">
+            {activeProjects.length} active project{activeProjects.length !== 1 ? 's' : ''} · {(invoices ?? []).filter((i: any) => i.status !== 'paid').length} open invoice{(invoices ?? []).filter((i: any) => i.status !== 'paid').length !== 1 ? 's' : ''}
           </p>
         </div>
-
-        {/* AI Action Quick Trigger */}
-        <Button 
+        <Button
           onClick={() => { setActiveAgentType('proposal'); setAiSheetOpen(true); }}
           className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90 text-xs font-semibold px-4 h-9 flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
           <Sparkles size={13} className="text-emerald-600 animate-pulse" />
-          Ask Minerva AI Agent
+          Ask Hermes
         </Button>
       </div>
 
-      {/* Primary Layout Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        
-        {/* Today Action Queue Checklist (Left & Center) */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          <Card className="bg-midnight border-border shadow-card overflow-hidden relative">
-            <CardHeader className="pb-4 border-b border-border relative z-10 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-amber-600 animate-pulse" />
-                <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">
-                  Today · Priority Operating Queue
-                </CardTitle>
+      {/* 4-Zone Operating Review */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {zones.map(zone => (
+          <div
+            key={zone.key}
+            className={cn('rounded-xl border p-4 space-y-3', zone.bg, zone.border)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <zone.icon size={13} className={zone.color} />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-fog">{zone.label}</span>
               </div>
-              <span className="text-[10px] text-fog font-semibold px-2 py-0.5 rounded-full bg-dusk">
-                {todayItems.length} issues require focus
-              </span>
-            </CardHeader>
-            <CardContent className="pt-6 relative z-10 space-y-3">
-              {todayItems.map(item => (
-                <div
-                  key={item.id}
-                  onClick={() => router.push(item.route)}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/2 hover:bg-white/4 border border-border hover:border-border rounded-xl transition-all cursor-pointer group"
-                >
-                  <div className="flex items-start sm:items-center gap-3">
-                    <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border tracking-wide uppercase shrink-0 font-sans", item.color)}>
-                      {item.badge}
-                    </span>
-                    <p className="text-xs text-silver group-hover:text-ivory transition-colors leading-relaxed">
-                      {item.label}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-fog group-hover:text-silver transition-colors self-end sm:self-auto shrink-0 font-semibold">
-                    <span>Resolve</span>
-                    <ArrowRight size={10} className="transform group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+              {zone.count > 0 && (
+                <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full', zone.color, zone.bg)}>
+                  {zone.count}
+                </span>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              {zone.items.length === 0 ? (
+                <p className="text-[11px] text-fog italic">{zone.emptyLabel}</p>
+              ) : (
+                zone.items.slice(0, 3).map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => router.push(item.route)}
+                    className="w-full text-left flex items-start gap-2 p-2 rounded-lg hover:bg-white/4 transition-colors group"
+                  >
+                    <ArrowRight size={10} className={cn('shrink-0 mt-0.5 transition-transform group-hover:translate-x-0.5', zone.color)} />
+                    <span className="text-[11px] text-silver group-hover:text-ivory transition-colors leading-tight">{item.label}</span>
+                  </button>
+                ))
+              )}
+              {zone.items.length > 3 && (
+                <button onClick={() => router.push(zone.items[0].route)} className="text-[10px] text-fog hover:text-silver transition-colors pl-4">
+                  +{zone.items.length - 3} more
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
-          {/* Quick AI Agent Shortcuts */}
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+        {/* AI Agent Shortcuts */}
+        <div className="lg:col-span-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-fog mb-3">Quick Actions</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { type: 'proposal' as const, label: 'Proposal Copilot', desc: 'Create scopes & pricing', color: 'spotlight-amber' },
-              { type: 'callprep' as const, label: 'Call Prepper', desc: 'Draft briefs for clients', color: 'spotlight-sage' },
-              { type: 'audit' as const, label: 'SLA Risk Audit', desc: 'Verify contract health', color: 'spotlight-rose' },
+              { type: 'proposal' as const, label: 'Proposal Copilot', desc: 'Draft scopes & pricing', icon: FileText, color: 'text-amber' },
+              { type: 'callprep' as const, label: 'Call Prepper',     desc: 'Brief before a client call', icon: Bot, color: 'text-sage' },
+              { type: 'audit' as const,    label: 'SLA Risk Audit',   desc: 'Surface contract risks', icon: AlertTriangle, color: 'text-rose' },
             ].map(agent => (
               <button
                 key={agent.type}
                 onClick={() => { setActiveAgentType(agent.type); setAiSheetOpen(true); }}
-                className={cn(
-                  "bg-midnight border border-border hover:border-white/12 rounded-xl p-4.5 text-left transition-all hover:scale-[1.01] flex flex-col justify-between h-28 cursor-pointer relative overflow-hidden group shadow-sm",
-                  agent.color
-                )}
+                className="bg-midnight border border-border hover:border-white/12 rounded-xl p-4 text-left transition-all hover:scale-[1.01] flex flex-col justify-between h-24 cursor-pointer relative overflow-hidden group shadow-sm"
               >
-                <div className="flex justify-between items-start w-full">
-                  <div className="p-1.5 rounded-lg bg-secondary/60 text-silver group-hover:text-ivory transition-colors">
-                    <Bot size={14} />
-                  </div>
-                  <Zap size={10} className="text-fog group-hover:text-silver opacity-60 transition-opacity" />
-                </div>
+                <agent.icon size={14} className={agent.color} />
                 <div>
-                  <h4 className="text-xs font-semibold text-ivory leading-tight mt-2">{agent.label}</h4>
+                  <h4 className="text-xs font-semibold text-ivory leading-tight">{agent.label}</h4>
                   <p className="text-[10px] text-fog mt-0.5">{agent.desc}</p>
                 </div>
+                <Zap size={10} className="absolute top-3 right-3 text-fog/40" />
               </button>
             ))}
           </div>
-
         </div>
 
-        {/* Right Sidebar: Margin Gauge, Health Ring & AI Assist */}
-        <div className="space-y-6">
-          
-          {/* Margin Gauge Thermometer */}
-          <Card className="bg-midnight border-border shadow-card spotlight-sage">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-fog">
-                Agency Margin Thermometer
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-end justify-between">
-                <div>
-                  <span className="text-[9px] uppercase tracking-wider font-semibold text-fog">Current Avg Margin</span>
-                  <p className="text-3xl font-bold font-mono text-emerald-600 leading-none mt-1">
-                    {projectMargin}%
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-fog">Target Marge</p>
-                  <p className="text-xs font-semibold text-silver">{marginTarget}% Target</p>
-                </div>
-              </div>
-
-              {/* Visual Horizontal Thermometer Bar */}
-              <div className="space-y-2">
-                <div className="w-full bg-secondary/60 h-3 rounded-full overflow-hidden border border-border p-0.5">
-                  {(() => {
-                    const thermometerStyle = { width: `${projectMargin}%` };
-                    return (
-                      <div
-                        className="h-full rounded-full transition-all duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)] bg-emerald-600"
-                        style={thermometerStyle}
-                      />
-                    );
-                  })()}
-                </div>
-                <div className="flex justify-between text-[8px] text-fog font-semibold">
-                  <span>0%</span>
-                  <span>50%</span>
-                  <span>{marginTarget}% (Min Target)</span>
-                  <span>100%</span>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-white/2 border border-border p-3 flex gap-2 items-start">
-                <AlertTriangle size={13} className="text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-silver leading-relaxed">
-                  Bolt Tech project budget burn is approaching threshold limits. Adjust freelance needs to protect profitability.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Client Sentiment Tracker */}
-          <Card className="bg-midnight border-border shadow-card">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-fog">
-                Portfolio Status
-              </CardTitle>
-              <button
-                onClick={() => router.push('/app/client-space')}
-                className="text-[9px] text-emerald-600 hover:underline transition-all cursor-pointer font-semibold"
-              >
-                Open Hub
-              </button>
+        {/* Right: Margin + Portfolio */}
+        <div className="space-y-4">
+          {/* Margin */}
+          <Card className="bg-midnight border-border">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-[10px] uppercase tracking-wider font-semibold text-fog">Agency Margin</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {[
-                { client: 'Acme Corp', health: 92, status: 'Active Retainer' },
-                { client: 'Bolt Tech', health: 58, status: 'Milestone Delayed' },
-              ].map((c, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2.5 bg-white/2 border border-border rounded-xl text-xs">
-                  <div>
-                    <span className="font-semibold text-ivory block">{c.client}</span>
-                    <span className="text-[10px] text-fog">{c.status}</span>
-                  </div>
-                  <span className={cn(
-                    "text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border",
-                    c.health >= 80 ? "text-emerald-600 bg-emerald-600/10 border-emerald-600/20" : "text-red-500 bg-red-500/10 border-red-500/20"
-                  )}>
-                    {c.health}% Score
-                  </span>
+              <div className="flex items-end justify-between">
+                <p className="text-3xl font-bold font-mono text-sage leading-none">{projectMargin}%</p>
+                <p className="text-[10px] text-fog">{marginTarget}% target</p>
+              </div>
+              <div className="w-full bg-secondary/60 h-2 rounded-full overflow-hidden">
+                <div className="bg-sage h-full rounded-full transition-all duration-700" style={{ width: `${projectMargin}%` }} />
+              </div>
+              {projectMargin < marginTarget && (
+                <div className="flex items-start gap-1.5 text-[10px] text-amber">
+                  <AlertTriangle size={10} className="shrink-0 mt-0.5" />
+                  <span>Below target — review budget burn</span>
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
 
-          {/* Onboarding getting started checklist */}
-          <GettingStartedChecklist />
+          {/* Portfolio */}
+          <Card className="bg-midnight border-border">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-[10px] uppercase tracking-wider font-semibold text-fog">Portfolio</CardTitle>
+              <button onClick={() => router.push('/app/clients')} className="text-[9px] text-sage hover:underline font-semibold">
+                View all
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {activeProjects.length === 0 ? (
+                <p className="text-[11px] text-fog italic">No active projects</p>
+              ) : (
+                activeProjects.slice(0, 4).map((p: any) => {
+                  const isOverdue = p.dueDate && p.dueDate < today;
+                  return (
+                    <div
+                      key={p._id}
+                      onClick={() => router.push('/app/delivery')}
+                      className="flex items-center justify-between p-2 bg-white/2 border border-border rounded-lg cursor-pointer hover:bg-white/4 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-ivory truncate">{p.name}</p>
+                        <p className="text-[10px] text-fog truncate">{p.clientName}</p>
+                      </div>
+                      <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ml-2', isOverdue ? 'text-rose bg-rose/10' : 'text-sage bg-sage/10')}>
+                        {isOverdue ? 'Overdue' : 'Active'}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
 
+          <GettingStartedChecklist />
         </div>
 
       </div>
 
-      {/* AI Agents Interactive Sheet */}
+      {/* AI Sheet */}
       <Sheet open={aiSheetOpen} onOpenChange={setAiSheetOpen}>
         <SheetContent side="right" className="w-full sm:w-[480px] bg-midnight border-border p-6 flex flex-col h-full gap-6">
           <SheetHeader className="border-b border-border pb-4">
             <SheetTitle className="text-lg font-serif text-ivory flex items-center gap-2">
               <Sparkles size={16} className="text-emerald-600 animate-pulse" />
-              <span>Minerva Operating Agent</span>
+              Hermes AI Agent
             </SheetTitle>
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto space-y-6">
-            
             {activeAgentType === 'proposal' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-amber-600/20 bg-amber-600/5">
-                  <h4 className="text-xs font-semibold text-ivory">AI Proposal Agent</h4>
-                  <p className="text-[11px] text-silver mt-1 leading-relaxed">
-                    Provide raw details for an agency proposal, and Minerva will compile services, estimated phases, timeline scopes, and payment terms in seconds.
-                  </p>
+                <div className="p-4 rounded-xl border border-amber/20 bg-amber/5">
+                  <h4 className="text-xs font-semibold text-ivory">Proposal Copilot</h4>
+                  <p className="text-[11px] text-silver mt-1 leading-relaxed">Draft a proposal scope and pricing from a brief.</p>
                 </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-[10px] uppercase font-semibold text-fog">Client Brand</label>
-                    <input type="text" placeholder="e.g. Acme Corp" className="w-full text-xs bg-obsidian border border-border rounded-lg px-3 py-2 text-ivory outline-none mt-1 focus:border-emerald-600" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase font-semibold text-fog">Project Scope Brief</label>
-                    <textarea rows={3} placeholder="Describe deliverables, phases, and key outcomes..." className="w-full text-xs bg-obsidian border border-border rounded-lg px-3 py-2 text-ivory outline-none mt-1 resize-none focus:border-emerald-600" />
-                  </div>
-                  <Button onClick={() => { setAiSheetOpen(false); router.push('/app/growth?tab=proposals'); }} className="w-full bg-emerald-600 text-obsidian hover:bg-emerald-600/90 mt-2 font-semibold">
-                    Launch Proposal Generator
-                  </Button>
-                </div>
+                <Button onClick={() => { setAiSheetOpen(false); router.push('/app/clients?tab=proposals'); }} className="w-full bg-ivory text-obsidian hover:bg-ivory/90 font-semibold rounded-xl">
+                  Open Proposal Builder
+                </Button>
               </div>
             )}
-
             {activeAgentType === 'callprep' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-emerald-600/20 bg-emerald-600/5">
-                  <h4 className="text-xs font-semibold text-ivory">AI Call Prepper</h4>
-                  <p className="text-[11px] text-silver mt-1 leading-relaxed">
-                    Prepares a comprehensive briefing summary containing deliverables, last emails, pending approvals, and active risk alerts before a sync session.
-                  </p>
+                <div className="p-4 rounded-xl border border-sage/20 bg-sage/5">
+                  <h4 className="text-xs font-semibold text-ivory">Call Prepper</h4>
+                  <p className="text-[11px] text-silver mt-1 leading-relaxed">Generate a briefing before a client call.</p>
                 </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-[10px] uppercase font-semibold text-fog">Select Meeting Client</label>
-                    <select title="Select Meeting Client" className="w-full text-xs bg-obsidian border border-border rounded-lg px-3 py-2 text-ivory outline-none mt-1 focus:border-emerald-600">
-                      <option>Acme Corp</option>
-                      <option>Bolt Tech</option>
-                      <option>Zenith Lab</option>
-                    </select>
-                  </div>
-                  <Button onClick={() => { setAiSheetOpen(false); toast.success("AI briefing brief generated."); }} className="w-full bg-ivory text-obsidian hover:bg-ivory/90 mt-2 font-semibold">
-                    Generate Briefing Digest
-                  </Button>
-                </div>
+                <Button onClick={() => { setAiSheetOpen(false); toast.success('Briefing generated.'); }} className="w-full bg-ivory text-obsidian hover:bg-ivory/90 font-semibold rounded-xl">
+                  Generate Digest
+                </Button>
               </div>
             )}
-
             {activeAgentType === 'audit' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5">
+                <div className="p-4 rounded-xl border border-rose/20 bg-rose/5">
                   <h4 className="text-xs font-semibold text-ivory">SLA Risk Audit</h4>
-                  <p className="text-[11px] text-silver mt-1 leading-relaxed">
-                    Audits active project progress speeds, average client approval response, and overdue billing invoices to flag operations bottlenecks.
-                  </p>
+                  <p className="text-[11px] text-silver mt-1 leading-relaxed">Surface contract risks, delays and billing gaps.</p>
                 </div>
-                <div className="space-y-3">
-                  <div className="rounded-xl border border-border p-3.5 bg-obsidian space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-silver">Average SLA speed</span>
-                      <span className="text-sage font-bold font-mono">1.8d (Healthy)</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-silver">Payment Collections health</span>
-                      <span className="text-amber font-bold font-mono">74% (Action needed)</span>
-                    </div>
-                  </div>
-                  <Button onClick={() => { setAiSheetOpen(false); router.push('/app/client-space'); }} className="w-full bg-emerald-600 text-obsidian hover:bg-emerald-600/90 font-semibold">
-                    View Health Cockpit
-                  </Button>
-                </div>
+                <Button onClick={() => { setAiSheetOpen(false); router.push('/app/intelligence'); }} className="w-full bg-ivory text-obsidian hover:bg-ivory/90 font-semibold rounded-xl">
+                  View Intelligence Hub
+                </Button>
               </div>
             )}
-
           </div>
 
           <div className="border-t border-border pt-4">
             <Button variant="ghost" onClick={() => setAiSheetOpen(false)} className="w-full text-fog hover:text-silver">
-              Close Panel
+              Close
             </Button>
           </div>
         </SheetContent>
       </Sheet>
-
     </div>
   );
 }

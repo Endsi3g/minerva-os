@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Plus, Search, FileText, Send, Copy, Trash2, X, Check, FileDown, Sparkles, Loader2, ArrowRight, TrendingUp } from 'lucide-react';
+import { Plus, Search, FileText, Send, Copy, Trash2, X, Check, FileDown, Sparkles, Loader2, ArrowRight, TrendingUp, FolderKanban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { TextAnimate } from '@/components/ui/text-animate';
@@ -11,6 +11,9 @@ import { Input } from '@/components/ui/input';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useAddProject } from '@/lib/hooks/useSupabase';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Label } from '@/components/ui/label';
 
 const SERVICE_TYPES = [
   'Brand Identity',
@@ -625,6 +628,8 @@ export default function Proposals() {
   const searchParams = useSearchParams();
   const { workspace: wsCtx } = useWorkspace();
 
+  const createProject = useAddProject();
+
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -635,6 +640,8 @@ export default function Proposals() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [convertingProposal, setConvertingProposal] = useState<any | null>(null);
+  const [convertDueDate, setConvertDueDate] = useState('');
 
   useEffect(() => {
     supabase.from('workspaces').select('*').then(({ data }) => {
@@ -688,6 +695,39 @@ export default function Proposals() {
         prev.map(pr => pr._id === proposalId ? { ...pr, status: 'sent' } : pr)
       );
       toast.success(p.form.sendSuccess);
+    }
+  }
+
+  async function signProposal(proposalId: string) {
+    const { error } = await supabase
+      .from('proposals')
+      .update({ status: 'signed' })
+      .eq('id', proposalId);
+    if (!error) {
+      setProposals(prev =>
+        prev.map(pr => pr._id === proposalId ? { ...pr, status: 'signed' } : pr)
+      );
+      toast.success('Proposal marked as signed.');
+    }
+  }
+
+  async function handleConvertToProject() {
+    if (!convertingProposal || !workspaceId) return;
+    const clientObj = clients.find((c: any) => c._id === convertingProposal.clientId);
+    try {
+      await createProject({
+        workspaceId,
+        name: convertingProposal.title,
+        clientName: clientObj?.company ?? '',
+        status: 'active',
+        dueDate: convertDueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        budget: convertingProposal.totalAmount ?? 0,
+      });
+      toast.success('Project created from proposal.');
+      setConvertingProposal(null);
+      setConvertDueDate('');
+    } catch {
+      toast.error('Could not create project.');
     }
   }
 
@@ -775,6 +815,39 @@ export default function Proposals() {
         />
       )}
 
+      {/* Convert to project sheet */}
+      <Sheet open={convertingProposal !== null} onOpenChange={open => { if (!open) { setConvertingProposal(null); setConvertDueDate(''); } }}>
+        <SheetContent side="right" className="w-full sm:w-96 p-6 flex flex-col gap-6">
+          <SheetHeader>
+            <SheetTitle>Create Project from Proposal</SheetTitle>
+          </SheetHeader>
+          {convertingProposal && (
+            <div className="flex flex-col gap-4 flex-1">
+              <div className="space-y-1.5">
+                <Label>Project Name</Label>
+                <Input value={convertingProposal.title} readOnly className="opacity-70" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Client</Label>
+                <Input value={clients.find((c: any) => c._id === convertingProposal.clientId)?.company ?? 'No client'} readOnly className="opacity-70" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Budget (pre-filled from proposal)</Label>
+                <Input value={convertingProposal.totalAmount ?? 0} readOnly className="opacity-70" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Due Date</Label>
+                <Input type="date" value={convertDueDate} onChange={e => setConvertDueDate(e.target.value)} className="[color-scheme:dark]" />
+              </div>
+            </div>
+          )}
+          <Button className="w-full" onClick={handleConvertToProject}>
+            <FolderKanban size={14} />
+            Create Project
+          </Button>
+        </SheetContent>
+      </Sheet>
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <TextAnimate text={p.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
@@ -838,6 +911,26 @@ export default function Proposals() {
                       title={p.actions.send}
                     >
                       <Send size={12} />
+                    </button>
+                  )}
+                  {proposal.status === 'sent' && (
+                    <button
+                      onClick={() => signProposal(proposal._id)}
+                      className="h-7 px-2 flex items-center gap-1 rounded-md text-[10px] text-sage hover:bg-sage/10 transition-colors border border-sage/20"
+                      title="Mark as Signed"
+                    >
+                      <Check size={11} />
+                      Signed
+                    </button>
+                  )}
+                  {proposal.status === 'signed' && (
+                    <button
+                      onClick={() => { setConvertingProposal(proposal); setConvertDueDate(''); }}
+                      className="h-7 px-2 flex items-center gap-1 rounded-md text-[10px] text-ivory hover:bg-ivory/10 transition-colors border border-white/20"
+                      title="Create Project from Proposal"
+                    >
+                      <FolderKanban size={11} />
+                      Project
                     </button>
                   )}
                   <button

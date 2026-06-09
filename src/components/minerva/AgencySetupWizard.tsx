@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import useMeasure from 'react-use-measure';
+
+const ONBOARDING_BG_VIDEO = process.env.NEXT_PUBLIC_BG_VIDEO_URL ?? '';
 import {
   Palette, Target, FileText, Code2, Layers, Users,
   CheckCircle2, ArrowLeft, ArrowRight, Rocket,
@@ -164,9 +166,48 @@ export function AgencySetupWizard() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-16"
+      className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16 overflow-hidden"
       style={{ backgroundColor: '#090909' }}
     >
+      {/* Background video */}
+      {ONBOARDING_BG_VIDEO && (
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ zIndex: 0 }}
+        >
+          <source src={ONBOARDING_BG_VIDEO} type="video/mp4" />
+        </video>
+      )}
+
+      {/* Gradient overlay — darkens video while preserving atmosphere */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 1,
+          background: ONBOARDING_BG_VIDEO
+            ? 'linear-gradient(to bottom, rgba(9,9,9,0.78) 0%, rgba(9,9,9,0.65) 50%, rgba(9,9,9,0.88) 100%)'
+            : 'none',
+        }}
+      />
+
+      {/* Vignette edges */}
+      {ONBOARDING_BG_VIDEO && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            zIndex: 2,
+            boxShadow: 'inset 0 0 120px rgba(0,0,0,0.6)',
+          }}
+        />
+      )}
+
+      {/* Content wrapper — above overlays */}
+      <div className="relative w-full flex flex-col items-center" style={{ zIndex: 3 }}>
+
       {/* Progress bar */}
       <div className="w-full max-w-lg mb-8">
         <div className="flex items-center justify-between mb-2">
@@ -205,8 +246,15 @@ export function AgencySetupWizard() {
       {/* Step content */}
       <motion.div
         animate={{ height: height > 0 ? height : 'auto' }}
-        className="w-full max-w-lg overflow-hidden relative"
+        className="w-full max-w-lg overflow-hidden relative rounded-2xl"
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={ONBOARDING_BG_VIDEO ? {
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(9,9,9,0.55)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          padding: '28px',
+        } : undefined}
       >
         <div ref={measureRef}>
           <AnimatePresence mode="wait">
@@ -273,6 +321,8 @@ export function AgencySetupWizard() {
           </button>
         )}
       </div>
+
+      </div>{/* end content wrapper */}
     </div>
   );
 }

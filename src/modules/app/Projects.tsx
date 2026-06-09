@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UpgradeBanner } from '@/components/minerva/UpgradeBanner';
-import { Plus, LayoutGrid, GanttChartSquare } from 'lucide-react';
+import { Plus, LayoutGrid, GanttChartSquare, CalendarDays, Receipt, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import {
 import { ProjectCard } from '@/components/minerva/ProjectCard';
 import { toast } from 'sonner';
 import { useLang } from '@/i18n';
-import { useWorkspaces, useProjects, useClients, useAddProject } from '@/lib/hooks/useSupabase';
+import { useWorkspaces, useProjects, useClients, useAddProject, useApprovals, useInvoices } from '@/lib/hooks/useSupabase';
 
 const STATUS_COLORS: Record<string, string> = {
   active:    'var(--color-sage)',
@@ -184,7 +184,7 @@ function ProjectCardSkeleton() {
 }
 
 import { useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function Projects() {
   const { t } = useLang();
@@ -196,7 +196,11 @@ export default function Projects() {
   const projects = useProjects(workspaceId);
   const clients = useClients(workspaceId);
   const createProject = useAddProject();
+  const allApprovals = useApprovals(workspaceId);
+  const allInvoices = useInvoices(workspaceId);
 
+  const router = useRouter();
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM);
   const [viewTab, setViewTab] = useState<'grid' | 'timeline'>('grid');
@@ -215,6 +219,21 @@ export default function Projects() {
       return true;
     });
   }, [projects, projectFilter]);
+
+  const projectClient = useMemo(() => {
+    if (!clients || !selectedProject) return null;
+    return (clients as any[]).find((c: any) => c.company === selectedProject.clientName);
+  }, [clients, selectedProject]);
+
+  const projectApprovals = useMemo(() => {
+    if (!allApprovals || !selectedProject) return [];
+    return (allApprovals as any[]).filter((a: any) => a.projectId === selectedProject._id);
+  }, [allApprovals, selectedProject]);
+
+  const projectInvoices = useMemo(() => {
+    if (!allInvoices || !selectedProject || !projectClient) return [];
+    return (Array.isArray(allInvoices) ? allInvoices : []).filter((i: any) => i.clientId === projectClient._id);
+  }, [allInvoices, selectedProject, projectClient]);
 
   const searchParams = useSearchParams();
   useEffect(() => {
@@ -365,7 +384,7 @@ export default function Projects() {
                   totalTasks: 0,
                   doneTasks: 0,
                   team: ['US']
-                }} />
+                }} onClick={() => { setSelectedProject(proj); }} />
               ))}
             </div>
           )}
@@ -408,6 +427,126 @@ export default function Projects() {
           </div>
 
           <Button className="w-full" onClick={handleAdd}>{p.form.create}</Button>
+        </SheetContent>
+      </Sheet>
+
+      {/* Project detail sheet */}
+      <Sheet open={selectedProject !== null} onOpenChange={open => { if (!open) setSelectedProject(null); }}>
+        <SheetContent side="right" className="w-full sm:w-[480px] p-0 flex flex-col bg-card border-border overflow-hidden">
+          {selectedProject && (
+            <>
+              <SheetHeader className="p-6 border-b border-border shrink-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <SheetTitle className="text-base font-semibold text-ivory truncate">{selectedProject.name}</SheetTitle>
+                    <p className="text-xs text-fog mt-0.5">{selectedProject.clientName}</p>
+                  </div>
+                  <span className={cn(
+                    'text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 shrink-0',
+                    selectedProject.status === 'active' ? 'text-sage bg-sage/10' :
+                    selectedProject.status === 'on_hold' ? 'text-warm bg-warm/10' :
+                    'text-fog bg-fog/10'
+                  )}>
+                    {selectedProject.status === 'active' ? 'Active' : selectedProject.status === 'on_hold' ? 'On Hold' : 'Completed'}
+                  </span>
+                </div>
+              </SheetHeader>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Dates & Budget */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-border p-3" style={{ backgroundColor: 'rgba(23,28,42,0.5)' }}>
+                    <p className="text-[10px] text-fog mb-1 flex items-center gap-1"><CalendarDays size={10} /> Due Date</p>
+                    <p className="text-sm font-medium text-ivory">
+                      {selectedProject.dueDate
+                        ? new Date(selectedProject.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : 'Not set'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border p-3" style={{ backgroundColor: 'rgba(23,28,42,0.5)' }}>
+                    <p className="text-[10px] text-fog mb-1 flex items-center gap-1"><Receipt size={10} /> Budget</p>
+                    <p className="text-sm font-medium text-ivory">
+                      {(selectedProject.budget ?? 0) > 0
+                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(selectedProject.budget)
+                        : 'No budget'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Approvals */}
+                <div>
+                  <p className="text-[10px] font-semibold text-fog uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <CheckCircle2 size={10} /> Approvals
+                  </p>
+                  {projectApprovals.length === 0 ? (
+                    <p className="text-xs text-fog italic">No approvals linked to this project.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {projectApprovals.map((a: any) => (
+                        <div key={a._id} className="flex items-center justify-between px-3 py-2 rounded-lg border border-border" style={{ backgroundColor: 'rgba(23,28,42,0.3)' }}>
+                          <p className="text-xs text-ivory truncate">{a.name}</p>
+                          <span className={cn(
+                            'text-[9px] font-semibold px-2 py-0.5 rounded-full ml-2 shrink-0',
+                            a.status === 'approved' ? 'text-sage bg-sage/10' :
+                            a.status === 'revision' ? 'text-ember bg-ember/10' :
+                            'text-warm bg-warm/10'
+                          )}>
+                            {a.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Invoices */}
+                <div>
+                  <p className="text-[10px] font-semibold text-fog uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <Receipt size={10} /> Invoices
+                  </p>
+                  {projectInvoices.length === 0 ? (
+                    <p className="text-xs text-fog italic">No invoices found for this client.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {(projectInvoices as any[]).slice(0, 5).map((inv: any) => (
+                        <div key={inv._id} className="flex items-center justify-between px-3 py-2 rounded-lg border border-border" style={{ backgroundColor: 'rgba(23,28,42,0.3)' }}>
+                          <p className="text-xs text-ivory">{inv.invoiceNumber || 'Invoice'}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-ivory">
+                              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(inv.amount)}
+                            </span>
+                            <span className={cn(
+                              'text-[9px] font-semibold px-2 py-0.5 rounded-full shrink-0',
+                              inv.status === 'paid' ? 'text-sage bg-sage/10' :
+                              inv.status === 'overdue' ? 'text-ember bg-ember/10' :
+                              'text-warm bg-warm/10'
+                            )}>
+                              {inv.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-border shrink-0">
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (projectClient) params.set('client', projectClient._id);
+                    router.push(`/app/finance-hub?${params.toString()}`);
+                    setSelectedProject(null);
+                  }}
+                >
+                  <Receipt size={14} />
+                  Create Invoice
+                </Button>
+              </div>
+            </>
+          )}
         </SheetContent>
       </Sheet>
     </>

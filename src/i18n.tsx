@@ -63,6 +63,18 @@ const translations = {
         },
         releases: [
           {
+            version: 'v2.5.0',
+            date: 'Jun 2026',
+            tag: 'Major',
+            items: [
+              'Dashboard rewritten as an operating review — 4 actionable zones: Blocking, Cash at Risk, Awaiting Client, Invoice Now',
+              'Project cards now open a detail sheet with linked approvals and invoices',
+              'Proposals: "Mark as Signed" button on sent proposals; "Create Project" converts a signed proposal directly into a project',
+              'Client cards now open a detail sheet with active projects, open invoices and pending approvals',
+              'Approvals: approved items show an "Invoice" button that routes directly to Finance Hub',
+            ] as string[],
+          },
+          {
             version: 'v2.4.0',
             date: 'Jun 2026',
             tag: 'Major',
@@ -575,6 +587,8 @@ const translations = {
           copyLink: 'Copy link',
           linkCopied: 'Link copied!',
           delete: 'Delete',
+          markSigned: 'Mark as Signed',
+          createProject: 'Create Project',
         },
       },
       expenses: {
@@ -840,7 +854,9 @@ const translations = {
           approve: 'Approve',
           revise: 'Revise',
           reopen: 'Re-open',
+          createInvoice: 'Create Invoice',
         },
+        invoiceReady: 'Invoice Ready',
         meta: {
           by: 'by',
           on: 'on',
@@ -2326,6 +2342,18 @@ const translations = {
         },
         releases: [
           {
+            version: 'v2.5.0',
+            date: 'Jun 2026',
+            tag: 'Majeur',
+            items: [
+              'Dashboard reecrit en revue operationnelle — 4 zones actionnables : Bloquant, Tresorerie a risque, En attente client, A facturer',
+              'Les cartes projet ouvrent un panneau detail avec approbations et factures liees',
+              'Propositions : bouton "Marquer comme signe" ; "Creer un projet" convertit une proposition signee en projet',
+              'Les cartes client ouvrent un panneau detail avec projets actifs, factures ouvertes et approbations en attente',
+              'Approbations : les elements approuves affichent un bouton "Facture" pointant vers le Hub Finance',
+            ] as string[],
+          },
+          {
             version: 'v2.4.0',
             date: 'Jun 2026',
             tag: 'Majeur',
@@ -2838,6 +2866,8 @@ const translations = {
           copyLink: 'Copier le lien',
           linkCopied: 'Lien copié !',
           delete: 'Supprimer',
+          markSigned: 'Marquer comme signé',
+          createProject: 'Créer un projet',
         },
       },
       expenses: {
@@ -3103,7 +3133,9 @@ const translations = {
           approve: 'Approuver',
           revise: 'Réviser',
           reopen: 'Réouvrir',
+          createInvoice: 'Créer une facture',
         },
+        invoiceReady: 'Prêt à facturer',
         meta: {
           by: 'par',
           on: 'le',
