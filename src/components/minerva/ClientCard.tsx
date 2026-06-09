@@ -25,6 +25,7 @@ interface ClientCardProps {
   client: Client;
   onPortalLink?: (clientId: string) => void;
   activePortalToken?: any;
+  onClick?: () => void;
 }
 
 function getClientHealthMetrics(company: string) {
@@ -62,13 +63,13 @@ function getClientHealthMetrics(company: string) {
   }
 }
 
-export function ClientCard({ client, onPortalLink, activePortalToken }: ClientCardProps) {
+export function ClientCard({ client, onPortalLink, activePortalToken, onClick }: ClientCardProps) {
   const status = STATUS_CONFIG[client.status];
   const isPortalActive = activePortalToken && new Date(activePortalToken.expires_at) > new Date();
   const health = getClientHealthMetrics(client.company);
 
   return (
-    <Card className="bg-card border-border rounded-xl p-5 space-y-4 hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none">
+    <Card onClick={onClick} className={cn('bg-card border-border rounded-xl p-5 space-y-4 hover:border-white/15 hover:bg-dusk/30 transition-colors shadow-none', onClick && 'cursor-pointer')}>
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <Avatar className="h-10 w-10 shrink-0">

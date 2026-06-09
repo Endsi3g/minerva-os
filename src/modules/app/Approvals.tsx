@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Check, RotateCcw, Palette, FileText, Video, File, Clock } from 'lucide-react';
+import { Check, RotateCcw, Palette, FileText, Video, File, Clock, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AnimatedNumber } from '@/components/ui/animated-number';
@@ -9,6 +9,7 @@ import type { ApprovalStatus, DeliverableType } from '@/lib/types';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useRouter } from 'next/navigation';
 import { CommentSection } from '@/components/minerva/CommentSection';
 import { ChoicePoll, VoteTally } from '@/components/ui/choice-poll';
 
@@ -16,6 +17,7 @@ export default function Approvals() {
   const { t, lang } = useLang();
   const a = t.app.approvals;
   const common = t.app.common;
+  const router = useRouter();
 
   const [approvalsRaw, setApprovalsRaw] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
@@ -51,7 +53,9 @@ export default function Approvals() {
       id: app.id,
       name: app.name,
       project: project?.name || '...',
+      projectId: app.project_id,
       client: client?.company || '...',
+      clientId: app.client_id,
       status: app.status as ApprovalStatus,
       type: app.type as DeliverableType,
       submittedBy: 'Studio',
@@ -199,12 +203,30 @@ export default function Approvals() {
                           size="sm"
                           variant="ghost"
                           className="h-7 px-2.5 text-xs text-fog hover:text-silver border border-border shrink-0"
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleStatusChange(approval.id, 'pending');
                           }}
                         >
                           {a.actions.reopen}
+                        </Button>
+                      )}
+
+                      {/* Invoice ready action on approved */}
+                      {status === 'approved' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2.5 text-xs text-sage hover:text-sage hover:bg-sage/10 border border-sage/20 shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const params = new URLSearchParams();
+                            if (approval.clientId) params.set('client', approval.clientId);
+                            router.push(`/app/finance-hub?${params.toString()}`);
+                          }}
+                        >
+                          <Receipt size={12} />
+                          Invoice
                         </Button>
                       )}
                     </div>
