@@ -4,18 +4,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Home,
-  TrendingUp,
   Users,
-  FolderOpen,
-  CheckSquare,
-  Bot,
-  Sparkles,
-  BookOpen,
-  CreditCard,
-  FileText,
+  Layers,
   BarChart2,
+  Brain,
   Settings,
-  Store,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -23,7 +16,6 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronRight,
-  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLang } from '@/i18n';
@@ -63,34 +55,13 @@ function MinervaLogo({ size = 28 }: { size?: number }) {
   );
 }
 
-/* ── Nav section data ────────────────────────────────────────────────── */
-const NAV_SECTIONS = [
-  {
-    label: 'Workspace',
-    items: [
-      { href: '/app/dashboard',  labelKey: 'cockpit',    fallback: 'Dashboard',    icon: Home },
-      { href: '/app/pipeline',   labelKey: 'pipeline',   fallback: 'Pipeline',     icon: TrendingUp },
-      { href: '/app/clients',    labelKey: 'clients',    fallback: 'Clients',      icon: Users },
-      { href: '/app/projects',   labelKey: 'projects',   fallback: 'Projects',     icon: FolderOpen },
-      { href: '/app/tasks',      labelKey: 'tasks',      fallback: 'Tasks',        icon: CheckSquare },
-    ],
-  },
-  {
-    label: 'Intelligence',
-    items: [
-      { href: '/app/agents',    labelKey: 'agents',    fallback: 'Agents',    icon: Bot },
-      { href: '/app/copilot',   labelKey: 'copilot',   fallback: 'Copilot',   icon: Sparkles },
-      { href: '/app/knowledge', labelKey: 'knowledge', fallback: 'Knowledge', icon: BookOpen },
-    ],
-  },
-  {
-    label: 'Finance',
-    items: [
-      { href: '/app/billing',   labelKey: 'billing',   fallback: 'Billing',   icon: CreditCard },
-      { href: '/app/proposals', labelKey: 'proposals', fallback: 'Proposals', icon: FileText },
-      { href: '/app/reports',   labelKey: 'reports',   fallback: 'Reports',   icon: BarChart2 },
-    ],
-  },
+/* ── Nav items ───────────────────────────────────────────────────────── */
+const NAV_ITEMS = [
+  { href: '/app/dashboard',    labelKey: 'dashboard',    fallback: 'Dashboard',    icon: Home },
+  { href: '/app/clients',      labelKey: 'clients',      fallback: 'Clients',      icon: Users },
+  { href: '/app/delivery',     labelKey: 'delivery',     fallback: 'Delivery',     icon: Layers },
+  { href: '/app/finance-hub',  labelKey: 'financeHub',   fallback: 'Finance',      icon: BarChart2 },
+  { href: '/app/intelligence', labelKey: 'intelligence', fallback: 'Intelligence', icon: Brain },
 ];
 
 export function AppSidebar() {
@@ -262,41 +233,23 @@ export function AppSidebar() {
 
         {/* ── Navigation ──────────────────────────────────────────────── */}
         <nav className="flex-1 overflow-y-auto py-4 space-y-1">
-          {NAV_SECTIONS.map((section, sIdx) => (
-            <div key={section.label} className={cn('px-2', sIdx > 0 && 'pt-2')}>
-              {!collapsed && (
-                <p className="px-3 mb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {section.label}
-                </p>
-              )}
-              <div className="space-y-0.5">
-                {section.items.map(item => {
-                  const label = (sidebar as Record<string, string>)[item.labelKey] ?? item.fallback;
-                  return (
-                    <NavItem
-                      key={item.href}
-                      href={item.href}
-                      label={label}
-                      icon={item.icon}
-                    />
-                  );
-                })}
-              </div>
-              {sIdx < NAV_SECTIONS.length - 1 && !collapsed && (
-                <div className="mt-2 border-t border-sidebar-border" />
-              )}
-            </div>
-          ))}
+          <div className="px-2 space-y-0.5">
+            {NAV_ITEMS.map(item => {
+              const label = (sidebar as Record<string, string>)[item.labelKey] ?? item.fallback;
+              return (
+                <NavItem
+                  key={item.href}
+                  href={item.href}
+                  label={label}
+                  icon={item.icon}
+                />
+              );
+            })}
+          </div>
 
           {/* ── Footer links ─────────────────────────────────────────── */}
-          <div className={cn('px-2 pt-2 border-t border-sidebar-border')}>
-            {[
-              { href: '/app/settings',    label: sidebar.settings,    icon: Settings },
-              { href: '/app/marketplace', label: sidebar.marketplace ?? 'Marketplace', icon: Store },
-              { href: '/app/support-hub', label: sidebar.help,        icon: HelpCircle },
-            ].map(item => (
-              <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
-            ))}
+          <div className={cn('px-2 pt-2 mt-2 border-t border-sidebar-border')}>
+            <NavItem href="/app/settings" label={sidebar.settings} icon={Settings} />
           </div>
         </nav>
 

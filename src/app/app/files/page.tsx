@@ -1,3 +1,5 @@
-﻿'use client';
-import Files from '@/modules/app/Files';
-export default function FilesPage() { return <Files />; }
+import { redirect } from 'next/navigation';
+
+export default function FilesPage() {
+  redirect('/app/delivery?tab=files');
+}

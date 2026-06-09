@@ -1,10 +1,5 @@
-'use client';
-import Pipeline from '@/modules/app/Pipeline';
-import { ErrorBoundary } from '@/components/minerva/ErrorBoundary';
+import { redirect } from 'next/navigation';
+
 export default function PipelinePage() {
-  return (
-    <ErrorBoundary>
-      <Pipeline />
-    </ErrorBoundary>
-  );
+  redirect('/app/clients?tab=pipeline');
 }
