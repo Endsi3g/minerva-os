@@ -21,8 +21,8 @@ export function PresenceAvatars() {
         return (
           <Tooltip key={presence.user}>
             <TooltipTrigger asChild>
-              <Avatar className="h-7 w-7 border-2 border-obsidian shrink-0">
-                <AvatarFallback className="text-[10px] bg-dusk text-silver">
+              <Avatar className="h-7 w-7 border-2 border-background shrink-0">
+                <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
                   {initials}
                 </AvatarFallback>
               </Avatar>

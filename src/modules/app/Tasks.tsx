@@ -74,7 +74,7 @@ const EMPTY_FORM: NewTaskForm = {
 
 function TaskRowSkeleton() {
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-midnight border border-border animate-pulse">
+    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-surface border border-border animate-pulse">
       <Skeleton className="h-4 w-4 rounded-full bg-secondary/60 shrink-0" />
       <Skeleton className="h-4 w-1/3 bg-secondary/60 flex-1" />
       <Skeleton className="h-4 w-20 bg-secondary/60 shrink-0 hidden sm:block" />
@@ -180,8 +180,8 @@ export default function Tasks() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <TextAnimate text={tk.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
-          <p className="text-sm text-fog mt-0.5">
+          <TextAnimate text={tk.title} type="calmInUp" className="text-2xl font-semibold text-foreground" />
+          <p className="text-sm text-muted-foreground mt-0.5">
             {tk.stats
               .replace('total', String(totalTasksCount))
               .replace('open', String(tasks ? tasks.filter((t: any) => t.status !== 'done').length : 0))}
@@ -209,7 +209,7 @@ export default function Tasks() {
                 "relative px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer select-none",
                 viewPreset === tab.id
                   ? "bg-accent text-foreground border-border shadow-sm"
-                  : "bg-transparent text-fog border-transparent hover:text-silver"
+                  : "bg-transparent text-muted-foreground border-transparent hover:text-foreground"
               )}
             >
               <span>{tab.label}</span>
@@ -227,8 +227,8 @@ export default function Tasks() {
             className={cn(
               'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
               filter === tab.id
-                ? 'bg-dusk text-ivory'
-                : 'text-fog hover:text-silver'
+                ? 'bg-primary-soft text-primary'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {tab.label}
@@ -250,13 +250,13 @@ export default function Tasks() {
             {[1, 2, 3, 4, 5].map(i => <TaskRowSkeleton key={i} />)}
           </div>
         ) : totalTasksCount === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-midnight/30 rounded-xl border border-border p-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/60 border border-border text-fog">
+          <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-surface rounded-xl border border-border p-8">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/60 border border-border text-muted-foreground">
               <CheckCircle2 size={20} />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-medium text-ivory">{'No tasks found'}</p>
-              <p className="text-xs text-fog max-w-xs">{'Create your first task to start collaborating.'}</p>
+              <p className="text-sm font-medium text-foreground">{'No tasks found'}</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{'Create your first task to start collaborating.'}</p>
             </div>
             <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setSheetOpen(true); }} className="rounded-full">
               <Plus size={14} className="mr-1.5" />
@@ -264,7 +264,7 @@ export default function Tasks() {
             </Button>
           </div>
         ) : visible.length === 0 ? (
-          <p className="text-sm text-fog py-8 text-center">{tk.empty}</p>
+          <p className="text-sm text-muted-foreground py-8 text-center">{tk.empty}</p>
         ) : (
           <>
             <Reorder.Group axis="y" values={orderedTasks} onReorder={setOrderedTasks} className="space-y-1 py-4">
@@ -276,7 +276,7 @@ export default function Tasks() {
                     key={task._id}
                     value={task}
                     onClick={() => setSelectedTask(task)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-card/80 transition-colors group cursor-grab active:cursor-grabbing bg-midnight border border-border select-none"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-alt transition-colors group cursor-grab active:cursor-grabbing bg-surface border border-border select-none"
                   >
                     {/* Status toggle */}
                     <button
@@ -291,12 +291,12 @@ export default function Tasks() {
                     </button>
 
                     {/* Title */}
-                    <p className={cn('flex-1 text-sm truncate', task.status === 'done' ? 'line-through text-fog' : 'text-ivory')}>
+                    <p className={cn('flex-1 text-sm truncate', task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground')}>
                       {task.title}
                     </p>
 
                     {/* Project pill */}
-                    <span className="hidden sm:block text-[10px] px-2 py-0.5 rounded-full bg-dusk text-fog border border-border shrink-0 max-w-[120px] truncate">
+                    <span className="hidden sm:block text-[10px] px-2 py-0.5 rounded-full bg-surface-alt text-muted-foreground border border-border shrink-0 max-w-[120px] truncate">
                       {project?.name || '...'}
                     </span>
 
@@ -306,7 +306,7 @@ export default function Tasks() {
                     </span>
 
                     {/* Due date */}
-                    <span className="hidden lg:block text-[10px] text-fog shrink-0">
+                    <span className="hidden lg:block text-[10px] text-muted-foreground shrink-0">
                       {new Date(task.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}
                     </span>
 
@@ -321,7 +321,7 @@ export default function Tasks() {
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4 px-1 py-2 border-t border-border">
-                <span className="text-xs text-fog">
+                <span className="text-xs text-muted-foreground">
                   Showing {Math.min((page - 1) * pageSize + 1, totalTasksCount)}-{Math.min(page * pageSize, totalTasksCount)} of {totalTasksCount} tasks
                 </span>
                 <div className="flex items-center gap-2">
@@ -330,17 +330,15 @@ export default function Tasks() {
                     variant="outline"
                     onClick={() => setPage(p => Math.max(p - 1, 1))}
                     disabled={page === 1}
-                    className="border-border text-fog hover:text-ivory"
                   >
                     Previous
                   </Button>
-                  <span className="text-xs text-silver font-medium font-mono px-2">{page} / {totalPages}</span>
+                  <span className="text-xs text-muted-foreground font-medium font-mono px-2">{page} / {totalPages}</span>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setPage(p => Math.min(p + 1, totalPages))}
                     disabled={page === totalPages}
-                    className="border-border text-fog hover:text-ivory"
                   >
                     Next
                   </Button>
@@ -354,19 +352,19 @@ export default function Tasks() {
 
       {/* Task detail sheet */}
       <Sheet open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <SheetContent side="right" className="w-full sm:w-[400px] bg-midnight border-border flex flex-col p-0">
+        <SheetContent side="right" className="w-full sm:w-[400px] bg-background border-border flex flex-col p-0">
           <SheetHeader className="p-6 border-b border-border">
             <div className="flex items-center gap-2 mb-1">
               <span className={cn('text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full', PRIORITY_COLOR[selectedTask?.priority as TaskPriority])}>
                 {tk.priorities[selectedTask?.priority as TaskPriority]}
               </span>
-              <span className="text-[10px] text-fog">Due {new Date(selectedTask?.dueDate).toLocaleDateString()}</span>
+              <span className="text-[10px] text-muted-foreground">Due {new Date(selectedTask?.dueDate).toLocaleDateString()}</span>
             </div>
-            <SheetTitle className="text-xl font-semibold text-ivory leading-tight">{selectedTask?.title}</SheetTitle>
+            <SheetTitle className="text-xl font-semibold text-foreground leading-tight">{selectedTask?.title}</SheetTitle>
           </SheetHeader>
 
           <div className="flex-1 overflow-hidden p-6">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-fog mb-4">Discussion</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-4">Discussion</p>
             {selectedTask && (
               <CommentSection targetId={selectedTask._id} targetType="task" />
             )}

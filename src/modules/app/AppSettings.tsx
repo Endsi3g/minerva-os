@@ -14,6 +14,7 @@ import { useTier } from '@/lib/hooks/useTier';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { UpgradeModal, TIER_BADGE_COLORS } from '@/components/minerva/UpgradeModal';
 import { LockedFeaturePage } from '@/components/minerva/LockedFeaturePage';
+import { TeamMembersPanel } from '@/components/minerva/TeamMembersPanel';
 import { isFeatureVisibleForTier } from '@/lib/tier';
 import type { ApiKey, FeatureKey, WorkspaceTier } from '@/lib/types';
 
@@ -463,125 +464,10 @@ function WorkspaceTab() {
 
 function TeamTab() {
   const { t } = useLang();
-  const { user } = useAuth();
-  const { workspace } = useWorkspace();
   const s = t.app.settings.team;
-  const roleLabels = s.roles as Record<string, string>;
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [invited, setInvited] = useState(false);
-  const [members, setMembers] = useState<any[]>([]);
-
-  const workspaceId = workspace?.id || null;
-  const isOwner = user?.role === 'owner';
-
-  useEffect(() => {
-    if (!workspaceId) return;
-    supabase.from('user_profiles').select('*').eq('workspace_id', workspaceId).then(({ data }) => {
-      if (data) setMembers(data);
-    });
-  }, [workspaceId]);
-
-  async function handleInvite() {
-    if (!inviteEmail || !workspaceId) return;
-    try {
-      const { error } = await supabase.from('invitations').insert({
-        workspace_id: workspaceId,
-        email: inviteEmail,
-        role: 'member',
-        token: Math.random().toString(36).substring(2, 15),
-        expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
-      });
-      if (error) throw error;
-      setInvited(true);
-      setInviteEmail('');
-      setTimeout(() => setInvited(false), 3000);
-    } catch (err) {
-      console.error('Failed to send invite:', err);
-    }
-  }
-
-  async function handleRoleChange(memberId: string, newRole: string) {
-    await supabase.from('user_profiles').update({ role: newRole }).eq('id', memberId);
-    setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m));
-  }
-
-  const ROLE_OPTIONS = ['owner', 'strategist', 'project_manager', 'designer', 'developer', 'finance'];
-
   return (
     <Section title={s.heading} subtitle={s.subtitle}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start w-full">
-        {/* Left Column - Invite Form */}
-        <div className="md:col-span-1 rounded-2xl p-6 bg-midnight border border-border space-y-4">
-          <h4 className="text-sm font-semibold text-ivory">{s.inviteButton}</h4>
-          <p className="text-xs text-fog leading-relaxed">
-            Invite new collaborators to your studio. Invited users will receive an email with a secure registration link.
-          </p>
-          <div className="space-y-2">
-            <input
-              type="email"
-              placeholder={s.invitePlaceholder}
-              value={inviteEmail}
-              onChange={e => setInviteEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleInvite()}
-              className="w-full rounded-xl h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/10 transition-all placeholder:text-white/20 bg-obsidian border border-border text-foreground"
-            />
-            <button
-              onClick={handleInvite}
-              className="w-full h-10 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] flex items-center justify-center bg-ivory text-obsidian"
-            >
-              {invited ? <Check size={14} /> : s.inviteButton}
-            </button>
-          </div>
-        </div>
-
-        {/* Right Column - Member List */}
-        <div className="md:col-span-2 space-y-2 w-full">
-          <h4 className="text-xs font-semibold uppercase tracking-widest text-fog px-1 mb-2">Team Members</h4>
-          {members.map(member => {
-            const initials = (member.name || '')
-              .split(' ')
-              .map((w: string) => w[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase() || 'U';
-            const isSelf = member.user_id === user?.id || member.email === user?.email;
-            return (
-              <div
-                key={member.id}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-midnight border border-border"
-              >
-                <div
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0 bg-dusk text-silver"
-                >
-                  {initials}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-ivory truncate">{member.name}</p>
-                  <p className="text-xs text-fog truncate">{member.email}</p>
-                </div>
-                {isOwner && !isSelf ? (
-                  <select
-                    value={member.role}
-                    onChange={e => handleRoleChange(member.id, e.target.value)}
-                    className="text-[11px] font-semibold px-2 py-1 rounded-lg appearance-none bg-dusk border border-border text-silver focus:outline-none cursor-pointer"
-                    title={s.changeRole}
-                  >
-                    {ROLE_OPTIONS.map(r => (
-                      <option key={r} value={r}>{roleLabels[r] ?? r}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <span
-                    className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full shrink-0 bg-muted text-fog"
-                  >
-                    {roleLabels[member.role] ?? member.role}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <TeamMembersPanel />
     </Section>
   );
 }

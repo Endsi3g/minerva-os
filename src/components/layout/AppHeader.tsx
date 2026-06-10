@@ -10,6 +10,8 @@ import {
   LogOut,
   Settings,
   MessageSquare,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -32,6 +34,7 @@ import {
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/theme';
 import { PresenceAvatars } from '../minerva/PresenceAvatars';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -130,6 +133,7 @@ function HeaderBreadcrumb({ pageLabel, pathname }: { pageLabel: string; pathname
 export function AppHeader() {
   const { collapsed, toggle } = useSidebar();
   const { toggleChat } = useChat();
+  const { theme, toggleTheme } = useTheme();
 
   const { user } = useAuth();
   const { setOpen: openPalette } = useCommandPalette();
@@ -257,9 +261,20 @@ export function AppHeader() {
         <Search size={16} />
       </Button>
       
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        className="text-muted-foreground hover:text-foreground transition-colors"
+        aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+        title={theme === 'light' ? 'Dark mode' : 'Light mode'}
+      >
+        {theme === 'light' ? <Moon size={15} strokeWidth={1.75} /> : <Sun size={15} strokeWidth={1.75} />}
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={toggleChat}
         className="text-muted-foreground hover:text-primary transition-colors"
         aria-label="AI Chat"
