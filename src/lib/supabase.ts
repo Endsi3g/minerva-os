@@ -30,6 +30,14 @@ function initMockDb() {
       const parsed = JSON.parse(saved);
       if (parsed && parsed.workspaces && parsed.workspaces.length > 0) {
         mockDb = parsed;
+        if (!mockDb.folders) {
+          mockDb.folders = [
+            { id: 'fld-1', workspace_id: 'mock-workspace-123', name: 'SL Mobbin', description: 'Related files for Project SL Mobbin.', owner: 'Alex Smith' },
+            { id: 'fld-2', workspace_id: 'mock-workspace-123', name: 'AS Mobbin', description: 'Outlines the critical path tasks identified during the Project AS Mobbin', owner: 'Alex Smith' },
+            { id: 'fld-3', workspace_id: 'mock-workspace-123', name: 'Demo folder', description: '', owner: 'Alex Smith' },
+          ];
+          saveMockDb();
+        }
         return;
       }
     }
@@ -416,6 +424,9 @@ class MockQueryBuilder {
       }
       mockDb[this.table].push(...newRecords);
       saveMockDb();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('minerva-db-change', { detail: { table: this.table } }));
+      }
       result = Array.isArray(this.actionData) ? newRecords : newRecords[0];
     } else if (this.action === 'update') {
       if (!mockDb[this.table]) mockDb[this.table] = [];
@@ -431,6 +442,9 @@ class MockQueryBuilder {
       });
       mockDb[this.table] = updatedList;
       saveMockDb();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('minerva-db-change', { detail: { table: this.table } }));
+      }
       result = updatedList.filter(item => {
         let matches = true;
         for (const filterFn of this.filters) {
@@ -452,6 +466,9 @@ class MockQueryBuilder {
       });
       mockDb[this.table] = kept;
       saveMockDb();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('minerva-db-change', { detail: { table: this.table } }));
+      }
       result = [];
     }
 

@@ -1,6 +1,6 @@
 'use client';
-import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -21,6 +21,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useSidebar, useChat } from './AppShell';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
 import { PresenceAvatars } from '../minerva/PresenceAvatars';
@@ -56,7 +65,67 @@ const PAGE_LABELS: Record<string, string> = {
   '/app/tickets': 'Support Tickets',
   '/app/nps': 'NPS',
   '/app/resources': 'Resource Planning',
+  '/app/folders': 'Folders',
 };
+
+function HeaderBreadcrumb({ pageLabel, pathname }: { pageLabel: string; pathname: string | null }) {
+  const searchParams = useSearchParams();
+  const folderId = searchParams?.get('id');
+
+  return (
+    <Breadcrumb className="hidden sm:block">
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/app/dashboard">Minerva OS</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        {pathname !== '/app/dashboard' && (
+          <>
+            <BreadcrumbSeparator />
+            {pathname?.startsWith('/app/clients/') ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link href="/app/clients">Clients</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Client Details</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            ) : pathname === '/app/folders' && folderId ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link href="/app/folders">Folders</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Folder Details</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            ) : (
+              <BreadcrumbItem>
+                <BreadcrumbPage>{pageLabel}</BreadcrumbPage>
+              </BreadcrumbItem>
+            )}
+          </>
+        )}
+        {pathname === '/app/dashboard' && (
+          <>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Dashboard</BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        )}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
 
 export function AppHeader() {
   const { collapsed, toggle } = useSidebar();
@@ -165,7 +234,10 @@ export function AppHeader() {
       </Button>
 
       {/* Breadcrumb */}
-      <span className="text-sm font-medium text-foreground">{pageLabel}</span>
+      <Suspense fallback={<span className="text-sm font-medium text-foreground">{pageLabel}</span>}>
+        <HeaderBreadcrumb pageLabel={pageLabel} pathname={pathname} />
+      </Suspense>
+      <span className="text-sm font-medium text-foreground sm:hidden">{pageLabel}</span>
 
       {/* Spacer */}
       <div className="flex-1" />

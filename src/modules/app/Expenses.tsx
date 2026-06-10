@@ -7,6 +7,7 @@ import { TextAnimate } from '@/components/ui/text-animate';
 import { useLang } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams } from 'next/navigation';
 
 function fmt(n: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
@@ -137,6 +138,14 @@ export default function Expenses() {
   }
 
   const [showForm, setShowForm] = useState(false);
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const action = searchParams?.get('create') || searchParams?.get('new');
+    if (action === 'expense') {
+      setShowForm(true);
+    }
+  }, [searchParams]);
 
   const totalPending = (expenses as any[]).filter(e => e.status === 'pending').reduce((s: number, e: any) => s + e.amount, 0);
   const totalApproved = (expenses as any[]).filter(e => e.status === 'approved').reduce((s: number, e: any) => s + e.amount, 0);

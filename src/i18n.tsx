@@ -427,6 +427,23 @@ const translations = {
       placeholder: 'Write a comment...',
     },
     app: {
+      folders: {
+        title: 'Folders',
+        subtitle: 'Add and remove folders from your sidebar in the table below, and organize folders by dragging and dropping directly in the sidebar',
+        newFolder: 'New folder',
+        browseAll: 'Browse all',
+        searchPlaceholder: 'Search by name, description, or owner',
+        remove: 'Remove',
+        owner: 'Owner',
+        addFolderTitle: 'Create Folder',
+        addFolderSubmit: 'Create',
+        nameLabel: 'Name',
+        descriptionLabel: 'Description',
+        ownerLabel: 'Owner',
+        cancel: 'Cancel',
+        viewAll: 'View all',
+        emptyState: 'No folders found. Create one to get started!'
+      },
       sidebar: {
         workspace: 'Workspace',
         studio: 'Studio',
@@ -2718,6 +2735,23 @@ const translations = {
       placeholder: 'Écrire un commentaire...',
     },
     app: {
+      folders: {
+        title: 'Dossiers',
+        subtitle: 'Ajoutez et supprimez des dossiers de votre barre latérale dans le tableau ci-dessous, et organisez les dossiers en les glissant-déposant directement dans la barre latérale',
+        newFolder: 'Nouveau dossier',
+        browseAll: 'Tout parcourir',
+        searchPlaceholder: 'Rechercher par nom, description ou propriétaire',
+        remove: 'Supprimer',
+        owner: 'Propriétaire',
+        addFolderTitle: 'Créer un dossier',
+        addFolderSubmit: 'Créer',
+        nameLabel: 'Nom',
+        descriptionLabel: 'Description',
+        ownerLabel: 'Propriétaire',
+        cancel: 'Annuler',
+        viewAll: 'Voir tout',
+        emptyState: 'Aucun dossier trouvé. Créez-en un pour commencer !'
+      },
       sidebar: {
         workspace: 'Espace',
         studio: 'Studio',

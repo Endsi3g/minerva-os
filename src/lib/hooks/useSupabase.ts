@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import type { Folder } from '@/lib/types';
 import {
   MOCK_LEADS, MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS,
   MOCK_INVOICES, MOCK_APPROVALS,
@@ -88,16 +89,19 @@ export function mapInvoice(db: any) {
     id: db.id,
     workspaceId: db.workspace_id,
     clientId: db.client_id,
-    invoiceNumber: db.invoice_number,
+    invoiceNumber: db.invoice_number || db.number,
     amount: Number(db.amount || 0),
     status: db.status,
-    date: db.date,
+    date: db.date || db.issued_date,
     dueDate: db.due_date,
     items: db.items || [],
     paidDate: db.paid_date,
     tps: Number(db.tps || 0),
     tvq: Number(db.tvq || 0),
     createdAt: db.created_at,
+    client: db.client || db.client_name,
+    clientName: db.client_name || db.client,
+    project: db.project,
   };
 }
 
@@ -164,6 +168,18 @@ export function mapActivity(db: any) {
     action: db.action_name,
     targetName: db.target_name,
     timestamp: db.created_at,
+  };
+}
+
+export function mapFolder(db: any): Folder | null {
+  if (!db) return null;
+  return {
+    id: db.id,
+    workspaceId: db.workspace_id,
+    name: db.name,
+    description: db.description || '',
+    owner: db.owner || 'Alex Smith',
+    createdAt: db.created_at,
   };
 }
 
@@ -823,6 +839,77 @@ export function useUserProfileByEmail(email: string | undefined | null) {
   return profile;
 }
 
+export function useFolders(workspaceId: string | undefined | null) {
+  const [folders, setFolders] = useState<Folder[] | null>(null);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      setFolders([]);
+      return;
+    }
+    if (workspaceId === MOCK_WS_ID) {
+      setFolders([
+        { id: 'fld-1', workspaceId, name: 'SL Mobbin', description: 'Related files for Project SL Mobbin.', owner: 'Alex Smith' },
+        { id: 'fld-2', workspaceId, name: 'AS Mobbin', description: 'Outlines the critical path tasks identified during the Project AS Mobbin', owner: 'Alex Smith' },
+        { id: 'fld-3', workspaceId, name: 'Demo folder', description: '', owner: 'Alex Smith' },
+      ]);
+      return;
+    }
+
+    let active = true;
+
+    async function fetchFolders() {
+      try {
+        const { data, error } = await supabase
+          .from('folders')
+          .select('*')
+          .eq('workspace_id', workspaceId);
+
+        if (active) {
+          if (!error && data) {
+            setFolders(data.map((f: any) => mapFolder(f) as Folder));
+          } else {
+            setFolders([]);
+          }
+        }
+      } catch (err) {
+        console.error('fetchFolders failed:', err);
+        if (active) setFolders([]);
+      }
+    }
+
+    fetchFolders();
+
+    const channel = supabase
+      .channel(`folders-realtime-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'folders', filter: `workspace_id=eq.${workspaceId}` }, () => {
+        fetchFolders();
+      })
+      .subscribe();
+
+    const handleDbChange = (e: Event) => {
+      const detail = (e as any).detail;
+      if (!detail || detail.table === 'folders') {
+        fetchFolders();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('minerva-db-change', handleDbChange);
+    }
+
+    return () => {
+      active = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('minerva-db-change', handleDbChange);
+      }
+      supabase.removeChannel(channel);
+    };
+  }, [workspaceId]);
+
+  return folders;
+}
+
 // ── Mutations ────────────────────────────────────────────────────────────────
 
 export function useAddClient() {
@@ -842,6 +929,36 @@ export function useAddClient() {
 
     if (error) throw error;
     return mapClient(data);
+  };
+}
+
+export function useAddFolder() {
+  return async (args: { workspaceId: string; name: string; description?: string; owner?: string }) => {
+    const { data, error } = await supabase
+      .from('folders')
+      .insert({
+        workspace_id: args.workspaceId,
+        name: args.name,
+        description: args.description || '',
+        owner: args.owner || 'Alex Smith',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapFolder(data) as Folder;
+  };
+}
+
+export function useDeleteFolder() {
+  return async (id: string) => {
+    const { error } = await supabase
+      .from('folders')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
   };
 }
 

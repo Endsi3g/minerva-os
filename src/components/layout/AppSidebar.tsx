@@ -16,6 +16,9 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronRight,
+  Folder,
+  MoreHorizontal,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLang } from '@/i18n';
@@ -24,6 +27,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { NewWorkspaceModal } from '@/components/minerva/NewWorkspaceModal';
 import { useSidebar } from './AppShell';
 import { useTier } from '@/lib/hooks/useTier';
+import { useFolders } from '@/lib/hooks/useSupabase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +76,7 @@ export function AppSidebar() {
   const { logout } = useAuth();
   const { workspace, workspaces, switchWorkspace } = useWorkspace();
   const { tier } = useTier();
+  const folders = useFolders(workspace?.id);
   const sidebar = t.app.sidebar;
 
   const [newWorkspaceOpen, setNewWorkspaceOpen] = useState(false);
@@ -245,6 +250,56 @@ export function AppSidebar() {
                 />
               );
             })}
+          </div>
+
+          {/* ── Folders section ───────────────────────────────────────── */}
+          <div className="px-2 pt-2 mt-2 border-t border-sidebar-border">
+            {!collapsed && (
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1">
+                {t.app.folders?.title || "Folders"}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {folders && folders.slice(0, 3).map((f) => (
+                <NavItem
+                  key={f.id}
+                  href={`/app/folders?id=${f.id}`}
+                  label={f.name}
+                  icon={Folder}
+                />
+              ))}
+              <NavItem
+                href="/app/folders"
+                label={t.app.folders?.viewAll || "... View all"}
+                icon={MoreHorizontal}
+              />
+            </div>
+          </div>
+
+          {/* ── Today section ─────────────────────────────────────────── */}
+          <div className="px-2 pt-2 mt-2 border-t border-sidebar-border">
+            {!collapsed && (
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1">
+                Today
+              </p>
+            )}
+            <div className="space-y-0.5">
+              <NavItem
+                href="/app/delivery"
+                label="Insight Analysis"
+                icon={FileText}
+              />
+              <NavItem
+                href="/app/delivery"
+                label="Overview: SLMobbin..."
+                icon={FileText}
+              />
+              <NavItem
+                href="/app/delivery"
+                label="Kickoff Follow-up"
+                icon={FileText}
+              />
+            </div>
           </div>
 
           {/* ── Footer links ─────────────────────────────────────────── */}

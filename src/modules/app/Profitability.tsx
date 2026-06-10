@@ -533,7 +533,7 @@ export default function Profitability() {
   ];
 
   return (
-    <>
+    <div className="pt-6">
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
           <TextAnimate text={p.title} type="calmInUp" className="text-2xl font-semibold text-ivory" />
@@ -571,6 +571,6 @@ export default function Profitability() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

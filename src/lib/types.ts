@@ -87,6 +87,15 @@ export interface FileAsset {
   uploadedDate: string;
 }
 
+export interface Folder {
+  id: string;
+  workspaceId: string;
+  name: string;
+  description?: string;
+  owner: string;
+  createdAt?: string;
+}
+
 // ── Phase 4 ──────────────────────────────────────────────────────────────────
 
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';

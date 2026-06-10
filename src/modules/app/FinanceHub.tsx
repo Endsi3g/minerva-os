@@ -1,15 +1,17 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLang } from '@/i18n';
 import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs';
 import { supabase } from '@/lib/supabase';
 import { useWorkspaces, useInvoices, useRetainers } from '@/lib/hooks/useSupabase';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { AlertCircle, ChevronRight } from 'lucide-react';
+import { AlertCircle, ChevronRight, Plus, FileText, Receipt, CreditCard } from 'lucide-react';
 import Billing from './Billing';
 import Expenses from './Expenses';
 import Profitability from './Profitability';
 import Finance from './Finance';
+import { Button } from '@/components/ui/button';
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -38,7 +40,13 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 
 /* ── FinanceOverview ─────────────────────────────────────────────────────── */
 
-function FinanceOverview({ onViewAllOverdue }: { onViewAllOverdue: () => void }) {
+function FinanceOverview({
+  onViewAllOverdue,
+  onQuickAction,
+}: {
+  onViewAllOverdue: () => void;
+  onQuickAction: (tabIndex: number, action: 'invoice' | 'retainer' | 'expense') => void;
+}) {
   const { t } = useLang();
   const ov = t.app.financeHub.overview;
 
@@ -115,6 +123,23 @@ function FinanceOverview({ onViewAllOverdue }: { onViewAllOverdue: () => void })
     return months;
   }, [allInvoices, today]);
 
+  // Cash flow stats
+  const { totalInflow, avgInflow, peakMonth } = useMemo(() => {
+    let total = 0;
+    let peak = { label: '—', key: '', revenue: 0 };
+    cashflowData.forEach(m => {
+      total += m.revenue;
+      if (m.revenue > peak.revenue) {
+        peak = m;
+      }
+    });
+    return {
+      totalInflow: total,
+      avgInflow: Math.round(total / 6),
+      peakMonth: peak,
+    };
+  }, [cashflowData]);
+
   // Overdue invoices
   const overdueInvoices = useMemo(() => {
     if (!allInvoices) return [];
@@ -157,7 +182,16 @@ function FinanceOverview({ onViewAllOverdue }: { onViewAllOverdue: () => void })
         className="rounded-[14px] border p-5"
         style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
       >
-        <p className="text-xs font-medium text-silver mb-4">{ov.cashflow}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <p className="text-xs font-medium text-silver">{ov.cashflow}</p>
+          <div className="flex items-center gap-4 text-[10px] text-fog">
+            <span>Total Inflow: <strong className="text-ivory">{fmt(totalInflow)}</strong></span>
+            <span>Average: <strong className="text-ivory">{fmt(avgInflow)}/mo</strong></span>
+            {peakMonth.revenue > 0 && (
+              <span>Peak: <strong className="text-ivory">{peakMonth.label} ({fmt(peakMonth.revenue)})</strong></span>
+            )}
+          </div>
+        </div>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart data={cashflowData} barSize={24}>
             <XAxis dataKey="label" tick={{ fill: '#8A9099', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -208,7 +242,10 @@ function FinanceOverview({ onViewAllOverdue }: { onViewAllOverdue: () => void })
                 <div key={inv._id ?? inv.id} className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <AlertCircle size={13} style={{ color: '#A86A6A', flexShrink: 0 }} />
-                    <span className="text-xs text-silver truncate">{inv.client ?? inv.clientName ?? '—'}</span>
+                    <span className="text-xs text-silver truncate font-medium">
+                      {inv.client || inv.clientName || '—'}{' '}
+                      <span className="text-[10px] text-fog font-normal">· {inv.invoiceNumber}</span>
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs font-medium text-ivory">{fmt(inv.amount ?? 0)}</span>
@@ -225,6 +262,49 @@ function FinanceOverview({ onViewAllOverdue }: { onViewAllOverdue: () => void })
           </div>
         )}
       </div>
+
+      {/* Quick Actions Panel */}
+      <div
+        className="rounded-[14px] border p-5 space-y-4"
+        style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+      >
+        <div>
+          <p className="text-xs font-medium text-silver">Quick Actions</p>
+          <p className="text-[10px] text-fog mt-0.5">Quickly record transactions or create agreements in the system.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onQuickAction(1, 'invoice')}
+            className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-border hover:bg-white/5 cursor-pointer text-xs text-silver hover:text-ivory"
+          >
+            <Plus size={12} />
+            <FileText size={12} className="text-fog" />
+            <span>New Invoice</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onQuickAction(1, 'retainer')}
+            className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-border hover:bg-white/5 cursor-pointer text-xs text-silver hover:text-ivory"
+          >
+            <Plus size={12} />
+            <CreditCard size={12} className="text-fog" />
+            <span>New Retainer</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onQuickAction(2, 'expense')}
+            className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-border hover:bg-white/5 cursor-pointer text-xs text-silver hover:text-ivory"
+          >
+            <Plus size={12} />
+            <Receipt size={12} className="text-fog" />
+            <span>New Expense</span>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -234,10 +314,16 @@ function FinanceOverview({ onViewAllOverdue }: { onViewAllOverdue: () => void })
 export default function FinanceHub() {
   const { t } = useLang();
   const h = t.app.financeHub;
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
 
+  const handleQuickAction = (tabIndex: number, action: 'invoice' | 'retainer' | 'expense') => {
+    setActiveTab(tabIndex);
+    router.push(`/app/finance-hub?new=${action}`);
+  };
+
   const tabs = [
-    { id: 0, label: h.tabs.overview,     content: <FinanceOverview onViewAllOverdue={() => setActiveTab(1)} /> },
+    { id: 0, label: h.tabs.overview,     content: <FinanceOverview onViewAllOverdue={() => setActiveTab(1)} onQuickAction={handleQuickAction} /> },
     { id: 1, label: h.tabs.billing,      content: <Billing /> },
     { id: 2, label: h.tabs.expenses,     content: <Expenses /> },
     { id: 3, label: h.tabs.profitability, content: <Profitability /> },

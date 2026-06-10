@@ -1,6 +1,6 @@
 # Minerva OS
 
-![Version](https://img.shields.io/badge/version-7.0.1-indigo?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-7.2.0-indigo?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
 
 **Minerva OS is the operating system for creative agencies** — one workspace that replaces your CRM, project tracker, client portal, billing software, and AI tools.
 
@@ -236,7 +236,9 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for step-by-step instructions
 
 | Version | Highlights |
 |---|---|
-| **v7.0.0** | StackAI Light Mode — full design system migration, indigo accent, semantic tokens, Next.js 15 build fixes |
+| **v7.2.0** | Redesigned agency dashboard with widescreen cinematic video hero banner, global breadcrumb navigation, and folders vault system |
+| **v7.1.0** | Finance Hub enhancements including cash flow metrics, unbilled actions triggers, and database schema parsing updates |
+| **v7.0.0** | StackAI Light Mode · full design system migration, indigo accent, semantic tokens, Next.js 15 build fixes |
 | **v6.0.0** | Unified Agency Platform — Cockpit Dashboard, consolidated workspace routes, tier-based settings gating |
 | **v5.0.0** | Multi-role dashboard switcher, global Command Bar (CMD+K), Agent Builder redesign |
 | **v4.7.0** | Marketplace Community Tier — browse, contribute, and install community templates |

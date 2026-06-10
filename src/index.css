@@ -32,6 +32,17 @@
   --color-warning: var(--warning);
   --color-danger:  var(--danger);
 
+  /* Obsidian theme colors */
+  --color-obsidian: #0A0D14;
+  --color-midnight: #111522;
+  --color-dusk: #171C2A;
+  --color-ivory: #F5F1E8;
+  --color-silver: #B8BDC7;
+  --color-fog: #8A9099;
+  --color-sage: #7FA38A;
+  --color-warm: #B89B6A;
+  --color-ember: #A86A6A;
+
   /* shadcn/ui bridge */
   --color-card:                     var(--surface);
   --color-card-foreground:          var(--foreground);

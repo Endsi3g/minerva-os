@@ -299,8 +299,11 @@ export default function Billing() {
 
   const searchParams = useSearchParams();
   useEffect(() => {
-    if (searchParams?.get('create') === 'true' || searchParams?.get('new') === 'true') {
+    const act = searchParams?.get('create') || searchParams?.get('new');
+    if (act === 'true' || act === 'invoice') {
       setInvoiceSheetOpen(true);
+    } else if (act === 'retainer') {
+      setRetainerSheetOpen(true);
     }
   }, [searchParams]);
 
