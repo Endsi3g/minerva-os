@@ -23,6 +23,9 @@ import { useWorkspaces, useProjects, useInvoices, useApprovals, useTasks, useCli
 import { TextAnimate } from '@/components/ui/text-animate';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useTier } from '@/lib/hooks/useTier';
+import { UpgradeModal } from '@/components/minerva/UpgradeModal';
+import type { FeatureKey } from '@/lib/types';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
@@ -47,6 +50,16 @@ export default function Dashboard() {
   const router = useRouter();
   const { t } = useLang();
   const { user } = useAuth();
+  const { tier } = useTier();
+
+  const isStarter = tier === 'starter';
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [lockedFeatureKey, setLockedFeatureKey] = useState<FeatureKey | null>(null);
+
+  const triggerUpgrade = (key: FeatureKey) => {
+    setLockedFeatureKey(key);
+    setUpgradeModalOpen(true);
+  };
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?._id ?? workspaces?.[0]?.id;
@@ -199,11 +212,23 @@ export default function Dashboard() {
           </p>
         </div>
         <Button
-          onClick={() => { setActiveAgentType('proposal'); setAiSheetOpen(true); }}
-          className="rounded-full bg-primary text-white hover:bg-primary-hover text-xs font-semibold px-4 h-9 flex items-center gap-2 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all"
+          onClick={() => {
+            if (isStarter) {
+              triggerUpgrade('agent_ops');
+            } else {
+              setActiveAgentType('proposal');
+              setAiSheetOpen(true);
+            }
+          }}
+          className="rounded-full bg-primary text-white hover:bg-primary-hover text-xs font-semibold px-4 h-9 flex items-center gap-2 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all relative"
         >
           <Sparkles size={13} className="animate-pulse" />
           Ask Hermes
+          {isStarter && (
+            <span className="absolute -top-1.5 -right-1.5 text-[7px] font-bold px-1 py-0.5 rounded bg-primary-foreground text-primary border border-primary uppercase leading-none scale-90">
+              PRO
+            </span>
+          )}
         </Button>
       </div>
 
@@ -232,7 +257,13 @@ export default function Dashboard() {
                 zone.items.slice(0, 3).map((item, idx) => (
                   <button
                     key={idx}
-                    onClick={() => router.push(item.route)}
+                    onClick={() => {
+                      if (isStarter && (zone.key === 'cash' || zone.key === 'invoice')) {
+                        triggerUpgrade('finance_hub');
+                      } else {
+                        router.push(item.route);
+                      }
+                    }}
                     className="w-full text-left flex items-start gap-2 p-2 rounded-lg hover:bg-surface-alt transition-colors group"
                   >
                     <ArrowRight size={10} className={cn('shrink-0 mt-0.5 transition-transform group-hover:translate-x-0.5', zone.color)} />
@@ -241,7 +272,16 @@ export default function Dashboard() {
                 ))
               )}
               {zone.items.length > 3 && (
-                <button onClick={() => router.push(zone.items[0].route)} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors pl-4">
+                <button
+                  onClick={() => {
+                    if (isStarter && (zone.key === 'cash' || zone.key === 'invoice')) {
+                      triggerUpgrade('finance_hub');
+                    } else {
+                      router.push(zone.items[0].route);
+                    }
+                  }}
+                  className="text-[10px] text-muted-foreground hover:text-foreground transition-colors pl-4"
+                >
                   +{zone.items.length - 3} more
                 </button>
               )}
@@ -266,7 +306,14 @@ export default function Dashboard() {
               ].map(agent => (
                 <button
                   key={agent.type}
-                  onClick={() => { setActiveAgentType(agent.type); setAiSheetOpen(true); }}
+                  onClick={() => {
+                    if (isStarter) {
+                      triggerUpgrade('agent_ops');
+                    } else {
+                      setActiveAgentType(agent.type);
+                      setAiSheetOpen(true);
+                    }
+                  }}
                   className="bg-surface border border-border hover:border-primary/30 hover:bg-primary-soft/30 rounded-xl p-4 text-left transition-all hover:scale-[1.01] flex flex-col justify-between h-24 cursor-pointer relative overflow-hidden group shadow-card"
                 >
                   <agent.icon size={14} className={agent.color} />
@@ -274,7 +321,13 @@ export default function Dashboard() {
                     <h4 className="text-xs font-semibold text-foreground leading-tight">{agent.label}</h4>
                     <p className="text-[10px] text-muted-foreground mt-0.5">{agent.desc}</p>
                   </div>
-                  <Zap size={10} className="absolute top-3 right-3 text-muted-foreground/40" />
+                  {isStarter ? (
+                    <span className="absolute top-3 right-3 text-[8px] font-bold px-1.5 py-0.5 rounded bg-primary-soft text-primary border border-primary-soft-border uppercase">
+                      PRO
+                    </span>
+                  ) : (
+                    <Zap size={10} className="absolute top-3 right-3 text-muted-foreground/40" />
+                  )}
                 </button>
               ))}
             </div>
@@ -285,11 +338,22 @@ export default function Dashboard() {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{d.financialPerformance}</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { label: d.mrrLabel, value: fmt(mrr), desc: 'Active retainers', icon: '📈', color: 'text-success bg-green-50 border-green-200' },
-                { label: d.pipelineLabel, value: fmt(pipelineValue), desc: 'Qualified leads', icon: '💼', color: 'text-primary bg-primary-soft border-primary-soft-border' },
-                { label: d.unpaidInvoicesLabel, value: fmt(unpaidInvoices), desc: 'Sent & Overdue', icon: '🧾', color: 'text-danger bg-red-50 border-red-200' },
+                { key: 'mrr' as FeatureKey, label: d.mrrLabel, value: fmt(mrr), desc: 'Active retainers', icon: '📈', color: 'text-success bg-green-50 border-green-200' },
+                { key: 'pipeline' as FeatureKey, label: d.pipelineLabel, value: fmt(pipelineValue), desc: 'Qualified leads', icon: '💼', color: 'text-primary bg-primary-soft border-primary-soft-border' },
+                { key: 'finance_hub' as FeatureKey, label: d.unpaidInvoicesLabel, value: fmt(unpaidInvoices), desc: 'Sent & Overdue', icon: '🧾', color: 'text-danger bg-red-50 border-red-200' },
               ].map((stat, idx) => (
-                <div key={idx} className="p-4 bg-surface border border-border rounded-xl shadow-card flex items-center justify-between">
+                <div
+                  key={idx}
+                  onClick={() => {
+                    if (isStarter) {
+                      triggerUpgrade(stat.key === 'pipeline' ? 'pipeline' : 'finance_hub');
+                    }
+                  }}
+                  className={cn(
+                    "p-4 bg-surface border border-border rounded-xl shadow-card flex items-center justify-between relative",
+                    isStarter && "cursor-pointer hover:border-primary/20 transition-all"
+                  )}
+                >
                   <div className="space-y-1">
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{stat.label}</span>
                     <p className="text-xl font-bold font-mono text-foreground leading-none">{stat.value}</p>
@@ -298,6 +362,11 @@ export default function Dashboard() {
                   <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center border font-semibold text-lg shrink-0", stat.color)}>
                     {stat.icon}
                   </div>
+                  {isStarter && (
+                    <span className="absolute top-2 right-2 text-[7px] font-bold px-1.5 py-0.5 rounded bg-primary-soft text-primary border border-primary-soft-border uppercase">
+                      PRO
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -374,9 +443,21 @@ export default function Dashboard() {
         {/* Right Sidebar */}
         <div className="space-y-6">
           {/* Margin */}
-          <Card className="bg-surface border-border shadow-card">
+          <Card
+            className={cn("bg-surface border-border shadow-card", isStarter && "cursor-pointer hover:border-primary/20 transition-all relative")}
+            onClick={() => {
+              if (isStarter) triggerUpgrade('profitability');
+            }}
+          >
             <CardHeader className="pb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Agency Margin Thermometer</CardTitle>
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-muted-foreground flex items-center justify-between">
+                <span>Agency Margin Thermometer</span>
+                {isStarter && (
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-primary-soft text-primary border border-primary-soft-border uppercase normal-case">
+                    PRO
+                  </span>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-end justify-between">
@@ -412,12 +493,26 @@ export default function Dashboard() {
           </Card>
 
           {/* Portfolio */}
-          <Card className="bg-surface border-border shadow-card">
+          <Card
+            className={cn("bg-surface border-border shadow-card", isStarter && "cursor-pointer hover:border-primary/20 transition-all relative")}
+            onClick={() => {
+              if (isStarter) triggerUpgrade('pipeline');
+            }}
+          >
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Portfolio Status</CardTitle>
-              <button onClick={() => router.push('/app/clients')} className="text-[9px] text-primary hover:underline font-semibold">
-                View all
-              </button>
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-muted-foreground flex items-center justify-between w-full">
+                <span>Portfolio Status</span>
+                {isStarter && (
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-primary-soft text-primary border border-primary-soft-border uppercase normal-case">
+                    PRO
+                  </span>
+                )}
+              </CardTitle>
+              {!isStarter && (
+                <button onClick={(e) => { e.stopPropagation(); router.push('/app/clients'); }} className="text-[9px] text-primary hover:underline font-semibold shrink-0 ml-2">
+                  View all
+                </button>
+              )}
             </CardHeader>
             <CardContent className="space-y-2">
               {activeProjects.length === 0 ? (
@@ -428,7 +523,12 @@ export default function Dashboard() {
                   return (
                     <div
                       key={p.id ?? p._id}
-                      onClick={() => router.push('/app/delivery')}
+                      onClick={(e) => {
+                        if (!isStarter) {
+                          e.stopPropagation();
+                          router.push('/app/delivery');
+                        }
+                      }}
                       className="flex items-center justify-between p-2.5 bg-background border border-border rounded-lg cursor-pointer hover:bg-surface-alt transition-colors"
                     >
                       <div className="min-w-0">
@@ -506,6 +606,18 @@ export default function Dashboard() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Upgrade Modal */}
+      {lockedFeatureKey && (
+        <UpgradeModal
+          featureKey={lockedFeatureKey}
+          open={upgradeModalOpen}
+          onClose={() => {
+            setUpgradeModalOpen(false);
+            setLockedFeatureKey(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -7,8 +7,8 @@ const TIER_RANK: Record<WorkspaceTier, number> = {
 };
 
 export const FEATURE_MIN_TIER: Record<FeatureKey, WorkspaceTier> = {
-  pipeline:        'starter',
-  proposals:       'starter',
+  pipeline:        'growth',
+  proposals:       'growth',
   finance_hub:     'growth',
   intelligence:    'growth',
   workflows:       'growth',
