@@ -24,6 +24,9 @@ export interface Client {
   monthlyValue: number;
   activeProjects: number;
   status: ClientStatus;
+  description?: string;
+  notes?: string;
+  phone?: string;
 }
 
 // ── Phase 3 ──────────────────────────────────────────────────────────────────

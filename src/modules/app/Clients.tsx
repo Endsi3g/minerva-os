@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Plus, Search, Copy, Check, Users, FolderKanban, Receipt, CheckCircle2, Mail } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Plus, Search, Copy, Check, Users } from 'lucide-react';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +29,7 @@ import {
 import { ClientCard } from '@/components/minerva/ClientCard';
 import type { ClientStatus } from '@/lib/types';
 import { useLang } from '@/i18n';
-import { useWorkspaces, useClients, useProjects, useAddClient, useInvoices, useApprovals } from '@/lib/hooks/useSupabase';
+import { useWorkspaces, useClients, useProjects, useAddClient } from '@/lib/hooks/useSupabase';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -110,6 +110,7 @@ export default function Clients() {
   const { t } = useLang();
   const cKeys = t.app.clients;
   const pKeys = cKeys.portal;
+  const router = useRouter();
 
   const workspaces = useWorkspaces();
   const workspaceId = workspaces?.[0]?.id;
@@ -117,11 +118,7 @@ export default function Clients() {
 
   const clients = useClients(workspaceId);
   const projects = useProjects(workspaceId);
-  const allInvoices = useInvoices(workspaceId);
-  const allApprovals = useApprovals(workspaceId);
   const addClient = useAddClient();
-
-  const [selectedClient, setSelectedClient] = useState<any | null>(null);
 
   const searchParams = useSearchParams();
 
@@ -394,7 +391,7 @@ export default function Clients() {
                 }}
                 onPortalLink={handleGeneratePortalLink}
                 activePortalToken={portalTokens.find(t => t.client_id === client._id)}
-                onClick={() => { setSelectedClient({ ...client, id: client._id, activeProjects: activeProjectsCount }); }}
+                onClick={() => { router.push(`/app/clients/${client._id || client.id}`); }}
               />
             );
           })}
@@ -473,127 +470,7 @@ export default function Clients() {
         </SheetContent>
       </Sheet>
 
-      {/* Client detail sheet */}
-      <Sheet open={selectedClient !== null} onOpenChange={open => { if (!open) setSelectedClient(null); }}>
-        <SheetContent side="right" className="w-full sm:w-[480px] p-0 flex flex-col bg-card border-border overflow-hidden">
-          {selectedClient && (() => {
-            const clientProjects = projects ? (projects as any[]).filter((p: any) =>
-              p.clientId === selectedClient._id || p.clientName === selectedClient.company
-            ) : [];
-            const activeClientProjects = clientProjects.filter((p: any) => p.status === 'active');
-            const clientInvoices = allInvoices ? (Array.isArray(allInvoices) ? allInvoices : []).filter((i: any) => i.clientId === selectedClient._id) : [];
-            const openInvoices = clientInvoices.filter((i: any) => i.status !== 'paid');
-            const openTotal = openInvoices.reduce((sum: number, i: any) => sum + (i.amount ?? 0), 0);
-            const clientApprovals = allApprovals ? (allApprovals as any[]).filter((a: any) => {
-              const proj = (projects as any[] | null)?.find((p: any) => p._id === a.projectId || p.id === a.projectId);
-              return proj && (proj.clientId === selectedClient._id || proj.clientName === selectedClient.company);
-            }) : [];
-            const pendingApprovals = clientApprovals.filter((a: any) => a.status === 'pending');
 
-            return (
-              <>
-                <SheetHeader className="p-6 border-b border-border shrink-0">
-                  <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0" style={{ backgroundColor: 'rgba(127,163,138,0.15)', color: '#7FA38A' }}>
-                      {selectedClient.company.split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <SheetTitle className="text-base font-semibold text-ivory truncate">{selectedClient.company}</SheetTitle>
-                      <p className="text-xs text-fog mt-0.5 flex items-center gap-1"><Mail size={10} />{selectedClient.email}</p>
-                    </div>
-                  </div>
-                </SheetHeader>
-
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                  {/* KPI strip */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-xl border border-border p-3 text-center" style={{ backgroundColor: 'rgba(23,28,42,0.5)' }}>
-                      <p className="text-lg font-semibold text-ivory">{activeClientProjects.length}</p>
-                      <p className="text-[10px] text-fog mt-0.5 flex items-center justify-center gap-1"><FolderKanban size={9} /> Active</p>
-                    </div>
-                    <div className="rounded-xl border border-border p-3 text-center" style={{ backgroundColor: 'rgba(23,28,42,0.5)' }}>
-                      <p className="text-lg font-semibold text-ivory">{openInvoices.length}</p>
-                      <p className="text-[10px] text-fog mt-0.5 flex items-center justify-center gap-1"><Receipt size={9} /> Open inv.</p>
-                    </div>
-                    <div className="rounded-xl border border-border p-3 text-center" style={{ backgroundColor: 'rgba(23,28,42,0.5)' }}>
-                      <p className="text-lg font-semibold text-ivory">{pendingApprovals.length}</p>
-                      <p className="text-[10px] text-fog mt-0.5 flex items-center justify-center gap-1"><CheckCircle2 size={9} /> Pending</p>
-                    </div>
-                  </div>
-
-                  {/* Active projects */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-fog uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                      <FolderKanban size={10} /> Projects
-                    </p>
-                    {clientProjects.length === 0 ? (
-                      <p className="text-xs text-fog italic">No projects yet.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {clientProjects.slice(0, 4).map((proj: any) => (
-                          <div key={proj._id ?? proj.id} className="flex items-center justify-between px-3 py-2 rounded-lg border border-border" style={{ backgroundColor: 'rgba(23,28,42,0.3)' }}>
-                            <p className="text-xs text-ivory truncate">{proj.name}</p>
-                            <span className={cn(
-                              'text-[9px] font-semibold px-2 py-0.5 rounded-full ml-2 shrink-0',
-                              proj.status === 'active' ? 'text-sage bg-sage/10' :
-                              proj.status === 'on_hold' ? 'text-warm bg-warm/10' :
-                              'text-fog bg-fog/10'
-                            )}>
-                              {proj.status}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Open invoices */}
-                  {openInvoices.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-semibold text-fog uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                        <Receipt size={10} /> Outstanding
-                      </p>
-                      <div className="px-3 py-2 rounded-lg border border-border flex items-center justify-between" style={{ backgroundColor: 'rgba(168,106,106,0.08)' }}>
-                        <p className="text-xs text-silver">{openInvoices.length} open invoice{openInvoices.length !== 1 ? 's' : ''}</p>
-                        <p className="text-sm font-semibold text-ember">
-                          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(openTotal)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Pending approvals */}
-                  {pendingApprovals.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-semibold text-fog uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                        <CheckCircle2 size={10} /> Pending Approvals
-                      </p>
-                      <div className="space-y-2">
-                        {pendingApprovals.slice(0, 3).map((a: any) => (
-                          <div key={a._id} className="flex items-center justify-between px-3 py-2 rounded-lg border border-border" style={{ backgroundColor: 'rgba(23,28,42,0.3)' }}>
-                            <p className="text-xs text-ivory truncate">{a.name}</p>
-                            <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full ml-2 shrink-0 text-warm bg-warm/10">pending</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-4 border-t border-border shrink-0">
-                  <Button
-                    variant="outline"
-                    className="w-full border-border text-fog hover:text-ivory"
-                    onClick={() => { handleGeneratePortalLink(selectedClient._id); setSelectedClient(null); }}
-                  >
-                    Open Portal
-                  </Button>
-                </div>
-              </>
-            );
-          })()}
-        </SheetContent>
-      </Sheet>
 
       {/* Portal link dialog */}
       <Dialog open={portalDialogOpen} onOpenChange={setPortalDialogOpen}>

@@ -22,6 +22,9 @@ export function mapClient(db: any) {
     monthlyValue: Number(db.monthly_value || 0),
     status: db.status,
     createdAt: db.created_at,
+    description: db.description,
+    notes: db.notes,
+    phone: db.phone,
   };
 }
 
@@ -210,6 +213,9 @@ export function useClients(workspaceId: string | undefined | null) {
         industry: (c as any).industry ?? '',
         activeProjects: c.activeProjects ?? 0,
         createdAt: '2026-01-01',
+        description: c.description,
+        notes: c.notes,
+        phone: c.phone,
       })));
       return;
     }
