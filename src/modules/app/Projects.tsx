@@ -24,7 +24,7 @@ import {
 import { ProjectCard } from '@/components/minerva/ProjectCard';
 import { toast } from 'sonner';
 import { useLang } from '@/i18n';
-import { useWorkspaces, useProjects, useClients, useAddProject, useApprovals, useInvoices } from '@/lib/hooks/useSupabase';
+import { useWorkspaces, useProjects, useClients, useAddProject, useApprovals, useInvoices, useTasks } from '@/lib/hooks/useSupabase';
 
 const STATUS_COLORS: Record<string, string> = {
   active:    'var(--color-sage)',
@@ -198,6 +198,7 @@ export default function Projects() {
   const createProject = useAddProject();
   const allApprovals = useApprovals(workspaceId);
   const allInvoices = useInvoices(workspaceId);
+  const tasks = useTasks(workspaceId);
 
   const router = useRouter();
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
@@ -375,17 +376,23 @@ export default function Projects() {
 
           {viewTab === 'grid' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProjects.map((proj: any) => (
-                <ProjectCard key={proj._id} project={{
-                  ...proj,
-                  id: proj._id,
-                  client: proj.clientName,
-                  spent: 0,
-                  totalTasks: 0,
-                  doneTasks: 0,
-                  team: ['US']
-                }} onClick={() => { setSelectedProject(proj); }} />
-              ))}
+              {filteredProjects.map((proj: any) => {
+                const projectTasks = tasks ? tasks.filter((t: any) => t.projectId === proj._id || t.projectId === proj.id) : [];
+                const totalTasks = projectTasks.length > 0 ? projectTasks.length : (proj.totalTasks ?? 0);
+                const doneTasks = projectTasks.length > 0 ? projectTasks.filter((t: any) => t.status === 'done').length : (proj.doneTasks ?? 0);
+
+                return (
+                  <ProjectCard key={proj._id} project={{
+                    ...proj,
+                    id: proj._id,
+                    client: proj.clientName,
+                    spent: proj.spent ?? 0,
+                    totalTasks,
+                    doneTasks,
+                    team: proj.team ?? ['US']
+                  }} onClick={() => { setSelectedProject(proj); }} />
+                );
+              })}
             </div>
           )}
         </>

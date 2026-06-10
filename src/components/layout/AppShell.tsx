@@ -145,7 +145,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       {/* Main area */}
       <div className="relative flex-1 flex flex-col overflow-hidden bg-background min-w-0">
         <AppHeader />
-        <ScrollArea className={`flex-1 ${pathname === '/app/dashboard' ? 'no-scrollbar' : ''}`}>
+        <ScrollArea className={`flex-1 h-full min-h-0 ${pathname === '/app/dashboard' ? 'no-scrollbar' : ''}`}>
           <div className={isMobile ? 'p-4 pb-[80px]' : 'p-6 pb-24'}>
             <div className="w-full">
               {children}

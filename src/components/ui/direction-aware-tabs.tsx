@@ -89,11 +89,10 @@ function DirectionAwareTabs({
     <div className="flex flex-col w-full">
       <div
         className={cn(
-          "flex space-x-1 border rounded-full cursor-pointer px-[3px] py-[3.2px] self-start",
+          "flex space-x-1 border border-border rounded-full cursor-pointer px-[3px] py-[3.2px] self-start bg-sidebar/60",
           className,
           rounded
         )}
-        style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
       >
         {tabs.map((tab) => (
           <button
@@ -101,7 +100,7 @@ function DirectionAwareTabs({
             onClick={() => handleTabClick(tab.id)}
             className={cn(
               "relative rounded-full px-3.5 py-1.5 text-xs font-medium transition focus-visible:outline-none flex gap-2 items-center",
-              activeTab === tab.id ? "text-ivory" : "text-fog hover:text-silver",
+              activeTab === tab.id ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground",
               rounded ? roundedInner : undefined
             )}
             style={{ WebkitTapHighlightColor: "transparent" }}
@@ -110,10 +109,10 @@ function DirectionAwareTabs({
               <motion.span
                 layoutId="minerva-tab-bubble"
                 className={cn(
-                  "absolute inset-0 z-10 border border-white/10",
+                  "absolute inset-0 z-10 border border-border/50 shadow-sm",
                   rounded ? roundedInner : "rounded-full"
                 )}
-                style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+                style={{ backgroundColor: 'var(--surface)' }}
                 transition={{ type: "spring", bounce: 0.19, duration: 0.4 }}
               />
             )}

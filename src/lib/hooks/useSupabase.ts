@@ -845,6 +845,53 @@ export function useAddClient() {
   };
 }
 
+export function useUpdateClient() {
+  return async (args: {
+    id: string;
+    company?: string;
+    contact?: string;
+    email?: string;
+    phone?: string;
+    description?: string;
+    notes?: string;
+    monthlyValue?: number;
+    status?: string;
+    industry?: string;
+  }) => {
+    const updates: any = {};
+    if (args.company !== undefined) updates.company = args.company;
+    if (args.contact !== undefined) updates.contact = args.contact;
+    if (args.email !== undefined) updates.email = args.email;
+    if (args.phone !== undefined) updates.phone = args.phone;
+    if (args.description !== undefined) updates.description = args.description;
+    if (args.notes !== undefined) updates.notes = args.notes;
+    if (args.monthlyValue !== undefined) updates.monthly_value = args.monthlyValue;
+    if (args.status !== undefined) updates.status = args.status;
+    if (args.industry !== undefined) updates.industry = args.industry;
+
+    const { data, error } = await supabase
+      .from('clients')
+      .update(updates)
+      .eq('id', args.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapClient(data);
+  };
+}
+
+export function useDeleteClient() {
+  return async (id: string) => {
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  };
+}
+
 export function useAddProject() {
   return async (args: { workspaceId: string; clientName: string; name: string; status: string; dueDate: string; budget: number; description?: string }) => {
     let embedding: number[] | null = null;
