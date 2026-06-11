@@ -5,6 +5,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [8.1.0] — 2026-06-11
+
+### Added
+
+- **SLARiskAudit module** (`src/modules/app/SLARiskAudit.tsx`): New Hermes AI assistant page — animated health gauge (0–100), live scanning animation, violations table with expandable detail rows, severity filter tabs (Critical / High / Medium / Low), and SLA threshold reference panel.
+- **`/app/sla-audit` route** (`src/app/app/sla-audit/page.tsx`): Dedicated page wrapping SLARiskAudit in ErrorBoundary + Suspense.
+- **ClientForm module** (`src/modules/app/ClientForm.tsx`): Shared create/edit form for clients with Company, Classification, and Description sections; supabase insert/update/delete.
+- **`/app/clients/create` + `/app/clients/[id]/edit` routes**: Thin page wrappers for ClientForm.
+- **ProjectForm module** (`src/modules/app/ProjectForm.tsx`): Shared create/edit form for projects; loads clients dropdown from supabase.
+- **`/app/projects/create` + `/app/projects/[id]/edit` routes**: Thin page wrappers for ProjectForm.
+- **`/app/delivery/approvals` route**: Standalone approvals page wrapping the existing Approvals module.
+- **Contracts module** (`src/modules/app/Contracts.tsx`): Full contract management — status filters (draft / sent / signed / declined), expandable cards, inline editor modal, duplicate/send actions, supabase clients dropdown.
+- **`/app/contracts` route**: Page wrapper for Contracts.
+- **DownloadsTab in AppSettings**: Desktop (Windows .exe, macOS .dmg) and mobile (iOS, Android) download links with 3-column layout.
+- **Hermes Assistants sidebar section** (AppSidebar): Three nav links — Proposal Builder, Call Prepper, SLA Risk Audit — with dedicated icons.
+- **i18n keys**: `settings.tabs.privacy`, `settings.tabs.downloads`, `settings.privacy.*`, `settings.downloads.*` added in EN and FR.
+
+### Changed
+
+- **Global accent color**: Indigo (#4F46E5) → Sage (#7FA38A) in both light (`:root`) and dark (`:root.dark`) modes across all semantic tokens (`--primary`, `--primary-hover`, `--primary-active`, `--primary-soft`, `--primary-soft-border`).
+- **AppShell**: Sidebar collapse state removed; `collapsed` is always `false`, `toggle` is a no-op.
+- **AppSidebar**: Fixed width 240px — collapse logic, collapse button, and Folder/Today sections removed. QUICK LINKS section replaces them (Projects, Tasks, Approvals, File Vault, Contracts). Logo fill updated to Sage.
+- **AppHeader**: Sidebar toggle button removed. PAGE_LABELS extended with `/app/sla-audit`, `/app/contracts`, `/app/delivery/approvals`, `/app/intelligence`, `/app/delivery`, `/app/finance-hub`.
+- **Files.tsx**: Full-screen drag-and-drop overlay using `dragCounter` ref. Category filter tabs (All / Images / Videos / Documents / Archives / Other) with live counts.
+- **Dashboard Quick Actions**: Proposal Copilot, Call Prepper, SLA Risk Audit now navigate directly (`router.push`) to `/app/proposals`, `/app/call-preps`, `/app/sla-audit` instead of opening the AI Sheet.
+- **proposals/page.tsx**: Redirect removed — now renders `<Proposals />` module directly inside ErrorBoundary + Suspense.
+- **AppSettings**: Semantic token migration throughout — all hardcoded dark tokens (`text-ivory`, `text-fog`, `text-silver`, `bg-midnight`, `bg-dusk`, `bg-obsidian`, `text-ember`, `bg-ember`, `border-ember`, `text-warm`, `bg-warm`, `border-warm`, `text-sage`, `bg-sage`, `bg-ivory`, `text-obsidian`) replaced with `text-foreground`, `text-muted-foreground`, `bg-surface`, `bg-secondary`, `bg-background`, `text-destructive`, `text-warning`, `bg-primary`, `bg-foreground`, `text-background`. Toggle off-state: `bg-white/10` → `bg-secondary`. PrivacyTab strings externalized via i18n. Privacy and Downloads added to `settingsTabs`.
+- **AgentsList, AgentOps, NPS**: Semantic token migration — hardcoded dark palette replaced with CSS variable tokens.
+- **NPS**: Promoter / Passive / Detractor guide section added above the score gauge.
+
+---
+
 ## [7.0.1] — 2026-06-08
 
 ### Changed

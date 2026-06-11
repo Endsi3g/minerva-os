@@ -1,6 +1,6 @@
 # Minerva OS
 
-![Version](https://img.shields.io/badge/version-7.2.0-indigo?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-8.1.0-sage?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
 
 **Minerva OS is the operating system for creative agencies** — one workspace that replaces your CRM, project tracker, client portal, billing software, and AI tools.
 
@@ -35,7 +35,10 @@ Everything your team touches lives at `/app/*`. Access requires login.
 | Send proposals and invoices | Proposals + Finance Hub |
 | Monitor agency health | Intelligence + Reports |
 | Build AI agents for your workflow | Agent Builder + Agent Ops |
-| Chat with your workspace AI | Copilot (Hermes) |
+| Draft proposals with AI | Proposal Builder (Hermes) |
+| Prep for client calls | Call Prepper (Hermes) |
+| Audit contract SLA risks | SLA Risk Audit (Hermes) |
+| Manage contracts | Contracts |
 | Automate repetitive work | Workflows |
 
 ### Your client portal (external)
