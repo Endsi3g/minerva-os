@@ -166,12 +166,11 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
     <CommandPaletteProvider>
-      <SidebarContext.Provider value={{ collapsed, toggle: () => setCollapsed(c => !c) }}>
+      <SidebarContext.Provider value={{ collapsed: false, toggle: () => {} }}>
         <ChatContext.Provider value={{ isChatOpen, toggleChat: () => setIsChatOpen(o => !o) }}>
           <AppShellContent>{children}</AppShellContent>
         </ChatContext.Provider>

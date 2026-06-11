@@ -58,17 +58,17 @@ export default function AgentsList() {
       {/* Header section */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-ivory tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
             <Bot className="text-emerald-600" />
             Workforce Agents
           </h1>
-          <p className="text-xs text-fog max-w-xl leading-relaxed">
+          <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
             Deploy and orchestrate autonomous AI agents specialized in project delivery, client onboarding, tax audits, or CRM intelligence.
           </p>
         </div>
         <Button
           onClick={() => setCreateOpen(true)}
-          className="bg-ivory text-midnight hover:bg-ivory/90 rounded-full text-xs font-bold px-4 shadow-md flex items-center gap-1.5 cursor-pointer self-start md:self-auto"
+          className="rounded-full text-xs font-bold px-4 shadow-md flex items-center gap-1.5 cursor-pointer self-start md:self-auto"
         >
           <Plus size={14} />
           Create Agent
@@ -77,13 +77,13 @@ export default function AgentsList() {
 
       {/* Search Bar */}
       <div className="relative max-w-md w-full bg-card border border-border rounded-xl overflow-hidden group">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fog group-focus-within:text-silver transition-colors" size={14} />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-muted-foreground transition-colors" size={14} />
         <Input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search workforce agents..."
-          className="w-full pl-10 pr-4 bg-transparent border-none text-xs text-ivory placeholder-fog focus:ring-0 focus-visible:ring-0"
+          className="w-full pl-10 pr-4 bg-transparent border-none text-xs text-foreground placeholder-fog focus:ring-0 focus-visible:ring-0"
         />
       </div>
 
@@ -106,25 +106,25 @@ export default function AgentsList() {
                   icons={getAgentIcons(agent.id)}
                 />
                 
-                <h3 className="text-sm font-bold text-ivory truncate px-2">{agent.name}</h3>
+                <h3 className="text-sm font-bold text-foreground truncate px-2">{agent.name}</h3>
                 <p className="text-[10px] text-warm font-semibold uppercase tracking-wider mt-0.5">{agent.role}</p>
-                <p className="text-xs text-silver mt-2 line-clamp-2 px-4 leading-relaxed font-sans">{agent.description}</p>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2 px-4 leading-relaxed font-sans">{agent.description}</p>
               </CardContent>
 
               <div className="p-4 border-t border-border relative z-10 flex items-center justify-between bg-secondary/60">
                 <div className="flex items-center gap-1.5">
                   <span className={cn(
                     "h-1.5 w-1.5 rounded-full shrink-0",
-                    agent.status === 'active' ? 'bg-emerald-600 animate-pulse' : 'bg-fog'
+                    agent.status === 'active' ? 'bg-primary animate-pulse' : 'bg-border'
                   )} />
-                  <span className="text-[10px] text-fog capitalize font-semibold">{agent.status}</span>
+                  <span className="text-[10px] text-muted-foreground capitalize font-semibold">{agent.status}</span>
                 </div>
                 
                 <Button
                   onClick={() => router.push(`/app/agents/${agent.id}`)}
                   variant="ghost"
                   size="sm"
-                  className="text-xs font-bold text-emerald-600 hover:bg-accent hover:text-foreground rounded-lg flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-primary hover:bg-accent hover:text-accent-foreground rounded-lg flex items-center gap-1 cursor-pointer"
                 >
                   <span>Open Builder</span>
                   <ArrowRight size={12} />
