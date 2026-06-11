@@ -7,15 +7,15 @@ import { useLang } from '@/i18n';
 import type { TimelineEvent, TimelineEventType } from '@/lib/types';
 
 const EVENT_CONFIG: Record<TimelineEventType, { icon: React.ElementType; color: string }> = {
-  file_uploaded:       { icon: Upload,        color: '#B8BDC7' },
-  approval_submitted:  { icon: CheckCircle2,  color: '#B89B6A' },
-  approval_approved:   { icon: CheckCircle2,  color: '#7FA38A' },
-  approval_revision:   { icon: AlertCircle,   color: '#A86A6A' },
-  comment_added:       { icon: MessageSquare, color: '#8A9099' },
-  portal_accessed:     { icon: LogIn,         color: '#8A9099' },
-  invoice_paid:        { icon: CreditCard,    color: '#7FA38A' },
-  proposal_signed:     { icon: FileSignature, color: '#7FA38A' },
-  milestone_completed: { icon: Milestone,     color: '#7FA38A' },
+  file_uploaded:       { icon: Upload,        color: 'var(--muted-foreground)' },
+  approval_submitted:  { icon: CheckCircle2,  color: 'var(--warning)' },
+  approval_approved:   { icon: CheckCircle2,  color: 'var(--primary)' },
+  approval_revision:   { icon: AlertCircle,   color: 'var(--destructive)' },
+  comment_added:       { icon: MessageSquare, color: 'var(--muted-foreground)' },
+  portal_accessed:     { icon: LogIn,         color: 'var(--muted-foreground)' },
+  invoice_paid:        { icon: CreditCard,    color: 'var(--primary)' },
+  proposal_signed:     { icon: FileSignature, color: 'var(--primary)' },
+  milestone_completed: { icon: Milestone,     color: 'var(--primary)' },
 };
 
 export default function PortalTimeline() {

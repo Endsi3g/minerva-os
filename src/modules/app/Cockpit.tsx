@@ -18,28 +18,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PortfolioHealth, HealthAlert, Client, Project, Task, Approval, Invoice, Retainer } from '@/lib/types';
 
 function scoreColor(score: number) {
-  if (score >= 75) return '#7FA38A';
-  if (score >= 50) return '#B89B6A';
-  return '#A86A6A';
+  if (score >= 75) return 'var(--primary)';
+  if (score >= 50) return 'var(--warning)';
+  return 'var(--destructive)';
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: '#8A9099' }}>
+    <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 text-muted-foreground">
       {children}
     </p>
   );
 }
 
-function KpiCard({ label, value, sub, color = '#F5F1E8' }: { label: string; value: React.ReactNode; sub?: string; color?: string }) {
+function KpiCard({ label, value, sub, color = 'var(--foreground)' }: { label: string; value: React.ReactNode; sub?: string; color?: string }) {
   return (
     <div
       className="rounded-[14px] border p-5 flex flex-col gap-1"
-      style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+      style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
     >
-      <p className="text-[11px]" style={{ color: '#8A9099' }}>{label}</p>
+      <p className="text-[11px] text-muted-foreground">{label}</p>
       <p className="text-2xl font-semibold leading-none" style={{ color }}>{value}</p>
-      {sub && <p className="text-[11px] mt-0.5" style={{ color: '#8A9099' }}>{sub}</p>}
+      {sub && <p className="text-[11px] mt-0.5 text-muted-foreground">{sub}</p>}
     </div>
   );
 }
@@ -119,12 +119,12 @@ export default function Cockpit() {
   }, [tasks]);
 
   const alertIcons: Record<string, React.ElementType> = { critical: AlertTriangle, warning: AlertCircle, info: Info };
-  const alertColors: Record<string, string> = { critical: '#A86A6A', warning: '#B89B6A', info: '#8A9099' };
+  const alertColors: Record<string, string> = { critical: 'var(--destructive)', warning: 'var(--warning)', info: 'var(--muted-foreground)' };
 
   const trendIcon = (trend: PortfolioHealth['trend']) =>
     trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
   const trendColor = (trend: PortfolioHealth['trend']) =>
-    trend === 'up' ? '#7FA38A' : trend === 'down' ? '#A86A6A' : '#8A9099';
+    trend === 'up' ? 'var(--primary)' : trend === 'down' ? 'var(--destructive)' : 'var(--muted-foreground)';
 
   return (
     <div className="space-y-8 max-w-6xl">
@@ -132,11 +132,11 @@ export default function Cockpit() {
       <div>
         <h1
           className="text-3xl font-normal"
-          style={{ fontFamily: '"Playfair Display", Georgia, serif', color: '#F5F1E8', letterSpacing: '-0.02em' }}
+          style={{ fontFamily: '"Playfair Display", Georgia, serif', color: 'var(--foreground)', letterSpacing: '-0.02em' }}
         >
           {ck.title}
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#8A9099' }}>{ck.subtitle}</p>
+        <p className="text-sm mt-1 text-muted-foreground">{ck.subtitle}</p>
       </div>
 
       {/* KPI Strip */}
@@ -168,11 +168,11 @@ export default function Cockpit() {
             <>
               <div
                 className="rounded-[14px] border p-4 flex items-center gap-4"
-                style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
               >
                 <HealthScoreRing score={portfolio?.overall ?? 0} size={52} />
                 <div>
-                  <p className="text-[11px]" style={{ color: '#8A9099' }}>{ck.portfolioScore}</p>
+                  <p className="text-[11px] text-muted-foreground">{ck.portfolioScore}</p>
                   <p className="text-xs mt-0.5" style={{ color: scoreColor(portfolio?.overall ?? 0) }}>
                     {hs.trend[portfolio?.trend ?? 'stable']}
                   </p>
@@ -182,7 +182,7 @@ export default function Cockpit() {
                 label={t.app.cockpit.sections.alerts}
                 value={<AnimatedNumber value={portfolio?.summary.critical ?? 0} />}
                 sub={portfolio?.summary.critical ? `${portfolio.summary.atRisk} at risk` : 'All healthy'}
-                color={portfolio?.summary.critical ? '#A86A6A' : '#7FA38A'}
+                color={portfolio?.summary.critical ? 'var(--destructive)' : 'var(--primary)'}
               />
             </>
           )}
@@ -190,7 +190,7 @@ export default function Cockpit() {
             label="On-time delivery"
             value={`${onTimeRate}%`}
             sub={`${tasks.filter(t => t.status === 'done').length} tasks done`}
-            color={onTimeRate >= 80 ? '#7FA38A' : onTimeRate >= 60 ? '#B89B6A' : '#A86A6A'}
+            color={onTimeRate >= 80 ? 'var(--primary)' : onTimeRate >= 60 ? 'var(--warning)' : 'var(--destructive)'}
           />
           <KpiCard
             label="Revenue (month)"
@@ -209,14 +209,14 @@ export default function Cockpit() {
               className="rounded-[14px] border p-6 flex items-center gap-3"
               style={{ backgroundColor: 'rgba(127,163,138,0.04)', borderColor: 'rgba(127,163,138,0.15)' }}
             >
-              <CheckCircle2 size={16} style={{ color: '#7FA38A' }} />
-              <p className="text-sm" style={{ color: '#8A9099' }}>{ck.noAlerts}</p>
+              <CheckCircle2 size={16} style={{ color: 'var(--primary)' }} />
+              <p className="text-sm text-muted-foreground">{ck.noAlerts}</p>
             </div>
           ) : (
             <div className="space-y-2">
               {portfolio.alerts.slice(0, 6).map((alert: HealthAlert) => {
                 const Icon = alertIcons[alert.severity] ?? Info;
-                const color = alertColors[alert.severity] ?? '#8A9099';
+                const color = alertColors[alert.severity] ?? 'var(--muted-foreground)';
                 return (
                   <motion.div
                     key={alert.id}
@@ -226,9 +226,9 @@ export default function Cockpit() {
                     style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: `${color}30` }}
                   >
                     <Icon size={14} style={{ color, flexShrink: 0 }} />
-                    <p className="text-sm flex-1" style={{ color: '#F5F1E8' }}>{alert.message}</p>
+                    <p className="text-sm flex-1" style={{ color: 'var(--foreground)' }}>{alert.message}</p>
                     <Link href={alert.link}>
-                      <ChevronRight size={14} style={{ color: '#8A9099' }} />
+                      <ChevronRight size={14} className="text-muted-foreground" />
                     </Link>
                   </motion.div>
                 );
@@ -243,7 +243,7 @@ export default function Cockpit() {
         <section>
           <SectionTitle>{ck.sections.health}</SectionTitle>
           {!portfolio?.clients.length ? (
-            <p className="text-sm" style={{ color: '#8A9099' }}>{ck.allHealthy}</p>
+            <p className="text-sm text-muted-foreground">{ck.allHealthy}</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {portfolio.clients.map((c, i) => {
@@ -255,7 +255,7 @@ export default function Cockpit() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     className="rounded-[14px] border p-4 space-y-3"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+                    style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -265,7 +265,7 @@ export default function Cockpit() {
                         {c.clientName.slice(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate" style={{ color: '#F5F1E8' }}>{c.clientName}</p>
+                        <p className="text-xs font-medium truncate" style={{ color: 'var(--foreground)' }}>{c.clientName}</p>
                         <div className="flex items-center gap-1 mt-0.5">
                           <TrendIcon size={10} style={{ color: trendColor(c.trend) }} />
                           <span className="text-[10px]" style={{ color: trendColor(c.trend) }}>{hs.trend[c.trend]}</span>
@@ -277,7 +277,7 @@ export default function Cockpit() {
                       {(Object.keys(c.dimensions) as Array<keyof typeof c.dimensions>).map(dim => (
                         <div key={dim}>
                           <div className="flex justify-between mb-0.5">
-                            <span className="text-[9px]" style={{ color: '#8A9099' }}>{hs.dimensions[dim]}</span>
+                            <span className="text-[9px] text-muted-foreground">{hs.dimensions[dim]}</span>
                             <span className="text-[9px]" style={{ color: scoreColor(c.dimensions[dim]) }}>{c.dimensions[dim]}</span>
                           </div>
                           <div className="h-0.5 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
@@ -305,25 +305,25 @@ export default function Cockpit() {
                 className="rounded-[14px] border p-5 flex items-center gap-3"
                 style={{ backgroundColor: 'rgba(127,163,138,0.04)', borderColor: 'rgba(127,163,138,0.15)' }}
               >
-                <CheckCircle2 size={16} style={{ color: '#7FA38A' }} />
-                <p className="text-sm" style={{ color: '#8A9099' }}>All tasks completed</p>
+                <CheckCircle2 size={16} style={{ color: 'var(--primary)' }} />
+                <p className="text-sm text-muted-foreground">All tasks completed</p>
               </div>
             ) : (
               <div
                 className="rounded-[14px] border divide-y"
-                style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', '--tw-divide-opacity': '1' } as React.CSSProperties}
+                style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', '--tw-divide-opacity': '1' } as React.CSSProperties}
               >
                 {urgentTasks.map((task) => (
                   <div key={task.id} className="flex items-center gap-3 px-4 py-2.5">
                     <div
                       className="h-1.5 w-1.5 rounded-full shrink-0"
                       style={{
-                        backgroundColor: task.priority === 'urgent' ? '#A86A6A' : task.priority === 'high' ? '#B89B6A' : '#8A9099'
+                        backgroundColor: task.priority === 'urgent' ? 'var(--destructive)' : task.priority === 'high' ? 'var(--warning)' : 'var(--muted-foreground)'
                       }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate" style={{ color: '#F5F1E8' }}>{task.title}</p>
-                      <p className="text-[10px]" style={{ color: '#8A9099' }}>{task.project}</p>
+                      <p className="text-xs font-medium truncate" style={{ color: 'var(--foreground)' }}>{task.title}</p>
+                      <p className="text-[10px] text-muted-foreground">{task.project}</p>
                     </div>
                   </div>
                 ))}
@@ -337,11 +337,11 @@ export default function Cockpit() {
           <SectionTitle>{ck.sections.delivery}</SectionTitle>
           <div
             className="rounded-[14px] border p-5 space-y-4"
-            style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+            style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
           >
             <div>
               <div className="flex justify-between mb-1.5">
-                <span className="text-xs" style={{ color: '#8A9099' }}>Tasks on-time</span>
+                <span className="text-xs text-muted-foreground">Tasks on-time</span>
                 <span className="text-xs font-medium" style={{ color: scoreColor(onTimeRate) }}>{onTimeRate}%</span>
               </div>
               <div className="h-1.5 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
@@ -349,14 +349,14 @@ export default function Cockpit() {
               </div>
             </div>
             <div className="flex justify-between">
-              <span className="text-xs" style={{ color: '#8A9099' }}>Avg. approval age</span>
-              <span className="text-xs font-medium" style={{ color: avgApprovalDays > 7 ? '#A86A6A' : '#7FA38A' }}>
+              <span className="text-xs text-muted-foreground">Avg. approval age</span>
+              <span className="text-xs font-medium" style={{ color: avgApprovalDays > 7 ? 'var(--destructive)' : 'var(--primary)' }}>
                 {avgApprovalDays}d
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-xs" style={{ color: '#8A9099' }}>Pending approvals</span>
-              <span className="text-xs font-medium" style={{ color: '#F5F1E8' }}>
+              <span className="text-xs text-muted-foreground">Pending approvals</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>
                 {approvals.filter(a => a.status === 'pending').length}
               </span>
             </div>
@@ -367,20 +367,20 @@ export default function Cockpit() {
         <section>
           <SectionTitle>{ck.sections.wins}</SectionTitle>
           {!recentWins.length ? (
-            <p className="text-sm" style={{ color: '#8A9099' }}>{ck.noWins}</p>
+            <p className="text-sm text-muted-foreground">{ck.noWins}</p>
           ) : (
             <div
               className="rounded-[14px] border divide-y"
-              style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', '--tw-divide-opacity': '1' } as React.CSSProperties}
+              style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', '--tw-divide-opacity': '1' } as React.CSSProperties}
             >
               {recentWins.map((win, i) => (
                 <div key={i} className="flex items-center gap-3 px-4 py-2.5">
-                  <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: '#7FA38A' }} />
+                  <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: 'var(--primary)' }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs truncate" style={{ color: '#F5F1E8' }}>{win.name}</p>
-                    <p className="text-[10px]" style={{ color: '#8A9099' }}>{win.label}</p>
+                    <p className="text-xs truncate" style={{ color: 'var(--foreground)' }}>{win.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{win.label}</p>
                   </div>
-                  <span className="text-[10px] shrink-0" style={{ color: '#8A9099' }}>
+                  <span className="text-[10px] shrink-0 text-muted-foreground">
                     {new Date(win.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                   </span>
                 </div>

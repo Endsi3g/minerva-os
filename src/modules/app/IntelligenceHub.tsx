@@ -33,14 +33,14 @@ function PortalAnalytics({ workspaceId }: { workspaceId: string }) {
   }, [workspaceId]);
 
   if (rows === null) {
-    return <p className="text-sm text-fog py-8 text-center">{ci.loading}</p>;
+    return <p className="text-sm text-muted-foreground py-8 text-center">{ci.loading}</p>;
   }
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/6 p-12 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
-        <Eye size={24} className="mx-auto mb-3 opacity-30" style={{ color: '#8A9099' }} />
-        <p className="text-sm text-fog">{ci.noData}</p>
+      <div className="rounded-2xl border border-border p-12 text-center" style={{ backgroundColor: 'var(--surface)' }}>
+        <Eye size={24} className="mx-auto mb-3 opacity-30" style={{ color: 'var(--muted-foreground)' }} />
+        <p className="text-sm text-muted-foreground">{ci.noData}</p>
       </div>
     );
   }
@@ -58,15 +58,15 @@ function PortalAnalytics({ workspaceId }: { workspaceId: string }) {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-medium text-ivory">{ci.title}</p>
-        <p className="text-xs text-fog mt-0.5">{ci.subtitle}</p>
+        <p className="text-sm font-medium text-foreground">{ci.title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{ci.subtitle}</p>
       </div>
-      <div className="rounded-2xl border border-white/6 overflow-hidden">
+      <div className="rounded-2xl border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               {[ci.cols.client, ci.cols.visits, ci.cols.lastSeen, ci.cols.proposals, ci.cols.files, ci.cols.approvals].map(col => (
-                <th key={col} className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-fog">{col}</th>
+                <th key={col} className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{col}</th>
               ))}
             </tr>
           </thead>
@@ -79,12 +79,12 @@ function PortalAnalytics({ workspaceId }: { workspaceId: string }) {
                   borderBottom: '1px solid rgba(255,255,255,0.04)',
                 }}
               >
-                <td className="px-4 py-3 font-medium text-ivory">{row.clientName}</td>
-                <td className="px-4 py-3 text-silver">{row.visits}</td>
-                <td className="px-4 py-3 text-fog">{relTime(row.lastSeen)}</td>
-                <td className="px-4 py-3 text-silver">{row.proposals}</td>
-                <td className="px-4 py-3 text-silver">{row.files}</td>
-                <td className="px-4 py-3 text-silver">{row.approvals}</td>
+                <td className="px-4 py-3 font-medium text-foreground">{row.clientName}</td>
+                <td className="px-4 py-3 text-muted-foreground">{row.visits}</td>
+                <td className="px-4 py-3 text-muted-foreground">{relTime(row.lastSeen)}</td>
+                <td className="px-4 py-3 text-muted-foreground">{row.proposals}</td>
+                <td className="px-4 py-3 text-muted-foreground">{row.files}</td>
+                <td className="px-4 py-3 text-muted-foreground">{row.approvals}</td>
               </tr>
             ))}
           </tbody>
@@ -97,9 +97,9 @@ function PortalAnalytics({ workspaceId }: { workspaceId: string }) {
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
 function scoreColor(score: number) {
-  if (score >= 75) return '#7FA38A';
-  if (score >= 50) return '#B89B6A';
-  return '#A86A6A';
+  if (score >= 75) return 'var(--primary)';
+  if (score >= 50) return 'var(--warning)';
+  return 'var(--destructive)';
 }
 
 function scoreTrend(score: number): 'up' | 'stable' | 'down' {
@@ -109,9 +109,9 @@ function scoreTrend(score: number): 'up' | 'stable' | 'down' {
 }
 
 function TrendIcon({ trend, size = 14 }: { trend: 'up' | 'stable' | 'down'; size?: number }) {
-  if (trend === 'up') return <TrendingUp size={size} style={{ color: '#7FA38A' }} />;
-  if (trend === 'down') return <TrendingDown size={size} style={{ color: '#A86A6A' }} />;
-  return <Minus size={size} style={{ color: '#8A9099' }} />;
+  if (trend === 'up') return <TrendingUp size={size} style={{ color: 'var(--primary)' }} />;
+  if (trend === 'down') return <TrendingDown size={size} style={{ color: 'var(--destructive)' }} />;
+  return <Minus size={size} style={{ color: 'var(--muted-foreground)' }} />;
 }
 
 /* ── SubScoreBar ─────────────────────────────────────────────────────────── */
@@ -122,8 +122,8 @@ function SubScoreBar({ label, score, icon }: { label: string; score: number; ico
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span style={{ color: '#8A9099' }}>{icon}</span>
-          <span className="text-[11px] text-fog font-medium uppercase tracking-wider">{label}</span>
+          <span style={{ color: 'var(--muted-foreground)' }}>{icon}</span>
+          <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{label}</span>
         </div>
         <span className="text-xs font-bold tabular-nums" style={{ color }}>{score}</span>
       </div>
@@ -155,9 +155,9 @@ function LeversPanel({ positives, negatives }: { positives: string[]; negatives:
               className="mt-0.5 w-3.5 h-3.5 rounded flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: 'rgba(127,163,138,0.15)' }}
             >
-              <ArrowUpRight size={8} style={{ color: '#7FA38A' }} />
+              <ArrowUpRight size={8} style={{ color: 'var(--primary)' }} />
             </div>
-            <p className="text-[10px] text-silver leading-snug">{p}</p>
+            <p className="text-[10px] text-muted-foreground leading-snug">{p}</p>
           </div>
         ))}
       </div>
@@ -168,9 +168,9 @@ function LeversPanel({ positives, negatives }: { positives: string[]; negatives:
               className="mt-0.5 w-3.5 h-3.5 rounded flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: 'rgba(168,106,106,0.15)' }}
             >
-              <ArrowDownRight size={8} style={{ color: '#A86A6A' }} />
+              <ArrowDownRight size={8} style={{ color: 'var(--destructive)' }} />
             </div>
-            <p className="text-[10px] text-silver leading-snug">{n}</p>
+            <p className="text-[10px] text-muted-foreground leading-snug">{n}</p>
           </div>
         ))}
       </div>
@@ -203,10 +203,10 @@ function HealthRing({ score }: { score: number }) {
       </svg>
       <div className="absolute text-center">
         <p className="text-4xl font-bold leading-none tabular-nums" style={{ color }}>{score}</p>
-        <p className="text-[10px] text-fog mt-1">/ 100</p>
+        <p className="text-[10px] text-muted-foreground mt-1">/ 100</p>
         <div className="flex items-center justify-center gap-0.5 mt-1.5">
           <TrendIcon trend={trend} size={10} />
-          <span className="text-[10px]" style={{ color: trend === 'up' ? '#7FA38A' : trend === 'down' ? '#A86A6A' : '#8A9099' }}>
+          <span className="text-[10px]" style={{ color: trend === 'up' ? 'var(--primary)' : trend === 'down' ? 'var(--destructive)' : 'var(--muted-foreground)' }}>
             {trend === 'up' ? 'Improving' : trend === 'down' ? 'At risk' : 'Stable'}
           </span>
         </div>
@@ -235,7 +235,7 @@ function BriefingBanner({ projects, deals, approvals, healthScore, npsScore }: {
   const pendingApprovals = (approvals ?? []).filter((a: any) => a.status === 'pending').length;
   const openDeals = (deals ?? []).filter((d: any) => d.stage !== 'closed_won' && d.stage !== 'closed_lost').length;
 
-  const statusColor = healthScore >= 80 ? '#7FA38A' : healthScore >= 55 ? '#B89B6A' : '#A86A6A';
+  const statusColor = healthScore >= 80 ? 'var(--primary)' : healthScore >= 55 ? 'var(--warning)' : 'var(--destructive)';
   const statusLabel = healthScore >= 80 ? 'Healthy' : healthScore >= 55 ? 'Monitoring' : 'At Risk';
 
   const dateLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -248,11 +248,11 @@ function BriefingBanner({ projects, deals, approvals, healthScore, npsScore }: {
       : `${lateProjects > 0 ? `${lateProjects} project${lateProjects > 1 ? 's' : ''} overdue. ` : ''}${pendingApprovals > 0 ? `${pendingApprovals} approval${pendingApprovals > 1 ? 's' : ''} stalled. ` : ''}Action required to restore health.`;
 
   const chips = [
-    { label: 'Active Projects', value: activeProjects.toString(), color: '#B8BDC7' },
-    lateProjects > 0 ? { label: 'Overdue', value: lateProjects.toString(), color: '#A86A6A' } : null,
-    pendingApprovals > 0 ? { label: 'Pending Approvals', value: pendingApprovals.toString(), color: '#B89B6A' } : null,
-    openDeals > 0 ? { label: 'Open Deals', value: openDeals.toString(), color: '#B8BDC7' } : null,
-    npsScore !== null ? { label: 'NPS', value: `${npsScore >= 0 ? '+' : ''}${npsScore}`, color: npsScore >= 0 ? '#7FA38A' : '#A86A6A' } : null,
+    { label: 'Active Projects', value: activeProjects.toString(), color: 'var(--muted-foreground)' },
+    lateProjects > 0 ? { label: 'Overdue', value: lateProjects.toString(), color: 'var(--destructive)' } : null,
+    pendingApprovals > 0 ? { label: 'Pending Approvals', value: pendingApprovals.toString(), color: 'var(--warning)' } : null,
+    openDeals > 0 ? { label: 'Open Deals', value: openDeals.toString(), color: 'var(--muted-foreground)' } : null,
+    npsScore !== null ? { label: 'NPS', value: `${npsScore >= 0 ? '+' : ''}${npsScore}`, color: npsScore >= 0 ? 'var(--primary)' : 'var(--destructive)' } : null,
   ].filter((c): c is { label: string; value: string; color: string } => c !== null);
 
   return (
@@ -268,17 +268,17 @@ function BriefingBanner({ projects, deals, approvals, healthScore, npsScore }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-3">
             <div className="p-1.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(127,163,138,0.12)' }}>
-              <Zap size={13} style={{ color: '#7FA38A' }} />
+              <Zap size={13} style={{ color: 'var(--primary)' }} />
             </div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-fog">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Intelligence Briefing · {dateLabel}
             </p>
           </div>
-          <p className="text-base font-medium leading-relaxed mb-4" style={{ color: '#D8DDE6' }}>
+          <p className="text-base font-medium leading-relaxed mb-4" style={{ color: 'var(--foreground)' }}>
             Agency is{' '}
             <span className="font-bold" style={{ color: statusColor }}>{statusLabel}</span>
             {' — '}
-            <span className="text-silver">{narrative}</span>
+            <span className="text-muted-foreground">{narrative}</span>
           </p>
           {chips.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -289,7 +289,7 @@ function BriefingBanner({ projects, deals, approvals, healthScore, npsScore }: {
                   style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
                 >
                   <span className="font-bold tabular-nums" style={{ color: chip.color }}>{chip.value}</span>
-                  <span className="text-fog">{chip.label}</span>
+                  <span className="text-muted-foreground">{chip.label}</span>
                 </div>
               ))}
             </div>
@@ -323,20 +323,20 @@ function RiskPanel({ risks }: { risks: RiskItem[] }) {
     return (
       <div className="flex items-start gap-2.5 py-2">
         <div className="mt-0.5 p-1 rounded-md" style={{ backgroundColor: 'rgba(127,163,138,0.1)' }}>
-          <CheckCircle size={12} style={{ color: '#7FA38A' }} />
+          <CheckCircle size={12} style={{ color: 'var(--primary)' }} />
         </div>
         <div>
           <p className="text-xs font-medium text-sage">All systems operational</p>
-          <p className="text-[11px] text-fog mt-0.5">No active risks or overdue items detected.</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">No active risks or overdue items detected.</p>
         </div>
       </div>
     );
   }
 
   const severityStyle = {
-    critical: { bg: 'rgba(168,106,106,0.1)', icon: '#A86A6A', tag: 'High Risk' },
-    warning: { bg: 'rgba(184,155,106,0.1)', icon: '#B89B6A', tag: 'Medium Risk' },
-    info: { bg: 'rgba(138,144,153,0.06)', icon: '#8A9099', tag: 'Monitor' },
+    critical: { bg: 'rgba(168,106,106,0.1)', icon: 'var(--destructive)', tag: 'High Risk' },
+    warning: { bg: 'rgba(184,155,106,0.1)', icon: 'var(--warning)', tag: 'Medium Risk' },
+    info: { bg: 'rgba(138,144,153,0.06)', icon: 'var(--muted-foreground)', tag: 'Monitor' },
   };
 
   return (
@@ -348,7 +348,7 @@ function RiskPanel({ risks }: { risks: RiskItem[] }) {
             <div className="flex items-start gap-2.5">
               <AlertTriangle size={13} className="mt-0.5 flex-shrink-0" style={{ color: style.icon }} />
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-silver leading-snug">{r.label}</p>
+                <p className="text-xs text-muted-foreground leading-snug">{r.label}</p>
               </div>
               <div
                 className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -396,18 +396,18 @@ function NpsCard({
           className="p-3 rounded-2xl"
           style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
         >
-          <MessageSquare size={20} style={{ color: '#8A9099' }} />
+          <MessageSquare size={20} style={{ color: 'var(--muted-foreground)' }} />
         </div>
         <div>
-          <p className="text-sm font-medium text-silver">No NPS responses yet</p>
-          <p className="text-[11px] text-fog mt-1 leading-relaxed max-w-[180px]">
+          <p className="text-sm font-medium text-muted-foreground">No NPS responses yet</p>
+          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-[180px]">
             Send a survey to start collecting client sentiment signals.
           </p>
         </div>
         <Button
           size="sm"
           variant="outline"
-          className="text-[11px] h-7 px-3 border-white/8 text-silver hover:text-ivory"
+          className="text-[11px] h-7 px-3 border-white/8 text-muted-foreground hover:text-foreground"
           onClick={() => router.push('/app/intelligence?tab=nps')}
         >
           Send NPS Survey
@@ -417,7 +417,7 @@ function NpsCard({
     );
   }
 
-  const color = npsScore >= 50 ? '#7FA38A' : npsScore >= 0 ? '#B89B6A' : '#A86A6A';
+  const color = npsScore >= 50 ? 'var(--primary)' : npsScore >= 0 ? 'var(--warning)' : 'var(--destructive)';
 
   return (
     <div className="space-y-3">
@@ -435,24 +435,24 @@ function NpsCard({
         <>
           <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
             <div
-              style={{ width: `${(promoters / total) * 100}%`, backgroundColor: '#7FA38A', transition: 'width 0.8s ease' }}
+              style={{ width: `${(promoters / total) * 100}%`, backgroundColor: 'var(--primary)', transition: 'width 0.8s ease' }}
               className="rounded-full"
             />
             <div
-              style={{ width: `${(passives / total) * 100}%`, backgroundColor: '#B89B6A', transition: 'width 0.8s ease' }}
+              style={{ width: `${(passives / total) * 100}%`, backgroundColor: 'var(--warning)', transition: 'width 0.8s ease' }}
               className="rounded-full"
             />
             <div
-              style={{ width: `${(detractors / total) * 100}%`, backgroundColor: '#A86A6A', transition: 'width 0.8s ease' }}
+              style={{ width: `${(detractors / total) * 100}%`, backgroundColor: 'var(--destructive)', transition: 'width 0.8s ease' }}
               className="rounded-full"
             />
           </div>
           <div className="flex gap-3 text-[11px]">
-            <span><span className="font-semibold" style={{ color: '#7FA38A' }}>{promoters}</span><span className="text-fog ml-1">Promoters</span></span>
-            <span><span className="font-semibold" style={{ color: '#B89B6A' }}>{passives}</span><span className="text-fog ml-1">Passive</span></span>
-            <span><span className="font-semibold" style={{ color: '#A86A6A' }}>{detractors}</span><span className="text-fog ml-1">Detractors</span></span>
+            <span><span className="font-semibold" style={{ color: 'var(--primary)' }}>{promoters}</span><span className="text-muted-foreground ml-1">Promoters</span></span>
+            <span><span className="font-semibold" style={{ color: 'var(--warning)' }}>{passives}</span><span className="text-muted-foreground ml-1">Passive</span></span>
+            <span><span className="font-semibold" style={{ color: 'var(--destructive)' }}>{detractors}</span><span className="text-muted-foreground ml-1">Detractors</span></span>
           </div>
-          <p className="text-[10px] text-fog">{total} total response{total !== 1 ? 's' : ''}</p>
+          <p className="text-[10px] text-muted-foreground">{total} total response{total !== 1 ? 's' : ''}</p>
         </>
       )}
     </div>
@@ -472,18 +472,18 @@ function AgentCard({ agents, lastAgentAction }: { agents: any[]; lastAgentAction
           className="p-3 rounded-2xl"
           style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
         >
-          <Bot size={20} style={{ color: '#8A9099' }} />
+          <Bot size={20} style={{ color: 'var(--muted-foreground)' }} />
         </div>
         <div>
-          <p className="text-sm font-medium text-silver">Background systems monitored</p>
-          <p className="text-[11px] text-fog mt-1 leading-relaxed max-w-[180px]">
+          <p className="text-sm font-medium text-muted-foreground">Background systems monitored</p>
+          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-[180px]">
             No Hermes agents configured. Run a health audit to detect automation gaps.
           </p>
         </div>
         <Button
           size="sm"
           variant="outline"
-          className="text-[11px] h-7 px-3 border-white/8 text-silver hover:text-ivory"
+          className="text-[11px] h-7 px-3 border-white/8 text-muted-foreground hover:text-foreground"
           onClick={() => router.push('/app/intelligence?tab=agents')}
         >
           Run Health Audit
@@ -496,9 +496,9 @@ function AgentCard({ agents, lastAgentAction }: { agents: any[]; lastAgentAction
   return (
     <div className="space-y-3">
       <div className="flex items-baseline gap-2">
-        <p className="text-3xl font-bold tabular-nums leading-none text-ivory">{activeCount}</p>
-        <p className="text-sm text-fog">active</p>
-        <p className="text-sm text-fog">· {agents.length} total</p>
+        <p className="text-3xl font-bold tabular-nums leading-none text-foreground">{activeCount}</p>
+        <p className="text-sm text-muted-foreground">active</p>
+        <p className="text-sm text-muted-foreground">· {agents.length} total</p>
       </div>
 
       <div className="space-y-2">
@@ -508,20 +508,20 @@ function AgentCard({ agents, lastAgentAction }: { agents: any[]; lastAgentAction
             <div key={agent.id ?? agent._id ?? agent.name} className="flex items-center gap-2.5">
               <div
                 className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: isActive ? '#7FA38A' : '#8A9099' }}
+                style={{ backgroundColor: isActive ? 'var(--primary)' : 'var(--muted-foreground)' }}
               />
-              <p className="text-xs text-silver flex-1 truncate">{agent.name}</p>
-              <p className="text-[10px] text-fog">{isActive ? 'Active' : 'Idle'}</p>
+              <p className="text-xs text-muted-foreground flex-1 truncate">{agent.name}</p>
+              <p className="text-[10px] text-muted-foreground">{isActive ? 'Active' : 'Idle'}</p>
             </div>
           );
         })}
         {agents.length > 3 && (
-          <p className="text-[10px] text-fog pl-4">+{agents.length - 3} more</p>
+          <p className="text-[10px] text-muted-foreground pl-4">+{agents.length - 3} more</p>
         )}
       </div>
 
       {lastAgentAction && (
-        <div className="flex items-center gap-1.5 text-[11px] text-fog pt-1 border-t border-white/5">
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1 border-t border-border">
           <Clock size={10} />
           <span>Last action: {new Date(lastAgentAction).toLocaleDateString()}</span>
         </div>
@@ -701,7 +701,7 @@ function IntelligenceOverview() {
   const total = npsResponses.length;
 
   const cardBase = {
-    backgroundColor: '#111522',
+    backgroundColor: 'var(--surface)',
     borderColor: 'rgba(255,255,255,0.07)',
   };
 
@@ -725,8 +725,8 @@ function IntelligenceOverview() {
           style={cardBase}
         >
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-fog">Portfolio Health</p>
-            <p className="text-[11px] text-fog mt-0.5">Composite score across delivery, pipeline and sentiment</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Portfolio Health</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Composite score across delivery, pipeline and sentiment</p>
           </div>
 
           <div className="flex items-center justify-center py-2">
@@ -741,7 +741,7 @@ function IntelligenceOverview() {
 
           {(positiveLevers.length > 0 || negativeLevers.length > 0) && (
             <div className="border-t pt-4" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-fog mb-2.5">Contributing Factors</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2.5">Contributing Factors</p>
               <LeversPanel positives={positiveLevers} negatives={negativeLevers} />
             </div>
           )}
@@ -757,15 +757,15 @@ function IntelligenceOverview() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-fog">Risk &amp; Action Center</p>
-                <p className="text-[11px] text-fog mt-0.5">Priority items requiring action this week</p>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Risk &amp; Action Center</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Priority items requiring action this week</p>
               </div>
               <div className="flex items-center gap-1.5">
                 <div
                   className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: risks.length === 0 ? '#7FA38A' : risks[0]?.severity === 'critical' ? '#A86A6A' : '#B89B6A' }}
+                  style={{ backgroundColor: risks.length === 0 ? 'var(--primary)' : risks[0]?.severity === 'critical' ? 'var(--destructive)' : 'var(--warning)' }}
                 />
-                <span className="text-[10px] font-medium" style={{ color: risks.length === 0 ? '#7FA38A' : '#B8BDC7' }}>
+                <span className="text-[10px] font-medium" style={{ color: risks.length === 0 ? 'var(--primary)' : 'var(--muted-foreground)' }}>
                   {risks.length === 0 ? 'All clear' : `${risks.length} flag${risks.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
@@ -782,8 +782,8 @@ function IntelligenceOverview() {
               style={cardBase}
             >
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-fog">NPS Snapshot</p>
-                <p className="text-[11px] text-fog mt-0.5">Client satisfaction signal</p>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">NPS Snapshot</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Client satisfaction signal</p>
               </div>
               <NpsCard
                 npsScore={npsScore}
@@ -801,10 +801,10 @@ function IntelligenceOverview() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-fog">Agent Ops</p>
-                  <p className="text-[11px] text-fog mt-0.5">Automation activity</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Agent Ops</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Automation activity</p>
                 </div>
-                <Activity size={13} style={{ color: '#8A9099' }} />
+                <Activity size={13} style={{ color: 'var(--muted-foreground)' }} />
               </div>
               <AgentCard agents={agents} lastAgentAction={lastAgentAction} />
             </div>
@@ -840,13 +840,13 @@ function IntelligenceOverview() {
           <div
             key={stat.label}
             className="rounded-xl border p-4"
-            style={{ backgroundColor: '#111522', borderColor: 'rgba(255,255,255,0.06)' }}
+            style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
           >
             <div className="flex items-center gap-1.5 mb-2">
-              <span style={{ color: '#8A9099' }}>{stat.icon}</span>
-              <p className="text-[10px] text-fog font-medium uppercase tracking-wider">{stat.label}</p>
+              <span style={{ color: 'var(--muted-foreground)' }}>{stat.icon}</span>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
             </div>
-            <p className="text-2xl font-bold tabular-nums text-ivory leading-none">{stat.value}</p>
+            <p className="text-2xl font-bold tabular-nums text-foreground leading-none">{stat.value}</p>
           </div>
         ))}
       </div>
@@ -878,12 +878,12 @@ export default function IntelligenceHub() {
     <div className="space-y-6">
       <div>
         <h1
-          className="text-2xl font-semibold text-ivory"
+          className="text-2xl font-semibold text-foreground"
           style={{ fontFamily: "'Playfair Display', serif" }}
         >
           {h.title}
         </h1>
-        <p className="text-sm text-fog mt-1">{h.subtitle}</p>
+        <p className="text-sm text-muted-foreground mt-1">{h.subtitle}</p>
       </div>
       <DirectionAwareTabs tabs={tabs} className="w-full" activeTab={activeTab} onTabChange={setActiveTab} />
     </div>

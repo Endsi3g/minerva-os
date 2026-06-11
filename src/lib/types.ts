@@ -150,7 +150,7 @@ export interface ClientPortalToken {
   clientId: string;
   clientName: string;
   expiresAt: string;
-  scopes: ('approvals' | 'files' | 'invoices' | 'reports' | 'proposals')[];
+  scopes: ('approvals' | 'files' | 'invoices' | 'reports' | 'proposals' | 'tickets' | 'nps')[];
 }
 
 // V2.7 — Decision Journal
@@ -201,6 +201,18 @@ export interface PortalNotificationPrefs {
   clientId: string;
   frequency: PortalNotificationFrequency;
   enabledTypes: PortalNotificationType[];
+}
+
+// V3.0 — Portal Messages
+export interface PortalMessage {
+  id: string;
+  clientId: string;
+  workspaceId: string;
+  fromWorkspace: boolean;
+  authorName: string;
+  body: string;
+  sentAt: string;
+  readAt: string | null;
 }
 
 // V2.7 — Timeline

@@ -27,8 +27,8 @@ const PERFORMANCE_DATA = [
 ];
 
 const UTILIZATION_DATA = [
-  { name: 'Billable Hours', value: 38, color: '#7FA38A' },
-  { name: 'Non-Billable Hours', value: 12, color: '#B89B6A' },
+  { name: 'Billable Hours', value: 38, color: 'var(--primary)' },
+  { name: 'Non-Billable Hours', value: 12, color: 'var(--warning)' },
 ];
 
 export default function Profile() {
@@ -54,9 +54,9 @@ export default function Profile() {
     <div className="space-y-6 w-full px-6 py-6 max-w-[1200px] mx-auto select-none">
       
       {/* Banner & Identity */}
-      <div className="relative rounded-xl overflow-hidden border border-white/5 bg-[#111522] shadow-lg">
+      <div className="relative rounded-xl overflow-hidden border border-border bg-surface shadow-lg">
         {/* Video/Gradient Banner */}
-        <div className="h-44 w-full bg-gradient-to-r from-[#171C2A] via-[#0A0D14] to-[#111522] relative">
+        <div className="h-44 w-full bg-gradient-to-r from-secondary via-background to-surface relative">
           <video
             autoPlay
             loop
@@ -65,19 +65,19 @@ export default function Profile() {
             className="absolute inset-0 w-full h-full object-cover opacity-35"
             src="/dashboard-banner.mp4"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#111522] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-surface to-transparent" />
         </div>
 
         {/* Profile Details Overlay */}
         <div className="p-6 pt-0 relative -mt-10 flex flex-col sm:flex-row items-center sm:items-end gap-5">
-          <div className="h-20 w-20 rounded-full border-4 border-[#111522] bg-[#7FA38A] flex items-center justify-center text-xl font-bold text-obsidian shadow-md shrink-0">
+          <div className="h-20 w-20 rounded-full border-4 border-surface bg-primary flex items-center justify-center text-xl font-bold text-obsidian shadow-md shrink-0">
             {initials}
           </div>
           <div className="flex-1 text-center sm:text-left space-y-1 pb-1">
-            <h1 className="text-xl font-bold text-ivory tracking-tight">{displayName}</h1>
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3.5 text-xs text-fog">
+            <h1 className="text-xl font-bold text-foreground tracking-tight">{displayName}</h1>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3.5 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
-                <Shield size={12} className="text-[#7FA38A]" />
+                <Shield size={12} className="text-primary" />
                 {role}
               </span>
               <span className="flex items-center gap-1">
@@ -99,12 +99,12 @@ export default function Profile() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Bio / Description Card */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <Card className="bg-surface border border-border rounded-xl shadow-none">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Focus Description</CardTitle>
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-foreground">Focus Description</CardTitle>
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="text-[10px] font-bold text-[#7FA38A] hover:underline transition-all cursor-pointer"
+                className="text-[10px] font-bold text-primary hover:underline transition-all cursor-pointer"
               >
                 {isEditing ? 'Save Focus' : 'Edit Focus'}
               </button>
@@ -115,10 +115,10 @@ export default function Profile() {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   rows={3}
-                  className="w-full bg-[#171C2A] border border-white/10 rounded-xl p-3 text-xs text-silver placeholder-fog resize-none outline-none focus:border-white/20 transition-colors"
+                  className="w-full bg-secondary border border-white/10 rounded-xl p-3 text-xs text-muted-foreground placeholder-fog resize-none outline-none focus:border-white/20 transition-colors"
                 />
               ) : (
-                <p className="text-xs text-silver leading-relaxed font-sans">{bio}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed font-sans">{bio}</p>
               )}
             </CardContent>
           </Card>
@@ -127,40 +127,40 @@ export default function Profile() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             
             {/* Task Completion Rate (AreaChart) */}
-            <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+            <Card className="bg-surface border border-border rounded-xl shadow-none">
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory flex items-center gap-1.5">
-                  <CheckCircle size={13} className="text-[#7FA38A]" />
+                <CardTitle className="text-xs uppercase tracking-wider font-semibold text-foreground flex items-center gap-1.5">
+                  <CheckCircle size={13} className="text-primary" />
                   Task Delivery Rate
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={PERFORMANCE_DATA} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <XAxis dataKey="month" stroke="#8A9099" fontSize={9} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#8A9099" fontSize={9} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={9} tickLine={false} axisLine={false} />
+                    <YAxis stroke="var(--muted-foreground)" fontSize={9} tickLine={false} axisLine={false} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#171C2A', borderColor: 'rgba(255,255,255,0.06)', borderRadius: '8px' }}
-                      labelStyle={{ fontSize: '10px', color: '#F5F1E8', fontWeight: 600 }}
-                      itemStyle={{ fontSize: '10px', color: '#B8BDC7' }}
+                      contentStyle={{ backgroundColor: 'var(--secondary)', borderColor: 'var(--border)', borderRadius: '8px' }}
+                      labelStyle={{ fontSize: '10px', color: 'var(--foreground)', fontWeight: 600 }}
+                      itemStyle={{ fontSize: '10px', color: 'var(--muted-foreground)' }}
                     />
                     <defs>
                       <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#7FA38A" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#7FA38A" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <Area type="monotone" dataKey="onTimeRate" stroke="#7FA38A" strokeWidth={1.5} fillOpacity={1} fill="url(#colorRate)" />
+                    <Area type="monotone" dataKey="onTimeRate" stroke="var(--primary)" strokeWidth={1.5} fillOpacity={1} fill="url(#colorRate)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* Billable Hour Utilization (PieChart) */}
-            <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+            <Card className="bg-surface border border-border rounded-xl shadow-none">
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory flex items-center gap-1.5">
-                  <TrendingUp size={13} className="text-[#B89B6A]" />
+                <CardTitle className="text-xs uppercase tracking-wider font-semibold text-foreground flex items-center gap-1.5">
+                  <TrendingUp size={13} className="text-warning" />
                   Hour Utilization
                 </CardTitle>
               </CardHeader>
@@ -181,14 +181,14 @@ export default function Profile() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#171C2A', borderColor: 'rgba(255,255,255,0.06)', borderRadius: '8px' }}
-                      itemStyle={{ fontSize: '9px', color: '#B8BDC7' }}
+                      contentStyle={{ backgroundColor: 'var(--secondary)', borderColor: 'var(--border)', borderRadius: '8px' }}
+                      itemStyle={{ fontSize: '9px', color: 'var(--muted-foreground)' }}
                     />
                     <Legend
                       verticalAlign="bottom"
                       height={36}
                       iconSize={8}
-                      formatter={(value) => <span className="text-[9px] text-fog">{value}</span>}
+                      formatter={(value) => <span className="text-[9px] text-muted-foreground">{value}</span>}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -203,38 +203,38 @@ export default function Profile() {
         <div className="space-y-6">
           
           {/* AI Advisor Panel */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none relative overflow-hidden">
+          <Card className="bg-surface border border-border rounded-xl shadow-none relative overflow-hidden">
             <TextureOverlay texture="dots" opacity={0.08} />
             <CardHeader className="relative z-10 flex flex-row items-center gap-2 pb-2">
-              <Sparkles size={14} className="text-[#B89B6A] animate-pulse" />
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">Hermes Advisor</CardTitle>
+              <Sparkles size={14} className="text-warning animate-pulse" />
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-foreground">Hermes Advisor</CardTitle>
             </CardHeader>
             <CardContent className="relative z-10 space-y-4">
-              <div className="flex items-start gap-3 p-3 bg-white/2 border border-white/5 rounded-xl">
-                <Bot size={14} className="text-[#7FA38A] shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 bg-white/2 border border-border rounded-xl">
+                <Bot size={14} className="text-primary shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <p className="text-[11px] font-bold text-ivory">Delivery Performance</p>
-                  <p className="text-[11px] text-silver leading-relaxed">
-                    Your task on-time delivery is at <span className="text-[#7FA38A] font-semibold">98%</span>. Continue prioritizing tasks under active projects to secure a perfect score this cycle.
+                  <p className="text-[11px] font-bold text-foreground">Delivery Performance</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Your task on-time delivery is at <span className="text-primary font-semibold">98%</span>. Continue prioritizing tasks under active projects to secure a perfect score this cycle.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 bg-white/2 border border-white/5 rounded-xl">
-                <TrendingUp size={14} className="text-[#B89B6A] shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 bg-white/2 border border-border rounded-xl">
+                <TrendingUp size={14} className="text-warning shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <p className="text-[11px] font-bold text-ivory">Utilization Optimization</p>
-                  <p className="text-[11px] text-silver leading-relaxed">
-                    Unbilled support time currently uses <span className="text-[#B89B6A] font-semibold">24%</span> of your weekly capacity. I recommend setting up workflow automation triggers to reduce manual triage.
+                  <p className="text-[11px] font-bold text-foreground">Utilization Optimization</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Unbilled support time currently uses <span className="text-warning font-semibold">24%</span> of your weekly capacity. I recommend setting up workflow automation triggers to reduce manual triage.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 bg-white/2 border border-white/5 rounded-xl">
+              <div className="flex items-start gap-3 p-3 bg-white/2 border border-border rounded-xl">
                 <Award size={14} className="text-purple-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <p className="text-[11px] font-bold text-ivory">Operational Excellence</p>
-                  <p className="text-[11px] text-silver leading-relaxed">
+                  <p className="text-[11px] font-bold text-foreground">Operational Excellence</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
                     You have successfully guided the onboarding of all workspaces. Consider upgrading the setup kit templates to further accelerate future client integrations.
                   </p>
                 </div>
@@ -243,22 +243,22 @@ export default function Profile() {
           </Card>
 
           {/* User Roles & Permissions Info */}
-          <Card className="bg-[#111522] border border-white/5 rounded-xl shadow-none">
+          <Card className="bg-surface border border-border rounded-xl shadow-none">
             <CardHeader>
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-ivory">System Permission Profile</CardTitle>
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-foreground">System Permission Profile</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex items-center justify-between text-xs py-2 border-b border-white/5">
-                <span className="text-fog">Active Workspace</span>
-                <span className="text-ivory font-medium">{workspace?.name ?? 'AS Mobbin'}</span>
+                <span className="text-muted-foreground">Active Workspace</span>
+                <span className="text-foreground font-medium">{workspace?.name ?? 'AS Mobbin'}</span>
               </div>
               <div className="flex items-center justify-between text-xs py-2 border-b border-white/5">
-                <span className="text-fog">Workspace Tier</span>
-                <span className="text-ivory font-semibold capitalize">{workspace?.tier ?? 'starter'}</span>
+                <span className="text-muted-foreground">Workspace Tier</span>
+                <span className="text-foreground font-semibold capitalize">{workspace?.tier ?? 'starter'}</span>
               </div>
               <div className="flex items-center justify-between text-xs py-2">
-                <span className="text-fog">Role Scope</span>
-                <span className="text-ivory font-medium capitalize">{user?.role ?? 'Owner'}</span>
+                <span className="text-muted-foreground">Role Scope</span>
+                <span className="text-foreground font-medium capitalize">{user?.role ?? 'Owner'}</span>
               </div>
             </CardContent>
           </Card>

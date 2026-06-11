@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import type { Approval, ApprovalStatus } from '@/lib/types';
+import type { Approval, ApprovalStatus, PortalMessage } from '@/lib/types';
 
 export function usePortalData() {
   const params = useParams();
@@ -13,6 +13,7 @@ export function usePortalData() {
   const [clientEmail, setClientEmail] = useState('');
   const [isExpired, setIsExpired] = useState(false);
   const [triggerFetch, setTriggerFetch] = useState(0);
+  const [messages, setMessages] = useState<PortalMessage[]>([]);
 
   function refresh() {
     setTriggerFetch(prev => prev + 1);
@@ -40,6 +41,10 @@ export function usePortalData() {
           setPortalData(data);
           setNeedsVerification(false);
           setIsExpired(false);
+          fetch(`/api/portal/messages?token=${token}`)
+            .then(r => r.ok ? r.json() : [])
+            .then((msgs: PortalMessage[]) => setMessages(msgs))
+            .catch(() => {});
         } else {
           setPortalData(null);
         }
@@ -77,6 +82,7 @@ export function usePortalData() {
     tickets: portalData?.tickets ?? [],
     proposals: portalData?.proposals ?? [],
     scopes: portalData?.scopes ?? [],
+    messages,
     refresh,
   };
 }

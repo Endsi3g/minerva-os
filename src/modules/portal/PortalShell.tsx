@@ -90,6 +90,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     { label: t.portal.timeline.tabLabel,     path: 'timeline',     scope: null },
     { label: t.app.sidebar.tickets,          path: 'tickets',      scope: 'tickets' },
     { label: t.app.sidebar.nps,              path: 'nps',          scope: 'nps' },
+    { label: t.portal.messages.tabLabel,     path: 'messages',     scope: null },
   ];
 
   // Block unauthorized direct URL access

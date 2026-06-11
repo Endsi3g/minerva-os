@@ -1,4 +1,4 @@
-import type { Lead, Client, Project, Task, Approval, FileAsset, Invoice, Retainer, Milestone, ClientPortalToken, DecisionEntry, PortalNotification, DocumentFolder, MarketplaceItem } from './types';
+import type { Lead, Client, Project, Task, Approval, FileAsset, Invoice, Retainer, Milestone, ClientPortalToken, DecisionEntry, PortalNotification, PortalMessage, DocumentFolder, MarketplaceItem } from './types';
 
 
 export const MOCK_LEADS: Lead[] = [
@@ -321,6 +321,8 @@ export const MOCK_PORTAL_TOKENS: ClientPortalToken[] = [
   { token: 'demo-stratum', clientId: 'c1', clientName: 'Stratum Labs',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices'] },
   { token: 'demo-volta',   clientId: 'c2', clientName: 'Volta Interactive', expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices', 'reports'] },
   { token: 'demo-solara',  clientId: 'c8', clientName: 'Solara Health',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices'] },
+  // Universal demo token — full access, all scopes
+  { token: 'demo-client',  clientId: 'c1', clientName: 'Stratum Labs',     expiresAt: '2027-12-31T23:59:59Z', scopes: ['approvals', 'files', 'invoices', 'proposals', 'reports', 'tickets', 'nps'] },
 ];
 
 // ── V2.7 — Decision Journal ───────────────────────────────────────────────────
@@ -382,6 +384,60 @@ export const MOCK_PROPOSALS = [
 ];
 
 
+
+// V3.0 — Portal Messages
+export const MOCK_MESSAGES: PortalMessage[] = [
+  {
+    id: 'msg1',
+    clientId: 'c1',
+    workspaceId: 'mock-workspace-123',
+    fromWorkspace: true,
+    authorName: 'Uprising Studio',
+    body: 'Welcome to your Minerva client portal, Felix. This is your central hub to track all active projects, review deliverables, and stay aligned with our team. Feel free to reach out directly through this message thread.',
+    sentAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+    readAt: new Date(Date.now() - 13 * 86400000).toISOString(),
+  },
+  {
+    id: 'msg2',
+    clientId: 'c1',
+    workspaceId: 'mock-workspace-123',
+    fromWorkspace: true,
+    authorName: 'Uprising Studio',
+    body: 'The Logo Suite v3 is now ready for your review in the Deliverables tab. We have iterated on the wordmark weight and refined the colour palette as discussed in our last call. Please share your feedback by end of week.',
+    sentAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    readAt: null,
+  },
+  {
+    id: 'msg3',
+    clientId: 'c1',
+    workspaceId: 'mock-workspace-123',
+    fromWorkspace: true,
+    authorName: 'Uprising Studio',
+    body: 'Just a heads-up — the Brand Guidelines PDF is now available in the Files section. The document covers typography, colour tokens, spacing rules, and logo usage guidelines for all your internal teams.',
+    sentAt: new Date(Date.now() - 6 * 86400000).toISOString(),
+    readAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: 'msg4',
+    clientId: 'c1',
+    workspaceId: 'mock-workspace-123',
+    fromWorkspace: false,
+    authorName: 'Felix Braun',
+    body: 'Thank you for the update. We have reviewed the guidelines internally and overall they look great. We will send consolidated feedback on the logo suite by Thursday.',
+    sentAt: new Date(Date.now() - 4 * 86400000).toISOString(),
+    readAt: new Date(Date.now() - 4 * 86400000).toISOString(),
+  },
+  {
+    id: 'msg5',
+    clientId: 'c1',
+    workspaceId: 'mock-workspace-123',
+    fromWorkspace: true,
+    authorName: 'Uprising Studio',
+    body: 'Invoice INV-2026-041 is due on June 15. You can view and pay it directly in the Billing tab. If you have any questions about the line items, do not hesitate to reach out.',
+    sentAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+    readAt: null,
+  },
+];
 
 // V3.0 — Marketplace
 export const MOCK_MARKETPLACE_ITEMS: MarketplaceItem[] = [

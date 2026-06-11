@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { CheckCircle2, Clock, AlertCircle, ArrowRight, Sparkles, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, ArrowRight, Sparkles, RefreshCw, CalendarClock, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePortalData } from './usePortalData';
 import { useLang } from '@/i18n';
@@ -15,13 +15,13 @@ const fadeInUp = {
   }),
 };
 
-function ProgressBar({ value, max, color = '#7FA38A' }: { value: number; max: number; color?: string }) {
+function ProgressBar({ value, max }: { value: number; max: number }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div className="w-full h-1 rounded-full overflow-hidden bg-muted">
       <div
-        className="h-full rounded-full transition-all duration-700"
-        style={{ width: `${pct}%`, backgroundColor: color }}
+        className="h-full rounded-full transition-all duration-700 bg-primary"
+        style={{ width: `${pct}%` }}
       />
     </div>
   );
@@ -31,8 +31,9 @@ export default function PortalOverview() {
   const { t, lang } = useLang();
   const pc = t.portal.common;
   const po = t.portal.overview;
+  const [taskFilter, setTaskFilter] = useState<'all' | 'in_progress' | 'overdue'>('all');
 
-  const { token, isValid, clientName, projects, tasks, approvals, invoices, milestones, proposals } = usePortalData();
+  const { token, isValid, clientName, projects, tasks, approvals, invoices, milestones, proposals, messages } = usePortalData();
 
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryGenerating, setSummaryGenerating] = useState(false);
@@ -58,10 +59,6 @@ export default function PortalOverview() {
     { label: po.stats.pendingApprovals,  value: String(pendingApprovals), sub: po.stats.pendingApprovalsSub, color: pendingApprovals > 0 ? 'text-amber-600' : 'text-emerald-600' },
     { label: po.stats.outstanding,        value: outstandingTotal > 0 ? `$${outstandingTotal.toLocaleString()}` : '—', sub: po.stats.outstandingSub, color: outstandingTotal > 0 ? 'text-amber-600' : 'text-emerald-600' },
   ];
-
-  function plural(count: number, single: string, plural: string) {
-    return (count === 1 ? single : plural).replace('{{count}}', String(count));
-  }
 
   async function generateSummary(force = false) {
     if (!token || summaryGenerating) return;
@@ -120,33 +117,155 @@ export default function PortalOverview() {
         ))}
       </div>
 
-      {/* Pending Decisions CTA */}
-      {pendingDecisionsCount > 0 && (
+      {/* ── Task Timeline ─────────────────────────────────────────── */}
+      {tasks.length > 0 && (
         <motion.div custom={4} variants={fadeInUp} initial="hidden" animate="visible">
-          <div
-            className="rounded-[16px] border p-5 space-y-3 border-amber-200 dark:border-amber-800"
-            style={{ backgroundColor: 'rgba(184,155,106,0.04)' }}
-          >
-            <p className="text-sm font-semibold text-amber-600">{po.decisions.title}</p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <CalendarClock size={14} className="text-primary" />
+                {po.taskTimeline.title}
+              </h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{po.taskTimeline.subtitle}</p>
+            </div>
+            <div className="flex items-center gap-1 rounded-xl border border-border bg-surface p-1">
+              {(['all', 'in_progress', 'overdue'] as const).map(f => {
+                const labels: Record<typeof f, string> = {
+                  all: po.taskTimeline.filterAll,
+                  in_progress: po.taskTimeline.filterInProgress,
+                  overdue: po.taskTimeline.filterOverdue,
+                };
+                return (
+                  <button
+                    key={f}
+                    onClick={() => setTaskFilter(f)}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-200 cursor-pointer',
+                      taskFilter === f
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {labels[f]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {(() => {
+            const now = Date.now();
+            const filtered = tasks.filter((task: any) => {
+              if (taskFilter === 'in_progress') return task.status === 'in_progress' || task.status === 'review';
+              if (taskFilter === 'overdue') return task.dueDate && new Date(task.dueDate).getTime() < now && task.status !== 'done';
+              return task.status !== 'done';
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <div className="py-8 text-center">
+                  <p className="text-xs text-muted-foreground">{po.taskTimeline.noTasks}</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-2">
+                {filtered.map((task: any) => {
+                  const daysLeft = task.dueDate
+                    ? Math.ceil((new Date(task.dueDate).getTime() - now) / 86400000)
+                    : null;
+                  const isOverdue = daysLeft !== null && daysLeft < 0;
+                  const isNear = daysLeft !== null && daysLeft >= 0 && daysLeft <= 3;
+                  const project = projects.find((p: any) => p.id === task.projectId || p._id === task.projectId);
+
+                  const statusColor = task.status === 'review' ? 'text-primary' :
+                    task.status === 'in_progress' ? 'text-warning' :
+                    task.status === 'done' ? 'text-success' : 'text-muted-foreground';
+
+                  const statusDot = task.status === 'review' ? 'bg-primary' :
+                    task.status === 'in_progress' ? 'bg-warning' :
+                    task.status === 'done' ? 'bg-success' : 'bg-muted-foreground';
+
+                  return (
+                    <div
+                      key={task.id || task._id}
+                      className="flex items-center gap-3 px-4 py-3 rounded-[12px] border border-border bg-card"
+                    >
+                      <span className={cn('h-2 w-2 rounded-full shrink-0', statusDot)} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground truncate">{task.title}</p>
+                        <p className="text-[11px] text-muted-foreground">{project?.name ?? '...'}</p>
+                      </div>
+                      {!task.assignee && (
+                        <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-border text-muted-foreground">
+                          {po.taskTimeline.unassigned}
+                        </span>
+                      )}
+                      {daysLeft !== null && (
+                        <span className={cn('text-[11px] shrink-0 font-medium tabular-nums', isOverdue ? 'text-destructive' : isNear ? 'text-warning' : statusColor)}>
+                          {isOverdue
+                            ? `${Math.abs(daysLeft)}${po.taskTimeline.overdueSuffix}`
+                            : daysLeft === 0
+                            ? po.taskTimeline.today
+                            : `${po.taskTimeline.etaLabel} ${new Date(task.dueDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' })}`}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </motion.div>
+      )}
+
+      {/* ── Awaiting from Client ──────────────────────────────────── */}
+      {pendingDecisionsCount > 0 && (
+        <motion.div custom={5} variants={fadeInUp} initial="hidden" animate="visible">
+          <div className="rounded-[16px] border border-warning/30 p-5 space-y-3 bg-warning/5">
+            <div className="flex items-center gap-2">
+              <Clock size={13} className="text-warning" />
+              <p className="text-sm font-semibold text-warning">{po.awaitingClient.title}</p>
+            </div>
+            <p className="text-[11px] text-muted-foreground -mt-1">{po.awaitingClient.subtitle}</p>
             <div className="space-y-2">
-              {pendingApprovals > 0 && (
-                <Link href={`/portal/${token}/deliverables`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card">
-                  <span className="text-sm text-foreground">{plural(pendingApprovals, po.decisions.pendingApprovals, po.decisions.pendingApprovalsPlural)}</span>
-                  <ArrowRight size={13} className="text-amber-600" />
+              {approvals.filter((a: any) => a.status === 'pending').map((a: any) => (
+                <Link
+                  key={a.id || a._id}
+                  href={`/portal/${token}/deliverables`}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card border border-border"
+                >
+                  <span className="text-sm text-foreground">
+                    {po.awaitingClient.approvalItem.replace('{{name}}', a.name || a.title || 'deliverable')}
+                  </span>
+                  <ArrowRight size={13} className="text-warning shrink-0" />
                 </Link>
-              )}
-              {outstandingInvoices.length > 0 && (
-                <Link href={`/portal/${token}/invoices`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card">
-                  <span className="text-sm text-foreground">{plural(outstandingInvoices.length, po.decisions.unpaidInvoices, po.decisions.unpaidInvoicesPlural)}</span>
-                  <ArrowRight size={13} className="text-amber-600" />
+              ))}
+              {outstandingInvoices.map((inv: any) => (
+                <Link
+                  key={inv.id || inv._id}
+                  href={`/portal/${token}/invoices`}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card border border-border"
+                >
+                  <span className="text-sm text-foreground">
+                    {po.awaitingClient.invoiceItem.replace('{{number}}', inv.number || inv.invoiceNumber || inv.id)}
+                  </span>
+                  <ArrowRight size={13} className="text-warning shrink-0" />
                 </Link>
-              )}
-              {unsignedProposals > 0 && (
-                <Link href={`/portal/${token}/proposals`} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card">
-                  <span className="text-sm text-foreground">{plural(unsignedProposals, po.decisions.openProposals, po.decisions.openProposalsPlural)}</span>
-                  <ArrowRight size={13} className="text-amber-600" />
+              ))}
+              {(proposals || []).filter((p: any) => p.status === 'sent').map((prop: any) => (
+                <Link
+                  key={prop.id || prop._id}
+                  href={`/portal/${token}/proposals`}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-200 hover:bg-accent bg-card border border-border"
+                >
+                  <span className="text-sm text-foreground">
+                    {po.awaitingClient.proposalItem.replace('{{title}}', prop.title || 'proposal')}
+                  </span>
+                  <ArrowRight size={13} className="text-warning shrink-0" />
                 </Link>
-              )}
+              ))}
             </div>
           </div>
         </motion.div>
@@ -231,8 +350,61 @@ export default function PortalOverview() {
         </motion.div>
       )}
 
+      {/* ── Announcements ─────────────────────────────────────────── */}
+      {(() => {
+        const announcements = messages.filter((m: any) => m.fromWorkspace).slice(-3).reverse();
+        if (announcements.length === 0) return null;
+        return (
+          <motion.div custom={8} variants={fadeInUp} initial="hidden" animate="visible">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <MessageSquare size={14} className="text-primary" />
+                {po.announcements.title}
+              </h2>
+              <Link
+                href={`/portal/${token}/messages`}
+                className="text-[11px] text-primary hover:underline flex items-center gap-1"
+              >
+                {po.announcements.seeAll}
+                <ArrowRight size={10} />
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {announcements.map((msg: any) => {
+                const isNew = !msg.readAt;
+                const days = Math.floor((Date.now() - new Date(msg.sentAt).getTime()) / 86400000);
+                const dateStr = days === 0
+                  ? (lang === 'fr' ? "Aujourd'hui" : 'Today')
+                  : days === 1
+                  ? (lang === 'fr' ? 'Hier' : 'Yesterday')
+                  : new Date(msg.sentAt).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' });
+                return (
+                  <div
+                    key={msg.id}
+                    className="rounded-[14px] border border-border bg-card p-4 space-y-2"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold text-foreground">{msg.authorName}</span>
+                        {isNew && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                            {t.portal.messages.newBadge}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0">{dateStr}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{msg.body}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        );
+      })()}
+
       {/* Monthly Summary */}
-      <motion.div custom={7} variants={fadeInUp} initial="hidden" animate="visible">
+      <motion.div custom={10} variants={fadeInUp} initial="hidden" animate="visible">
         <div className="rounded-[16px] border border-border bg-card p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">

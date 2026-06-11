@@ -5,6 +5,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [8.2.0] — 2026-06-11
+
+### Added
+
+- **Client Portal — Task Timeline**: New section in PortalOverview showing all project tasks with ETA badges (overdue / near / on-track), filter tabs (All / In Progress / Overdue), and assignee status tags. Clients can now see exactly when deliverables will be ready.
+- **Client Portal — Awaiting from Client**: Replaced the compact "Pending Decisions" CTA with a fully detailed section showing every specific item requiring client action — each pending approval by name, each outstanding invoice by number, each unsigned proposal by title — all with direct links to the relevant tab.
+- **Client Portal — Announcements panel**: New section in PortalOverview showing the last 3 workspace messages with unread badges, author, relative date, and truncated body. Links to the full Messages tab.
+- **Client Portal — Messages tab** (`src/modules/portal/PortalMessages.tsx`): Full-page thread view — chronological message bubbles, workspace messages on the left, client replies on the right, unread "New" badges, relative timestamps. Empty state included.
+- **`/portal/[token]/messages` route**: New portal page wrapping PortalMessages.
+- **`demo-client` portal token**: Universal demo token (`demo-client`) pointing to Stratum Labs with all scopes enabled — approvals, files, invoices, proposals, reports, tickets, nps. Accessible at `/portal/demo-client`.
+- **`MOCK_MESSAGES`** (`src/lib/mock-data.ts`): 5 realistic portal messages (welcome, logo review ready, brand guidelines upload, client reply, invoice notice) with `fromWorkspace`, `readAt`, and `sentAt` fields.
+- **`PortalMessage` type** (`src/lib/types.ts`): New interface with `id`, `clientId`, `workspaceId`, `fromWorkspace`, `authorName`, `body`, `sentAt`, `readAt`.
+- **`/api/portal/messages` route**: New GET endpoint returning portal messages filtered by token/clientId. Falls back to MOCK_MESSAGES when no Supabase credentials.
+- **MCP tools** (`minerva-mcp/tools/reports.ts`): Two new tools — `sla_audit` (runs SLA risk checks across contracts, projects, and invoices; returns violations grouped by severity + health score) and `list_contracts` (lists all contracts with status, client, value, and expiry).
+- **i18n keys**: `portal.overview.taskTimeline`, `portal.overview.awaitingClient`, `portal.overview.announcements`, `portal.messages` added in EN and FR.
+
+### Changed
+
+- **usePortalData hook**: Now fetches messages from `/api/portal/messages` after successful data load and exposes `messages: PortalMessage[]` in return value.
+- **PortalShell**: "Messages" tab added to `PORTAL_TABS` (no scope restriction — always visible).
+- **IntelligenceHub.tsx**: Full semantic token migration — `text-fog`, `text-silver`, `text-ivory` replaced with semantic Tailwind classes; all inline hex colors (`#8A9099`, `#7FA38A`, `#B89B6A`, `#A86A6A`, `#B8BDC7`, `#D8DDE6`) replaced with CSS variables (`var(--muted-foreground)`, `var(--primary)`, `var(--warning)`, `var(--destructive)`, `var(--foreground)`); table row backgrounds use `var(--surface)` / `var(--background)`.
+- **Cockpit.tsx**: Full semantic token migration — `scoreColor()` returns CSS variables; all inline style hex colors and `style={{ color: '#8A9099' }}` converted to semantic classes.
+- **Profile.tsx**: Full semantic token migration — gradient background uses Tailwind semantic classes; chart `stroke`, `stopColor`, tooltip `contentStyle` use CSS variables; Recharts `UTILIZATION_DATA` colors use `var(--primary)` / `var(--warning)`.
+- **Scorecards.tsx**: `scoreColor()` returns CSS variables; all inline hex colors replaced with `var(--primary)`, `var(--warning)`, `var(--destructive)`, `var(--muted-foreground)`, `var(--foreground)`.
+- **PortalTimeline.tsx**: `EVENT_CONFIG` colors migrated from hex to CSS variables (`var(--primary)`, `var(--warning)`, `var(--destructive)`, `var(--muted-foreground)`).
+- **ClientPortalToken type** (`src/lib/types.ts`): `scopes` union extended with `'tickets'` and `'nps'`.
+- **Electron `main.ts`**: `backgroundColor` changed from hardcoded `#0A0D14` to `#ffffff` (theme-neutral; actual background set by app CSS).
+- **`minerva-mobile/package.json`**: Version bumped to 8.2.0.
+
+---
+
 ## [8.1.0] — 2026-06-11
 
 ### Added
