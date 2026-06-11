@@ -1,6 +1,6 @@
 # Minerva OS
 
-![Version](https://img.shields.io/badge/version-8.2.0-sage?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-8.2.1-sage?style=flat-square) ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat-square)
 
 **Minerva OS is the operating system for creative agencies** — one workspace that replaces your CRM, project tracker, client portal, billing software, and AI tools.
 
@@ -239,6 +239,7 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for step-by-step instructions
 
 | Version | Highlights |
 |---|---|
+| **v8.2.1** | Complete semantic token migration — all hardcoded hex values replaced across AgencySetupWizard, ClientSpace, PortalCopilot, SignUp, Workflows, Files, AgentsList; sage primary finalized in light mode |
 | **v8.2.0** | Enhanced client portal (Task Timeline, Awaiting from Client, Announcements, Messages thread), semantic token cleanup across 5+ modules, MCP sla_audit + list_contracts tools |
 | **v8.1.0** | SLA Risk Audit module, Hermes Assistants sidebar, Contracts module, ClientForm/ProjectForm CRUD, Settings redesign, sage accent rollout |
 | **v7.2.0** | Redesigned agency dashboard with widescreen cinematic video hero banner, global breadcrumb navigation, and folders vault system |

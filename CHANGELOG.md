@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [8.2.1] — 2026-06-11
+
+### Changed
+
+- **index.css**: Light mode primary accent migrated from indigo (`#4F46E5`) to sage (`#7FA38A`); dark mode primary updated to sage tint variants — full visual consistency with v8 design intent.
+- **AppShell.tsx**: Removed last `useState(false)` reference for sidebar collapse — sidebar is now permanently fixed with no state overhead.
+- **AgentsList.tsx**: Semantic token migration — `text-ivory` → `text-foreground`, `text-fog` → `text-muted-foreground`, `text-emerald-600` → `text-primary`, agent status dot uses `bg-primary` for active state.
+- **Files.tsx**: Added category filter tabs (All / Images / Videos / Documents / Archives); `TYPE_CONFIG` migrated to semantic color tokens (`text-primary`, `text-warning`, `text-muted-foreground`); removed `TextAnimate` dependency.
+- **AgencySetupWizard.tsx**: Complete semantic token migration — all 86+ hardcoded hex values replaced with CSS variables (`var(--foreground)`, `var(--background)`, `var(--surface)`, `var(--secondary)`, `var(--border)`, `var(--muted-foreground)`, `var(--primary)`, `var(--warning)`); alpha tints use `color-mix(in srgb, var(--token) X%, transparent)`.
+- **ClientSpace.tsx**: Semantic token migration — metric colors, status background functions, tab active border, health ledger container, SLA alert all use Tailwind semantic utilities.
+- **PortalCopilot.tsx**: All inline style hex values replaced with CSS variables; user message bubble uses `color-mix()` for tinted background.
+- **Workflows.tsx**: `urgencyConfig` hex palette replaced with CSS variables + `color-mix()`; AI suggestions section inline styles migrated.
+- **SignUp.tsx**: Background overlay, error text, step item active/inactive states, input background all migrated to semantic tokens.
+
+---
+
 ## [8.2.0] — 2026-06-11
 
 ### Added
