@@ -949,9 +949,9 @@ function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
   }
 
   const urgencyConfig: Record<string, { color: string; bg: string; border: string }> = {
-    high:   { color: '#A86A6A', bg: 'rgba(168,106,106,0.10)', border: 'rgba(168,106,106,0.25)' },
-    medium: { color: '#B89B6A', bg: 'rgba(184,155,106,0.10)', border: 'rgba(184,155,106,0.25)' },
-    low:    { color: '#8A9099', bg: 'rgba(138,144,153,0.10)', border: 'rgba(138,144,153,0.20)' },
+    high:   { color: 'var(--destructive)', bg: 'color-mix(in srgb, var(--destructive) 10%, transparent)', border: 'color-mix(in srgb, var(--destructive) 25%, transparent)' },
+    medium: { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 10%, transparent)', border: 'color-mix(in srgb, var(--warning) 25%, transparent)' },
+    low:    { color: 'var(--muted-foreground)', bg: 'color-mix(in srgb, var(--muted-foreground) 10%, transparent)', border: 'color-mix(in srgb, var(--muted-foreground) 20%, transparent)' },
   };
 
   return (
@@ -972,14 +972,14 @@ function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
           <button
             onClick={loadSuggestions}
             className="px-4 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-white/8"
-            style={{ border: '1px solid rgba(255,255,255,0.10)', color: '#B8BDC7' }}
+            style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
           >
             {sg.retry}
           </button>
         </div>
       ) : suggestions.length === 0 ? (
         <div className="rounded-2xl border border-white/6 p-12 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
-          <Sparkles size={22} className="mx-auto mb-3 opacity-30" style={{ color: '#8A9099' }} />
+          <Sparkles size={22} className="mx-auto mb-3 opacity-30" style={{ color: 'var(--muted-foreground)' }} />
           <p className="text-sm text-fog">{sg.empty}</p>
         </div>
       ) : (
@@ -998,8 +998,8 @@ function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
                 className="rounded-2xl border p-5 flex items-start gap-4"
                 style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}
               >
-                <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(184,189,199,0.08)' }}>
-                  <Sparkles size={14} style={{ color: '#B8BDC7' }} />
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--muted-foreground) 8%, transparent)' }}>
+                  <Sparkles size={14} style={{ color: 'var(--muted-foreground)' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -1012,8 +1012,8 @@ function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
                     </span>
                   </div>
                   <p className="text-xs text-fog leading-relaxed">{s.rationale}</p>
-                  <p className="text-[11px] mt-1.5" style={{ color: '#8A9099' }}>
-                    {sg.trigger}: <span style={{ color: '#B8BDC7' }}>{s.trigger}</span>
+                  <p className="text-[11px] mt-1.5" style={{ color: 'var(--muted-foreground)' }}>
+                    {sg.trigger}: <span style={{ color: 'var(--foreground)' }}>{s.trigger}</span>
                   </p>
                 </div>
                 <button
@@ -1021,8 +1021,8 @@ function SuggestedWorkflows({ workspaceId }: { workspaceId: string }) {
                   disabled={isApplying || isApplied}
                   className="shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition-all disabled:opacity-50 cursor-pointer"
                   style={isApplied
-                    ? { backgroundColor: 'rgba(127,163,138,0.12)', border: '1px solid rgba(127,163,138,0.25)', color: '#7FA38A' }
-                    : { backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#B8BDC7' }}
+                    ? { backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--primary) 25%, transparent)', color: 'var(--primary)' }
+                    : { backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--muted-foreground)' }}
                 >
                   {isApplied ? <><Check size={11} className="inline mr-1" />{sg.applied}</> : isApplying ? sg.applying : sg.apply}
                 </button>

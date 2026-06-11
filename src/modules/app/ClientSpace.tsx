@@ -20,16 +20,16 @@ export default function ClientSpace() {
 
   // Health metric cards
   const metrics = [
-    { label: 'Avg Approval Speed', value: `${healthStats.avgApprovalDays} Days`, desc: 'Target: < 2 days', status: 'optimal', color: 'text-[#7FA38A]' },
-    { label: 'Silence Index', value: `${healthStats.silenceIndex} Days`, desc: 'Last portal access', status: 'good', color: 'text-[#B89B6A]' },
-    { label: 'NPS Satisfaction', value: `${healthStats.npsScore} / 10`, desc: '14 client responses', status: 'excellent', color: 'text-[#7FA38A]' },
-    { label: 'Active Issues', value: String(healthStats.openTickets), desc: 'Pending resolution', status: 'warning', color: 'text-[#A86A6A]' },
+    { label: 'Avg Approval Speed', value: `${healthStats.avgApprovalDays} Days`, desc: 'Target: < 2 days', status: 'optimal', color: 'text-primary' },
+    { label: 'Silence Index', value: `${healthStats.silenceIndex} Days`, desc: 'Last portal access', status: 'good', color: 'text-warning' },
+    { label: 'NPS Satisfaction', value: `${healthStats.npsScore} / 10`, desc: '14 client responses', status: 'excellent', color: 'text-primary' },
+    { label: 'Active Issues', value: String(healthStats.openTickets), desc: 'Pending resolution', status: 'warning', color: 'text-destructive' },
   ];
 
   const getStatusBg = (status: string) => {
-    if (status === 'warning') return 'border-[#A86A6A]/20 bg-[#A86A6A]/5';
-    if (status === 'good') return 'border-[#B89B6A]/20 bg-[#B89B6A]/5';
-    return 'border-[#7FA38A]/20 bg-[#7FA38A]/5';
+    if (status === 'warning') return 'border-destructive/20 bg-destructive/5';
+    if (status === 'good') return 'border-warning/20 bg-warning/5';
+    return 'border-primary/20 bg-primary/5';
   };
 
   return (
@@ -49,10 +49,10 @@ export default function ClientSpace() {
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 -mb-px transition-colors cursor-pointer',
-                isActive ? 'border-[#7FA38A] text-ivory' : 'border-transparent text-fog hover:text-silver'
+                isActive ? 'border-primary text-foreground' : 'border-transparent text-fog hover:text-silver'
               )}
             >
-              <Icon size={14} className={isActive ? 'text-[#7FA38A]' : 'text-fog'} />
+              <Icon size={14} className={isActive ? 'text-primary' : 'text-fog'} />
               <span>{tab.label}</span>
             </button>
           );
@@ -82,17 +82,17 @@ export default function ClientSpace() {
             </div>
 
             {/* Detailed Health Ledger */}
-            <div className="border border-white/5 bg-[#111522] rounded-2xl p-6">
+            <div className="border border-border bg-surface rounded-2xl p-6">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-ivory mb-4 flex items-center gap-2">
-                <Activity size={13} className="text-[#7FA38A]" />
+                <Activity size={13} className="text-primary" />
                 Client Engagement Sentiment & SLA Analysis
               </h4>
 
               <div className="space-y-3">
                 {[
-                  { client: 'Acme Corp', silence: '2d ago', approvals: '1.2d avg', sentiment: 'Positive', nps: '9.2', status: 'healthy', color: 'text-[#7FA38A]' },
-                  { client: 'Bolt Tech', silence: '8d ago', approvals: '3.4d avg', sentiment: 'At Risk', nps: '5.8', status: 'at-risk', color: 'text-[#A86A6A]' },
-                  { client: 'Zenith Lab', silence: '1d ago', approvals: '0.9d avg', sentiment: 'Highly Satisfied', nps: '10.0', status: 'healthy', color: 'text-[#7FA38A]' }
+                  { client: 'Acme Corp', silence: '2d ago', approvals: '1.2d avg', sentiment: 'Positive', nps: '9.2', status: 'healthy', color: 'text-primary' },
+                  { client: 'Bolt Tech', silence: '8d ago', approvals: '3.4d avg', sentiment: 'At Risk', nps: '5.8', status: 'at-risk', color: 'text-destructive' },
+                  { client: 'Zenith Lab', silence: '1d ago', approvals: '0.9d avg', sentiment: 'Highly Satisfied', nps: '10.0', status: 'healthy', color: 'text-primary' }
                 ].map((row, idx) => (
                   <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white/2 hover:bg-white/4 border border-white/5 rounded-xl transition-all">
                     <div className="flex items-center gap-3">
@@ -109,7 +109,7 @@ export default function ClientSpace() {
                         <p className="text-[10px] text-fog">Sentiment</p>
                         <p className={cn("text-xs font-semibold", row.color)}>{row.sentiment}</p>
                       </div>
-                      <div className="bg-[#171C2A] border border-white/5 rounded-lg px-2.5 py-1 text-center shrink-0">
+                      <div className="bg-secondary border border-border rounded-lg px-2.5 py-1 text-center shrink-0">
                         <p className="text-[9px] text-fog">NPS Score</p>
                         <p className={cn("text-xs font-mono font-bold", row.color)}>{row.nps}</p>
                       </div>
@@ -120,8 +120,8 @@ export default function ClientSpace() {
             </div>
 
             {/* SLA Policy Warning */}
-            <div className="p-4 rounded-xl border border-[#B89B6A]/20 bg-[#B89B6A]/5 flex items-start gap-3">
-              <AlertCircle size={15} className="text-[#B89B6A] shrink-0 mt-0.5" />
+            <div className="p-4 rounded-xl border border-warning/20 bg-warning/5 flex items-start gap-3">
+              <AlertCircle size={15} className="text-warning shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-semibold text-ivory">SLA Threshold Alert</p>
                 <p className="text-[11px] text-silver mt-0.5 leading-relaxed">

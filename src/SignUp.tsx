@@ -97,7 +97,7 @@ export default function SignUp() {
         </video>
         
         {/* Glassmorphic overlay panel */}
-        <div className="absolute inset-0 bg-[#0A0D14]/40 backdrop-blur-sm z-0" />
+        <div className="absolute inset-0 bg-background/40 backdrop-blur-sm z-0" />
 
         <motion.div
           className="relative z-10 w-full max-w-xs space-y-8"
@@ -207,7 +207,7 @@ export default function SignUp() {
             </InputGroup>
             <p className="text-xs text-white/30 pl-1 -mt-2">{s.passwordHint}</p>
 
-            {error && <p className="text-sm text-[#A86A6A] px-1">{error}</p>}
+            {error && <p className="text-sm text-destructive px-1">{error}</p>}
 
             <button
               type="submit"
@@ -241,14 +241,14 @@ function StepItem({ number, text, active = false }: { number: number; text: stri
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 w-full',
         active
-          ? 'bg-[#F5F1E8] text-[#0A0D14] font-medium shadow-[0_4px_20px_rgba(245,241,232,0.15)]'
-          : 'bg-[#111522]/40 backdrop-blur-md text-[#B8BDC7] border border-white/5',
+          ? 'bg-foreground text-background font-medium shadow-[0_4px_20px_rgba(245,241,232,0.15)]'
+          : 'bg-surface/40 backdrop-blur-md text-muted-foreground border border-white/5',
       )}
     >
       <span
         className={cn(
           'w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0',
-          active ? 'bg-[#0A0D14] text-[#F5F1E8]' : 'bg-white/5 text-[#8A9099]',
+          active ? 'bg-background text-foreground' : 'bg-white/5 text-muted-foreground',
         )}
       >
         {number}
@@ -289,7 +289,7 @@ function InputGroup({ label, placeholder, type, value, onChange, children }: Inp
           placeholder={placeholder}
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full bg-[#1A1A1A] border-none rounded-xl h-11 px-4 text-white placeholder:text-white/20 focus:ring-2 focus:ring-white/20 focus:outline-none transition-all text-sm"
+          className="w-full bg-surface border-none rounded-xl h-11 px-4 text-white placeholder:text-white/20 focus:ring-2 focus:ring-white/20 focus:outline-none transition-all text-sm"
         />
         {children}
       </div>

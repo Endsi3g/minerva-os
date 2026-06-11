@@ -167,7 +167,7 @@ export function AgencySetupWizard() {
   return (
     <div
       className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16 overflow-hidden"
-      style={{ backgroundColor: '#090909' }}
+      style={{ backgroundColor: 'var(--background)' }}
     >
       {/* Background video */}
       {ONBOARDING_BG_VIDEO && (
@@ -211,21 +211,21 @@ export function AgencySetupWizard() {
       {/* Progress bar */}
       <div className="w-full max-w-lg mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px]" style={{ color: '#999999' }}>
+          <span className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
             {ob.stepLabel.replace('{{current}}', String(step)).replace('{{total}}', String(TOTAL_STEPS))}
           </span>
           <button
             onClick={handleSkip}
             className="text-[11px] hover:text-white/70 transition-colors"
-            style={{ color: '#999999' }}
+            style={{ color: 'var(--muted-foreground)' }}
           >
             {ob.skip}
           </button>
         </div>
-        <div className="h-[2px] rounded-full" style={{ backgroundColor: '#262626' }}>
+        <div className="h-[2px] rounded-full" style={{ backgroundColor: 'var(--border)' }}>
           <motion.div
             className="h-full rounded-full"
-            style={{ backgroundColor: '#ffffff' }}
+            style={{ backgroundColor: 'var(--foreground)' }}
             animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
             transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
           />
@@ -235,7 +235,7 @@ export function AgencySetupWizard() {
             <span
               key={i}
               className="text-[10px] flex-1 text-center truncate transition-colors"
-              style={{ color: i + 1 <= step ? '#ffffff' : '#4A5060' }}
+              style={{ color: i + 1 <= step ? 'var(--foreground)' : 'var(--muted-foreground)' }}
             >
               {label}
             </span>
@@ -286,7 +286,7 @@ export function AgencySetupWizard() {
           className={`flex items-center gap-2 text-sm transition-colors ${
             step === 1 ? 'opacity-0 pointer-events-none' : 'hover:text-white/70'
           }`}
-          style={{ color: '#999999' }}
+          style={{ color: 'var(--muted-foreground)' }}
         >
           <ArrowLeft size={14} />
           {ob.back}
@@ -298,8 +298,8 @@ export function AgencySetupWizard() {
             disabled={!canAdvance()}
             className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all"
             style={{
-              backgroundColor: canAdvance() ? '#ffffff' : 'rgba(255,255,255,0.10)',
-              color: canAdvance() ? '#000000' : '#4A5060',
+              backgroundColor: canAdvance() ? 'var(--foreground)' : 'rgba(255,255,255,0.10)',
+              color: canAdvance() ? 'var(--background)' : 'var(--muted-foreground)',
               cursor: canAdvance() ? 'pointer' : 'not-allowed',
             }}
           >
@@ -312,8 +312,8 @@ export function AgencySetupWizard() {
             disabled={isSubmitting}
             className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all"
             style={{
-              backgroundColor: isSubmitting ? 'rgba(255,255,255,0.3)' : '#ffffff',
-              color: '#000000',
+              backgroundColor: isSubmitting ? 'rgba(255,255,255,0.3)' : 'var(--foreground)',
+              color: 'var(--background)',
             }}
           >
             {isSubmitting ? ob.step6.launching : ob.step8.launchCta}
@@ -339,10 +339,10 @@ function StepDiscovery({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--foreground)', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
           {ob.step1.heading}
         </h1>
-        <p className="text-sm" style={{ color: '#999999' }}>{ob.step1.subheading}</p>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{ob.step1.subheading}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -354,16 +354,16 @@ function StepDiscovery({
               onClick={() => patch({ referralSource: opt.value })}
               className="text-left rounded-xl p-4 transition-all"
               style={{
-                backgroundColor: isSelected ? '#1c1c1c' : '#141414',
+                backgroundColor: isSelected ? 'var(--secondary)' : 'var(--surface)',
                 border: isSelected
                   ? '1px solid rgba(255,255,255,0.25)'
-                  : '1px solid #262626',
+                  : '1px solid var(--border)',
               }}
             >
-              <p className="text-sm font-medium" style={{ color: isSelected ? '#ffffff' : '#e7eaf0' }}>
+              <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
                 {opt.label}
               </p>
-              <p className="text-[11px] mt-0.5 leading-snug" style={{ color: '#999999' }}>{opt.desc}</p>
+              <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--muted-foreground)' }}>{opt.desc}</p>
             </button>
           );
         })}
@@ -385,15 +385,15 @@ function StepAgencyName({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--foreground)', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
           {ob.step2.heading}
         </h1>
-        <p className="text-sm" style={{ color: '#999999' }}>{ob.step2.subheading}</p>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{ob.step2.subheading}</p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: '#e7eaf0' }}>{ob.step2.agencyNameLabel}</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--foreground)' }}>{ob.step2.agencyNameLabel}</label>
           <input
             type="text"
             value={state.agencyName}
@@ -402,25 +402,25 @@ function StepAgencyName({
             autoFocus
             className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-colors"
             style={{
-              backgroundColor: '#141414',
-              color: '#ffffff',
-              border: '1px solid #262626',
+              backgroundColor: 'var(--surface)',
+              color: 'var(--foreground)',
+              border: '1px solid var(--border)',
             }}
             onFocus={e => { e.target.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-            onBlur={e => { e.target.style.borderColor = '#262626'; }}
+            onBlur={e => { e.target.style.borderColor = 'var(--border)'; }}
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: '#e7eaf0' }}>{ob.step2.logoLabel}</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--foreground)' }}>{ob.step2.logoLabel}</label>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="w-full rounded-xl px-4 py-3 text-sm transition-colors text-left"
             style={{
-              backgroundColor: '#141414',
-              color: '#999999',
-              border: '1px dashed #262626',
+              backgroundColor: 'var(--surface)',
+              color: 'var(--muted-foreground)',
+              border: '1px dashed var(--border)',
             }}
           >
             {state.logoFile ? state.logoFile.name : ob.step2.logoHint}
@@ -452,10 +452,10 @@ function StepAgencyType({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--foreground)', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
           {ob.step3.heading}
         </h1>
-        <p className="text-sm" style={{ color: '#999999' }}>{ob.step3.subheading}</p>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{ob.step3.subheading}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -468,17 +468,17 @@ function StepAgencyType({
               onClick={() => patch({ agencyType: key as AgencyType })}
               className="text-left rounded-xl p-4 transition-all"
               style={{
-                backgroundColor: isSelected ? '#1c1c1c' : '#141414',
+                backgroundColor: isSelected ? 'var(--secondary)' : 'var(--surface)',
                 border: isSelected
                   ? '1px solid rgba(255,255,255,0.25)'
-                  : '1px solid #262626',
+                  : '1px solid var(--border)',
               }}
             >
-              <Icon size={18} className="mb-2" style={{ color: isSelected ? '#ffffff' : '#999999' }} />
-              <p className="text-sm font-medium" style={{ color: isSelected ? '#ffffff' : '#e7eaf0' }}>
+              <Icon size={18} className="mb-2" style={{ color: 'var(--foreground)' }} />
+              <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
                 {type.label}
               </p>
-              <p className="text-[11px] mt-0.5 leading-snug" style={{ color: '#999999' }}>{type.desc}</p>
+              <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--muted-foreground)' }}>{type.desc}</p>
             </button>
           );
         })}
@@ -490,9 +490,9 @@ function StepAgencyType({
 // ── Step 4: Team size ─────────────────────────────────────────────────────────
 
 const TIER_BADGE_COLORS: Record<string, { backgroundColor: string; color: string }> = {
-  starter: { backgroundColor: 'rgba(127,163,138,0.15)', color: '#7FA38A' },
-  growth:  { backgroundColor: 'rgba(184,155,106,0.15)', color: '#B89B6A' },
-  scale:   { backgroundColor: 'rgba(184,189,199,0.15)', color: '#B8BDC7' },
+  starter: { backgroundColor: 'color-mix(in srgb, var(--primary) 15%, transparent)', color: 'var(--primary)' },
+  growth:  { backgroundColor: 'color-mix(in srgb, var(--warning) 15%, transparent)', color: 'var(--warning)' },
+  scale:   { backgroundColor: 'color-mix(in srgb, var(--muted-foreground) 15%, transparent)', color: 'var(--muted-foreground)' },
 };
 
 function StepTeamSize({
@@ -506,10 +506,10 @@ function StepTeamSize({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--foreground)', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
           {ob.step4.heading}
         </h1>
-        <p className="text-sm" style={{ color: '#999999' }}>{ob.step4.subheading}</p>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{ob.step4.subheading}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -521,16 +521,16 @@ function StepTeamSize({
               onClick={() => patch({ teamSize: opt.value })}
               className="text-left rounded-xl p-4 transition-all"
               style={{
-                backgroundColor: isSelected ? '#1c1c1c' : '#141414',
+                backgroundColor: isSelected ? 'var(--secondary)' : 'var(--surface)',
                 border: isSelected
                   ? '1px solid rgba(255,255,255,0.25)'
-                  : '1px solid #262626',
+                  : '1px solid var(--border)',
               }}
             >
-              <p className="text-lg font-bold" style={{ color: isSelected ? '#ffffff' : '#e7eaf0' }}>
+              <p className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>
                 {opt.label}
               </p>
-              <p className="text-[11px] mt-0.5" style={{ color: '#999999' }}>{opt.desc}</p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--muted-foreground)' }}>{opt.desc}</p>
             </button>
           );
         })}
@@ -544,7 +544,7 @@ function StepTeamSize({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             className="flex items-center gap-2 px-4 py-3 rounded-xl"
-            style={{ backgroundColor: '#141414', border: '1px solid #262626' }}
+            style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)' }}
           >
             <span
               className="text-[11px] font-semibold px-2 py-0.5 rounded-full capitalize"
@@ -552,7 +552,7 @@ function StepTeamSize({
             >
               {derivedTier}
             </span>
-            <span className="text-sm" style={{ color: '#e7eaf0' }}>
+            <span className="text-sm" style={{ color: 'var(--foreground)' }}>
               {ob.step4.tierPreview[derivedTier as keyof typeof ob.step4.tierPreview]}
             </span>
           </motion.div>
@@ -574,12 +574,12 @@ function StepGoals({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--foreground)', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
           {ob.step5.heading}
         </h1>
-        <p className="text-sm" style={{ color: '#999999' }}>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
           {ob.step5.subheading}
-          <span className="ml-1" style={{ color: '#666' }}>({ob.step5.maxSelection})</span>
+          <span className="ml-1 text-muted-foreground">({ob.step5.maxSelection})</span>
         </p>
       </div>
 
@@ -593,21 +593,21 @@ function StepGoals({
               onClick={() => !isDisabled && toggleGoal(goal.value)}
               className="text-left rounded-xl p-4 transition-all"
               style={{
-                backgroundColor: isSelected ? '#1c1c1c' : '#141414',
+                backgroundColor: isSelected ? 'var(--secondary)' : 'var(--surface)',
                 border: isSelected
                   ? '1px solid rgba(255,255,255,0.25)'
-                  : '1px solid #262626',
+                  : '1px solid var(--border)',
                 opacity: isDisabled ? 0.4 : 1,
                 cursor: isDisabled ? 'not-allowed' : 'pointer',
               }}
             >
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium" style={{ color: isSelected ? '#ffffff' : '#e7eaf0' }}>
+                <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
                   {goal.label}
                 </p>
-                {isSelected && <CheckCircle2 size={14} style={{ color: '#22c55e', flexShrink: 0 }} />}
+                {isSelected && <CheckCircle2 size={14} style={{ color: 'var(--primary)', flexShrink: 0 }} />}
               </div>
-              <p className="text-[11px] mt-0.5" style={{ color: '#999999' }}>{goal.desc}</p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--muted-foreground)' }}>{goal.desc}</p>
             </button>
           );
         })}
@@ -635,15 +635,15 @@ function StepKitPreview({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--foreground)', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
           {heading}
         </h1>
-        <p className="text-sm" style={{ color: '#999999' }}>{ob.step6.subheading}</p>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{ob.step6.subheading}</p>
       </div>
 
       <div
         className="rounded-xl p-5 space-y-3"
-        style={{ backgroundColor: '#141414', border: '1px solid #262626' }}
+        style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)' }}
       >
         {[
           projectsLine,
@@ -654,9 +654,9 @@ function StepKitPreview({
           <div key={i} className="flex items-center gap-3">
             <div
               className="h-1.5 w-1.5 rounded-full shrink-0"
-              style={{ backgroundColor: '#22c55e' }}
+              style={{ backgroundColor: 'var(--primary)' }}
             />
-            <span className="text-sm" style={{ color: '#e7eaf0' }}>{line}</span>
+            <span className="text-sm" style={{ color: 'var(--foreground)' }}>{line}</span>
           </div>
         ))}
       </div>
@@ -666,7 +666,7 @@ function StepKitPreview({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-sm text-center"
-          style={{ color: '#999999' }}
+          style={{ color: 'var(--muted-foreground)' }}
         >
           {ob.step6.launching}
         </motion.p>
@@ -695,20 +695,20 @@ function StepChoosePlan({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--foreground)', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
           {s7.heading}
         </h1>
-        <p className="text-sm" style={{ color: '#999999' }}>{s7.subheading}</p>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{s7.subheading}</p>
       </div>
 
       {/* Billing toggle */}
-      <div className="flex items-center justify-center gap-1 p-1 rounded-full mx-auto w-fit" style={{ backgroundColor: '#141414' }}>
+      <div className="flex items-center justify-center gap-1 p-1 rounded-full mx-auto w-fit" style={{ backgroundColor: 'var(--surface)' }}>
         <button
           onClick={() => patch({ billingCycle: 'monthly' })}
           className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
           style={{
-            backgroundColor: !isAnnual ? '#1c1c1c' : 'transparent',
-            color: !isAnnual ? '#ffffff' : '#999999',
+            backgroundColor: !isAnnual ? 'var(--secondary)' : 'transparent',
+            color: !isAnnual ? 'var(--foreground)' : 'var(--muted-foreground)',
           }}
         >
           {s7.monthly}
@@ -717,12 +717,12 @@ function StepChoosePlan({
           onClick={() => patch({ billingCycle: 'annual' })}
           className="px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5"
           style={{
-            backgroundColor: isAnnual ? '#1c1c1c' : 'transparent',
-            color: isAnnual ? '#ffffff' : '#999999',
+            backgroundColor: isAnnual ? 'var(--secondary)' : 'transparent',
+            color: isAnnual ? 'var(--foreground)' : 'var(--muted-foreground)',
           }}
         >
           {s7.annual}
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 15%, transparent)', color: 'var(--primary)' }}>
             {s7.annualSave}
           </span>
         </button>
@@ -740,34 +740,34 @@ function StepChoosePlan({
               onClick={() => patch({ selectedPlan: plan.key })}
               className="text-left rounded-xl p-4 transition-all relative flex flex-col"
               style={{
-                backgroundColor: plan.featured ? '#1c1c1c' : '#141414',
+                backgroundColor: plan.featured ? 'var(--secondary)' : 'var(--surface)',
                 border: isSelected
                   ? '1px solid rgba(255,255,255,0.3)'
                   : plan.featured
                     ? '1px solid rgba(255,255,255,0.12)'
-                    : '1px solid #262626',
+                    : '1px solid var(--border)',
               }}
             >
               {plan.featured && (
                 <span
                   className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-semibold px-2.5 py-0.5 rounded-full"
-                  style={{ backgroundColor: 'rgba(184,155,106,0.15)', color: '#B89B6A' }}
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--warning) 15%, transparent)', color: 'var(--warning)' }}
                 >
                   {s7.popular}
                 </span>
               )}
-              <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>{plan.name}</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{plan.name}</p>
               <div className="flex items-baseline gap-0.5 mt-2">
-                <span className="text-2xl font-bold" style={{ color: '#ffffff' }}>${price}</span>
-                <span className="text-xs" style={{ color: '#999999' }}>{s7.perMonth}</span>
+                <span className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>${price}</span>
+                <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s7.perMonth}</span>
               </div>
-              <p className="text-[11px] mt-1 mb-3" style={{ color: '#999999' }}>{plan.desc}</p>
+              <p className="text-[11px] mt-1 mb-3" style={{ color: 'var(--muted-foreground)' }}>{plan.desc}</p>
 
               <div className="space-y-1.5 flex-1">
                 {plan.features.map((f, fi) => (
                   <div key={fi} className="flex items-start gap-1.5">
-                    <Check size={11} className="mt-0.5 shrink-0" style={{ color: '#22c55e' }} />
-                    <span className="text-[11px] leading-snug" style={{ color: '#e7eaf0' }}>{f}</span>
+                    <Check size={11} className="mt-0.5 shrink-0" style={{ color: 'var(--primary)' }} />
+                    <span className="text-[11px] leading-snug" style={{ color: 'var(--foreground)' }}>{f}</span>
                   </div>
                 ))}
               </div>
@@ -778,7 +778,7 @@ function StepChoosePlan({
                   animate={{ scale: 1 }}
                   className="absolute top-3 right-3"
                 >
-                  <CheckCircle2 size={16} style={{ color: '#22c55e' }} />
+                  <CheckCircle2 size={16} style={{ color: 'var(--primary)' }} />
                 </motion.div>
               )}
             </button>
@@ -810,15 +810,15 @@ function StepGetStarted({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
             className="w-14 h-14 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: '#1c1c1c', border: '1px solid #262626' }}
+            style={{ backgroundColor: 'var(--secondary)', border: '1px solid var(--border)' }}
           >
-            <Sparkles size={24} style={{ color: '#ffffff' }} />
+            <Sparkles size={24} style={{ color: 'var(--foreground)' }} />
           </motion.div>
         </div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--foreground)', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.025em' }}>
           {s8.heading}
         </h1>
-        <p className="text-sm" style={{ color: '#999999' }}>{s8.subheading}</p>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{s8.subheading}</p>
       </div>
 
       <div className="space-y-3">
@@ -835,16 +835,16 @@ function StepGetStarted({
             disabled={isSubmitting}
             className="w-full text-left rounded-xl p-5 transition-all group"
             style={{
-              backgroundColor: '#141414',
-              border: '1px solid #262626',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--border)',
             }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium" style={{ color: '#ffffff' }}>{action.label}</p>
-                <p className="text-[12px] mt-0.5" style={{ color: '#999999' }}>{action.desc}</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{action.label}</p>
+                <p className="text-[12px] mt-0.5" style={{ color: 'var(--muted-foreground)' }}>{action.desc}</p>
               </div>
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" style={{ color: '#999999' }} />
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" style={{ color: 'var(--muted-foreground)' }} />
             </div>
           </motion.button>
         ))}

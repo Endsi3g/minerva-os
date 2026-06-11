@@ -95,9 +95,9 @@ export default function PortalCopilot() {
               exit={{ scale: 0.8, opacity: 0 }}
               onClick={() => setOpen(true)}
               className="flex items-center gap-2.5 px-4 py-3 rounded-full shadow-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
-              style={{ backgroundColor: '#111522', border: '1px solid rgba(255,255,255,0.12)', color: '#F5F1E8' }}
+              style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
             >
-              <Sparkles size={15} style={{ color: '#B89B6A' }} />
+              <Sparkles size={15} style={{ color: 'var(--warning)' }} />
               <span className="text-sm font-medium">{pc.title}</span>
             </motion.button>
           )}
@@ -114,20 +114,20 @@ export default function PortalCopilot() {
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="fixed bottom-6 right-6 z-50 flex flex-col rounded-[20px] border overflow-hidden w-[340px] sm:w-[380px]"
             style={{
-              backgroundColor: '#111522',
-              borderColor: 'rgba(255,255,255,0.10)',
+              backgroundColor: 'var(--surface)',
+              borderColor: 'var(--border)',
               boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
               height: '520px',
             }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-2.5">
-                <Sparkles size={14} style={{ color: '#B89B6A' }} />
-                <span className="text-sm font-semibold" style={{ color: '#F5F1E8' }}>{pc.title}</span>
+                <Sparkles size={14} style={{ color: 'var(--warning)' }} />
+                <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{pc.title}</span>
               </div>
               <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
-                <X size={15} style={{ color: '#8A9099' }} />
+                <X size={15} style={{ color: 'var(--muted-foreground)' }} />
               </button>
             </div>
 
@@ -136,8 +136,8 @@ export default function PortalCopilot() {
               {messages.length === 0 && (
                 <div className="h-full flex flex-col items-center justify-center text-center px-4">
                   <Sparkles size={22} className="mb-3" style={{ color: '#B89B6A', opacity: 0.6 }} />
-                  <p className="text-sm font-medium mb-1" style={{ color: '#F5F1E8' }}>{pc.emptyState}</p>
-                  <p className="text-xs" style={{ color: '#8A9099' }}>{pc.subtitle}</p>
+                  <p className="text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>{pc.emptyState}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{pc.subtitle}</p>
                 </div>
               )}
               {messages.map((m: Message, i: number) => (
@@ -146,12 +146,12 @@ export default function PortalCopilot() {
                     className="max-w-[85%] px-3.5 py-2.5 rounded-[14px] text-sm leading-relaxed"
                     style={
                       m.role === 'user'
-                        ? { backgroundColor: 'rgba(245,241,232,0.10)', color: '#F5F1E8' }
-                        : { backgroundColor: 'rgba(255,255,255,0.04)', color: '#B8BDC7', border: '1px solid rgba(255,255,255,0.06)' }
+                        ? { backgroundColor: 'color-mix(in srgb, var(--foreground) 10%, transparent)', color: 'var(--foreground)' }
+                        : { backgroundColor: 'rgba(255,255,255,0.04)', color: 'var(--muted-foreground)', border: '1px solid rgba(255,255,255,0.06)' }
                     }
                   >
                     {m.content}
-                    {m.streaming && <span className="inline-block h-3.5 w-0.5 ml-0.5 align-middle animate-pulse" style={{ backgroundColor: '#8A9099' }} />}
+                    {m.streaming && <span className="inline-block h-3.5 w-0.5 ml-0.5 align-middle animate-pulse" style={{ backgroundColor: 'var(--muted-foreground)' }} />}
                   </div>
                 </div>
               ))}
@@ -159,7 +159,7 @@ export default function PortalCopilot() {
             </div>
 
             {/* Input */}
-            <div className="px-3 py-3 border-t shrink-0" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+            <div className="px-3 py-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <input
                   ref={inputRef}
@@ -168,18 +168,18 @@ export default function PortalCopilot() {
                   onKeyDown={handleKey}
                   placeholder={pc.placeholder}
                   disabled={streaming}
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#8A9099] disabled:opacity-50"
-                  style={{ color: '#F5F1E8' }}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
+                  style={{ color: 'var(--foreground)' }}
                 />
                 <button
                   onClick={send}
                   disabled={!input.trim() || streaming}
                   className="shrink-0 p-1.5 rounded-lg transition-all duration-200 disabled:opacity-30 cursor-pointer hover:bg-white/5"
                 >
-                  <Send size={13} style={{ color: '#7FA38A' }} />
+                  <Send size={13} style={{ color: 'var(--primary)' }} />
                 </button>
               </div>
-              <p className="text-center text-[10px] mt-2" style={{ color: '#8A9099', opacity: 0.6 }}>{pc.poweredBy}</p>
+              <p className="text-center text-[10px] mt-2" style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}>{pc.poweredBy}</p>
             </div>
           </motion.div>
         )}
