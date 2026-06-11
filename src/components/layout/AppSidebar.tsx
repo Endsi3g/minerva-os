@@ -10,24 +10,25 @@ import {
   Brain,
   Settings,
   LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
   Plus,
   CheckCircle,
   ChevronDown,
   ChevronRight,
-  Folder,
-  MoreHorizontal,
-  FileText,
+  FolderOpen,
+  CheckSquare,
+  FileSignature,
+  ClipboardCheck,
+  Wand2,
+  Phone,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLang } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { NewWorkspaceModal } from '@/components/minerva/NewWorkspaceModal';
-import { useSidebar } from './AppShell';
+
 import { useTier } from '@/lib/hooks/useTier';
-import { useFolders } from '@/lib/hooks/useSupabase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,18 +37,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 /* ── Minerva logo SVG inline ─────────────────────────────────────────── */
 function MinervaLogo({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="Minerva">
-      <rect width="28" height="28" rx="8" fill="#4F46E5" />
+      <rect width="28" height="28" rx="8" fill="#7FA38A" />
       <path
         d="M6 20V8l8 8 8-8v12"
         stroke="white"
@@ -68,15 +64,27 @@ const NAV_ITEMS = [
   { href: '/app/intelligence', labelKey: 'intelligence', fallback: 'Intelligence', icon: Brain },
 ];
 
+const QUICK_LINKS = [
+  { href: '/app/projects',  label: 'Active Projects', icon: FolderOpen },
+  { href: '/app/tasks',     label: 'My Tasks',        icon: CheckSquare },
+  { href: '/app/approvals', label: 'Approvals',       icon: ClipboardCheck },
+  { href: '/app/files',     label: 'File Vault',      icon: FileSignature },
+  { href: '/app/contracts', label: 'Contracts',       icon: FileSignature },
+];
+
+const HERMES_LINKS = [
+  { href: '/app/proposals',  label: 'Proposal Builder', icon: Wand2 },
+  { href: '/app/call-preps', label: 'Call Prepper',     icon: Phone },
+  { href: '/app/sla-audit',  label: 'SLA Risk Audit',   icon: ShieldAlert },
+];
+
 export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { collapsed, toggle } = useSidebar();
   const { t } = useLang();
   const { logout } = useAuth();
   const { workspace, workspaces, switchWorkspace } = useWorkspace();
   const { tier } = useTier();
-  const folders = useFolders(workspace?.id);
   const sidebar = t.app.sidebar;
 
   const [newWorkspaceOpen, setNewWorkspaceOpen] = useState(false);
@@ -110,29 +118,6 @@ export function AppSidebar() {
   }) {
     const isActive = pathname === href || pathname.startsWith(href + '/');
 
-    if (collapsed) {
-      return (
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Link
-              href={href}
-              className={cn(
-                'flex items-center justify-center w-9 h-9 rounded-lg transition-colors mx-auto',
-                isActive
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:bg-accent/60 hover:text-accent-foreground'
-              )}
-            >
-              <Icon size={16} strokeWidth={isActive ? 2 : 1.75} />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="text-xs">
-            {label}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
     return (
       <Link
         href={href}
@@ -152,52 +137,35 @@ export function AppSidebar() {
   return (
     <TooltipProvider>
       <aside
-        className={cn(
-          'shrink-0 flex flex-col border-r transition-all duration-300 select-none h-screen',
-          'bg-sidebar border-sidebar-border',
-          collapsed ? 'w-14' : 'w-[240px]'
-        )}
+        className="shrink-0 flex flex-col border-r select-none h-screen w-[240px] bg-sidebar border-sidebar-border"
       >
         {/* ── Logo / Workspace header ─────────────────────────────────── */}
-        <div className={cn(
-          'shrink-0 flex items-center border-b border-sidebar-border h-16',
-          collapsed ? 'justify-center px-2' : 'px-4 justify-between'
-        )}>
-          {collapsed ? (
-            <button
-              onClick={toggle}
-              className="p-1.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
-              title="Expand sidebar"
-            >
-              <PanelLeftOpen size={16} />
-            </button>
-          ) : (
-            <>
-              {/* Logo + wordmark */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2.5 hover:bg-accent/60 px-2 py-1.5 rounded-lg transition-colors cursor-pointer text-left group min-w-0 flex-1">
-                    <MinervaLogo size={28} />
-                    <div className="min-w-0 flex-1 leading-none">
-                      <p className="text-sm font-semibold text-foreground truncate">
-                        {workspace?.name ?? 'Minerva'}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                        Uprising Studio
-                      </p>
-                    </div>
-                    <ChevronDown size={12} className="text-muted-foreground shrink-0 group-hover:text-foreground transition-colors" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="bottom" align="start" className="w-52 z-50">
-                  <DropdownMenuLabel className="text-xs font-semibold px-2 py-1">Workspaces</DropdownMenuLabel>
-                  {workspaces.map(w => (
-                    <DropdownMenuItem
-                      key={w.id}
-                      onClick={() => switchWorkspace(w.id)}
-                      className="flex items-center gap-2 text-xs cursor-pointer"
-                    >
-                      <div
+        <div className="shrink-0 flex items-center border-b border-sidebar-border h-16 px-4 justify-between">
+          {/* Logo + wordmark */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2.5 hover:bg-accent/60 px-2 py-1.5 rounded-lg transition-colors cursor-pointer text-left group min-w-0 flex-1">
+                <MinervaLogo size={28} />
+                <div className="min-w-0 flex-1 leading-none">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {workspace?.name ?? 'Minerva'}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                    Uprising Studio
+                  </p>
+                </div>
+                <ChevronDown size={12} className="text-muted-foreground shrink-0 group-hover:text-foreground transition-colors" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="bottom" align="start" className="w-52 z-50">
+              <DropdownMenuLabel className="text-xs font-semibold px-2 py-1">Workspaces</DropdownMenuLabel>
+              {workspaces.map(w => (
+                <DropdownMenuItem
+                  key={w.id}
+                  onClick={() => switchWorkspace(w.id)}
+                  className="flex items-center gap-2 text-xs cursor-pointer"
+                >
+                  <div
                         className="h-5 w-5 rounded flex items-center justify-center shrink-0 text-[9px] font-bold text-white"
                         ref={(node) => { if (node) node.style.backgroundColor = w.brandColor ?? '#4F46E5'; }}
                       >
@@ -223,17 +191,7 @@ export function AppSidebar() {
                     <span>{sidebar.signOut}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
-
-              <button
-                onClick={toggle}
-                className="p-1.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer shrink-0"
-                title="Collapse sidebar"
-              >
-                <PanelLeftClose size={14} />
-              </button>
-            </>
-          )}
+          </DropdownMenu>
         </div>
 
         {/* ── Navigation ──────────────────────────────────────────────── */}
@@ -252,53 +210,37 @@ export function AppSidebar() {
             })}
           </div>
 
-          {/* ── Folders section ───────────────────────────────────────── */}
+          {/* ── Quick Links ───────────────────────────────────────────── */}
           <div className="px-2 pt-2 mt-2 border-t border-sidebar-border">
-            {!collapsed && (
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1">
-                {t.app.folders?.title || "Folders"}
-              </p>
-            )}
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1">
+              Quick Links
+            </p>
             <div className="space-y-0.5">
-              {folders && folders.slice(0, 3).map((f) => (
+              {QUICK_LINKS.map(link => (
                 <NavItem
-                  key={f.id}
-                  href={`/app/folders?id=${f.id}`}
-                  label={f.name}
-                  icon={Folder}
+                  key={link.href}
+                  href={link.href}
+                  label={link.label}
+                  icon={link.icon}
                 />
               ))}
-              <NavItem
-                href="/app/folders"
-                label={t.app.folders?.viewAll || "... View all"}
-                icon={MoreHorizontal}
-              />
             </div>
           </div>
 
-          {/* ── Today section ─────────────────────────────────────────── */}
+          {/* ── Hermes Assistants ───────────────────────────────────── */}
           <div className="px-2 pt-2 mt-2 border-t border-sidebar-border">
-            {!collapsed && (
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1">
-                Today
-              </p>
-            )}
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1">
+              Hermes Assistants
+            </p>
             <div className="space-y-0.5">
-              <NavItem
-                href="/app/delivery"
-                label="Insight Analysis"
-                icon={FileText}
-              />
-              <NavItem
-                href="/app/delivery"
-                label="Overview: SLMobbin..."
-                icon={FileText}
-              />
-              <NavItem
-                href="/app/delivery"
-                label="Kickoff Follow-up"
-                icon={FileText}
-              />
+              {HERMES_LINKS.map(link => (
+                <NavItem
+                  key={link.href}
+                  href={link.href}
+                  label={link.label}
+                  icon={link.icon}
+                />
+              ))}
             </div>
           </div>
 
@@ -309,8 +251,7 @@ export function AppSidebar() {
         </nav>
 
         {/* ── Footer plan card ────────────────────────────────────────── */}
-        {!collapsed && (
-          <div className="shrink-0 p-3 border-t border-sidebar-border">
+        <div className="shrink-0 p-3 border-t border-sidebar-border">
             <div className="border border-border rounded-xl p-3 space-y-2.5 bg-secondary/60">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-foreground tracking-wide uppercase">{planName}</span>
@@ -353,7 +294,6 @@ export function AppSidebar() {
               </div>
             </div>
           </div>
-        )}
 
         <NewWorkspaceModal open={newWorkspaceOpen} onClose={() => setNewWorkspaceOpen(false)} />
       </aside>

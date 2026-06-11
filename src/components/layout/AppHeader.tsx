@@ -2,8 +2,6 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import {
-  PanelLeftClose,
-  PanelLeftOpen,
   Search,
   Bell,
   User,
@@ -13,6 +11,7 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
+import { useTheme } from '@/theme';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -22,7 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useSidebar, useChat } from './AppShell';
+import { useChat } from './AppShell';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -34,7 +33,6 @@ import {
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
-import { useTheme } from '@/theme';
 import { PresenceAvatars } from '../minerva/PresenceAvatars';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -69,6 +67,12 @@ const PAGE_LABELS: Record<string, string> = {
   '/app/nps': 'NPS',
   '/app/resources': 'Resource Planning',
   '/app/folders': 'Folders',
+  '/app/sla-audit': 'SLA Risk Audit',
+  '/app/contracts': 'Contracts',
+  '/app/delivery/approvals': 'Approvals',
+  '/app/intelligence': 'Intelligence',
+  '/app/delivery': 'Delivery',
+  '/app/finance-hub': 'Finance Hub',
 };
 
 function HeaderBreadcrumb({ pageLabel, pathname }: { pageLabel: string; pathname: string | null }) {
@@ -131,7 +135,6 @@ function HeaderBreadcrumb({ pageLabel, pathname }: { pageLabel: string; pathname
 }
 
 export function AppHeader() {
-  const { collapsed, toggle } = useSidebar();
   const { toggleChat } = useChat();
   const { theme, toggleTheme } = useTheme();
 
@@ -226,17 +229,6 @@ export function AppHeader() {
 
   return (
     <header className="h-14 flex items-center px-4 gap-3 bg-background border-b border-border shrink-0">
-      {/* Collapse toggle */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={toggle}
-        className="text-muted-foreground hover:text-foreground"
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-      </Button>
-
       {/* Breadcrumb */}
       <Suspense fallback={<span className="text-sm font-medium text-foreground">{pageLabel}</span>}>
         <HeaderBreadcrumb pageLabel={pageLabel} pathname={pathname} />
@@ -264,17 +256,6 @@ export function AppHeader() {
       <Button
         variant="ghost"
         size="icon"
-        onClick={toggleTheme}
-        className="text-muted-foreground hover:text-foreground transition-colors"
-        aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-        title={theme === 'light' ? 'Dark mode' : 'Light mode'}
-      >
-        {theme === 'light' ? <Moon size={15} strokeWidth={1.75} /> : <Sun size={15} strokeWidth={1.75} />}
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="icon"
         onClick={toggleChat}
         className="text-muted-foreground hover:text-primary transition-colors"
         aria-label="AI Chat"
@@ -282,7 +263,15 @@ export function AppHeader() {
         <MessageSquare size={16} />
       </Button>
 
-
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        className="text-muted-foreground hover:text-foreground transition-colors"
+        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+      </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

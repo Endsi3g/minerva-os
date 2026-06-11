@@ -4,13 +4,11 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Circle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLang } from './i18n';
 import { useAuth } from './contexts/AuthContext';
-import { cn } from '@/lib/utils';
 
-const BG_VIDEO = process.env.NEXT_PUBLIC_BG_VIDEO_URL || '/Plan_fixe_cinématique_Anime_c.mp4';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -62,45 +60,35 @@ export default function Login() {
   return (
     <main className="relative flex min-h-screen w-full bg-background selection:bg-foreground/20 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4 font-sans">
 
-      {/* ── Left Column — Video ────────────────────────────────────────────── */}
-      <div className="relative hidden w-[52%] flex-col items-center justify-center px-12 rounded-3xl overflow-hidden shadow-2xl h-full lg:flex" style={{ backgroundColor: '#111522' }}>
-        <video
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
-          autoPlay
-          muted
-          loop
-          playsInline
-        >
-          <source src={BG_VIDEO} type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/20 z-0" />
-
-        {/* Glassmorphic overlay panel */}
-        <div className="absolute inset-0 backdrop-blur-sm z-0" style={{ backgroundColor: 'rgba(10,13,20,0.40)' }} />
-
+      {/* ── Left Column — Brand panel ──────────────────────────────────────── */}
+      <div className="relative hidden w-[52%] flex-col items-center justify-center px-12 rounded-3xl h-full lg:flex bg-sidebar border border-border">
         <motion.div
-          className="relative z-10 w-full max-w-xs space-y-8"
+          className="w-full max-w-xs space-y-10"
           variants={containerVariants}
           initial="hidden"
           animate="show"
         >
+          {/* Logo */}
           <motion.div variants={itemVariants} className="flex items-center gap-2.5">
-            <Circle className="fill-white text-white h-5 w-5" />
-            <span className="text-xl font-semibold tracking-tight text-white">
-              Minerva OS
-            </span>
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-label="Minerva">
+              <rect width="28" height="28" rx="8" fill="var(--primary)" />
+              <path d="M6 20V8l8 8 8-8v12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="text-base font-semibold text-foreground">Minerva OS</span>
           </motion.div>
 
+          {/* Heading */}
           <motion.div variants={itemVariants} className="space-y-3">
-            <h1 className="text-4xl font-medium tracking-tight whitespace-nowrap text-white">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground leading-tight">
               {l.leftHeading}
             </h1>
-            <p className="text-sm leading-relaxed text-white/60">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               {l.leftDesc}
             </p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="space-y-2.5 w-full">
+          {/* Feature list */}
+          <motion.div variants={itemVariants} className="space-y-2 w-full">
             {l.features.map((feature) => (
               <FeatureItem key={feature} text={feature} />
             ))}
@@ -200,17 +188,9 @@ export default function Login() {
 
 function FeatureItem({ text }: { text: string }) {
   return (
-    <div
-      className={cn(
-        'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 w-full',
-        'backdrop-blur-md text-white/70 border border-white/10',
-      )}
-      style={{ backgroundColor: 'rgba(17,21,34,0.40)' }}
-    >
-      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 text-white/50" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
-        ·
-      </span>
-      <span className="text-sm font-medium">{text}</span>
+    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border bg-surface/60">
+      <CheckCircle size={14} className="text-primary flex-shrink-0" />
+      <span className="text-sm text-foreground">{text}</span>
     </div>
   );
 }

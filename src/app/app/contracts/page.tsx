@@ -1,15 +1,15 @@
 'use client';
 import { Suspense } from 'react';
-import Proposals from '@/modules/app/Proposals';
+import Contracts from '@/modules/app/Contracts';
 import { ErrorBoundary } from '@/components/minerva/ErrorBoundary';
 
 export const dynamic = 'force-dynamic';
 
-export default function ProposalsPage() {
+export default function ContractsPage() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<div className="p-6 text-center text-xs text-muted-foreground">Loading proposals...</div>}>
-        <Proposals />
+      <Suspense fallback={<div className="p-6 text-center text-xs text-muted-foreground">Loading contracts...</div>}>
+        <Contracts />
       </Suspense>
     </ErrorBoundary>
   );

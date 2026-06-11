@@ -135,6 +135,51 @@
     --sidebar-ring:                   var(--primary);
   }
 
+  /* ── Dark mode overrides ─────────────────────────────────────────── */
+  :root.dark {
+    --background:    #0A0D14;
+    --surface:       #111522;
+    --surface-alt:   #171C2A;
+    --sidebar:       #0E1119;
+    --border:        rgba(255,255,255,0.07);
+
+    --foreground:         #F5F1E8;
+    --muted-foreground:   #B8BDC7;
+    --subtle-foreground:  #8A9099;
+
+    --primary:             #818CF8;
+    --primary-hover:       #A5B4FC;
+    --primary-active:      #C7D2FE;
+    --primary-soft:        rgba(99,102,241,0.12);
+    --primary-soft-border: rgba(99,102,241,0.30);
+    --primary-foreground:  #0A0D14;
+
+    --success: #7FA38A;
+    --warning: #B89B6A;
+    --danger:  #A86A6A;
+
+    --card:              var(--surface);
+    --card-foreground:   var(--foreground);
+    --popover:           var(--surface);
+    --popover-foreground: var(--foreground);
+    --secondary:         var(--surface-alt);
+    --secondary-foreground: var(--foreground);
+    --muted:             var(--surface-alt);
+    --accent:            var(--primary-soft);
+    --accent-foreground: var(--primary);
+    --destructive:       var(--danger);
+    --input:             var(--border);
+    --ring:              var(--primary);
+
+    --sidebar-foreground:             var(--foreground);
+    --sidebar-primary:                var(--primary);
+    --sidebar-primary-foreground:     var(--primary-foreground);
+    --sidebar-accent:                 var(--primary-soft);
+    --sidebar-accent-foreground:      var(--primary);
+    --sidebar-border:                 var(--border);
+    --sidebar-ring:                   var(--primary);
+  }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
     font-feature-settings: 'cv01', 'cv05', 'ss03';

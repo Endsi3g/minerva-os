@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
 import {
@@ -134,10 +134,10 @@ export default function Dashboard() {
       key: 'blocking',
       label: 'Blocking',
       icon: AlertTriangle,
-      color: 'text-[#A86A6A]', // ember
-      bg: 'bg-midnight',
-      border: 'border-[#A86A6A]/20',
-      badgeBg: 'bg-[#A86A6A]/10',
+      color: 'text-danger', // ember
+      bg: 'bg-surface',
+      border: 'border-danger/20',
+      badgeBg: 'bg-danger/10',
       count: overdueProjects.length + stalledApprovals.length,
       items: [
         ...overdueProjects.map((p: any) => ({
@@ -155,10 +155,10 @@ export default function Dashboard() {
       key: 'cash',
       label: 'Cash at Risk',
       icon: DollarSign,
-      color: 'text-[#B89B6A]', // warm
-      bg: 'bg-midnight',
-      border: 'border-[#B89B6A]/20',
-      badgeBg: 'bg-[#B89B6A]/10',
+      color: 'text-warning', // warm
+      bg: 'bg-surface',
+      border: 'border-warning/20',
+      badgeBg: 'bg-warning/10',
       count: overdueInvoices.length + invoicesDueThisWeek.length,
       items: [
         ...overdueInvoices.map((i: any) => ({
@@ -176,10 +176,10 @@ export default function Dashboard() {
       key: 'awaiting',
       label: 'Awaiting Client',
       icon: Clock,
-      color: 'text-silver',
-      bg: 'bg-midnight',
-      border: 'border-white/8',
-      badgeBg: 'bg-white/5',
+      color: 'text-muted-foreground',
+      bg: 'bg-surface',
+      border: 'border-border',
+      badgeBg: 'bg-secondary',
       count: stalledApprovals.length,
       items: stalledApprovals.map((a: any) => ({
         label: `"${a.name ?? a.title ?? 'Deliverable'}" awaiting sign-off`,
@@ -191,10 +191,10 @@ export default function Dashboard() {
       key: 'invoice',
       label: 'Invoice Now',
       icon: CheckCircle2,
-      color: 'text-[#7FA38A]', // sage
-      bg: 'bg-midnight',
-      border: 'border-[#7FA38A]/20',
-      badgeBg: 'bg-[#7FA38A]/10',
+      color: 'text-success', // sage
+      bg: 'bg-surface',
+      border: 'border-success/20',
+      badgeBg: 'bg-success/10',
       count: approvedReady.length,
       items: approvedReady.map((a: any) => ({
         label: `"${a.name ?? a.title ?? 'Deliverable'}" approved · ready to invoice`,
@@ -208,7 +208,7 @@ export default function Dashboard() {
     <div className="space-y-8 w-full px-6 py-6 max-w-[1400px] mx-auto select-none">
 
       {/* Cinematic Hero Video Banner */}
-      <div className="relative w-full h-[220px] rounded-2xl overflow-hidden border border-white/10 shadow-lg flex items-center p-8 bg-midnight">
+      <div className="relative w-full h-[220px] rounded-2xl overflow-hidden border border-border shadow-lg flex items-center p-8 bg-surface">
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
           autoPlay
@@ -225,16 +225,16 @@ export default function Dashboard() {
         {/* Content overlaid on the video */}
         <div className="relative z-20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 w-full">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[#7FA38A]">
+            <div className="flex items-center gap-2 text-success">
               <Sparkles size={14} className="animate-pulse" />
               <span className="text-[10px] font-bold uppercase tracking-wider">Morning Briefing</span>
             </div>
             <TextAnimate
               text={greeting + ', ' + displayName}
               type="calmInUp"
-              className="text-2xl font-serif text-ivory tracking-tight"
+              className="text-2xl font-serif text-foreground tracking-tight"
             />
-            <p className="text-xs text-silver leading-relaxed max-w-md">
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
               You have {activeProjects.length} active project{activeProjects.length !== 1 ? 's' : ''} to track today · {(invoices ?? []).filter((i: any) => i.status !== 'paid').length} open invoice{(invoices ?? []).filter((i: any) => i.status !== 'paid').length !== 1 ? 's' : ''} awaiting action.
             </p>
           </div>
@@ -248,7 +248,7 @@ export default function Dashboard() {
                 setAiSheetOpen(true);
               }
             }}
-            className="rounded-full bg-ivory text-obsidian hover:bg-ivory/90 text-xs font-semibold px-5 h-9 flex items-center gap-2 shadow-sm shrink-0 transition-transform active:scale-95"
+            className="rounded-full bg-foreground text-background hover:bg-foreground/90 text-xs font-semibold px-5 h-9 flex items-center gap-2 shadow-sm shrink-0 transition-transform active:scale-95"
           >
             <Sparkles size={13} className="animate-pulse text-primary" />
             <span>Ask Hermes</span>
@@ -266,12 +266,12 @@ export default function Dashboard() {
         {zones.map(zone => (
           <div
             key={zone.key}
-            className={cn('rounded-xl border p-4 space-y-3 bg-midnight border-white/6', zone.border)}
+            className={cn('rounded-xl border p-4 space-y-3 bg-surface border-border', zone.border)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <zone.icon size={13} className={zone.color} />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-fog">{zone.label}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{zone.label}</span>
               </div>
               {zone.count > 0 && (
                 <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full', zone.color, zone.badgeBg)}>
@@ -281,7 +281,7 @@ export default function Dashboard() {
             </div>
             <div className="space-y-1.5">
               {zone.items.length === 0 ? (
-                <p className="text-[11px] text-fog italic">{zone.emptyLabel}</p>
+                <p className="text-[11px] text-muted-foreground italic">{zone.emptyLabel}</p>
               ) : (
                 zone.items.slice(0, 3).map((item, idx) => (
                   <button
@@ -293,10 +293,10 @@ export default function Dashboard() {
                         router.push(item.route);
                       }
                     }}
-                    className="w-full text-left flex items-start gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors group"
+                    className="w-full text-left flex items-start gap-2 p-2 rounded-lg hover:bg-secondary transition-colors group"
                   >
                     <ArrowRight size={10} className={cn('shrink-0 mt-0.5 transition-transform group-hover:translate-x-0.5', zone.color)} />
-                    <span className="text-[11px] text-silver group-hover:text-ivory transition-colors leading-tight">{item.label}</span>
+                    <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors leading-tight">{item.label}</span>
                   </button>
                 ))
               )}
@@ -309,7 +309,7 @@ export default function Dashboard() {
                       router.push(zone.items[0].route);
                     }
                   }}
-                  className="text-[10px] text-fog hover:text-silver transition-colors pl-4"
+                  className="text-[10px] text-muted-foreground hover:text-muted-foreground transition-colors pl-4"
                 >
                   +{zone.items.length - 3} more
                 </button>
@@ -326,12 +326,12 @@ export default function Dashboard() {
         <div className="lg:col-span-2 space-y-6">
           {/* Quick Actions */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-fog mb-3">Quick Actions</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Quick Actions</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { type: 'proposal' as const, label: 'Proposal Copilot', desc: 'Draft scopes & pricing', icon: FileText, color: 'text-[#B89B6A]' },
-                { type: 'callprep' as const, label: 'Call Prepper',     desc: 'Brief before a client call', icon: Bot, color: 'text-[#7FA38A]' },
-                { type: 'audit' as const,    label: 'SLA Risk Audit',   desc: 'Surface contract risks', icon: AlertTriangle, color: 'text-[#A86A6A]' },
+                { type: 'proposal' as const, label: 'Proposal Copilot', desc: 'Draft scopes & pricing', icon: FileText, color: 'text-warning', route: '/app/proposals' },
+                { type: 'callprep' as const, label: 'Call Prepper',     desc: 'Brief before a client call', icon: Bot, color: 'text-success', route: '/app/call-preps' },
+                { type: 'audit' as const,    label: 'SLA Risk Audit',   desc: 'Surface contract risks', icon: AlertTriangle, color: 'text-danger', route: '/app/sla-audit' },
               ].map(agent => (
                 <button
                   key={agent.type}
@@ -339,23 +339,22 @@ export default function Dashboard() {
                     if (isStarter) {
                       triggerUpgrade('agent_ops');
                     } else {
-                      setActiveAgentType(agent.type);
-                      setAiSheetOpen(true);
+                      router.push(agent.route);
                     }
                   }}
-                  className="bg-midnight border border-white/6 hover:border-[#7FA38A]/30 hover:bg-[#7FA38A]/5 rounded-xl p-4 text-left transition-all hover:scale-[1.01] flex flex-col justify-between h-24 cursor-pointer relative overflow-hidden group shadow-card"
+                  className="bg-surface border border-border hover:border-success/30 hover:bg-success/5 rounded-xl p-4 text-left transition-all hover:scale-[1.01] flex flex-col justify-between h-24 cursor-pointer relative overflow-hidden group shadow-card"
                 >
                   <agent.icon size={14} className={agent.color} />
                   <div>
-                    <h4 className="text-xs font-semibold text-ivory leading-tight">{agent.label}</h4>
-                    <p className="text-[10px] text-silver mt-0.5">{agent.desc}</p>
+                    <h4 className="text-xs font-semibold text-foreground leading-tight">{agent.label}</h4>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{agent.desc}</p>
                   </div>
                   {isStarter ? (
-                    <span className="absolute top-3 right-3 text-[8px] font-bold px-1.5 py-0.5 rounded bg-white/5 text-ivory border border-white/10 uppercase">
+                    <span className="absolute top-3 right-3 text-[8px] font-bold px-1.5 py-0.5 rounded bg-secondary text-foreground border border-border uppercase">
                       PRO
                     </span>
                   ) : (
-                    <Zap size={10} className="absolute top-3 right-3 text-silver/40" />
+                    <Zap size={10} className="absolute top-3 right-3 text-muted-foreground/40" />
                   )}
                 </button>
               ))}
@@ -364,12 +363,12 @@ export default function Dashboard() {
 
           {/* Financial Performance & Pipeline Stats */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-fog mb-3">{d.financialPerformance}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{d.financialPerformance}</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { key: 'mrr' as FeatureKey, label: d.mrrLabel, value: fmt(mrr), desc: 'Active retainers', icon: '📈', color: 'text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20' },
-                { key: 'pipeline' as FeatureKey, label: d.pipelineLabel, value: fmt(pipelineValue), desc: 'Qualified leads', icon: '💼', color: 'text-ivory bg-white/5 border-white/10' },
-                { key: 'finance_hub' as FeatureKey, label: d.unpaidInvoicesLabel, value: fmt(unpaidInvoices), desc: 'Sent & Overdue', icon: '🧾', color: 'text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20' },
+                { key: 'mrr' as FeatureKey, label: d.mrrLabel, value: fmt(mrr), desc: 'Active retainers', icon: '📈', color: 'text-success bg-success/10 border-success/20' },
+                { key: 'pipeline' as FeatureKey, label: d.pipelineLabel, value: fmt(pipelineValue), desc: 'Qualified leads', icon: '💼', color: 'text-foreground bg-secondary border-border' },
+                { key: 'finance_hub' as FeatureKey, label: d.unpaidInvoicesLabel, value: fmt(unpaidInvoices), desc: 'Sent & Overdue', icon: '🧾', color: 'text-danger bg-danger/10 border-danger/20' },
               ].map((stat, idx) => (
                 <div
                   key={idx}
@@ -379,20 +378,20 @@ export default function Dashboard() {
                     }
                   }}
                   className={cn(
-                    "p-4 bg-midnight border border-white/6 rounded-xl shadow-card flex items-center justify-between relative",
-                    isStarter && "cursor-pointer hover:border-white/10 transition-all"
+                    "p-4 bg-surface border border-border rounded-xl shadow-card flex items-center justify-between relative",
+                    isStarter && "cursor-pointer hover:border-border transition-all"
                   )}
                 >
                   <div className="space-y-1">
-                    <span className="text-[10px] text-fog uppercase tracking-wider font-semibold">{stat.label}</span>
-                    <p className="text-xl font-bold font-mono text-ivory leading-none">{stat.value}</p>
-                    <p className="text-[10px] text-silver pt-0.5">{stat.desc}</p>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{stat.label}</span>
+                    <p className="text-xl font-bold font-mono text-foreground leading-none">{stat.value}</p>
+                    <p className="text-[10px] text-muted-foreground pt-0.5">{stat.desc}</p>
                   </div>
                   <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center border font-semibold text-lg shrink-0", stat.color)}>
                     {stat.icon}
                   </div>
                   {isStarter && (
-                    <span className="absolute top-2 right-2 text-[7px] font-bold px-1.5 py-0.5 rounded bg-white/5 text-ivory border border-white/10 uppercase">
+                    <span className="absolute top-2 right-2 text-[7px] font-bold px-1.5 py-0.5 rounded bg-secondary text-foreground border border-border uppercase">
                       PRO
                     </span>
                   )}
@@ -402,42 +401,42 @@ export default function Dashboard() {
           </div>
 
           {/* Active Projects & Progress Card */}
-          <Card className="bg-midnight border-white/6 shadow-card overflow-hidden">
-            <CardHeader className="pb-3 border-b border-white/6 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-fog">
+          <Card className="bg-surface border-border shadow-card overflow-hidden">
+            <CardHeader className="pb-3 border-b border-border flex flex-row items-center justify-between">
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
                 {d.activeProjectsProgress}
               </CardTitle>
               <button
                 onClick={() => router.push('/app/delivery')}
-                className="text-[9px] text-[#7FA38A] hover:underline transition-all cursor-pointer font-semibold"
+                className="text-[9px] text-success hover:underline transition-all cursor-pointer font-semibold"
               >
                 {d.viewAllProjects}
               </button>
             </CardHeader>
             <CardContent className="pt-4 p-0">
               {activeProjects.length === 0 ? (
-                <div className="p-6 text-center text-xs text-silver">
+                <div className="p-6 text-center text-xs text-muted-foreground">
                   {d.noActiveProjects}
                 </div>
               ) : (
-                <div className="divide-y divide-white/6">
+                <div className="divide-y divide-border">
                   {activeProjects.map((project: any) => {
                     const pct = project.totalTasks > 0 ? Math.round((project.doneTasks / project.totalTasks) * 100) : 0;
                     const burnPct = project.budget > 0 ? Math.min(Math.round((project.spent / project.budget) * 100), 100) : 0;
                     return (
-                      <div key={project.id ?? project._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/3 transition-all">
+                      <div key={project.id ?? project._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-secondary/60 transition-all">
                         <div className="space-y-1 min-w-[160px]">
-                          <span className="font-semibold text-xs text-ivory block leading-tight">{project.name}</span>
-                          <span className="text-[10px] text-silver">{project.clientName}</span>
+                          <span className="font-semibold text-xs text-foreground block leading-tight">{project.name}</span>
+                          <span className="text-[10px] text-muted-foreground">{project.clientName}</span>
                         </div>
                         
                         {/* Tasks Progress Bar */}
                         <div className="flex-1 max-w-[200px] space-y-1.5">
-                          <div className="flex items-center justify-between text-[10px] text-silver">
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                             <span>Tasks Complete</span>
-                            <span className="font-semibold text-ivory">{project.doneTasks}/{project.totalTasks} ({pct}%)</span>
+                            <span className="font-semibold text-foreground">{project.doneTasks}/{project.totalTasks} ({pct}%)</span>
                           </div>
-                          <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                          <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden">
                             <div 
                               className="h-full rounded-full bg-[#7FA38A] transition-all duration-500"
                               style={{ width: `${pct}%` }}
@@ -448,14 +447,14 @@ export default function Dashboard() {
                         {/* Budget Burn Info */}
                         <div className="flex items-center gap-4 text-right shrink-0">
                           <div className="space-y-1">
-                            <span className="text-[9px] uppercase tracking-wider text-fog block">Budget Burn</span>
-                            <span className="text-xs font-mono font-semibold text-ivory">
+                            <span className="text-[9px] uppercase tracking-wider text-muted-foreground block">Budget Burn</span>
+                            <span className="text-xs font-mono font-semibold text-foreground">
                               {fmt(project.spent)} / {fmt(project.budget)}
                             </span>
                           </div>
                           <span className={cn(
                             "text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
-                            burnPct > 90 ? "text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20" : burnPct > 70 ? "text-[#B89B6A] bg-[#B89B6A]/10 border-[#B89B6A]/20" : "text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20"
+                            burnPct > 90 ? "text-danger bg-danger/10 border-danger/20" : burnPct > 70 ? "text-warning bg-warning/10 border-warning/20" : "text-success bg-success/10 border-success/20"
                           )}>
                             {burnPct}%
                           </span>
@@ -473,16 +472,16 @@ export default function Dashboard() {
         <div className="space-y-6">
           {/* Margin */}
           <Card
-            className={cn("bg-midnight border-white/6 shadow-card", isStarter && "cursor-pointer hover:border-white/10 transition-all relative")}
+            className={cn("bg-surface border-border shadow-card", isStarter && "cursor-pointer hover:border-border transition-all relative")}
             onClick={() => {
               if (isStarter) triggerUpgrade('profitability');
             }}
           >
             <CardHeader className="pb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-fog flex items-center justify-between">
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-muted-foreground flex items-center justify-between">
                 <span>Agency Margin Thermometer</span>
                 {isStarter && (
-                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-white/5 text-ivory border border-white/10 uppercase">
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-secondary text-foreground border border-border uppercase">
                     PRO
                   </span>
                 )}
@@ -491,19 +490,19 @@ export default function Dashboard() {
             <CardContent className="space-y-4">
               <div className="flex items-end justify-between">
                 <div>
-                  <span className="text-[9px] uppercase tracking-wider font-semibold text-fog">Current Avg Margin</span>
-                  <p className="text-3xl font-bold font-mono text-[#7FA38A] leading-none mt-1">{projectMargin}%</p>
+                  <span className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground">Current Avg Margin</span>
+                  <p className="text-3xl font-bold font-mono text-success leading-none mt-1">{projectMargin}%</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-fog font-semibold">Target Marge</p>
-                  <p className="text-xs font-semibold text-ivory">{marginTarget}% Target</p>
+                  <p className="text-[10px] text-muted-foreground font-semibold">Target Marge</p>
+                  <p className="text-xs font-semibold text-foreground">{marginTarget}% Target</p>
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
+                <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
                   <div className="bg-[#7FA38A] h-full rounded-full transition-all duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)]" style={{ width: `${projectMargin}%` }} />
                 </div>
-                <div className="flex justify-between text-[8px] text-fog font-semibold">
+                <div className="flex justify-between text-[8px] text-muted-foreground font-semibold">
                   <span>0%</span>
                   <span>50%</span>
                   <span>{marginTarget}% (Min Target)</span>
@@ -511,9 +510,9 @@ export default function Dashboard() {
                 </div>
               </div>
               {projectMargin < marginTarget && (
-                <div className="rounded-lg bg-[#B89B6A]/10 border border-[#B89B6A]/20 p-3 flex gap-2 items-start">
-                  <AlertTriangle size={13} className="text-[#B89B6A] shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-silver leading-relaxed">
+                <div className="rounded-lg bg-warning/10 border border-warning/20 p-3 flex gap-2 items-start">
+                  <AlertTriangle size={13} className="text-warning shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
                     Bolt Tech project budget burn is approaching threshold limits. Adjust freelance needs to protect profitability.
                   </p>
                 </div>
@@ -523,29 +522,29 @@ export default function Dashboard() {
 
           {/* Portfolio */}
           <Card
-            className={cn("bg-midnight border-white/6 shadow-card", isStarter && "cursor-pointer hover:border-white/10 transition-all relative")}
+            className={cn("bg-surface border-border shadow-card", isStarter && "cursor-pointer hover:border-border transition-all relative")}
             onClick={() => {
               if (isStarter) triggerUpgrade('pipeline');
             }}
           >
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-fog flex items-center justify-between w-full">
+              <CardTitle className="text-xs uppercase tracking-wider font-semibold text-muted-foreground flex items-center justify-between w-full">
                 <span>Portfolio Status</span>
                 {isStarter && (
-                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-white/5 text-ivory border border-white/10 uppercase">
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-secondary text-foreground border border-border uppercase">
                     PRO
                   </span>
                 )}
               </CardTitle>
               {!isStarter && (
-                <button onClick={(e) => { e.stopPropagation(); router.push('/app/clients'); }} className="text-[9px] text-[#7FA38A] hover:underline font-semibold shrink-0 ml-2">
+                <button onClick={(e) => { e.stopPropagation(); router.push('/app/clients'); }} className="text-[9px] text-success hover:underline font-semibold shrink-0 ml-2">
                   View all
                 </button>
               )}
             </CardHeader>
             <CardContent className="space-y-2">
               {activeProjects.length === 0 ? (
-                <p className="text-[11px] text-silver italic">No active projects</p>
+                <p className="text-[11px] text-muted-foreground italic">No active projects</p>
               ) : (
                 activeProjects.slice(0, 4).map((p: any) => {
                   const isOverdue = p.dueDate && p.dueDate < today;
@@ -558,15 +557,15 @@ export default function Dashboard() {
                           router.push('/app/delivery');
                         }
                       }}
-                      className="flex items-center justify-between p-2.5 bg-[#111522] border border-white/6 rounded-lg cursor-pointer hover:bg-white/3 transition-colors"
+                      className="flex items-center justify-between p-2.5 bg-[#111522] border border-border rounded-lg cursor-pointer hover:bg-secondary/60 transition-colors"
                     >
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-ivory truncate">{p.name}</p>
-                        <p className="text-[10px] text-silver truncate">{p.clientName}</p>
+                        <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{p.clientName}</p>
                       </div>
                       <span className={cn(
                         'text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ml-2 border',
-                        isOverdue ? 'text-[#A86A6A] bg-[#A86A6A]/10 border-[#A86A6A]/20' : 'text-[#7FA38A] bg-[#7FA38A]/10 border-[#7FA38A]/20'
+                        isOverdue ? 'text-danger bg-danger/10 border-danger/20' : 'text-success bg-success/10 border-success/20'
                       )}>
                         {isOverdue ? 'Overdue' : 'Active'}
                       </span>
@@ -584,10 +583,10 @@ export default function Dashboard() {
 
       {/* AI Sheet */}
       <Sheet open={aiSheetOpen} onOpenChange={setAiSheetOpen}>
-        <SheetContent side="right" className="w-full sm:w-[480px] bg-midnight border-white/6 p-6 flex flex-col h-full gap-6">
-          <SheetHeader className="border-b border-white/6 pb-4">
-            <SheetTitle className="text-lg font-serif text-ivory flex items-center gap-2">
-              <Sparkles size={16} className="text-[#7FA38A] animate-pulse" />
+        <SheetContent side="right" className="w-full sm:w-[480px] bg-surface border-border p-6 flex flex-col h-full gap-6">
+          <SheetHeader className="border-b border-border pb-4">
+            <SheetTitle className="text-lg font-serif text-foreground flex items-center gap-2">
+              <Sparkles size={16} className="text-success animate-pulse" />
               Hermes AI Agent
             </SheetTitle>
           </SheetHeader>
@@ -595,41 +594,41 @@ export default function Dashboard() {
           <div className="flex-1 overflow-y-auto space-y-6">
             {activeAgentType === 'proposal' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-white/10 bg-white/5">
-                  <h4 className="text-xs font-semibold text-ivory">Proposal Copilot</h4>
-                  <p className="text-[11px] text-silver mt-1 leading-relaxed">Draft a proposal scope and pricing from a brief.</p>
+                <div className="p-4 rounded-xl border border-border bg-secondary">
+                  <h4 className="text-xs font-semibold text-foreground">Proposal Copilot</h4>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Draft a proposal scope and pricing from a brief.</p>
                 </div>
-                <Button onClick={() => { setAiSheetOpen(false); router.push('/app/clients?tab=proposals'); }} className="w-full bg-ivory text-obsidian hover:bg-ivory/90 font-semibold rounded-xl">
+                <Button onClick={() => { setAiSheetOpen(false); router.push('/app/clients?tab=proposals'); }} className="w-full bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-xl">
                   Open Proposal Builder
                 </Button>
               </div>
             )}
             {activeAgentType === 'callprep' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-white/10 bg-white/5">
-                  <h4 className="text-xs font-semibold text-ivory">Call Prepper</h4>
-                  <p className="text-[11px] text-silver mt-1 leading-relaxed">Generate a briefing before a client call.</p>
+                <div className="p-4 rounded-xl border border-border bg-secondary">
+                  <h4 className="text-xs font-semibold text-foreground">Call Prepper</h4>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Generate a briefing before a client call.</p>
                 </div>
-                <Button onClick={() => { setAiSheetOpen(false); toast.success('Briefing generated.'); }} className="w-full bg-ivory text-obsidian hover:bg-ivory/90 font-semibold rounded-xl">
+                <Button onClick={() => { setAiSheetOpen(false); toast.success('Briefing generated.'); }} className="w-full bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-xl">
                   Generate Digest
                 </Button>
               </div>
             )}
             {activeAgentType === 'audit' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-white/10 bg-white/5">
-                  <h4 className="text-xs font-semibold text-ivory">SLA Risk Audit</h4>
-                  <p className="text-[11px] text-silver mt-1 leading-relaxed">Surface contract risks, delays and billing gaps.</p>
+                <div className="p-4 rounded-xl border border-border bg-secondary">
+                  <h4 className="text-xs font-semibold text-foreground">SLA Risk Audit</h4>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Surface contract risks, delays and billing gaps.</p>
                 </div>
-                <Button onClick={() => { setAiSheetOpen(false); router.push('/app/intelligence'); }} className="w-full bg-ivory text-obsidian hover:bg-ivory/90 font-semibold rounded-xl">
+                <Button onClick={() => { setAiSheetOpen(false); router.push('/app/intelligence'); }} className="w-full bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-xl">
                   View Intelligence Hub
                 </Button>
               </div>
             )}
           </div>
 
-          <div className="border-t border-white/6 pt-4">
-            <Button variant="ghost" onClick={() => setAiSheetOpen(false)} className="w-full text-silver hover:text-ivory hover:bg-white/5">
+          <div className="border-t border-border pt-4">
+            <Button variant="ghost" onClick={() => setAiSheetOpen(false)} className="w-full text-muted-foreground hover:text-foreground hover:bg-secondary">
               Close
             </Button>
           </div>

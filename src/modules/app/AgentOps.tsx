@@ -1,19 +1,11 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
-import { TextAnimate } from '@/components/ui/text-animate';
-import {
-  TerminalAnimationRoot,
-  TerminalAnimationWindow,
-  TerminalAnimationContent,
-  TerminalAnimationCommandBar,
-  TerminalAnimationOutput,
-} from '@/components/ui/terminal-animation';
 import { Sparkles, History, Activity, Edit3, CheckCircle, HelpCircle, Play, TrendingUp, FolderKanban, DollarSign, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -84,18 +76,6 @@ export default function AgentOps() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [runningAgent, setRunningAgent] = useState<string | null>(null);
   const [lastRuns, setLastRuns] = useState<Record<string, string>>({});
-
-  const terminalTabs = useMemo(() => [
-    {
-      label: "agent-ops.log",
-      command: "tail -n 20 agent-audit.log",
-      lines: audit.map((log: any) => ({
-        text: `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.action}: ${JSON.stringify(log.details)}`,
-        color: log.action.includes('error') ? 'text-[#ff5f56]' : 'text-[#7FA38A]',
-        delay: 200
-      }))
-    }
-  ], [audit]);
 
   async function loadData() {
     const wsRes = await supabase.from('workspaces').select('id').limit(1);
@@ -216,28 +196,28 @@ export default function AgentOps() {
     <div className="space-y-8 w-full">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-ivory font-serif italic flex items-center gap-3">
-            <Sparkles className="text-warm" />
-            <TextAnimate text="Agent Operations" type="calmInUp" className="text-3xl font-bold text-ivory font-serif italic" />
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
+            <Sparkles className="text-primary" size={20} />
+            Agent Operations
           </h1>
-          <p className="text-sm text-silver mt-2">
-            Monitor, govern, and configure the instructions for your AGI agency agents.
+          <p className="text-sm text-muted-foreground mt-1">
+            Monitor, govern, and configure your autonomous AI agents.
           </p>
         </div>
       </header>
 
-      {/* v4 Module Agents */}
+      {/* Module Agents */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs uppercase tracking-wider font-semibold text-ivory">Module Agents</p>
-            <p className="text-[11px] text-fog mt-0.5">AI agents running autonomously across your core modules</p>
+            <p className="text-xs uppercase tracking-wider font-semibold text-foreground">Module Agents</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">AI agents running autonomously across your core modules</p>
           </div>
           <Button
             size="sm"
             onClick={runAllAgents}
             disabled={!!runningAgent}
-            className="flex items-center gap-2 text-xs bg-ivory text-midnight hover:bg-ivory/90 rounded-lg px-4 disabled:opacity-50"
+            className="flex items-center gap-2 text-xs rounded-lg px-4 disabled:opacity-50"
           >
             <Play size={11} className={runningAgent === 'all' ? 'animate-pulse' : ''} />
             {runningAgent === 'all' ? 'Running...' : 'Run All'}
@@ -254,7 +234,7 @@ export default function AgentOps() {
 
             return (
               <motion.div key={mod.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <Card className="bg-midnight border-white/8 relative overflow-hidden">
+                <Card className="bg-surface border-border relative overflow-hidden">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
@@ -262,29 +242,29 @@ export default function AgentOps() {
                           <Icon size={14} className="text-white" />
                         </div>
                         <div>
-                          <p className="text-xs font-semibold text-ivory">{mod.name}</p>
-                          <p className="text-[9px] uppercase tracking-wider text-fog font-medium">{mod.role}</p>
+                          <p className="text-xs font-semibold text-foreground">{mod.name}</p>
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">{mod.role}</p>
                         </div>
                       </div>
-                      <div className={cn('w-1.5 h-1.5 rounded-full mt-1', lastRan ? 'bg-sage' : 'bg-silver/30')} />
+                      <div className={cn('w-1.5 h-1.5 rounded-full mt-1', lastRan ? 'bg-primary' : 'bg-border')} />
                     </div>
-                    <p className="text-[11px] text-silver leading-relaxed">{mod.description}</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{mod.description}</p>
                     {alertsForAgent.length > 0 && (
                       <div className="flex items-center gap-2">
                         {roseCount > 0 && (
-                          <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-rose/10 text-rose border border-rose/20">
+                          <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20">
                             <AlertTriangle size={8} /> {roseCount} critical
                           </span>
                         )}
                         {amberCount > 0 && (
-                          <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-amber/10 text-amber border border-amber/20">
+                          <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
                             <AlertTriangle size={8} /> {amberCount} warning
                           </span>
                         )}
                       </div>
                     )}
-                    <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                      <span className="text-[9px] text-fog">
+                    <div className="flex items-center justify-between pt-1 border-t border-border">
+                      <span className="text-[9px] text-muted-foreground">
                         {lastRan ? `Last run ${new Date(lastRan).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Never run'}
                       </span>
                       <Button
@@ -292,7 +272,7 @@ export default function AgentOps() {
                         variant="ghost"
                         onClick={() => runAgent(mod)}
                         disabled={!!runningAgent}
-                        className="h-6 px-2 text-[10px] text-silver hover:text-ivory border border-white/5 hover:bg-white/5 rounded-md flex items-center gap-1 disabled:opacity-40"
+                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground border border-border hover:bg-accent rounded-md flex items-center gap-1 disabled:opacity-40"
                       >
                         <Play size={8} className={runningAgent === mod.id ? 'animate-pulse' : ''} />
                         {runningAgent === mod.id ? 'Running' : 'Run'}
@@ -307,26 +287,26 @@ export default function AgentOps() {
 
         {/* Recent Agent Alerts */}
         {agentAlerts.length > 0 && (
-          <Card className="bg-midnight border-white/8 mb-6">
+          <Card className="bg-surface border-border mb-6">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-ivory flex items-center gap-2">
-                <AlertTriangle size={13} className="text-amber" />
+              <CardTitle className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <AlertTriangle size={13} className="text-warning" />
                 Recent Agent Alerts
-                <span className="ml-auto text-[9px] text-fog font-normal">Last 24h</span>
+                <span className="ml-auto text-[9px] text-muted-foreground font-normal">Last 24h</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-1.5">
                 {agentAlerts.slice(0, 8).map((row: any, i: number) => {
                   const d = row.details ?? {};
-                  const dotColor = d.severity === 'rose' ? '#A86A6A' : d.severity === 'amber' ? '#B89B6A' : '#8A9099';
+                  const dotColor = d.severity === 'rose' ? 'var(--danger)' : d.severity === 'amber' ? 'var(--warning)' : 'var(--muted-foreground)';
                   return (
-                    <div key={i} className="flex items-start gap-2.5 py-1.5 border-b border-white/4 last:border-0">
+                    <div key={i} className="flex items-start gap-2.5 py-1.5 border-b border-border last:border-0">
                       <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: dotColor }} />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-ivory truncate">{d.title || d.description}</p>
+                        <p className="text-xs text-foreground truncate">{d.title || d.description}</p>
                         {d.description && d.title && (
-                          <p className="text-[10px] text-fog mt-0.5 truncate">{d.description}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{d.description}</p>
                         )}
                       </div>
                       <span className="text-[9px] text-fog shrink-0">{new Date(row.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -340,199 +320,189 @@ export default function AgentOps() {
       </section>
 
       {/* Custom Agents Status Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {agents.map((agent: any, index: number) => (
-          <motion.div
-            key={agent.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card className="glass-card border-white/10 bg-midnight relative group overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-bold text-ivory">{agent.name}</CardTitle>
-                  <div className={cn(
-                    "w-2 h-2 rounded-full",
-                    agent.status === 'active' ? "bg-sage animate-pulse" : "bg-silver/40"
-                  )} />
-                </div>
-                <p className="text-[10px] text-warm font-medium uppercase tracking-widest">{agent.role}</p>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-xs text-silver mt-2 line-clamp-3">
-                  {agent.description}
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {agent.tools?.map((tool: string) => (
-                    <span key={tool} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-silver">
-                      {tool}
-                    </span>
-                  ))}
-                </div>
-                <div className="pt-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => openEditor(agent)}
-                    className="w-full text-xs text-silver hover:text-ivory border border-white/5 hover:bg-white/5 rounded-lg flex items-center justify-center gap-1.5"
-                  >
-                    <Edit3 size={12} />
-                    Configure Prompt
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </section>
+      {agents.length > 0 && (
+        <section>
+          <p className="text-xs uppercase tracking-wider font-semibold text-foreground mb-3">Custom Agents</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {agents.map((agent: any, index: number) => (
+              <motion.div
+                key={agent.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+              >
+                <Card className="bg-surface border-border relative group overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-semibold text-foreground">{agent.name}</CardTitle>
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        agent.status === 'active' ? "bg-primary animate-pulse" : "bg-border"
+                      )} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">{agent.role}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-xs text-muted-foreground line-clamp-3">{agent.description}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {agent.tools?.map((tool: string) => (
+                        <span key={tool} className="text-[9px] px-1.5 py-0.5 rounded bg-accent border border-border text-muted-foreground">
+                          {tool}
+                        </span>
+                      ))}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditor(agent)}
+                      className="w-full text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <Edit3 size={12} />
+                      Configure Prompt
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* Audit Trail + Prompt Editor Section */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Audit Trail + System Signals */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Live Audit Trail */}
-        <Card className="glass-card border-white/10 bg-midnight">
+        <Card className="bg-surface border-border">
           <CardHeader>
-            <CardTitle className="text-sm font-bold text-ivory flex items-center gap-2">
-              <History size={16} className="text-warm" />
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <History size={15} className="text-primary" />
               Live Audit Trail
             </CardTitle>
           </CardHeader>
           <CardContent>
             {audit.length === 0 ? (
-              <p className="text-xs text-silver italic">No recent agent activity.</p>
+              <p className="text-xs text-muted-foreground italic">No recent agent activity.</p>
             ) : (
-              <TerminalAnimationRoot tabs={terminalTabs} alwaysDark={true} className="w-full">
-                <TerminalAnimationWindow minHeight="320px" animateOnVisible={false} className="border border-white/5 bg-black/60 rounded-xl font-mono text-[10px]">
-                  <TerminalAnimationContent className="p-4 overflow-y-auto max-h-[300px] custom-scrollbar">
-                    <div className="flex items-center gap-1.5 text-fog mb-3 text-[9px] select-none">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-                      <span className="ml-2">Hermes Terminal Logs</span>
+              <div className="rounded-xl bg-muted/40 border border-border overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-warning/60" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-success/60" />
+                  <span className="ml-2 text-[10px] text-muted-foreground font-mono">agent-ops.log</span>
+                </div>
+                <div className="p-4 max-h-[260px] overflow-y-auto space-y-1.5 font-mono">
+                  {audit.map((log: any, i: number) => (
+                    <div key={i} className="flex items-start gap-2 text-[10px]">
+                      <span className="text-muted-foreground shrink-0">
+                        {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </span>
+                      <span className={cn(
+                        'flex-1 truncate',
+                        log.action?.includes('error') ? 'text-destructive' : 'text-primary'
+                      )}>
+                        [{log.action}] {typeof log.details === 'object' ? JSON.stringify(log.details) : log.details}
+                      </span>
                     </div>
-                    <div className="text-silver select-none">
-                      <span className="text-[#32f3e9]">guest@minerva-os</span>:<span className="text-[#b39aff]">~</span>$ <TerminalAnimationCommandBar className="inline-block" />
-                    </div>
-                    <TerminalAnimationOutput className="mt-2 space-y-1" />
-                  </TerminalAnimationContent>
-                </TerminalAnimationWindow>
-              </TerminalAnimationRoot>
+                  ))}
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        {/* System Signals & Configuration */}
-        <div className="space-y-6">
-          <Card className="glass-card border-white/10 bg-midnight">
+        {/* System Signals & Governance */}
+        <div className="space-y-4">
+          <Card className="bg-surface border-border">
             <CardHeader>
-              <CardTitle className="text-sm font-bold text-ivory flex items-center gap-2">
-                <Activity size={16} className="text-sage" />
+              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Activity size={15} className="text-primary" />
                 System Signals
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-silver">Active Workflows</span>
-                  <span className="font-bold text-ivory">12</span>
+            <CardContent className="space-y-3">
+              {[
+                { label: 'Active Workflows', value: String(agents.filter(a => a.status === 'active').length), color: 'text-foreground' },
+                { label: 'Total Agents', value: String(agents.length + MODULE_AGENTS.length), color: 'text-foreground' },
+                { label: 'Audit Events (today)', value: String(audit.length), color: 'text-foreground' },
+                { label: 'Alerts (24h)', value: String(agentAlerts.length), color: agentAlerts.length > 0 ? 'text-warning' : 'text-success' },
+              ].map(row => (
+                <div key={row.label} className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className={cn('font-semibold', row.color)}>{row.value}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-silver">Success Rate</span>
-                  <span className="font-bold text-sage">99.2%</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-silver">Human Interventions</span>
-                  <span className="font-bold text-ember">2</span>
-                </div>
-              </div>
+              ))}
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-white/10 bg-midnight">
+          <Card className="bg-surface border-border">
             <CardHeader>
-              <CardTitle className="text-sm font-bold text-ivory">Governance Mode</CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">Governance Mode</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-silver leading-relaxed">
-                Currently operating in <strong>Suggest-then-Approve</strong> mode. Agents require explicit confirmation for all critical actions (deals stage change, note creation, tasks assignment).
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Currently operating in <strong className="text-foreground">Suggest-then-Approve</strong> mode. Agents require explicit confirmation for all critical actions.
               </p>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* AI Instructions Editor dialog (MorphSurface Simulation) */}
+      {/* AI Instructions Editor dialog */}
       <Dialog open={!!editingAgent} onOpenChange={(open) => !open && setEditingAgent(null)}>
-        <DialogContent className="max-w-3xl bg-midnight border-white/10 text-ivory selection:bg-white/10">
+        <DialogContent className="max-w-3xl bg-surface border-border">
           <DialogHeader>
-            <DialogTitle className="text-lg font-serif italic text-ivory flex items-center gap-2">
-              <Sparkles className="text-warm" size={18} />
+            <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Sparkles className="text-primary" size={16} />
               Configure {editingAgent?.name} Instructions
             </DialogTitle>
-            <DialogDescription className="text-xs text-silver">
-              Fine-tune the custom instructions for {editingAgent?.role}. Apply standard templates below to override.
+            <DialogDescription className="text-xs text-muted-foreground">
+              Fine-tune the system prompt for {editingAgent?.role}. Apply a template below to get started.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
             <div className="md:col-span-2 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-silver uppercase tracking-wider">System Prompt Instructions</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">System Prompt</label>
                 <Textarea
                   value={editedInstructions}
                   onChange={(e) => setEditedInstructions(e.target.value)}
-                  className="min-h-[250px] bg-black/30 border-white/5 text-silver text-xs rounded-xl focus:ring-1 focus:ring-warm/50"
+                  className="min-h-[250px] text-xs rounded-xl"
                   placeholder="Describe how the agent should think, speak, and make decisions..."
                 />
               </div>
-
               <div className="flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingAgent(null)}
-                  className="text-xs text-silver hover:bg-white/5 rounded-lg"
-                >
+                <Button variant="ghost" size="sm" onClick={() => setEditingAgent(null)} className="text-xs">
                   Cancel
                 </Button>
                 <Button
                   size="sm"
                   onClick={handleSave}
                   disabled={saveStatus === 'saving'}
-                  className={cn(
-                    "text-xs font-semibold rounded-lg px-4",
-                    saveStatus === 'saved'
-                      ? "bg-sage text-midnight hover:bg-sage"
-                      : "bg-ivory text-midnight hover:bg-ivory/90"
-                  )}
+                  className="text-xs font-semibold px-4 gap-1.5"
                 >
                   {saveStatus === 'saving' && 'Saving...'}
-                  {saveStatus === 'saved' && (
-                    <span className="flex items-center gap-1">
-                      <CheckCircle size={12} /> Saved!
-                    </span>
-                  )}
-                  {saveStatus === 'error' && 'Error! Try Again'}
+                  {saveStatus === 'saved' && <><CheckCircle size={12} /> Saved!</>}
+                  {saveStatus === 'error' && 'Error. Try Again'}
                   {saveStatus === 'idle' && 'Save & Apply'}
                 </Button>
               </div>
             </div>
 
             {/* Prompt Library */}
-            <div className="space-y-4 border-t md:border-t-0 md:border-l border-white/5 pt-4 md:pt-0 md:pl-4">
-              <h3 className="text-xs font-semibold text-silver uppercase tracking-wider flex items-center gap-1.5">
-                <HelpCircle size={13} className="text-warm" />
+            <div className="space-y-3 border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-4">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <HelpCircle size={12} />
                 Prompt Library
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {PROMPT_TEMPLATES.map((template) => (
                   <button
                     key={template.title}
                     onClick={() => applyTemplate(template)}
-                    className="w-full text-left p-2.5 rounded-lg border border-white/5 bg-white/[0.01] hover:bg-white/5 transition-all space-y-1 group"
+                    className="w-full text-left p-2.5 rounded-lg border border-border bg-muted/30 hover:bg-accent hover:border-primary/30 transition-all space-y-1 group"
                   >
-                    <p className="text-[11px] font-semibold text-ivory group-hover:text-warm transition-colors">{template.title}</p>
-                    <p className="text-[9px] text-fog leading-relaxed line-clamp-2">{template.description}</p>
+                    <p className="text-[11px] font-semibold text-foreground group-hover:text-primary transition-colors">{template.title}</p>
+                    <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-2">{template.description}</p>
                   </button>
                 ))}
               </div>

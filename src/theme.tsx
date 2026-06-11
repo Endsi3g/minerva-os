@@ -21,16 +21,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('minerva-theme') as Theme | null;
-    const initial: Theme = saved === 'dark' ? 'dark' : 'light';
+    const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const initial: Theme = saved ?? preferred;
     setTheme(initial);
     applyTheme(initial);
   }, []);
 
   function toggleTheme() {
-    const next: Theme = theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    localStorage.setItem('minerva-theme', next);
-    applyTheme(next);
+    setTheme(prev => {
+      const next: Theme = prev === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('minerva-theme', next);
+      return next;
+    });
   }
 
   return (
